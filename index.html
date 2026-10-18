@@ -105,26 +105,11 @@
   .status-ok svg { flex: 0 0 auto; }
 
   /* Hoje */
-  header.hoje { padding: 24px 0 20px; }
-  .marca {
-    margin: 0 0 20px; font-family: var(--display); font-stretch: 75%; font-weight: 800; font-size: 15px;
-  }
-  .data { margin: 0; color: var(--tinta-2); font-size: 15px; }
+  header.hoje { padding: 28px 0 16px; }
+  .data { margin: 0; color: var(--tinta-2); font-size: 15px; font-variant-numeric: tabular-nums; }
   .atividade {
     margin: 2px 0 0; font-family: var(--display); font-stretch: 68%; font-weight: 850;
     font-size: clamp(56px, 16vw, 88px); line-height: .92; text-wrap: balance;
-  }
-  .nota { margin: 8px 0 0; font-size: 18px; color: var(--tinta-2); }
-  .hoje-acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; margin-top: 16px; }
-  .medidas {
-    display: flex; flex-wrap: wrap; gap: 8px 28px; margin: 22px 0 0; padding-top: 14px;
-    border-top: 1px solid var(--fio);
-  }
-  .medidas div { display: grid; }
-  .medidas dt { font-size: 13px; color: var(--tinta-2); }
-  .medidas dd {
-    margin: 0; font-family: var(--display); font-stretch: 85%; font-weight: 700; font-size: 22px;
-    font-variant-numeric: tabular-nums;
   }
 
   /* Abas dos treinos (fixas no topo) */
@@ -497,16 +482,8 @@
 <div id="tela-treino">
   <header class="hoje">
     <div class="wrap">
-      <p class="marca">Jiu-Jitsu + Hipertrofia</p>
       <p class="data" id="data"></p>
       <h1 class="atividade" id="atividade"></h1>
-      <p class="nota" id="nota"></p>
-      <div class="hoje-acoes" id="hoje-acoes"></div>
-      <dl class="medidas">
-        <div><dt>Peso atual</dt><dd>76 kg</dd></div>
-        <div><dt>Alvo</dt><dd>73–74 kg</dd></div>
-        <div><dt>Gordura</dt><dd>13,8%</dd></div>
-      </dl>
     </div>
   </header>
 
@@ -1283,31 +1260,8 @@
 
   // ---------- Render: tela Treino ----------
   function renderHoje() {
-    const dia = planoDoDia(new Date().getDay());
-    $('data').textContent = dataLonga(hoje());
-    $('atividade').textContent = dia.titulo;
-    $('nota').textContent = dia.nota;
-  }
-
-  function renderHojeAcoes() {
-    const d = planoDoDia(new Date().getDay());
-    const doDia = agruparPorData()[hoje()] || [];
-    const aberto = checkinAberto();
-    const varios = d.grupos.length > 1;
-    // Um botão por atividade planejada para hoje que ainda não teve check-in.
-    const partes = d.grupos.map((g, k) => {
-      const tipo = g === 'musc' ? `t${d.treino}` : g;
-      const feito = doDia.filter((c) => c.fim && TIPOS[c.tipo].grupo === g).pop();
-      if (aberto && aberto.tipo === tipo) return '';
-      if (feito) {
-        return `<span class="status-ok">${ICON_CHECK}${varios ? `${TIPOS[tipo].nome}: check-in feito` : 'Check-in feito'} ${horarioTexto(feito)}</span>`;
-      }
-      const classe = k === 0 ? 'btn' : 'btn-sec';
-      if (g === 'musc') return `<button class="${classe}" type="button" data-iniciar="${tipo}">Iniciar ${TIPOS[tipo].nome}</button>`;
-      return `<button class="${classe}" type="button" data-novo="${tipo}">Fazer check-in ${g === 'jiu' ? 'do jiu-jitsu' : 'da bike'}</button>`;
-    });
-    $('hoje-acoes').innerHTML = `${partes.join('')}
-      <button class="btn-sec" type="button" data-novo="${d.jiu ? 'bike' : 'jiu'}">Outro treino</button>`;
+    $('data').textContent = `${dataLonga(hoje())} às ${horaDe(agoraIso())}`;
+    $('atividade').textContent = planoDoDia(new Date().getDay()).titulo;
   }
 
   function renderTreinos() {
@@ -1702,7 +1656,6 @@
 
   function atualizarCheckinUI() {
     renderAtivo();
-    renderHojeAcoes();
     renderFichaCheckin();
     renderLista();
     renderSemana();
@@ -1754,8 +1707,6 @@
       pedirInicio(tipo, () => mostrarTreino(TIPOS[tipo].treino));
       return;
     }
-    const novo = e.target.closest('[data-novo]');
-    if (novo) return abrirFormCheckin({ tipo: novo.dataset.novo });
     if (e.target.closest('[data-encerrar]')) return abrirEncerrar();
   });
 
@@ -1936,7 +1887,8 @@
   if (esquecido) {
     toast(`O check-in do ${TIPOS[esquecido.tipo].nome} ficou aberto e foi encerrado às ${horaDe(esquecido.fim)}.`);
   }
-  setInterval(renderAtivo, 30000);
+  // Mantém o horário do topo e a barra de treino em andamento atualizados.
+  setInterval(() => { renderHoje(); renderAtivo(); }, 15000);
 })();
 </script>
 </body>
