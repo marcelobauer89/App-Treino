@@ -175,6 +175,19 @@
     border: 1px dashed var(--border); border-radius: var(--radius);
   }
 
+  /* Registro de série */
+  .log { border-top: 1px dashed var(--border); padding-top: 12px; display: grid; gap: 8px; }
+  .log-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .log-head h4 { margin: 0; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .log-hint { font-size: 12.5px; color: var(--muted); text-align: right; }
+  .serie-row { display: grid; grid-template-columns: 64px 1fr 92px; gap: 8px; align-items: center; }
+  .serie-row span { font-size: 13px; color: var(--muted); }
+  .serie-row input {
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px;
+    padding: 9px 10px; font-size: 14px; width: 100%; min-height: 48px; text-align: center;
+  }
+  .serie-row input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+
 
   /* Agenda */
   .agenda { margin-top: 28px; }
@@ -247,6 +260,7 @@
     </div>
     <p style="margin-top:14px">PSE = percepção subjetiva de esforço (10 é reservado ao tatame). Use a carga que respeite a técnica e a recuperação.</p>
     <p>Regra: terça e quinta são de jiu-jitsu. Se houver aula extra na sexta, o Treino 3 (pernas) vai para sábado. Domingo é descanso.</p>
+    <p>As cargas e PSE registrados ficam salvos só neste navegador (ainda sem sincronização em nuvem).</p>
     <p>Adaptação prática do PDF enviado. Não substitui avaliação de um profissional de educação física ou nutrição, especialmente se houver dor ou lesão.</p>
   </footer>
 </main>
@@ -396,6 +410,68 @@
     return TREINOS[estado.treino].exercicios;
   }
 
+  // ---------- Registro de séries ----------
+  // logs[chave][AAAA-MM-DD] = [{ carga, pse }, ...] (uma entrada por série)
+  const LOGS_KEY = 'bauer-logs-v1';
+  let logs = {};
+  try { logs = JSON.parse(localStorage.getItem(LOGS_KEY) || '{}') || {}; } catch (_) {}
+  const salvarLogs = () => { try { localStorage.setItem(LOGS_KEY, JSON.stringify(logs)); } catch (_) {} };
+
+  const pad = (n) => String(n).padStart(2, '0');
+  function hoje() {
+    const d = new Date();
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  }
+  const chaveEx = (ex) => `${estado.treino}:${ex.nome}`;
+  function numSeries(ex) {
+    const m = /^(\d+)\s*×/.exec(ex.dose);
+    return m ? parseInt(m[1], 10) : 3;
+  }
+
+  function ultimoAnterior(chave) {
+    const h = logs[chave] || {};
+    const datas = Object.keys(h).filter((d) => d < hoje() && h[d].some((s) => s && s.carga != null)).sort();
+    return datas.length ? h[datas[datas.length - 1]] : null;
+  }
+
+  function definirSerie(chave, n, campo, valor) {
+    const data = hoje();
+    logs[chave] = logs[chave] || {};
+    logs[chave][data] = logs[chave][data] || [];
+    logs[chave][data][n] = logs[chave][data][n] || {};
+    logs[chave][data][n][campo] = valor === '' ? null : Number(valor);
+    salvarLogs();
+  }
+
+  function logHTML(ex) {
+    const chave = chaveEx(ex);
+    const ultimo = ultimoAnterior(chave);
+    const atual = (logs[chave] || {})[hoje()] || [];
+    const linhas = Array.from({ length: numSeries(ex) }, (_, n) => {
+      const a = atual[n] || {};
+      const ref = (ultimo && ultimo[n]) || {};
+      // RF-14: a carga já vem preenchida com a da última sessão.
+      const carga = a.carga ?? ref.carga ?? '';
+      return `
+        <div class="serie-row">
+          <span>Série ${n + 1}</span>
+          <input type="number" inputmode="decimal" step="0.5" min="0" placeholder="kg"
+            data-ex="${chave}" data-serie="${n}" data-campo="carga" value="${carga}"
+            aria-label="${ex.nome}: carga da série ${n + 1} (kg)">
+          <input type="number" inputmode="numeric" min="1" max="10" placeholder="PSE ${ex.pse}"
+            data-ex="${chave}" data-serie="${n}" data-campo="pse" value="${a.pse ?? ''}"
+            aria-label="${ex.nome}: PSE real da série ${n + 1}">
+        </div>`;
+    }).join('');
+    const cargas = ultimo ? ultimo.map((s) => (s && s.carga != null ? s.carga : '–')).join(' / ') : null;
+    const hint = cargas ? `Última vez: ${cargas} kg` : 'Primeiro registro';
+    return `
+      <div class="log">
+        <div class="log-head"><h4>Registrar séries</h4><span class="log-hint">${hint}</span></div>
+        ${linhas}
+      </div>`;
+  }
+
   // ---------- Render ----------
   function renderTreinos() {
     $('treinos').innerHTML = Object.entries(TREINOS).map(([id, t]) => `
@@ -452,6 +528,7 @@
         </div>
         <p class="why">${ex.why}</p>
         <div class="meters">${bars}</div>
+        ${logHTML(ex)}
         ${video ? `<a class="video" href="${video}" target="_blank" rel="noopener">
           ${ICON_PLAY} Ver execução no YouTube
         </a>` : ''}
@@ -491,6 +568,14 @@
     estado.descAberta = e.target.open;
     salvar();
   }, true);
+
+  $('list').addEventListener('input', (e) => {
+    if (!e.target.closest('[data-campo]')) return;
+    // Salva a linha inteira para que a carga pré-preenchida também fique registrada.
+    e.target.closest('.serie-row').querySelectorAll('[data-campo]').forEach((el) => {
+      definirSerie(el.dataset.ex, Number(el.dataset.serie), el.dataset.campo, el.value);
+    });
+  });
 
   $('chips').addEventListener('click', (e) => {
     const b = e.target.closest('[data-foco]');
