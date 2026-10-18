@@ -3,311 +3,304 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#0e1014">
+<meta name="theme-color" content="#f3f4f6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1115" media="(prefers-color-scheme: dark)">
 <title>Bauer • Jiu-Jitsu + Hipertrofia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap">
 <style>
+  /* Layout: a ficha de treino da academia — uma coluna, linhas separadas por fios.
+     A ousadia fica num lugar só: os níveis aparecem como graus de fita na ponteira da faixa. */
   :root {
-    --bg: #0e1014;
-    --surface: #161920;
-    --surface-2: #1d212a;
-    --border: #2a2f3a;
-    --text: #f2f3f5;
-    --muted: #9aa1ad;
-    --accent: #ff6b2c;
-    --accent-soft: rgba(255, 107, 44, .14);
-    --track: #2a2f3a;
-    --radius: 16px;
-    color-scheme: dark;
+    --gi: #f3f4f6;            /* fundo: algodão do kimono */
+    --papel: #ffffff;         /* superfície da ficha */
+    --tinta: #101318;
+    --tinta-2: #4b5361;
+    --fio: #dde1e7;
+    --tatame: #1f4e9e;        /* ações: azul do tatame */
+    --tatame-forte: #183f80;
+    --tatame-tinta: #1f4e9e;
+    --tatame-suave: #e6edf8;
+    --sobre-tatame: #ffffff;
+    --faixa: #111111;         /* ponteira da faixa */
+    --fita: #ffffff;          /* grau de fita */
+    --fita-vazia: #2e3136;
+    --erro: #c62828;
+    --display: "Archivo", "Arial Narrow", system-ui, sans-serif;
+    --texto: "Archivo", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color-scheme: light;
   }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --gi: #0f1115; --papel: #171a20; --tinta: #f2f4f7; --tinta-2: #a3abb8; --fio: #2a2f38;
+      --tatame: #3566d6; --tatame-forte: #2b57bf; --tatame-tinta: #8db0ff; --tatame-suave: #1b2740;
+      --faixa: #000000; --fita: #f2f4f7; --fita-vazia: #2c2f35; --erro: #ff6b6b;
+      color-scheme: dark;
+    }
+  }
+
   * { box-sizing: border-box; }
-  :where(button, a, input, summary):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after { animation: none !important; transition: none !important; }
-  }
-  html, body { margin: 0; background: var(--bg); color: var(--text); }
+  html { -webkit-text-size-adjust: 100%; }
   body {
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    line-height: 1.45;
-    -webkit-font-smoothing: antialiased;
-    padding-bottom: 48px;
+    margin: 0; background: var(--gi); color: var(--tinta);
+    font-family: var(--texto); font-size: 16px; line-height: 1.5; -webkit-font-smoothing: antialiased;
   }
   button, input { font: inherit; color: inherit; }
   button { cursor: pointer; }
-  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 18px; }
+  :where(button, a, input, summary):focus-visible { outline: 2px solid var(--tatame-tinta); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 0 16px; }
+  h2.secao {
+    margin: 0; font-family: var(--display); font-stretch: 80%; font-weight: 800;
+    font-size: 26px; line-height: 1.1;
+  }
 
-  /* Header */
-  header.top {
-    padding: 28px 0 18px;
-    background: radial-gradient(900px 260px at 20% -40%, rgba(255,107,44,.25), transparent 70%);
-    border-bottom: 1px solid var(--border);
+  /* Hoje */
+  header.hoje { padding: 24px 0 20px; }
+  .marca {
+    margin: 0 0 20px; font-family: var(--display); font-stretch: 75%; font-weight: 800; font-size: 15px;
   }
-  .kicker {
-    display: inline-block; font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
-    color: var(--accent); font-weight: 700; margin-bottom: 6px;
+  .data { margin: 0; color: var(--tinta-2); font-size: 15px; }
+  .atividade {
+    margin: 2px 0 0; font-family: var(--display); font-stretch: 68%; font-weight: 850;
+    font-size: clamp(56px, 16vw, 88px); line-height: .92; text-wrap: balance;
   }
-  h1 { margin: 0; font-size: clamp(22px, 4vw, 32px); letter-spacing: -.02em; }
-  .meta { margin: 6px 0 0; color: var(--muted); font-size: 14px; }
-  .stats { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
-  .stat {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 999px;
-    padding: 6px 12px; font-size: 13px; color: var(--muted);
+  .nota { margin: 8px 0 0; font-size: 18px; color: var(--tinta-2); }
+  .medidas {
+    display: flex; flex-wrap: wrap; gap: 8px 28px; margin: 22px 0 0; padding-top: 14px;
+    border-top: 1px solid var(--fio);
   }
-  .stat b { color: var(--text); }
+  .medidas div { display: grid; }
+  .medidas dt { font-size: 13px; color: var(--tinta-2); }
+  .medidas dd {
+    margin: 0; font-family: var(--display); font-stretch: 85%; font-weight: 700; font-size: 22px;
+    font-variant-numeric: tabular-nums;
+  }
 
-  /* Controls */
-  .controls {
-    display: grid; gap: 12px; padding: 12px 0;
-    position: sticky; top: 0; z-index: 10;
-    background: rgba(14,16,20,.92); backdrop-filter: blur(10px);
-  }
-  @media (min-width: 720px) {
-    .controls { align-items: center; }
-  }
-  .treino-toggle {
-    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; max-width: 640px; background: var(--surface); border: 1px solid var(--border);
-    border-radius: 14px; padding: 4px; gap: 4px;
+  /* Abas dos treinos (fixas no topo) */
+  .controles { position: sticky; top: 0; z-index: 10; background: var(--gi); padding: 8px 0; }
+  .treinos {
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px;
+    background: var(--papel); border: 1px solid var(--fio); border-radius: 12px;
   }
   .treino-btn {
-    border: 0; background: transparent; padding: 10px 12px; border-radius: 10px;
-    text-align: left; color: var(--muted);
-    display: flex; flex-direction: column; justify-content: flex-start; min-width: 0;
+    display: flex; flex-direction: column; justify-content: flex-start; min-width: 0; min-height: 52px;
+    padding: 7px 10px; border: 0; border-radius: 9px; background: transparent;
+    text-align: left; color: var(--tinta-2);
   }
-  .treino-btn b { display: block; font-size: 15px; color: inherit; }
-  .treino-btn span { font-size: 12px; display: block; line-height: 1.25; }
-  .treino-btn[aria-selected="true"] { background: var(--surface-2); color: var(--text); box-shadow: inset 0 0 0 1px var(--border); }
-  .treino-btn[aria-selected="true"] b { color: var(--accent); }
+  .treino-btn b { font-family: var(--display); font-stretch: 80%; font-weight: 800; font-size: 17px; color: var(--tinta); }
+  .treino-btn span { font-size: 12.5px; line-height: 1.25; }
+  .treino-btn[aria-selected="true"] { background: var(--tatame); color: var(--sobre-tatame); }
+  .treino-btn[aria-selected="true"] b { color: var(--sobre-tatame); }
 
-  .chips {
-    display: flex; gap: 8px; padding: 6px 2px 4px; overflow-x: auto; scrollbar-width: none;
-  }
+  .chips { display: flex; gap: 8px; margin-top: 8px; padding: 2px 0; overflow-x: auto; scrollbar-width: none; }
   .chips::-webkit-scrollbar { display: none; }
   .chip {
-    flex: 0 0 auto; min-height: 44px; padding: 0 16px; border-radius: 999px; background: transparent;
-    border: 1px solid var(--border); color: var(--muted); font-size: 14px;
+    flex: 0 0 auto; min-height: 44px; padding: 0 16px; border-radius: 999px;
+    border: 1px solid var(--fio); background: var(--papel); color: var(--tinta-2); font-size: 14px;
   }
-  .chip:hover { color: var(--text); }
-  .chip[aria-pressed="true"] { background: var(--text); color: #111; border-color: var(--text); }
+  .chip:hover { color: var(--tinta); }
+  .chip[aria-pressed="true"] { background: var(--tinta); border-color: var(--tinta); color: var(--gi); }
 
-  /* Phase / summary banner */
-  .phase {
-    margin: 14px 0 6px; padding: 16px 18px; border-radius: var(--radius);
-    background: var(--surface); border: 1px solid var(--border);
-    display: grid; gap: 4px;
+  /* Sobre o treino */
+  .sobre { margin-top: 16px; border-block: 1px solid var(--fio); }
+  .sobre summary {
+    list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; min-height: 56px; padding: 10px 0;
   }
-  .phase h2 { margin: 0; font-size: 17px; }
-  .phase p { margin: 0; color: var(--muted); font-size: 14px; }
-  .phase { padding: 0; overflow: hidden; }
-  .acc-treino summary {
-    list-style: none; cursor: pointer; user-select: none;
-    display: flex; align-items: center; justify-content: space-between; gap: 14px;
-    padding: 16px 18px;
-  }
-  .acc-treino summary::-webkit-details-marker { display: none; }
-  .acc-treino summary:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: var(--radius); }
-  .acc-head { display: grid; gap: 3px; min-width: 0; }
-  .acc-hint { color: var(--muted); font-size: 13px; }
-  .acc-treino[open] .acc-hint { display: none; }
-  .acc-treino .chev { flex: 0 0 auto; color: var(--muted); transition: transform .2s ease, color .15s; }
-  .acc-treino summary:hover .chev, .acc-treino[open] .chev { color: var(--accent); }
-  .acc-treino[open] .chev { transform: rotate(180deg); }
-  .acc-treino .acc-body {
-    display: grid; gap: 14px; padding: 2px 18px 18px;
-    border-top: 1px solid var(--border); padding-top: 14px; margin: 0 18px; padding-left: 0; padding-right: 0;
-    animation: rise .2s ease both;
-  }
-  @media (min-width: 720px) { .acc-treino .acc-body { grid-template-columns: repeat(3, 1fr); gap: 20px; } }
-  .info-item { display: grid; gap: 6px; align-content: start; }
-  .info-item h4 { margin: 0; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
-  .info-item p { color: var(--text); font-size: 14px; margin: 0; }
-  .info-item p b { font-weight: 600; }
-  .phase .focus-line { color: var(--text); font-size: 14px; margin-top: 6px; }
-  .phase .focus-line em { font-style: normal; color: var(--accent); font-weight: 600; }
+  .sobre summary::-webkit-details-marker { display: none; }
+  .sobre-head { display: grid; min-width: 0; }
+  .sobre h2 { margin: 0; font-size: 16px; font-weight: 700; }
+  .sobre-dica { color: var(--tinta-2); font-size: 14px; }
+  .sobre[open] .sobre-dica { display: none; }
+  .chev { flex: 0 0 auto; color: var(--tinta-2); transition: transform .2s ease; }
+  .sobre[open] .chev { transform: rotate(180deg); }
+  .sobre-corpo { display: grid; gap: 14px; padding: 0 0 18px; }
+  @media (min-width: 720px) { .sobre-corpo { grid-template-columns: repeat(3, 1fr); gap: 20px; } }
+  .sobre-corpo h3 { margin: 0 0 4px; font-size: 14px; font-weight: 700; }
+  .sobre-corpo p { margin: 0 0 6px; font-size: 15px; max-width: 65ch; }
 
-  /* Count */
-  .count { color: var(--muted); font-size: 13px; margin: 14px 2px 4px; }
-
-  /* Cards grid */
-  .grid { display: grid; gap: 12px; margin-top: 8px; }
-  @media (min-width: 720px) { .grid { grid-template-columns: 1fr 1fr; } }
-
-  .card {
-    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 16px; display: flex; flex-direction: column; gap: 12px;
-    animation: rise .28s ease both;
+  /* Ficha */
+  .ficha { margin-top: 24px; }
+  .ficha-topo { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 10px; }
+  .ficha-topo span { color: var(--tinta-2); font-size: 14px; text-align: right; }
+  .exercicios {
+    list-style: none; margin: 0; padding: 0;
+    background: var(--papel); border: 1px solid var(--fio); border-radius: 14px;
   }
-  .card:hover { border-color: #3a404e; }
-  @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-
-  .card-head { display: flex; gap: 12px; align-items: flex-start; }
-  .num {
-    flex: 0 0 auto; width: 34px; height: 34px; border-radius: 10px;
-    display: grid; place-items: center; background: var(--surface-2);
-    color: var(--muted); font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums;
+  .ex { display: grid; gap: 12px; padding: 18px 16px; }
+  .ex + .ex { border-top: 1px solid var(--fio); }
+  .ex-topo { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 10px; align-items: start; }
+  .ex-num {
+    font-family: var(--display); font-stretch: 75%; font-weight: 800; font-size: 22px; line-height: 1.15;
+    color: var(--tinta-2); font-variant-numeric: tabular-nums;
   }
-  .title { flex: 1; min-width: 0; }
-  .title h3 { margin: 0; font-size: 17px; letter-spacing: -.01em; }
-  .dose {
-    display: inline-block; margin-top: 4px; font-size: 14px; font-weight: 600;
-    color: var(--text); font-variant-numeric: tabular-nums;
-  }
+  .ex h3 { margin: 0; font-family: var(--display); font-stretch: 80%; font-weight: 800; font-size: 22px; line-height: 1.15; }
+  .ex-dose { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 4px 0 0; }
+  .ex-dose > span:first-child { font-weight: 700; font-variant-numeric: tabular-nums; }
   .pse {
-    flex: 0 0 auto; font-size: 12px; font-weight: 700; padding: 5px 9px; border-radius: 8px;
-    background: var(--accent-soft); color: var(--accent); white-space: nowrap;
+    padding: 1px 8px; border: 1px solid var(--fio); border-radius: 999px;
+    font-size: 13px; color: var(--tinta-2); white-space: nowrap;
   }
-  .why { margin: 0; color: var(--muted); font-size: 14px; }
+  .ex-why { margin: 0; color: var(--tinta-2); font-size: 15px; max-width: 65ch; }
 
-  .meters { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; }
-  .m { display: grid; gap: 4px; }
-  .m-top { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
-  .m-top b { font-weight: 600; }
-  .bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; }
-  /* Nível = quantos segmentos estão preenchidos, sempre na mesma cor. */
-  .bar i { height: 6px; border-radius: 3px; background: var(--track); }
-  .bar.lvl-alta i, .bar.lvl-media i:nth-child(-n+2), .bar.lvl-baixa i:first-child { background: var(--accent); }
-
-  .video {
-    margin-top: auto; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-    padding: 11px 14px; border-radius: 12px; border: 1px solid var(--border);
-    background: var(--surface-2); color: var(--text); text-decoration: none; font-size: 14px; font-weight: 600;
-    transition: background .15s, border-color .15s;
+  .graus { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; margin: 0; }
+  .graus dt { font-size: 13px; color: var(--tinta-2); }
+  .graus dd { display: flex; align-items: center; gap: 8px; margin: 2px 0 0; font-size: 14px; font-weight: 600; }
+  /* Ponteira da faixa: cada grau de fita é um nível (1 baixa, 2 média, 3 alta). */
+  .ponteira {
+    flex: 0 0 auto; display: inline-flex; gap: 3px; align-items: stretch; height: 16px; padding: 3px 18px 3px 5px;
+    background: var(--faixa); border-radius: 2px; box-shadow: inset 0 0 0 1px var(--fio);
   }
-  .video:hover { background: #242936; border-color: #3a404e; }
-  .video svg { color: #ff4d4d; }
+  .ponteira i { width: 5px; background: var(--fita-vazia); }
+  .ponteira[data-nivel="3"] i,
+  .ponteira[data-nivel="2"] i:nth-child(-n+2),
+  .ponteira[data-nivel="1"] i:first-child { background: var(--fita); }
 
-  .empty {
-    grid-column: 1 / -1; text-align: center; padding: 40px 16px; color: var(--muted);
-    border: 1px dashed var(--border); border-radius: var(--radius);
-  }
-
-  /* Registro de pesos */
+  .ex-acoes { display: flex; gap: 8px; }
   .log-btn {
-    margin-top: auto; display: inline-flex; align-items: center; justify-content: center;
-    min-height: 48px; padding: 11px 14px; border-radius: 12px;
-    border: 1px solid rgba(255,107,44,.45); background: var(--accent-soft); color: var(--accent);
-    font-size: 14px; font-weight: 600; transition: background .15s;
+    flex: 1 1 auto; min-width: 0; min-height: 48px; padding: 0 14px; border: 0; border-radius: 10px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    background: var(--tatame); color: var(--sobre-tatame); font-size: 15px; font-weight: 700;
   }
-  .log-btn:hover { background: rgba(255,107,44,.22); }
-  .log-btn.feito { gap: 8px; background: var(--surface-2); border-color: var(--border); color: var(--text); font-variant-numeric: tabular-nums; }
-  .log-btn.feito svg { color: var(--accent); flex: 0 0 auto; }
-  .log-btn.feito:hover { background: #242936; }
-  .log-btn + .video { margin-top: 0; }
+  .log-btn:hover { background: var(--tatame-forte); }
+  .log-btn.feito {
+    background: var(--tatame-suave); color: var(--tatame-tinta); font-size: 14px; font-variant-numeric: tabular-nums;
+  }
+  .log-btn.feito svg { flex: 0 0 auto; }
+  .video {
+    flex: 0 0 auto; min-height: 48px; padding: 0 14px; border: 1px solid var(--fio); border-radius: 10px;
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--tinta); text-decoration: none; font-size: 15px; font-weight: 600;
+  }
+  .video:hover { background: var(--gi); }
+  .video svg { color: #e02424; }
+  .vazio { padding: 32px 16px; text-align: center; color: var(--tinta-2); }
+  .vazio button {
+    margin-top: 10px; min-height: 44px; padding: 0 16px; border: 1px solid var(--fio); border-radius: 10px;
+    background: transparent; color: var(--tinta); font-weight: 600;
+  }
 
+  /* Semana */
+  .semana { margin-top: 32px; }
+  .semana h2 { margin-bottom: 10px; }
+  .dias { list-style: none; margin: 0; padding: 0; background: var(--papel); border: 1px solid var(--fio); border-radius: 14px; overflow: hidden; }
+  .dia { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 12px; align-items: baseline; padding: 12px 16px; }
+  .dia + .dia { border-top: 1px solid var(--fio); }
+  .dia-curto { font-family: var(--display); font-stretch: 80%; font-weight: 700; color: var(--tinta-2); }
+  .dia-info b { display: block; font-weight: 700; }
+  .dia-info span { display: block; font-size: 14px; color: var(--tinta-2); }
+  .dia.hoje { background: var(--tatame-suave); }
+  .tag-hoje {
+    align-self: center; padding: 2px 10px; border-radius: 999px;
+    background: var(--tatame); color: var(--sobre-tatame); font-size: 12px; font-weight: 700;
+  }
+  .semana-nota { margin: 10px 0 0; color: var(--tinta-2); font-size: 14px; max-width: 65ch; }
+
+  /* Rodapé */
+  footer { margin: 32px 0 48px; color: var(--tinta-2); font-size: 13px; }
+  footer p { margin: 0 0 8px; max-width: 70ch; }
+  .legenda { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 0 0 14px; padding: 0; list-style: none; }
+  .legenda li { display: inline-flex; align-items: center; gap: 8px; }
+
+  /* Modal de pesos */
   dialog.modal {
     width: min(440px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); padding: 0;
-    border: 1px solid var(--border); border-radius: var(--radius);
-    background: var(--surface); color: var(--text);
+    border: 1px solid var(--fio); border-radius: 18px; background: var(--papel); color: var(--tinta);
   }
-  dialog.modal::backdrop { background: rgba(0,0,0,.65); }
+  dialog.modal::backdrop { background: rgba(10, 12, 16, .55); }
   /* No celular o modal abre como folha inferior, ao alcance do polegar. */
   @media (max-width: 560px) {
     dialog.modal {
       width: 100%; max-width: 100%; max-height: 90dvh; margin: auto 0 0;
-      border-bottom: 0; border-radius: var(--radius) var(--radius) 0 0;
+      border-bottom: 0; border-radius: 18px 18px 0 0;
     }
-    dialog.modal[open] { animation: sheet .22s ease-out both; }
-    .modal-body { padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px)); }
+    dialog.modal[open] { animation: folha .22s ease-out both; }
+    .modal-body { padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)); }
   }
-  @keyframes sheet { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
-  .modal-body { padding: 18px; display: grid; gap: 16px; }
+  @keyframes folha { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .modal-body { display: grid; gap: 16px; padding: 20px 16px; }
   .modal-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
-  .modal-head h3 { margin: 0; font-size: 18px; letter-spacing: -.01em; }
+  .modal-head h3 { margin: 0; font-family: var(--display); font-stretch: 80%; font-weight: 800; font-size: 26px; line-height: 1.1; }
   .modal-close {
-    flex: 0 0 auto; width: 44px; height: 44px; margin: -10px -10px 0 0; border: 0; border-radius: 10px;
-    background: transparent; color: var(--muted); display: grid; place-items: center;
+    flex: 0 0 auto; width: 44px; height: 44px; margin: -8px -8px 0 0; border: 0; border-radius: 10px;
+    display: grid; place-items: center; background: transparent; color: var(--tinta-2);
   }
-  .modal-close:hover { color: var(--text); background: var(--surface-2); }
-  .modal-done {
-    min-height: 48px; border: 0; border-radius: 12px;
-    background: var(--accent); color: #111; font-size: 15px; font-weight: 700;
-  }
-
+  .modal-close:hover { background: var(--gi); color: var(--tinta); }
   .log { display: grid; gap: 8px; }
-  .log-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 8px; }
-  .log-head h4 { margin: 0; white-space: nowrap; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
-  .log-hint { font-size: 12.5px; color: var(--muted); margin-left: auto; }
+  .log-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 2px 8px; }
+  .log-head h4 { margin: 0; font-size: 14px; font-weight: 700; white-space: nowrap; }
+  .log-hint { margin-left: auto; font-size: 13px; color: var(--tinta-2); font-variant-numeric: tabular-nums; }
   .serie-row { display: grid; grid-template-columns: 64px 1fr; gap: 8px; align-items: center; }
-  .serie-row label { font-size: 13px; color: var(--muted); }
+  .serie-row label { font-size: 14px; color: var(--tinta-2); }
   .serie-row input {
-    background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px;
-    padding: 9px 10px; font-size: 16px; width: 100%; min-height: 48px; text-align: center;
+    width: 100%; min-height: 52px; padding: 8px 12px; border: 1px solid var(--fio); border-radius: 10px;
+    background: var(--gi); text-align: center;
+    font-family: var(--display); font-stretch: 90%; font-weight: 700; font-size: 20px; font-variant-numeric: tabular-nums;
   }
-  .serie-row input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
-  .serie-row input[aria-invalid="true"] { border-color: #ff5a5a; }
-
-
-  /* Agenda */
-  .agenda { margin-top: 28px; }
-  .agenda h2 { font-size: 17px; margin: 0 0 10px; }
-  .dias { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); }
-  .dia { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; display: grid; gap: 2px; }
-  .dia small { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
-  .dia b { font-size: 14px; }
-  .dia span { color: var(--muted); font-size: 12.5px; }
-  .dia.treino { border-color: rgba(255,107,44,.45); }
-  .dia.treino b { color: var(--accent); }
-  .dia.hoje { border-color: var(--text); box-shadow: inset 0 0 0 1px var(--text); }
-  .dia.hoje small::after { content: " · hoje"; color: var(--text); font-weight: 700; }
-  .agenda p { color: var(--muted); font-size: 13px; margin: 10px 0 0; }
-
-  /* Footer */
-  footer { margin-top: 28px; color: var(--muted); font-size: 12.5px; }
-  footer p { margin: 0 0 8px; }
-
-  .legend { display: flex; flex-wrap: wrap; gap: 14px; color: var(--muted); font-size: 12.5px; margin-top: 4px; }
-  .legend span { display: inline-flex; align-items: center; gap: 6px; }
-  .legend .bar { display: grid; width: 54px; }
+  .serie-row input::placeholder { color: var(--tinta-2); font-weight: 400; }
+  .serie-row input:focus { outline: 2px solid var(--tatame-tinta); outline-offset: -1px; }
+  .serie-row input[aria-invalid="true"] { border-color: var(--erro); }
+  .log-erro { margin: 0; color: var(--erro); font-size: 14px; }
+  .modal-done {
+    min-height: 52px; border: 0; border-radius: 10px;
+    background: var(--tatame); color: var(--sobre-tatame); font-size: 16px; font-weight: 700;
+  }
+  .modal-done:hover { background: var(--tatame-forte); }
 </style>
 </head>
 <body>
 
-<header class="top">
+<header class="hoje">
   <div class="wrap">
-    <span class="kicker">Plano adaptado</span>
-    <h1>Jiu-Jitsu + Hipertrofia</h1>
-    <p class="meta">3 treinos (costas · peito/ombro · pernas) + 2× jiu-jitsu · alvo inicial 73–74 kg</p>
-    <div class="stats">
-      <span class="stat">Peso atual <b>76 kg</b></span>
-      <span class="stat">Gordura <b>13,8%</b></span>
-    </div>
+    <p class="marca">Jiu-Jitsu + Hipertrofia</p>
+    <p class="data" id="data"></p>
+    <h1 class="atividade" id="atividade"></h1>
+    <p class="nota" id="nota"></p>
+    <dl class="medidas">
+      <div><dt>Peso atual</dt><dd>76 kg</dd></div>
+      <div><dt>Alvo</dt><dd>73–74 kg</dd></div>
+      <div><dt>Gordura</dt><dd>13,8%</dd></div>
+    </dl>
   </div>
 </header>
 
+<div class="controles">
+  <div class="wrap">
+    <div class="treinos" id="treinos" role="tablist" aria-label="Treino"></div>
+  </div>
+</div>
+
 <main class="wrap">
-
-  <section class="controls">
-    <div class="treino-toggle" id="treinos" role="tablist" aria-label="Treino"></div>
-  </section>
-
   <div class="chips" id="chips" role="group" aria-label="Filtrar por foco"></div>
 
-  <section class="phase" id="phase"></section>
+  <section id="sobre"></section>
 
-  <div class="count" id="count"></div>
-
-  <section class="grid" id="list" aria-live="polite"></section>
-
-  <section class="agenda" aria-label="Semana tipo">
-    <h2>Semana tipo</h2>
-    <div class="dias">
-      <div class="dia treino" data-dow="1"><small>Segunda</small><b>Treino 2</b><span>Peito, tríceps e ombro</span></div>
-      <div class="dia" data-dow="2"><small>Terça</small><b>Jiu-jitsu</b><span>Prioridade técnica</span></div>
-      <div class="dia treino" data-dow="3"><small>Quarta</small><b>Treino 1</b><span>Costas + bíceps</span></div>
-      <div class="dia" data-dow="4"><small>Quinta</small><b>Jiu-jitsu</b><span>Prioridade técnica</span></div>
-      <div class="dia treino" data-dow="5"><small>Sexta</small><b>Treino 3</b><span>Pernas (se não houver jiu)</span></div>
-      <div class="dia" data-dow="6"><small>Sábado</small><b>Bike leve</b><span>20–40 min, ou Treino 3 deslocado</span></div>
-      <div class="dia" data-dow="0"><small>Domingo</small><b>Descanso</b><span>Recuperação</span></div>
+  <section class="ficha" aria-labelledby="ficha-titulo">
+    <div class="ficha-topo">
+      <h2 class="secao" id="ficha-titulo">Ficha</h2>
+      <span id="count"></span>
     </div>
-    <p>Pernas fica na sexta para ter o fim de semana de recuperação e não pesar antes do jiu de terça.</p>
+    <ol class="exercicios" id="list" aria-live="polite"></ol>
+  </section>
+
+  <section class="semana" aria-labelledby="semana-titulo">
+    <h2 class="secao" id="semana-titulo">Semana</h2>
+    <ol class="dias" id="dias"></ol>
+    <p class="semana-nota">Pernas fica na sexta para ter o fim de semana de recuperação e não pesar antes do jiu de terça.</p>
   </section>
 
   <footer>
-    <div class="legend">
-      <span><span class="bar lvl-alta" aria-hidden="true"><i></i><i></i><i></i></span>Alta contribuição</span>
-      <span><span class="bar lvl-media" aria-hidden="true"><i></i><i></i><i></i></span>Média</span>
-      <span><span class="bar lvl-baixa" aria-hidden="true"><i></i><i></i><i></i></span>Baixa / secundária</span>
-    </div>
-    <p style="margin-top:14px">PSE = percepção subjetiva de esforço (10 é reservado ao tatame). Use a carga que respeite a técnica e a recuperação.</p>
-    <p>Regra: terça e quinta são de jiu-jitsu. Se houver aula extra na sexta, o Treino 3 (pernas) vai para sábado. Domingo é descanso.</p>
+    <ul class="legenda" aria-label="Legenda dos graus">
+      <li><span class="ponteira" data-nivel="3" aria-hidden="true"><i></i><i></i><i></i></span>Alta contribuição</li>
+      <li><span class="ponteira" data-nivel="2" aria-hidden="true"><i></i><i></i><i></i></span>Média</li>
+      <li><span class="ponteira" data-nivel="1" aria-hidden="true"><i></i><i></i><i></i></span>Baixa ou secundária</li>
+    </ul>
+    <p>PSE é a percepção subjetiva de esforço; o 10 fica reservado ao tatame. Use a carga que respeite a técnica e a recuperação.</p>
+    <p>Terça e quinta são de jiu-jitsu. Se houver aula extra na sexta, o Treino 3 (pernas) vai para sábado. Domingo é descanso.</p>
     <p>As cargas registradas ficam salvas só neste navegador (ainda sem sincronização em nuvem).</p>
     <p>Adaptação prática do PDF enviado. Não substitui avaliação de um profissional de educação física ou nutrição, especialmente se houver dor ou lesão.</p>
   </footer>
@@ -399,6 +392,19 @@
     },
   };
 
+  // Semana tipo; o índice segue Date.getDay() (0 = domingo).
+  const SEMANA = [
+    { curto: 'Dom', atividade: 'Descanso', nota: 'Recuperação' },
+    { curto: 'Seg', treino: '2', nota: 'Peito, tríceps e ombro' },
+    { curto: 'Ter', atividade: 'Jiu-jitsu', nota: 'Prioridade técnica' },
+    { curto: 'Qua', treino: '1', nota: 'Costas + bíceps' },
+    { curto: 'Qui', atividade: 'Jiu-jitsu', nota: 'Prioridade técnica' },
+    { curto: 'Sex', treino: '3', nota: 'Pernas (se não houver jiu)' },
+    { curto: 'Sáb', atividade: 'Bike leve', nota: '20–40 min, ou Treino 3 deslocado' },
+  ];
+  const ORDEM_SEMANA = [1, 2, 3, 4, 5, 6, 0];
+  const tituloDia = (d) => (d.treino ? TREINOS[d.treino].nome : d.atividade);
+
   const FOCOS = [
     { id: 'todos', label: 'Todos' },
     { id: 'H', label: 'Hipertrofia' },
@@ -413,20 +419,8 @@
     { k: 'M', label: 'Mobilidade' },
   ];
   const NIVEL = { alta: 'Alta', media: 'Média', baixa: 'Baixa' };
-  const SEG = { alta: 3, media: 2, baixa: 1 };
+  const GRAUS = { alta: 3, media: 2, baixa: 1 };
 
-  // ---------- Estado ----------
-  const KEY = 'bauer-treino-estado';
-  let estado = { treino: '1', foco: 'todos', descAberta: false };
-  try {
-    const salvo = JSON.parse(localStorage.getItem(KEY) || 'null');
-    if (salvo) estado = { ...estado, ...salvo };
-  } catch (_) {}
-  if (!TREINOS[estado.treino]) estado.treino = '1';
-  const salvar = () => { try { localStorage.setItem(KEY, JSON.stringify({ treino: estado.treino, foco: estado.foco, descAberta: estado.descAberta })); } catch (_) {} };
-
-  // ---------- Helpers ----------
-  const $ = (id) => document.getElementById(id);
   // Vídeos oficiais da planilha (YouTube Shorts).
   // Exercícios sem entrada aqui não recebem botão de vídeo.
   const VIDEOS = {
@@ -450,30 +444,54 @@
     'Puxada': 'ptL4ALz_nXg',
   };
 
-  function videoDe(nome) {
-    const id = VIDEOS[nome];
-    return id ? `https://www.youtube.com/shorts/${id}` : null;
+  // ---------- Datas ----------
+  const pad = (n) => String(n).padStart(2, '0');
+  function hoje() {
+    const d = new Date();
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   }
+
+  // ---------- Estado ----------
+  const KEY = 'bauer-treino-estado';
+  let estado = { treino: '1', foco: 'todos', descAberta: false, dia: null };
+  try {
+    const salvo = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (salvo) estado = { ...estado, ...salvo };
+  } catch (_) {}
+  if (!TREINOS[estado.treino]) estado.treino = '1';
+  // Na primeira abertura do dia, a ficha já abre no treino de hoje.
+  if (estado.dia !== hoje()) {
+    const treinoDeHoje = SEMANA[new Date().getDay()].treino;
+    if (treinoDeHoje) estado.treino = treinoDeHoje;
+    estado.dia = hoje();
+  }
+  const salvar = () => {
+    try {
+      const { treino, foco, descAberta, dia } = estado;
+      localStorage.setItem(KEY, JSON.stringify({ treino, foco, descAberta, dia }));
+    } catch (_) {}
+  };
+  salvar();
+
+  // ---------- Helpers ----------
+  const $ = (id) => document.getElementById(id);
+  const videoDe = (nome) => (VIDEOS[nome] ? `https://www.youtube.com/shorts/${VIDEOS[nome]}` : null);
+  const exerciciosDoTreino = () => TREINOS[estado.treino].exercicios;
 
   const CHEVRON = '<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
   const ICON_PLAY = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
+  const ICON_CHECK = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
+  const ICON_X = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+  const ponteiraHTML = (nivel) =>
+    `<span class="ponteira" data-nivel="${GRAUS[nivel]}" aria-hidden="true"><i></i><i></i><i></i></span>`;
 
-  function exerciciosDoTreino() {
-    return TREINOS[estado.treino].exercicios;
-  }
-
-  // ---------- Registro de séries ----------
+  // ---------- Registro de pesos ----------
   // logs[chave][AAAA-MM-DD] = [{ carga }, ...] (uma entrada por série)
   const LOGS_KEY = 'bauer-logs-v1';
   let logs = {};
   try { logs = JSON.parse(localStorage.getItem(LOGS_KEY) || '{}') || {}; } catch (_) {}
   const salvarLogs = () => { try { localStorage.setItem(LOGS_KEY, JSON.stringify(logs)); } catch (_) {} };
 
-  const pad = (n) => String(n).padStart(2, '0');
-  function hoje() {
-    const d = new Date();
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-  }
   const chaveEx = (ex) => `${estado.treino}:${ex.nome}`;
   function numSeries(ex) {
     const m = /^(\d+)\s*×/.exec(ex.dose);
@@ -509,6 +527,8 @@
     const v = lerKg(el.value);
     el.setAttribute('aria-invalid', String(v === undefined));
     if (v !== undefined) definirSerie(el.dataset.ex, Number(el.dataset.serie), el.dataset.campo, v);
+    const erro = $('log-erro');
+    if (erro) erro.hidden = !camposDoModal().some((c) => c.getAttribute('aria-invalid') === 'true');
   }
 
   function logHTML(ex) {
@@ -527,19 +547,17 @@
           <input id="kg-${n}" type="text" inputmode="decimal" autocomplete="off" placeholder="kg"
             enterkeyhint="${n < total - 1 ? 'next' : 'done'}"
             data-ex="${chave}" data-serie="${n}" data-campo="carga" value="${carga != null ? fmtKg(carga) : ''}"
-            aria-label="${ex.nome}: carga da série ${n + 1} (kg)">
+            aria-label="${ex.nome}: carga da série ${n + 1} (kg)" aria-describedby="log-erro">
         </div>`;
     }).join('');
-    const cargas = ultimo ? listaKg(ultimo) : null;
-    const hint = cargas ? `<span class="log-hint">Última vez: ${cargas} kg</span>` : '';
+    const hint = ultimo ? `<span class="log-hint">Última vez: ${listaKg(ultimo)} kg</span>` : '';
     return `
       <div class="log">
-        <div class="log-head"><h4>Registrar séries</h4>${hint}</div>
+        <div class="log-head"><h4>Carga por série (kg)</h4>${hint}</div>
         ${linhas}
+        <p class="log-erro" id="log-erro" hidden>Use só números, como 22,5.</p>
       </div>`;
   }
-
-  const ICON_CHECK = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
 
   function logBtnHTML(ex, i) {
     const salvo = (logs[chaveEx(ex)] || {})[hoje()] || [];
@@ -552,6 +570,15 @@
   }
 
   // ---------- Render ----------
+  function renderHoje() {
+    const agora = new Date();
+    const data = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }).format(agora);
+    const dia = SEMANA[agora.getDay()];
+    $('data').textContent = data.charAt(0).toUpperCase() + data.slice(1);
+    $('atividade').textContent = tituloDia(dia);
+    $('nota').textContent = dia.nota;
+  }
+
   function renderTreinos() {
     $('treinos').innerHTML = Object.entries(TREINOS).map(([id, t]) => `
       <button class="treino-btn" role="tab" data-treino="${id}" aria-selected="${id === estado.treino}">
@@ -564,21 +591,21 @@
       <button class="chip" data-foco="${f.id}" aria-pressed="${f.id === estado.foco}">${f.label}</button>`).join('');
   }
 
-  function renderFase() {
+  function renderSobre() {
     const t = TREINOS[estado.treino];
-    $('phase').innerHTML = `
-      <details class="acc-treino"${estado.descAberta ? ' open' : ''}>
+    $('sobre').innerHTML = `
+      <details class="sobre"${estado.descAberta ? ' open' : ''}>
         <summary>
-          <div class="acc-head">
-            <h2>${t.nome} · ${t.subtitulo}</h2>
-            <span class="acc-hint">Objetivo, o que se espera e impacto</span>
+          <div class="sobre-head">
+            <h2>Sobre o ${t.nome}</h2>
+            <span class="sobre-dica">Objetivo, o que esperar e impacto</span>
           </div>
           ${CHEVRON}
         </summary>
-        <div class="acc-body">
-          <div class="info-item"><h4>Objetivo</h4><p>${t.objetivo}</p></div>
-          <div class="info-item"><h4>O que se espera</h4><p>${t.esperado}</p></div>
-          <div class="info-item"><h4>Impacto</h4>
+        <div class="sobre-corpo">
+          <div><h3>Objetivo</h3><p>${t.objetivo}</p></div>
+          <div><h3>O que esperar</h3><p>${t.esperado}</p></div>
+          <div><h3>Impacto</h3>
             <p><b>No jiu-jitsu:</b> ${t.impacto_jiu}</p>
             <p><b>No físico:</b> ${t.impacto_fisico}</p>
           </div>
@@ -586,55 +613,71 @@
       </details>`;
   }
 
-  function cardHTML(ex, i) {
+  function exercicioHTML(ex, i) {
     const video = videoDe(ex.nome);
-    const bars = DIMS.map(({ k, label }) => `
-      <div class="m">
-        <div class="m-top"><span>${label}</span><b>${NIVEL[ex[k]]}</b></div>
-        <div class="bar lvl-${ex[k]}" aria-label="${label}: ${NIVEL[ex[k]]}">
-          ${[1, 2, 3].map((n) => `<i></i>`).join('')}
-        </div>
+    const graus = DIMS.map(({ k, label }) => `
+      <div>
+        <dt>${label}</dt>
+        <dd>${ponteiraHTML(ex[k])}${NIVEL[ex[k]]}</dd>
       </div>`).join('');
     return `
-      <article class="card">
-        <div class="card-head">
-          <span class="num">${String(i + 1).padStart(2, '0')}</span>
-          <div class="title">
+      <li class="ex">
+        <div class="ex-topo">
+          <span class="ex-num">${pad(i + 1)}</span>
+          <div>
             <h3>${ex.nome}</h3>
-            <span class="dose">${ex.dose}</span>
+            <p class="ex-dose"><span>${ex.dose}</span><span class="pse" title="Percepção subjetiva de esforço">PSE ${ex.pse}</span></p>
           </div>
-          <span class="pse" title="Percepção subjetiva de esforço">PSE ${ex.pse}</span>
         </div>
-        <p class="why">${ex.why}</p>
-        <div class="meters">${bars}</div>
-        ${logBtnHTML(ex, i)}
-        ${video ? `<a class="video" href="${video}" target="_blank" rel="noopener">
-          ${ICON_PLAY} Ver execução no YouTube
-        </a>` : ''}
-      </article>`;
+        <p class="ex-why">${ex.why}</p>
+        <dl class="graus">${graus}</dl>
+        <div class="ex-acoes">
+          ${logBtnHTML(ex, i)}
+          ${video ? `<a class="video" href="${video}" target="_blank" rel="noopener">${ICON_PLAY} Vídeo</a>` : ''}
+        </div>
+      </li>`;
   }
 
   function renderLista() {
-    let itens = exerciciosDoTreino();
-    if (estado.foco !== 'todos') itens = itens.filter((ex) => ex[estado.foco] === 'alta');
+    const todos = exerciciosDoTreino();
+    const foco = FOCOS.find((f) => f.id === estado.foco);
+    const itens = estado.foco === 'todos' ? todos : todos.filter((ex) => ex[estado.foco] === 'alta');
 
     $('count').textContent = `${itens.length} ${itens.length === 1 ? 'exercício' : 'exercícios'}` +
-      (estado.foco !== 'todos' ? ` com alta contribuição em ${FOCOS.find(f => f.id === estado.foco).label.toLowerCase()}` : '');
+      (estado.foco !== 'todos' ? ` com alta ${foco.label.toLowerCase()}` : '');
 
-    const todos = exerciciosDoTreino();
     $('list').innerHTML = itens.length
-      ? itens.map((ex) => cardHTML(ex, todos.indexOf(ex))).join('')
-      : `<div class="empty">Nenhum exercício encontrado.<br>Tente remover o filtro de foco.</div>`;
+      ? itens.map((ex) => exercicioHTML(ex, todos.indexOf(ex))).join('')
+      : `<li class="vazio">Nenhum exercício do ${TREINOS[estado.treino].nome} tem alta contribuição em ${foco.label.toLowerCase()}.<br>
+           <button type="button" data-foco="todos">Ver todos os exercícios</button></li>`;
+  }
+
+  function renderSemana() {
+    const hojeIdx = new Date().getDay();
+    $('dias').innerHTML = ORDEM_SEMANA.map((i) => {
+      const d = SEMANA[i];
+      return `
+        <li class="dia${i === hojeIdx ? ' hoje' : ''}">
+          <span class="dia-curto">${d.curto}</span>
+          <div class="dia-info"><b>${tituloDia(d)}</b><span>${d.nota}</span></div>
+          ${i === hojeIdx ? '<span class="tag-hoje">Hoje</span>' : '<span></span>'}
+        </li>`;
+    }).join('');
   }
 
   function renderTudo() {
     renderTreinos();
     renderChips();
-    renderFase();
+    renderSobre();
     renderLista();
   }
 
   // ---------- Eventos ----------
+  function mudarFoco(foco) {
+    estado.foco = foco;
+    salvar(); renderChips(); renderLista();
+  }
+
   $('treinos').addEventListener('click', (e) => {
     const b = e.target.closest('[data-treino]');
     if (!b) return;
@@ -642,18 +685,23 @@
     salvar(); renderTudo();
   });
 
-  $('phase').addEventListener('toggle', (e) => {
-    if (!e.target.matches('.acc-treino')) return;
+  $('sobre').addEventListener('toggle', (e) => {
+    if (!e.target.matches('.sobre')) return;
     estado.descAberta = e.target.open;
     salvar();
   }, true);
 
-  const dialog = $('log-dialog');
-  const ICON_X = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+  $('chips').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-foco]');
+    if (b) mudarFoco(b.dataset.foco);
+  });
 
+  const dialog = $('log-dialog');
   let aberto = null;
 
   $('list').addEventListener('click', (e) => {
+    const f = e.target.closest('[data-foco]');
+    if (f) return mudarFoco(f.dataset.foco);
     const b = e.target.closest('[data-log]');
     if (!b) return;
     aberto = Number(b.dataset.log);
@@ -662,7 +710,7 @@
       <div class="modal-head">
         <div>
           <h3 id="log-title">${ex.nome}</h3>
-          <span class="dose">${ex.dose} · PSE ${ex.pse}</span>
+          <p class="ex-dose"><span>${ex.dose}</span><span class="pse">PSE ${ex.pse}</span></p>
         </div>
         <button class="modal-close" type="button" data-fechar aria-label="Fechar">${ICON_X}</button>
       </div>
@@ -707,15 +755,8 @@
     if (b) b.outerHTML = logBtnHTML(exerciciosDoTreino()[aberto], aberto);
   });
 
-  document.querySelector(`.dia[data-dow="${new Date().getDay()}"]`)?.classList.add('hoje');
-
-  $('chips').addEventListener('click', (e) => {
-    const b = e.target.closest('[data-foco]');
-    if (!b) return;
-    estado.foco = b.dataset.foco;
-    salvar(); renderChips(); renderLista();
-  });
-
+  renderHoje();
+  renderSemana();
   renderTudo();
 })();
 </script>
