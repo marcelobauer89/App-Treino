@@ -1503,18 +1503,20 @@
         <dt>${label}</dt>
         <dd>${ponteiraHTML(ex[k])}${NIVEL[ex[k]]}</dd>
       </div>`).join('');
-    const info = `
+    const topo = `
         <div class="ex-topo">
           <span class="ex-num">${pad(i + 1)}</span>
           <div>
             <h3>${ex.nome}</h3>
             <p class="ex-dose"><span>${ex.dose}</span><span class="pse" title="Percepção subjetiva de esforço">PSE ${ex.pse}</span></p>
           </div>
-        </div>
+        </div>`;
+    const info = `
         <p class="ex-why">${ex.why}</p>
         <dl class="graus">${graus}</dl>`;
     // Com vídeo, o cartão vira um carrossel: deslizando para o lado aparece a execução.
-    const corpo = !id ? info : `
+    // O nome fica fora do carrossel, sempre visível nos dois painéis.
+    const corpo = !id ? topo + info : `${topo}
         <div class="ex-slides" data-ex="${i}" role="group" aria-label="${esc(ex.nome)}: informações e vídeo">
           <div class="ex-slide">${info}</div>
           <div class="ex-slide ex-video" data-video="${id}" data-nome="${esc(ex.nome)}">
