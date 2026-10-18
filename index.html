@@ -9,7 +9,7 @@
 <script>
   // Aplica o tema escolhido antes da primeira pintura, para a tela não piscar.
   try {
-    var temaSalvo = (JSON.parse(localStorage.getItem('bauer-config-v1') || '{}') || {}).tema;
+    var temaSalvo = localStorage.getItem('bauer-tema');
     if (temaSalvo === 'claro') document.documentElement.dataset.theme = 'light';
     if (temaSalvo === 'escuro') document.documentElement.dataset.theme = 'dark';
   } catch (_) {}
@@ -289,6 +289,24 @@
   .campo > legend.nota-campo { margin-bottom: 8px; font-size: 13px; font-weight: 400; }
   .avisos { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
   .avisos:empty { display: none; }
+  .campo input[readonly] { color: var(--tinta-2); background: var(--papel); }
+  .conta-linha { margin: 0; font-size: 15px; overflow-wrap: anywhere; }
+
+  /* Entrada: aparece antes do login; o resto do app fica escondido. */
+  body.deslogado { padding-bottom: 0; }
+  body.deslogado #tela-treino, body.deslogado #tela-dashboard, body.deslogado #tela-voce,
+  body.deslogado .nav, body.deslogado .ativo { display: none !important; }
+  .entrar { min-height: 100dvh; display: grid; align-items: center; }
+  .entrar-in { display: grid; justify-items: start; gap: 16px; padding-block: 48px; }
+  .entrar .atividade { margin: 0; }
+  .entrar-texto { margin: 0; max-width: 36ch; font-size: 17px; color: var(--tinta-2); }
+  .btn-google {
+    display: inline-flex; align-items: center; gap: 12px; min-height: 52px; padding: 0 22px;
+    border: 1px solid var(--fio); border-radius: 10px; background: var(--papel); color: var(--tinta);
+    font-size: 16px; font-weight: 700;
+  }
+  .btn-google:hover { border-color: var(--tinta-2); }
+  .btn-google:disabled { opacity: .6; cursor: wait; }
   .ativo {
     position: fixed; left: 0; right: 0; z-index: 19;
     bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
@@ -477,7 +495,17 @@
   .rec-legenda { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--tinta-2); }
 </style>
 </head>
-<body>
+<body class="deslogado">
+
+<section class="entrar" id="tela-entrar" aria-labelledby="entrar-titulo">
+  <div class="wrap entrar-in">
+    <p class="data">Plano de 6 semanas</p>
+    <h1 class="atividade" id="entrar-titulo">Jiu-Jitsu + Hipertrofia</h1>
+    <p class="entrar-texto" id="entrar-status" role="status">Carregando seus treinos…</p>
+    <button class="btn-google" type="button" id="entrar-google" hidden></button>
+    <button class="btn" type="button" id="entrar-tentar" hidden>Tentar de novo</button>
+  </div>
+</section>
 
 <div id="tela-treino">
   <header class="hoje">
@@ -592,11 +620,11 @@
       </div>
       <div class="campo">
         <label for="p-email">E-mail</label>
-        <input type="email" id="p-email" autocomplete="email" inputmode="email" placeholder="nome@exemplo.com" aria-describedby="email-erro">
+        <input type="email" id="p-email" readonly aria-describedby="email-nota">
+        <p class="nota-campo" id="email-nota">E-mail da sua conta Google.</p>
       </div>
-      <p class="form-erro" id="email-erro" role="alert" hidden>Digite um e-mail válido, como nome@exemplo.com.</p>
       <button class="btn" type="submit">Salvar dados</button>
-      <p class="nota-campo">Seus dados ficam só neste aparelho. A foto é salva assim que você escolhe.</p>
+      <p class="nota-campo">A foto é salva assim que você escolhe.</p>
     </form>
   </section>
 
@@ -622,6 +650,14 @@
         <div class="opcoes" id="opcoes-jiu"></div>
       </fieldset>
       <ul class="avisos" id="avisos-jiu"></ul>
+    </div>
+  </section>
+
+  <section class="bloco" aria-labelledby="conta-titulo">
+    <div class="bloco-topo"><h2 class="secao" id="conta-titulo">Conta</h2></div>
+    <div class="cartao">
+      <p class="conta-linha">Conectado com o Google como <b id="conta-email"></b></p>
+      <button class="btn-sec" type="button" id="sair">Sair da conta</button>
     </div>
   </section>
 </main>
@@ -661,8 +697,16 @@
   <div class="modal-body" id="form-body"></div>
 </dialog>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>
 (() => {
+  // ---------- Conexão com o Supabase ----------
+  // Preencha com os dados do seu projeto (Supabase → Project Settings → API).
+  // A chave anon pode ficar no código: quem protege os dados são as regras de acesso (RLS) do banco.
+  const SUPABASE_URL = 'https://SEU-PROJETO.supabase.co';
+  const SUPABASE_ANON_KEY = 'SUA-CHAVE-ANON';
+  const configurado = /^https:\/\//.test(SUPABASE_URL) && !SUPABASE_URL.includes('SEU-PROJETO') && !SUPABASE_ANON_KEY.startsWith('SUA-');
+
   // ---------- Dados (do PDF) ----------
   // Níveis: 'alta' | 'media' | 'baixa'
   // H = Hipertrofia, M = Mobilidade, F = Força, E = Explosão
@@ -743,17 +787,18 @@
     },
   };
 
-  // ---------- Perfil e configurações ----------
-  const CFG_KEY = 'bauer-config-v1';
-  const PERFIL_KEY = 'bauer-perfil-v1';
+  // ---------- Perfil e configurações (vêm do Supabase depois do login) ----------
   const lerJSON = (k) => {
     try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return v && typeof v === 'object' ? v : {}; } catch (_) { return {}; }
   };
-  const gravarJSON = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (_) { return false; } };
-  let config = { tema: 'auto', diasJiu: [2, 4], ...lerJSON(CFG_KEY) };
-  if (!Array.isArray(config.diasJiu)) config.diasJiu = [2, 4];
-  config.diasJiu = config.diasJiu.filter((i) => Number.isInteger(i) && i >= 1 && i <= 6);
-  let perfil = { nome: '', email: '', foto: '', ...lerJSON(PERFIL_KEY) };
+  let config = { tema: 'auto', diasJiu: [2, 4] };
+  let perfil = { nome: '', email: '', foto: '' };
+  // Só uma cópia do tema fica no navegador, para aplicá-lo antes da primeira pintura.
+  const guardarTemaLocal = () => { try { localStorage.setItem('bauer-tema', config.tema); } catch (_) {} };
+  try {
+    const t = localStorage.getItem('bauer-tema');
+    if (['auto', 'claro', 'escuro'].includes(t)) config.tema = t;
+  } catch (_) {}
 
   // Semana tipo montada a partir dos dias de jiu; o índice segue Date.getDay() (0 = domingo).
   const CURTOS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -872,16 +917,115 @@
   // ---------- Check-ins ----------
   // checkin = { id, tipo, inicio, fim (null = aberto), semHorario, recuperacao, obs, retroativo,
   //             series: { [exercício]: [{ carga }] }, ultimaSerie }
-  const CK_KEY = 'bauer-checkins-v1';
-  const novoId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-  const salvarCheckins = () => { try { localStorage.setItem(CK_KEY, JSON.stringify(checkins)); } catch (_) {} };
+  let checkins = [];
+  const novoId = () => (crypto.randomUUID
+    ? crypto.randomUUID()
+    : '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, (c) =>
+      (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16)));
 
-  function carregarCheckins() {
-    try {
-      const v = JSON.parse(localStorage.getItem(CK_KEY) || 'null');
-      if (Array.isArray(v)) return v;
-    } catch (_) {}
-    return null;
+  // ---------- Supabase ----------
+  const sb = configurado && window.supabase
+    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { flowType: 'pkce' } })
+    : null;
+  let usuario = null;
+
+  const paraLinha = (c) => ({
+    id: c.id, usuario_id: usuario.id, tipo: c.tipo, inicio: c.inicio, fim: c.fim,
+    sem_horario: !!c.semHorario, recuperacao: c.recuperacao ?? null, obs: c.obs || '',
+    retroativo: !!c.retroativo, ultima_serie: c.ultimaSerie || null, series: c.series || {},
+  });
+  // O banco devolve "AAAA-MM-DDTHH:MM:SS"; o app trabalha com "AAAA-MM-DDTHH:MM".
+  const minuto = (s) => (s ? s.slice(0, 16) : null);
+  const deLinha = (r) => ({
+    id: r.id, tipo: r.tipo, inicio: minuto(r.inicio), fim: minuto(r.fim), semHorario: r.sem_horario,
+    recuperacao: r.recuperacao, obs: r.obs || '', retroativo: r.retroativo,
+    ultimaSerie: minuto(r.ultima_serie), series: r.series || {},
+  });
+
+  // As gravações vão em fila, na ordem em que aconteceram (ex.: encerrar um check-in antes de abrir outro).
+  let fila = Promise.resolve();
+  function enviar(op) {
+    fila = fila
+      .then(async () => { const { error } = await op(); if (error) throw error; })
+      .catch(falhaAoSalvar);
+    return fila;
+  }
+  async function falhaAoSalvar() {
+    toast('Não foi possível salvar. Confira a internet; os dados foram recarregados do servidor.');
+    try { await carregarDados(); renderizarApp(); } catch (_) {}
+  }
+  const salvarCheckin = (c) => enviar(() => sb.from('checkins').upsert(paraLinha(c)));
+  const excluirCheckinRemoto = (id) => enviar(() => sb.from('checkins').delete().eq('id', id));
+  const salvarPerfil = (campos) => enviar(() => sb.from('perfis').update(campos).eq('id', usuario.id));
+
+  // Cargas digitadas são enviadas depois de uma pausa, para não gravar a cada tecla.
+  const timersSeries = new Map();
+  function salvarSeriesDepois(c) {
+    clearTimeout(timersSeries.get(c.id));
+    timersSeries.set(c.id, setTimeout(() => { timersSeries.delete(c.id); salvarCheckin(c); }, 800));
+  }
+  function salvarSeriesPendentes() {
+    for (const [id, t] of timersSeries) {
+      clearTimeout(t);
+      const c = checkins.find((x) => x.id === id);
+      if (c) salvarCheckin(c);
+    }
+    timersSeries.clear();
+  }
+
+  async function carregarDados() {
+    const [p, c] = await Promise.all([
+      sb.from('perfis').select('*').eq('id', usuario.id).maybeSingle(),
+      sb.from('checkins').select('*').order('inicio'),
+    ]);
+    if (p.error || c.error) throw p.error || c.error;
+    let linha = p.data;
+    if (!linha) {
+      // Conta criada antes do schema: cria o perfil com os dados do Google.
+      const meta = usuario.user_metadata || {};
+      linha = {
+        id: usuario.id, nome: meta.full_name || meta.name || '', email: usuario.email || '',
+        foto: meta.avatar_url || meta.picture || '', tema: 'auto', dias_jiu: [2, 4],
+      };
+      const { error } = await sb.from('perfis').upsert(linha);
+      if (error) throw error;
+    }
+    perfil = { nome: linha.nome || '', email: usuario.email || linha.email || '', foto: linha.foto || '' };
+    config = { tema: linha.tema || 'auto', diasJiu: (linha.dias_jiu || []).map(Number).filter((i) => i >= 1 && i <= 6) };
+    checkins = (c.data || []).map(deLinha);
+  }
+
+  // No primeiro login neste aparelho, envia para a conta o que já estava salvo só no navegador.
+  async function migrarDadosLocais() {
+    const marca = `bauer-migrado-${usuario.id}`;
+    try { if (localStorage.getItem(marca)) return; } catch (_) { return; }
+    let locais = [];
+    try { const v = JSON.parse(localStorage.getItem('bauer-checkins-v1') || 'null'); if (Array.isArray(v)) locais = v; } catch (_) {}
+    if (!locais.length) locais = migrarLogsAntigos();
+    // Só migra para contas ainda vazias, para não sobrescrever o que já veio de outro aparelho.
+    if (checkins.length) { try { localStorage.setItem(marca, '1'); } catch (_) {} return; }
+    if (locais.length) {
+      const novos = locais.map((c) => ({ ...c, id: novoId() }));
+      const { error } = await sb.from('checkins').insert(novos.map(paraLinha));
+      if (error) throw error;
+      checkins = novos;
+    }
+    const cfg = lerJSON('bauer-config-v1');
+    const pf = lerJSON('bauer-perfil-v1');
+    const mudancas = {};
+    if (['auto', 'claro', 'escuro'].includes(cfg.tema)) mudancas.tema = cfg.tema;
+    if (Array.isArray(cfg.diasJiu)) mudancas.dias_jiu = cfg.diasJiu.filter((i) => Number.isInteger(i) && i >= 1 && i <= 6);
+    if (pf.nome) mudancas.nome = String(pf.nome).slice(0, 120);
+    if (pf.foto) mudancas.foto = pf.foto;
+    if (Object.keys(mudancas).length) {
+      const { error } = await sb.from('perfis').update(mudancas).eq('id', usuario.id);
+      if (error) throw error;
+      if (mudancas.tema) config.tema = mudancas.tema;
+      if (mudancas.dias_jiu) config.diasJiu = mudancas.dias_jiu;
+      if (mudancas.nome) perfil.nome = mudancas.nome;
+      if (mudancas.foto) perfil.foto = mudancas.foto;
+    }
+    try { localStorage.setItem(marca, '1'); } catch (_) {}
   }
 
   // Converte as cargas salvas antes dos check-ins (por dia e exercício) em check-ins sem horário.
@@ -906,9 +1050,6 @@
     }
     return Object.values(porDia);
   }
-
-  let checkins = carregarCheckins();
-  if (!checkins) { checkins = migrarLogsAntigos(); salvarCheckins(); }
 
   const dataDe = (c) => c.inicio.slice(0, 10);
   const checkinAberto = () => checkins.find((c) => !c.fim) || null;
@@ -953,7 +1094,7 @@
       recuperacao: null, obs: '', retroativo: false, series: {},
     };
     checkins.push(c);
-    salvarCheckins();
+    salvarCheckin(c);
     return c;
   }
 
@@ -963,7 +1104,7 @@
     if (!a || minutosEntre(a.inicio, agoraIso()) < 180) return null;
     const umaHora = isoLocal(new Date(new Date(a.inicio).getTime() + 60 * 60000));
     a.fim = a.ultimaSerie && a.ultimaSerie > a.inicio ? a.ultimaSerie : umaHora;
-    salvarCheckins();
+    salvarCheckin(a);
     return a;
   }
 
@@ -1035,7 +1176,7 @@
     c.series[nome] = c.series[nome] || [];
     c.series[nome][n] = valor == null ? null : { carga: valor };
     if (!c.fim) c.ultimaSerie = agoraIso();
-    salvarCheckins();
+    salvarSeriesDepois(c);
   }
 
   function salvarInput(el) {
@@ -1158,7 +1299,8 @@
     a.fim = agoraIso() > a.inicio ? agoraIso() : a.inicio;
     a.recuperacao = valorRec(encDialog, 'enc-rec');
     a.obs = $('enc-obs').value.trim();
-    salvarCheckins();
+    salvarSeriesPendentes();
+    salvarCheckin(a);
     const depois = depoisEncerrar;
     depoisEncerrar = null;
     encDialog.close();
@@ -1245,12 +1387,13 @@
     // Regra 13: check-ins do mesmo dia não podem se sobrepor.
     const choque = checkins.find((c) => !c.semHorario && dataDe(c) === data && inicio < (c.fim || agoraIso()) && c.inicio < fim);
     if (choque) return erro(`Esse horário se sobrepõe ao ${TIPOS[choque.tipo].nome} ${horarioTexto(choque)}. Ajuste o início ou a duração.`);
-    checkins.push({
+    const novo = {
       id: novoId(), tipo, inicio, fim, semHorario: false,
       recuperacao: valorRec(formDialog, 'f-rec'), obs: $('f-obs').value.trim(),
       retroativo: data < hoje(), series: {},
-    });
-    salvarCheckins();
+    };
+    checkins.push(novo);
+    salvarCheckin(novo);
     formDialog.close();
     toast(`Check-in de ${TIPOS[tipo].nome} salvo.`);
     diaSel = data;
@@ -1574,10 +1717,11 @@
 
   function renderFoto() {
     const ini = iniciais(perfil.nome);
-    $('voce-avatar').innerHTML = perfil.foto ? `<img src="${perfil.foto}" alt="">` : (ini ? esc(ini) : ICON_PESSOA);
+    const foto = esc(perfil.foto);
+    $('voce-avatar').innerHTML = foto ? `<img src="${foto}" alt="" referrerpolicy="no-referrer">` : (ini ? esc(ini) : ICON_PESSOA);
     $('foto-label-texto').textContent = perfil.foto ? 'Trocar foto' : 'Escolher foto';
     $('remover-foto').hidden = !perfil.foto;
-    $('nav-voce-icone').innerHTML = perfil.foto ? `<img class="nav-foto" src="${perfil.foto}" alt="">` : ICON_PESSOA;
+    $('nav-voce-icone').innerHTML = foto ? `<img class="nav-foto" src="${foto}" alt="" referrerpolicy="no-referrer">` : ICON_PESSOA;
   }
 
   function avisosJiu() {
@@ -1604,8 +1748,7 @@
   function preencherPerfil() {
     $('p-nome').value = perfil.nome;
     $('p-email').value = perfil.email;
-    $('p-email').removeAttribute('aria-invalid');
-    $('email-erro').hidden = true;
+    $('conta-email').textContent = perfil.email || 'sua conta Google';
   }
 
   // Recorta a imagem no centro e reduz para 320×320, para caber no armazenamento do navegador.
@@ -1743,6 +1886,7 @@
   });
 
   logDialog.addEventListener('close', () => {
+    salvarSeriesPendentes();
     const b = $('list').querySelector(`[data-log="${exAberto}"]`);
     if (b) b.outerHTML = logBtnHTML(exerciciosDoTreino()[exAberto], exAberto);
     renderFichaCheckin();
@@ -1797,7 +1941,7 @@
     if (sim) {
       const alvo = checkins.find((c) => c.id === sim.dataset.excluirSim);
       checkins = checkins.filter((c) => c !== alvo);
-      salvarCheckins();
+      excluirCheckinRemoto(alvo.id);
       ckExpandido = null; ckExcluindo = null;
       toast(`Check-in de ${TIPOS[alvo.tipo].nome} excluído.`);
       atualizarCheckinUI();
@@ -1819,12 +1963,8 @@
     try { foto = await processarFoto(arquivo); } catch (_) {
       return erroFoto('Não foi possível ler essa imagem. Escolha um arquivo JPG ou PNG.');
     }
-    const anterior = perfil.foto;
     perfil.foto = foto;
-    if (!gravarJSON(PERFIL_KEY, perfil)) {
-      perfil.foto = anterior;
-      return erroFoto('A foto não coube no armazenamento do navegador. Tente outra imagem.');
-    }
+    salvarPerfil({ foto });
     erroFoto('');
     renderFoto();
     toast('Foto atualizada.');
@@ -1832,7 +1972,7 @@
 
   $('remover-foto').addEventListener('click', () => {
     perfil.foto = '';
-    gravarJSON(PERFIL_KEY, perfil);
+    salvarPerfil({ foto: '' });
     erroFoto('');
     renderFoto();
     toast('Foto removida.');
@@ -1840,55 +1980,118 @@
 
   $('form-perfil').addEventListener('submit', (e) => {
     e.preventDefault();
-    const email = $('p-email');
-    email.value = email.value.trim();
-    const valido = !email.value || email.checkValidity();
-    email.setAttribute('aria-invalid', String(!valido));
-    $('email-erro').hidden = valido;
-    if (!valido) { email.focus(); return; }
     perfil.nome = $('p-nome').value.trim();
-    perfil.email = email.value;
-    gravarJSON(PERFIL_KEY, perfil);
+    salvarPerfil({ nome: perfil.nome });
     renderFoto();
     toast('Dados salvos.');
-  });
-
-  $('p-email').addEventListener('input', () => {
-    if ($('p-email').getAttribute('aria-invalid') === 'true' && (!$('p-email').value || $('p-email').checkValidity())) {
-      $('p-email').setAttribute('aria-invalid', 'false');
-      $('email-erro').hidden = true;
-    }
   });
 
   $('tela-voce').addEventListener('change', (e) => {
     if (e.target.name === 'tema') {
       config.tema = e.target.value;
-      gravarJSON(CFG_KEY, config);
+      salvarPerfil({ tema: config.tema });
+      guardarTemaLocal();
       aplicarTema();
     }
     if (e.target.name === 'dia-jiu') {
       config.diasJiu = [...document.querySelectorAll('input[name="dia-jiu"]:checked')].map((c) => Number(c.value)).sort();
-      gravarJSON(CFG_KEY, config);
+      salvarPerfil({ dias_jiu: config.diasJiu });
       $('avisos-jiu').innerHTML = avisosJiu().map((a) => `<li class="aviso">${a}</li>`).join('');
       renderHoje();
       atualizarCheckinUI();
     }
   });
 
+  $('sair').addEventListener('click', async () => {
+    salvarSeriesPendentes();
+    await fila;
+    await sb.auth.signOut();
+  });
+
+  // ---------- Entrada (login com Google) ----------
+  const ICONE_GOOGLE = '<svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>';
+
+  function mostrarEntrada(modo, msg = '') {
+    document.body.classList.add('deslogado');
+    $('tela-entrar').hidden = false;
+    $('entrar-google').hidden = modo !== 'login';
+    $('entrar-tentar').hidden = modo !== 'erro';
+    $('entrar-status').textContent = {
+      carregando: 'Carregando seus treinos…',
+      config: 'O app ainda não está ligado ao Supabase. Preencha SUPABASE_URL e SUPABASE_ANON_KEY no index.html (o passo a passo está no README).',
+      login: 'Entre com sua conta Google para ver o treino do dia, registrar cargas e acompanhar seus check-ins em qualquer aparelho.',
+      erro: msg,
+    }[modo];
+  }
+
+  function renderizarApp() {
+    renderHoje();
+    renderTudo();
+    renderFoto();
+    preencherPerfil();
+    atualizarCheckinUI();
+    mostrarTela();
+  }
+
+  let relogio = null;
+  async function entrarNoApp(sessao) {
+    usuario = sessao.user;
+    mostrarEntrada('carregando');
+    // Limpa o código de retorno do login do Google da barra de endereço.
+    if (/[?&]code=/.test(location.search)) history.replaceState(null, '', location.pathname + location.hash);
+    try {
+      await carregarDados();
+      await migrarDadosLocais();
+    } catch (_) {
+      mostrarEntrada('erro', 'Não foi possível carregar seus dados. Confira a internet e tente de novo.');
+      return;
+    }
+    guardarTemaLocal();
+    aplicarTema();
+    document.body.classList.remove('deslogado');
+    $('tela-entrar').hidden = true;
+    const esquecido = encerrarEsquecidos();
+    renderizarApp();
+    if (esquecido) {
+      toast(`O check-in do ${TIPOS[esquecido.tipo].nome} ficou aberto e foi encerrado às ${horaDe(esquecido.fim)}.`);
+    }
+    // Mantém o horário do topo e a barra de treino em andamento atualizados.
+    if (!relogio) relogio = setInterval(() => { renderHoje(); renderAtivo(); }, 15000);
+  }
+
+  $('entrar-google').innerHTML = `${ICONE_GOOGLE}<span>Entrar com Google</span>`;
+  $('entrar-google').addEventListener('click', async () => {
+    $('entrar-google').disabled = true;
+    const { error } = await sb.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: location.origin + location.pathname },
+    });
+    if (error) {
+      $('entrar-google').disabled = false;
+      mostrarEntrada('erro', 'Não foi possível abrir o login do Google. Tente de novo.');
+    }
+  });
+  $('entrar-tentar').addEventListener('click', () => {
+    if (usuario) entrarNoApp({ user: usuario });
+  });
+
   // ---------- Início ----------
   aplicarTema();
-  renderFoto();
-  preencherPerfil();
-  const esquecido = encerrarEsquecidos();
-  renderHoje();
-  renderTudo();
-  atualizarCheckinUI();
-  mostrarTela();
-  if (esquecido) {
-    toast(`O check-in do ${TIPOS[esquecido.tipo].nome} ficou aberto e foi encerrado às ${horaDe(esquecido.fim)}.`);
+  if (!sb) {
+    mostrarEntrada('config');
+  } else {
+    mostrarEntrada('carregando');
+    sb.auth.onAuthStateChange((evento, sessao) => {
+      // Chamadas ao Supabase ficam fora do callback para não travar o cliente de autenticação.
+      if (sessao && (!usuario || usuario.id !== sessao.user.id)) setTimeout(() => entrarNoApp(sessao), 0);
+      if (!sessao) {
+        usuario = null;
+        checkins = [];
+        $('entrar-google').disabled = false;
+        mostrarEntrada('login');
+      }
+    });
   }
-  // Mantém o horário do topo e a barra de treino em andamento atualizados.
-  setInterval(() => { renderHoje(); renderAtivo(); }, 15000);
 })();
 </script>
 </body>
