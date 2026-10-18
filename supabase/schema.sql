@@ -13,6 +13,12 @@ create table if not exists public.perfis (
   dias_jiu smallint[] not null default '{2,4}' check (dias_jiu <@ '{1,2,3,4,5,6}'::smallint[])
 );
 
+-- Semana montada em "Você": 7 listas (0 = domingo ... 6 = sábado) com até 2 atividades cada,
+-- ex.: [[], ["t2"], ["jiu"], ["t1"], ["jiu"], ["t3"], ["bike"]]. Vazia (null) = semana montada a partir de dias_jiu.
+-- Bancos criados antes desta coluna a recebem ao rodar o arquivo de novo.
+alter table public.perfis add column if not exists semana jsonb
+  check (semana is null or (jsonb_typeof(semana) = 'array' and jsonb_array_length(semana) = 7));
+
 -- Check-ins de treino. Horários em hora local do aparelho, sem fuso.
 create table if not exists public.checkins (
   id uuid primary key default gen_random_uuid(),

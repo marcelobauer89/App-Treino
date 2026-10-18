@@ -318,6 +318,56 @@
   .opcao input:disabled + span { opacity: .45; }
   .campo > legend.nota-campo { margin-bottom: 8px; font-size: 13px; font-weight: 400; }
   .avisos { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+
+  /* Minha semana: atividades arrastáveis e os dias que as recebem */
+  /* A paleta acompanha a rolagem para ficar à mão ao arrastar até os últimos dias. */
+  .paleta {
+    position: sticky; top: 0; z-index: 2; display: flex; flex-wrap: wrap; gap: 8px;
+    margin: -8px -4px; padding: 8px 4px; background: var(--papel);
+  }
+  .ativ {
+    display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 12px 0 10px;
+    border: 1px solid var(--fio); border-radius: 10px; background: var(--papel); color: var(--tinta);
+    font: inherit; font-size: 14px; font-weight: 600; cursor: grab;
+    touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+  }
+  .ativ:hover { border-color: var(--tinta-2); }
+  .ativ.arrastando { opacity: .35; }
+  .ativ.no-dia { min-height: 36px; padding-right: 2px; background: var(--gi); }
+  .fantasma {
+    position: fixed; left: 0; top: 0; z-index: 60; pointer-events: none; margin: 0;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, .22); cursor: grabbing;
+  }
+  .dias-cfg { list-style: none; margin: 0; padding: 0; border: 1px solid var(--fio); border-radius: 12px; overflow: hidden; }
+  .dia-cfg {
+    display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 10px; align-items: center;
+    min-height: 60px; padding: 8px 8px 8px 12px; transition: background-color .12s ease, box-shadow .12s ease;
+  }
+  .dia-cfg + .dia-cfg { border-top: 1px solid var(--fio); }
+  .dia-cfg.hoje .dia-curto { color: var(--tatame-tinta); }
+  .dia-cfg.alvo { background: var(--tatame-suave); box-shadow: inset 3px 0 0 var(--tatame); }
+  .dia-slots { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
+  .dia-vazio { color: var(--tinta-2); font-size: 14px; }
+  .chip-x {
+    display: grid; place-items: center; width: 32px; height: 32px; border: 0; border-radius: 8px;
+    background: transparent; color: var(--tinta-2); cursor: pointer;
+  }
+  .chip-x:hover { color: var(--tinta); background: var(--fio); }
+  .chip-x svg { width: 16px; height: 16px; }
+  .dia-add {
+    display: grid; place-items: center; width: 44px; height: 44px; border: 1px dashed var(--fio); border-radius: 10px;
+    background: transparent; color: var(--tinta-2); font-size: 22px; line-height: 1; cursor: pointer;
+  }
+  .dia-add:hover { color: var(--tinta); border-color: var(--tinta-2); }
+  .ativ-opcoes { display: grid; gap: 8px; }
+  .ativ-opcao {
+    display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 0 14px; text-align: left;
+    border: 1px solid var(--fio); border-radius: 12px; background: var(--papel); color: var(--tinta);
+    font: inherit; font-size: 16px; font-weight: 600; cursor: pointer;
+  }
+  .ativ-opcao small { margin-left: auto; color: var(--tinta-2); font-size: 13px; font-weight: 500; }
+  .ativ-opcao[aria-pressed="true"] { border-color: var(--tatame); box-shadow: inset 0 0 0 1px var(--tatame); background: var(--tatame-suave); }
+  .ativ-opcao[aria-pressed="true"] small { color: var(--tatame-tinta); }
   .avisos:empty { display: none; }
   .campo input[readonly] { color: var(--tinta-2); background: var(--papel); }
   .conta-linha { margin: 0; font-size: 15px; overflow-wrap: anywhere; }
@@ -571,7 +621,7 @@
     <section class="semana" aria-labelledby="semana-titulo">
       <h2 class="secao" id="semana-titulo">Semana</h2>
       <ol class="dias" id="dias"></ol>
-      <p class="semana-nota">Pernas fica na sexta para ter o fim de semana de recuperação e não pesar antes do jiu de terça.</p>
+      <p class="semana-nota" id="semana-nota">Pernas fica na sexta para ter o fim de semana de recuperação e não pesar antes do jiu de terça.</p>
     </section>
 
     <footer>
@@ -581,8 +631,8 @@
         <li><span class="ponteira" data-nivel="1" aria-hidden="true"><i></i><i></i><i></i></span>Baixa ou secundária</li>
       </ul>
       <p>PSE é a percepção subjetiva de esforço; o 10 fica reservado ao tatame. Use a carga que respeite a técnica e a recuperação.</p>
-      <p>Os dias de jiu-jitsu se escolhem em Você (padrão terça e quinta). Se houver aula extra na sexta, o Treino 3 (pernas) vai para sábado. Domingo é descanso.</p>
-      <p>Check-ins e cargas ficam salvos só neste navegador (ainda sem sincronização em nuvem).</p>
+      <p>A semana se monta em Você: arraste os treinos, o jiu-jitsu e a bike para os dias (até 2 por dia). O padrão é Treino 2 na segunda, Treino 1 na quarta, Treino 3 na sexta, jiu na terça e na quinta e bike leve no sábado.</p>
+      <p>Check-ins e cargas ficam salvos na sua conta e aparecem em qualquer aparelho em que você entrar.</p>
       <p>Adaptação prática do PDF enviado. Não substitui avaliação de um profissional de educação física ou nutrição, especialmente se houver dor ou lesão.</p>
     </footer>
   </main>
@@ -675,14 +725,14 @@
     </div>
   </section>
 
-  <section class="bloco" aria-labelledby="jiu-titulo">
-    <div class="bloco-topo"><h2 class="secao" id="jiu-titulo">Dias de jiu-jitsu</h2></div>
+  <section class="bloco" aria-labelledby="semana-cfg-titulo">
+    <div class="bloco-topo"><h2 class="secao" id="semana-cfg-titulo">Minha semana</h2></div>
     <div class="cartao">
-      <fieldset class="campo">
-        <legend class="nota-campo">Marque os dias de aula. A Semana e o topo da tela Treino se ajustam na hora. Domingo fica para descanso.</legend>
-        <div class="opcoes" id="opcoes-jiu"></div>
-      </fieldset>
-      <ul class="avisos" id="avisos-jiu"></ul>
+      <p class="nota-campo">Arraste uma atividade até o dia ou toque em + no dia. Até 2 por dia; dia vazio é descanso. A Semana e o treino de hoje se ajustam na hora.</p>
+      <div class="paleta" id="paleta" aria-label="Atividades para arrastar"></div>
+      <ol class="dias-cfg" id="dias-cfg"></ol>
+      <ul class="avisos" id="avisos-semana"></ul>
+      <button class="btn-sec" type="button" id="semana-padrao">Voltar à semana padrão</button>
     </div>
   </section>
 
@@ -728,6 +778,9 @@
 </dialog>
 <dialog class="modal" id="form-dialog" aria-labelledby="form-title">
   <div class="modal-body" id="form-body"></div>
+</dialog>
+<dialog class="modal" id="ativ-dialog" aria-labelledby="ativ-title">
+  <div class="modal-body" id="ativ-body"></div>
 </dialog>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
@@ -825,7 +878,9 @@
   const lerJSON = (k) => {
     try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return v && typeof v === 'object' ? v : {}; } catch (_) { return {}; }
   };
-  let config = { tema: 'auto', diasJiu: [2, 4] };
+  let config = { tema: 'auto', semana: [[], ['t2'], ['jiu'], ['t1'], ['jiu'], ['t3'], ['bike']] };
+  // A conta já tem a semana salva (coluna perfis.semana)? Senão, ela vem dos antigos dias de jiu.
+  let semanaDaConta = false;
   let perfil = { nome: '', email: '', foto: '' };
   // Só uma cópia do tema fica no navegador, para aplicá-lo antes da primeira pintura.
   const guardarTemaLocal = () => { try { localStorage.setItem('bauer-tema', config.tema); } catch (_) {} };
@@ -834,22 +889,45 @@
     if (['auto', 'claro', 'escuro'].includes(t)) config.tema = t;
   } catch (_) {}
 
-  // Semana tipo montada a partir dos dias de jiu; o índice segue Date.getDay() (0 = domingo).
+  // Semana do usuário: para cada dia (índice de Date.getDay(), 0 = domingo), até 2 atividades
+  // entre 't1', 't2', 't3', 'jiu' e 'bike'. Dia vazio é descanso.
   const CURTOS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
   const NOMES_DIA = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
-  const TREINO_DO_DIA = { 1: '2', 3: '1', 5: '3' };
   const ORDEM_SEMANA = [1, 2, 3, 4, 5, 6, 0];
+  const naDia = (i) => `${i === 0 || i === 6 ? 'No' : 'Na'} ${NOMES_DIA[i]}`;
+  const daDia = (i) => `${i === 0 || i === 6 ? 'do' : 'da'} ${NOMES_DIA[i]}`;
+  const copiaSemana = (s) => s.map((d) => [...d]);
+  const ehTreino = (t) => /^t[123]$/.test(t);
+  const nomeAtividade = (t) => (ehTreino(t) ? TREINOS[t.slice(1)].nome : t === 'jiu' ? 'Jiu-jitsu' : 'Bike leve');
+  // Contas antigas só tinham os dias de jiu: a semana é montada com eles sobre o plano original.
+  function semanaDeDiasJiu(dias) {
+    const s = [[], ['t2'], [], ['t1'], [], ['t3'], []];
+    dias.forEach((i) => { if (i >= 1 && i <= 6) s[i].push('jiu'); });
+    if (!dias.includes(6)) s[6].push('bike');
+    return s;
+  }
+  const SEMANA_PADRAO = semanaDeDiasJiu([2, 4]);
+  function validarSemana(s) {
+    if (!Array.isArray(s) || s.length !== 7) return null;
+    return s.map((d) => (Array.isArray(d)
+      ? [...new Set(d.filter((t) => ehTreino(t) || t === 'jiu' || t === 'bike'))].slice(0, 2)
+      : []));
+  }
   function planoDoDia(i) {
-    const treino = TREINO_DO_DIA[i];
-    const jiu = config.diasJiu.includes(i);
-    const bike = i === 6 && !jiu;
-    const grupos = [treino && 'musc', jiu && 'jiu', bike && 'bike'].filter(Boolean);
+    const tipos = config.semana[i] || [];
+    const tipoTreino = tipos.find(ehTreino);
+    const treino = tipoTreino ? tipoTreino.slice(1) : undefined;
+    const grupos = [...new Set(tipos.map((t) => (ehTreino(t) ? 'musc' : t)))];
+    const notaDe = (t) => (ehTreino(t) ? TREINOS[t.slice(1)].subtitulo : t === 'jiu' ? 'aula de jiu' : 'bike leve');
     let titulo = 'Descanso', nota = 'Recuperação';
-    if (treino && jiu) { titulo = `${TREINOS[treino].nome} + Jiu-jitsu`; nota = `${TREINOS[treino].subtitulo} e aula de jiu`; }
-    else if (treino) { titulo = TREINOS[treino].nome; nota = i === 5 ? 'Pernas (se não houver jiu)' : TREINOS[treino].subtitulo; }
-    else if (jiu) { titulo = 'Jiu-jitsu'; nota = 'Prioridade técnica'; }
-    else if (bike) { titulo = 'Bike leve'; nota = '20–40 min, ou Treino 3 deslocado'; }
-    return { curto: CURTOS[i], treino, jiu, bike, grupos, titulo, nota };
+    if (tipos.length === 1) {
+      titulo = nomeAtividade(tipos[0]);
+      nota = tipos[0] === 'jiu' ? 'Prioridade técnica' : tipos[0] === 'bike' ? '20–40 min, intensidade leve' : notaDe(tipos[0]);
+    } else if (tipos.length) {
+      titulo = tipos.map(nomeAtividade).join(' + ');
+      nota = tipos.map(notaDe).join(', ');
+    }
+    return { curto: CURTOS[i], tipos, treino, jiu: tipos.includes('jiu'), bike: tipos.includes('bike'), grupos, titulo, nota };
   }
 
   // Tipos de check-in. Musculação usa uma cor só; o número no selo diz qual treino foi.
@@ -934,19 +1012,20 @@
     if (salvo) estado = { ...estado, ...salvo };
   } catch (_) {}
   if (!TREINOS[estado.treino]) estado.treino = '1';
-  // Na primeira abertura do dia, a ficha já abre no treino de hoje.
-  if (estado.dia !== hoje()) {
-    const treinoDeHoje = planoDoDia(new Date().getDay()).treino;
-    if (treinoDeHoje) estado.treino = treinoDeHoje;
-    estado.dia = hoje();
-  }
   const salvar = () => {
     try {
       const { treino, foco, descAberta, dia } = estado;
       localStorage.setItem(KEY, JSON.stringify({ treino, foco, descAberta, dia }));
     } catch (_) {}
   };
-  salvar();
+  // Na primeira abertura do dia, a ficha já abre no treino de hoje (chamado depois de carregar a semana da conta).
+  function abrirTreinoDoDia() {
+    if (estado.dia === hoje()) return;
+    const treinoDeHoje = planoDoDia(new Date().getDay()).treino;
+    if (treinoDeHoje) estado.treino = treinoDeHoje;
+    estado.dia = hoje();
+    salvar();
+  }
 
   // ---------- Check-ins ----------
   // checkin = { id, tipo, inicio, fim (null = aberto), semHorario, recuperacao, obs, retroativo,
@@ -991,8 +1070,10 @@
       .catch(falhaAoSalvar);
     return fila;
   }
-  async function falhaAoSalvar() {
-    toast('Não foi possível salvar. Confira a internet; os dados foram recarregados do servidor.');
+  async function falhaAoSalvar(erro) {
+    // Banco ainda sem a coluna perfis.semana (schema.sql antigo).
+    if (/semana/.test((erro && erro.message) || '')) toast('Para salvar a semana, rode de novo o supabase/schema.sql no Supabase (veja o README).');
+    else toast('Não foi possível salvar. Confira a internet; os dados foram recarregados do servidor.');
     try { await carregarDados(); renderizarApp(); } catch (_) {}
   }
   const salvarCheckin = (c) => enviar(() => sb.from('checkins').upsert(paraLinha(c)));
@@ -1032,7 +1113,12 @@
       if (error) throw error;
     }
     perfil = { nome: linha.nome || '', email: usuario.email || linha.email || '', foto: linha.foto || '' };
-    config = { tema: linha.tema || 'auto', diasJiu: (linha.dias_jiu || []).map(Number).filter((i) => i >= 1 && i <= 6) };
+    const semana = validarSemana(linha.semana);
+    semanaDaConta = !!semana;
+    config = {
+      tema: linha.tema || 'auto',
+      semana: semana || semanaDeDiasJiu((linha.dias_jiu || [2, 4]).map(Number)),
+    };
     checkins = (c.data || []).map(deLinha);
   }
 
@@ -1062,7 +1148,7 @@
       const { error } = await sb.from('perfis').update(mudancas).eq('id', usuario.id);
       if (error) throw error;
       if (mudancas.tema) config.tema = mudancas.tema;
-      if (mudancas.dias_jiu) config.diasJiu = mudancas.dias_jiu;
+      if (mudancas.dias_jiu && !semanaDaConta) config.semana = semanaDeDiasJiu(mudancas.dias_jiu);
       if (mudancas.nome) perfil.nome = mudancas.nome;
       if (mudancas.foto) perfil.foto = mudancas.foto;
     }
@@ -1110,7 +1196,7 @@
   }
   const tipoPlanejado = (data) => {
     const d = planoDoDia(deData(data).getDay());
-    return d.treino ? `t${d.treino}` : d.bike ? 'bike' : 'jiu';
+    return d.tipos.find(ehTreino) || d.tipos[0] || 'jiu';
   };
 
   // Sessão em que as cargas do treino vão: o check-in aberto desse treino ou o último de hoje.
@@ -1619,12 +1705,20 @@
     $('dias').innerHTML = ORDEM_SEMANA.map((i, pos) => {
       const d = planoDoDia(i);
       const doDia = porData[somarDias(seg, pos)] || [];
-      // Regra 12: check-in do tipo planejado marca o dia como feito; os demais contam como extra.
-      const feitos = d.grupos.filter((g) => doDia.some((c) => c.fim && TIPOS[c.tipo].grupo === g));
-      const nomeGrupo = (g) => (g === 'musc' ? TREINOS[d.treino].nome : TIPOS[g].nome);
+      // Regra 12: check-in do tipo planejado (ou do mesmo grupo) marca a atividade como feita;
+      // os de grupos fora do plano contam como extra.
+      const restantes = doDia.filter((c) => c.fim);
+      const usar = (t, casa) => {
+        const k = restantes.findIndex(casa);
+        if (k < 0) return false;
+        restantes.splice(k, 1);
+        return true;
+      };
+      const exatos = d.tipos.filter((t) => usar(t, (c) => c.tipo === t));
+      const feitos = d.tipos.filter((t) => exatos.includes(t) || usar(t, (c) => TIPOS[c.tipo].grupo === TIPOS[t].grupo));
       let feito = '';
-      if (feitos.length && feitos.length === d.grupos.length) feito = `<span class="tag-feito">${ICON_CHECK}Feito</span>`;
-      else if (feitos.length) feito = `<span class="tag-feito">${ICON_CHECK}${feitos.map(nomeGrupo).join(', ')}</span>`;
+      if (feitos.length && feitos.length === d.tipos.length) feito = `<span class="tag-feito">${ICON_CHECK}Feito</span>`;
+      else if (feitos.length) feito = `<span class="tag-feito">${ICON_CHECK}${feitos.map(nomeAtividade).join(', ')}</span>`;
       const extras = doDia.filter((c) => !d.grupos.includes(TIPOS[c.tipo].grupo));
       const tags = [
         i === hojeIdx ? '<span class="tag-hoje">Hoje</span>' : '',
@@ -1638,6 +1732,8 @@
           <div class="dia-tags">${tags}</div>
         </li>`;
     }).join('');
+    // A nota explica a semana padrão; com a semana mudada ela deixa de valer.
+    $('semana-nota').hidden = JSON.stringify(config.semana) !== JSON.stringify(SEMANA_PADRAO);
   }
 
   function renderAtivo() {
@@ -1700,10 +1796,12 @@
     $('semana-atual-datas').textContent = ds.getMonth() === dd.getMonth()
       ? `${ds.getDate()} a ${dd.getDate()} de ${nomeMes(dd.getFullYear(), dd.getMonth())}`
       : `${ds.getDate()} de ${nomeMes(ds.getFullYear(), ds.getMonth())} a ${dd.getDate()} de ${nomeMes(dd.getFullYear(), dd.getMonth())}`;
+    // Planejado = quantas vezes cada tipo aparece na semana montada pelo usuário.
+    const planejado = (g) => config.semana.flat().filter((t) => (ehTreino(t) ? 'musc' : t) === g).length;
     $('metas').innerHTML =
-      linha('Musculação', 't1', 'musc', conta('musc'), 3) +
-      linha('Jiu-jitsu', 'jiu', 'jiu', conta('jiu'), config.diasJiu.length) +
-      linha(planoDoDia(6).bike ? 'Bike (opcional)' : 'Bike', 'bike', 'bike', conta('bike'), planoDoDia(6).bike ? 1 : 0);
+      linha('Musculação', 't1', 'musc', conta('musc'), planejado('musc')) +
+      linha('Jiu-jitsu', 'jiu', 'jiu', conta('jiu'), planejado('jiu')) +
+      linha('Bike', 'bike', 'bike', conta('bike'), planejado('bike'));
   }
 
   function renderCalendario() {
@@ -1841,25 +1939,207 @@
     $('nav-voce-icone').innerHTML = foto ? `<img class="nav-foto" src="${foto}" alt="" referrerpolicy="no-referrer">` : ICON_PESSOA;
   }
 
-  function avisosJiu() {
-    const av = config.diasJiu
-      .filter((i) => TREINO_DO_DIA[i])
-      .map((i) => `Na ${NOMES_DIA[i]} você terá ${TREINOS[TREINO_DO_DIA[i]].nome} e jiu-jitsu no mesmo dia; faça um check-in para cada.`);
-    // Regra 5: pernas pesadas na véspera do tatame.
-    if (config.diasJiu.includes(6)) {
-      av.push('O jiu de sábado vem logo depois do Treino 3 (pernas) de sexta. Se as pernas estiverem pesadas, vá mais leve no rola.');
-      av.push('Com jiu no sábado, a bike leve sai da semana.');
-    }
-    if (!config.diasJiu.length) av.push('Nenhum dia de jiu-jitsu marcado. A Semana mostra só musculação e bike.');
+  // ---------- Minha semana ----------
+  const lista = (nomes) => (nomes.length > 1 ? `${nomes.slice(0, -1).join(', ')} e ${nomes[nomes.length - 1]}` : nomes[0]);
+  function avisosSemana() {
+    const s = config.semana;
+    const av = [];
+    const todas = s.flat();
+    const faltam = ['t1', 't2', 't3'].filter((t) => !todas.includes(t)).map(nomeAtividade);
+    if (faltam.length) av.push(`${lista(faltam)} ${faltam.length > 1 ? 'ficaram' : 'ficou'} fora da semana. O plano usa os três treinos.`);
+    ['t1', 't2', 't3'].forEach((t) => {
+      const n = todas.filter((x) => x === t).length;
+      if (n > 1) av.push(`O ${nomeAtividade(t)} aparece ${n} vezes na semana.`);
+    });
+    ORDEM_SEMANA.forEach((i) => {
+      if (s[i].length === 2) av.push(`${naDia(i)} você terá ${lista(s[i].map(nomeAtividade))}; faça um check-in para cada.`);
+    });
+    // Regra 5: pernas pesadas na véspera (ou no mesmo dia) do tatame.
+    ORDEM_SEMANA.forEach((i) => {
+      if (!s[i].includes('jiu')) return;
+      const vespera = (i + 6) % 7;
+      if (s[vespera].includes('t3')) av.push(`${naDia(i)} o jiu vem logo depois do Treino 3 (pernas). Se as pernas estiverem pesadas, vá mais leve no rola.`);
+      else if (s[i].includes('t3')) av.push(`${naDia(i)} o Treino 3 (pernas) e o jiu caem juntos. Se der, faça o jiu antes.`);
+    });
+    if (s.every((d) => d.length)) av.push('A semana não tem dia de descanso. Deixe pelo menos um dia vazio para recuperar.');
     return av;
   }
 
+  const ativHTML = (t, dia) => (dia === undefined
+    ? `<button class="ativ" type="button" data-arrastar="${t}">${seloHTML(t)}${nomeAtividade(t)}</button>`
+    : `<span class="ativ no-dia" data-arrastar="${t}" data-de="${dia}">${seloHTML(t)}${nomeAtividade(t)}<button class="chip-x" type="button" data-remover="${dia}:${t}" aria-label="Tirar ${nomeAtividade(t)} de ${NOMES_DIA[dia]}">${ICON_X}</button></span>`);
+
+  function renderSemanaConfig() {
+    const hojeIdx = new Date().getDay();
+    $('paleta').innerHTML = ORDEM_TIPOS.map((t) => ativHTML(t)).join('');
+    $('dias-cfg').innerHTML = ORDEM_SEMANA.map((i) => `
+      <li class="dia-cfg${i === hojeIdx ? ' hoje' : ''}" data-dia="${i}">
+        <span class="dia-curto">${CURTOS[i]}</span>
+        <div class="dia-slots">${config.semana[i].length ? config.semana[i].map((t) => ativHTML(t, i)).join('') : '<span class="dia-vazio">Descanso</span>'}</div>
+        <button class="dia-add" type="button" data-adicionar="${i}" aria-label="Escolher atividades de ${NOMES_DIA[i]}">+</button>
+      </li>`).join('');
+    $('avisos-semana').innerHTML = avisosSemana().map((a) => `<li class="aviso">${a}</li>`).join('');
+    $('semana-padrao').disabled = JSON.stringify(config.semana) === JSON.stringify(SEMANA_PADRAO);
+  }
+
+  function mudarSemana(fn) {
+    const s = copiaSemana(config.semana);
+    fn(s);
+    config.semana = s;
+    semanaDaConta = true;
+    salvarPerfil({ semana: s });
+    renderSemanaConfig();
+    renderHoje();
+    atualizarCheckinUI();
+  }
+  // Põe a atividade no dia; com o dia cheio, sai a mais antiga. Devolve a que saiu.
+  function colocarNoDia(s, dia, t) {
+    if (s[dia].includes(t)) return null;
+    const saiu = s[dia].length >= 2 ? s[dia].shift() : null;
+    s[dia].push(t);
+    return saiu;
+  }
+  function soltarNoDia(t, dia, de) {
+    if (de === dia) return;
+    if (config.semana[dia].includes(t)) {
+      if (de !== undefined) mudarSemana((s) => { s[de] = s[de].filter((x) => x !== t); });
+      toast(`${nomeAtividade(t)} já está ${naDia(dia).toLowerCase()}.`);
+      return;
+    }
+    let saiu = null;
+    mudarSemana((s) => {
+      if (de !== undefined) s[de] = s[de].filter((x) => x !== t);
+      saiu = colocarNoDia(s, dia, t);
+    });
+    if (saiu) toast(`${nomeAtividade(saiu)} saiu ${daDia(dia)}: até 2 atividades por dia.`);
+  }
+
+  // Seletor do botão + (também é o caminho sem arrastar, para teclado e leitor de tela).
+  const ativDialog = $('ativ-dialog');
+  function renderSeletor(dia) {
+    const doDia = config.semana[dia];
+    $('ativ-body').dataset.dia = dia;
+    $('ativ-body').innerHTML = `
+      <div class="modal-head"><h3 id="ativ-title">${NOMES_DIA[dia][0].toUpperCase() + NOMES_DIA[dia].slice(1)}</h3>${BOTAO_FECHAR}</div>
+      <p class="nota-campo">Escolha até 2 atividades. Com 2 marcadas, a próxima toma o lugar da mais antiga. Nenhuma marcada é descanso.</p>
+      <div class="ativ-opcoes">${ORDEM_TIPOS.map((t) => `
+        <button class="ativ-opcao" type="button" data-escolher="${t}" aria-pressed="${doDia.includes(t)}">
+          ${seloHTML(t, 'grande')}${nomeAtividade(t)}<small>${doDia.includes(t) ? 'No dia' : ''}</small>
+        </button>`).join('')}</div>
+      <button class="modal-done" type="button" data-fechar>Pronto</button>`;
+  }
+  ativDialog.addEventListener('click', (e) => {
+    if (e.target === ativDialog || e.target.closest('[data-fechar]')) return ativDialog.close();
+    const b = e.target.closest('[data-escolher]');
+    if (!b) return;
+    const dia = Number($('ativ-body').dataset.dia), t = b.dataset.escolher;
+    mudarSemana((s) => {
+      if (s[dia].includes(t)) s[dia] = s[dia].filter((x) => x !== t);
+      else colocarNoDia(s, dia, t);
+    });
+    renderSeletor(dia);
+    $('ativ-body').querySelector(`[data-escolher="${t}"]`).focus();
+  });
+
+  $('dias-cfg').addEventListener('click', (e) => {
+    const rem = e.target.closest('[data-remover]');
+    if (rem) {
+      const [dia, t] = rem.dataset.remover.split(':');
+      mudarSemana((s) => { s[dia] = s[dia].filter((x) => x !== t); });
+      return;
+    }
+    const add = e.target.closest('[data-adicionar]');
+    if (add) { renderSeletor(Number(add.dataset.adicionar)); ativDialog.showModal(); }
+  });
+  let ignorarClique = false;
+  $('paleta').addEventListener('click', (e) => {
+    if (!e.target.closest('[data-arrastar]')) return;
+    if (ignorarClique) { ignorarClique = false; return; }
+    toast('Arraste a atividade até um dia, ou toque em + no dia.');
+  });
+  $('semana-padrao').addEventListener('click', () => {
+    mudarSemana((s) => { s.splice(0, 7, ...copiaSemana(SEMANA_PADRAO)); });
+    toast('A semana voltou ao padrão.');
+  });
+
+  // Arrastar com o dedo ou o mouse (pointer events; o HTML5 drag and drop não funciona no toque).
+  let arrasto = null;
+  const diaSob = (x, y) => {
+    const el = document.elementFromPoint(x, y);
+    return el && el.closest('#dias-cfg .dia-cfg');
+  };
+  function moverArrasto(x, y) {
+    const a = arrasto;
+    a.x = x; a.y = y;
+    a.fantasma.style.transform = `translate(${x - a.dx}px, ${y - a.dy}px)`;
+    const alvo = diaSob(x, y);
+    if (alvo !== a.alvo) {
+      if (a.alvo) a.alvo.classList.remove('alvo');
+      if (alvo) alvo.classList.add('alvo');
+      a.alvo = alvo;
+    }
+    // Rola a tela quando o dedo chega perto do topo ou da navegação inferior.
+    const fundo = innerHeight - document.querySelector('.nav').offsetHeight;
+    a.vel = y < 70 ? -Math.ceil((70 - y) / 5) : y > fundo - 50 ? Math.ceil((y - fundo + 50) / 5) : 0;
+  }
+  function rolarArrasto() {
+    if (!arrasto || !arrasto.fantasma) return;
+    if (arrasto.vel) { scrollBy(0, arrasto.vel); moverArrasto(arrasto.x, arrasto.y); }
+    arrasto.raf = requestAnimationFrame(rolarArrasto);
+  }
+  function iniciarArrasto() {
+    const a = arrasto;
+    const r = a.el.getBoundingClientRect();
+    a.dx = a.x0 - r.left; a.dy = a.y0 - r.top;
+    a.fantasma = a.el.cloneNode(true);
+    a.fantasma.classList.add('fantasma');
+    a.fantasma.removeAttribute('data-arrastar');
+    a.fantasma.style.width = `${r.width}px`;
+    document.body.appendChild(a.fantasma);
+    a.el.classList.add('arrastando');
+    document.body.style.cursor = 'grabbing';
+    a.raf = requestAnimationFrame(rolarArrasto);
+  }
+  function terminarArrasto(soltar) {
+    const a = arrasto;
+    arrasto = null;
+    if (!a || !a.fantasma) return;
+    cancelAnimationFrame(a.raf);
+    a.fantasma.remove();
+    a.el.classList.remove('arrastando');
+    if (a.alvo) a.alvo.classList.remove('alvo');
+    document.body.style.cursor = '';
+    ignorarClique = true;
+    setTimeout(() => { ignorarClique = false; }, 0);
+    if (!soltar) return;
+    if (a.alvo) soltarNoDia(a.tipo, Number(a.alvo.dataset.dia), a.de);
+    else if (a.de !== undefined) {
+      mudarSemana((s) => { s[a.de] = s[a.de].filter((x) => x !== a.tipo); });
+      toast(`${nomeAtividade(a.tipo)} saiu ${daDia(a.de)}.`);
+    }
+  }
+  $('tela-voce').addEventListener('pointerdown', (e) => {
+    const el = e.target.closest('[data-arrastar]');
+    if (!el || e.target.closest('[data-remover]') || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    arrasto = { el, id: e.pointerId, tipo: el.dataset.arrastar, de: el.dataset.de === undefined ? undefined : Number(el.dataset.de), x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, vel: 0 };
+    try { el.setPointerCapture(e.pointerId); } catch (_) {}
+  });
+  document.addEventListener('pointermove', (e) => {
+    if (!arrasto || e.pointerId !== arrasto.id) return;
+    if (!arrasto.fantasma) {
+      if (Math.hypot(e.clientX - arrasto.x0, e.clientY - arrasto.y0) < 6) return;
+      iniciarArrasto();
+    }
+    e.preventDefault();
+    moverArrasto(e.clientX, e.clientY);
+  });
+  document.addEventListener('pointerup', (e) => { if (arrasto && e.pointerId === arrasto.id) terminarArrasto(true); });
+  document.addEventListener('pointercancel', (e) => { if (arrasto && e.pointerId === arrasto.id) terminarArrasto(false); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && arrasto) terminarArrasto(false); });
+
   function renderConfig() {
     document.querySelectorAll('input[name="tema"]').forEach((r) => { r.checked = r.value === config.tema; });
-    $('opcoes-jiu').innerHTML = ORDEM_SEMANA.map((i) => `
-      <label class="opcao"><input type="checkbox" name="dia-jiu" value="${i}"${config.diasJiu.includes(i) ? ' checked' : ''}${i === 0 ? ' disabled' : ''}>
-        <span>${CURTOS[i]}</span></label>`).join('');
-    $('avisos-jiu').innerHTML = avisosJiu().map((a) => `<li class="aviso">${a}</li>`).join('');
+    renderSemanaConfig();
   }
 
   function preencherPerfil() {
@@ -2134,13 +2414,6 @@
       guardarTemaLocal();
       aplicarTema();
     }
-    if (e.target.name === 'dia-jiu') {
-      config.diasJiu = [...document.querySelectorAll('input[name="dia-jiu"]:checked')].map((c) => Number(c.value)).sort();
-      salvarPerfil({ dias_jiu: config.diasJiu });
-      $('avisos-jiu').innerHTML = avisosJiu().map((a) => `<li class="aviso">${a}</li>`).join('');
-      renderHoje();
-      atualizarCheckinUI();
-    }
   });
 
   $('sair').addEventListener('click', async () => {
@@ -2194,6 +2467,7 @@
     document.body.classList.remove('deslogado');
     $('tela-entrar').hidden = true;
     const esquecido = encerrarEsquecidos();
+    abrirTreinoDoDia();
     renderizarApp();
     if (esquecido) {
       toast(`O check-in do ${TIPOS[esquecido.tipo].nome} ficou aberto e foi encerrado às ${horaDe(esquecido.fim)}.`);
