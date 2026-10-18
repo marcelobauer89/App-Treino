@@ -300,6 +300,8 @@
   .entrar-in { display: grid; justify-items: start; gap: 16px; padding-block: 48px; }
   .entrar .atividade { margin: 0; }
   .entrar-texto { margin: 0; max-width: 36ch; font-size: 17px; color: var(--tinta-2); }
+  .credito { margin: 16px 0 0; font-size: 14px; color: var(--tinta-2); }
+  .credito a { color: var(--tatame-tinta); font-weight: 600; text-underline-offset: 3px; }
   .btn-google {
     display: inline-flex; align-items: center; gap: 12px; min-height: 52px; padding: 0 22px;
     border: 1px solid var(--fio); border-radius: 10px; background: var(--papel); color: var(--tinta);
@@ -499,12 +501,12 @@
 
 <section class="entrar" id="tela-entrar" aria-labelledby="entrar-titulo">
   <div class="wrap entrar-in">
-    <p class="data">Plano de 6 semanas</p>
     <h1 class="atividade" id="entrar-titulo">Jiu-Jitsu + Hipertrofia</h1>
     <p class="entrar-texto" id="entrar-status" role="status">Carregando seus treinos…</p>
     <p class="form-erro" id="entrar-erro" role="alert" hidden></p>
     <button class="btn-google" type="button" id="entrar-google" hidden></button>
     <button class="btn" type="button" id="entrar-tentar" hidden>Tentar de novo</button>
+    <p class="credito">Desenvolvido por <a href="https://www.linkedin.com/in/marcelo-bauer" target="_blank" rel="noopener">Marcelo Bauer</a></p>
   </div>
 </section>
 
