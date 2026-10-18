@@ -48,14 +48,16 @@ Em **Authentication → URL Configuration**:
 ### 6. Colocar as chaves no app
 
 1. No Supabase, abra **Project Settings → API Keys** e copie a **URL do projeto** e a chave pública (**anon**, ou **publishable** nos projetos novos).
-2. No começo do `<script>` principal do `index.html`, troque:
+2. No começo do `<script>` principal do `index.html`, preencha (este repositório já está configurado):
 
    ```js
-   const SUPABASE_URL = 'https://SEU-PROJETO.supabase.co';
-   const SUPABASE_ANON_KEY = 'SUA-CHAVE-ANON';
+   const SUPABASE_URL = 'https://<seu-projeto>.supabase.co';
+   const SUPABASE_KEY = 'sb_publishable_...';
    ```
 
-3. Faça commit e push. A chave pública pode ficar no código: quem protege os dados são as regras de acesso (RLS) do `schema.sql`, que deixam cada usuário ler e alterar só os próprios registros. Nunca coloque a chave `service_role` (ou **secret**) no app.
+3. Faça commit e push. A chave publicável pode ficar no código: quem protege os dados são as regras de acesso (RLS) do `schema.sql`, que deixam cada usuário ler e alterar só os próprios registros.
+
+A chave **secreta** (`sb_secret_...` ou `service_role`) nunca vai no app nem no repositório, porque ela passa por cima das regras de acesso. Se ela vazar, crie outra em **Project Settings → API Keys** e apague a antiga.
 
 ## Testar no computador
 

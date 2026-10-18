@@ -697,15 +697,16 @@
   <div class="modal-body" id="form-body"></div>
 </dialog>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
 <script>
 (() => {
   // ---------- Conexão com o Supabase ----------
-  // Preencha com os dados do seu projeto (Supabase → Project Settings → API).
-  // A chave anon pode ficar no código: quem protege os dados são as regras de acesso (RLS) do banco.
-  const SUPABASE_URL = 'https://SEU-PROJETO.supabase.co';
-  const SUPABASE_ANON_KEY = 'SUA-CHAVE-ANON';
-  const configurado = /^https:\/\//.test(SUPABASE_URL) && !SUPABASE_URL.includes('SEU-PROJETO') && !SUPABASE_ANON_KEY.startsWith('SUA-');
+  // Dados do projeto (Supabase → Project Settings → API Keys).
+  // A chave publicável (ou anon) pode ficar no código: quem protege os dados são as regras de acesso (RLS) do banco.
+  // Nunca coloque aqui a chave secreta (sb_secret_... ou service_role).
+  const SUPABASE_URL = 'https://mlovfgbndtpeczgnvivi.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_8w6VXWwfAMpSCSUF9oEOLg_uCOgvZP2';
+  const configurado = /^https:\/\//.test(SUPABASE_URL) && !SUPABASE_URL.includes('SEU-PROJETO') && !SUPABASE_KEY.startsWith('SUA-');
 
   // ---------- Dados (do PDF) ----------
   // Níveis: 'alta' | 'media' | 'baixa'
@@ -925,7 +926,7 @@
 
   // ---------- Supabase ----------
   const sb = configurado && window.supabase
-    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { flowType: 'pkce' } })
+    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { flowType: 'pkce' } })
     : null;
   let usuario = null;
 
@@ -2018,7 +2019,7 @@
     $('entrar-tentar').hidden = modo !== 'erro';
     $('entrar-status').textContent = {
       carregando: 'Carregando seus treinos…',
-      config: 'O app ainda não está ligado ao Supabase. Preencha SUPABASE_URL e SUPABASE_ANON_KEY no index.html (o passo a passo está no README).',
+      config: 'O app ainda não está ligado ao Supabase. Preencha SUPABASE_URL e SUPABASE_KEY no index.html (o passo a passo está no README).',
       login: 'Entre com sua conta Google para ver o treino do dia, registrar cargas e acompanhar seus check-ins em qualquer aparelho.',
       erro: msg,
     }[modo];
