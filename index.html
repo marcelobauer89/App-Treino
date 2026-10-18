@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f3f4f6" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0f1115" media="(prefers-color-scheme: dark)">
 <title>Bauer • Jiu-Jitsu + Hipertrofia</title>
@@ -27,15 +27,25 @@
     --fita: #ffffff;          /* grau de fita */
     --fita-vazia: #2e3136;
     --erro: #c62828;
+    --sobre-erro: #ffffff;
+    --ao-vivo: #22c55e;
+    /* Tipos de check-in (paleta categórica validada; a letra no selo garante a leitura sem cor) */
+    --musc: #2a78d6;
+    --jiu: #eb6834;
+    --bike: #1baf7a;
+    --selo-tinta: #0b0d10;
     --display: "Archivo", "Arial Narrow", system-ui, sans-serif;
     --texto: "Archivo", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --nav-h: 64px;
+    --ativo-h: 60px;
     color-scheme: light;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --gi: #0f1115; --papel: #171a20; --tinta: #f2f4f7; --tinta-2: #a3abb8; --fio: #2a2f38;
       --tatame: #3566d6; --tatame-forte: #2b57bf; --tatame-tinta: #8db0ff; --tatame-suave: #1b2740;
-      --faixa: #000000; --fita: #f2f4f7; --fita-vazia: #2c2f35; --erro: #ff6b6b;
+      --faixa: #000000; --fita: #f2f4f7; --fita-vazia: #2c2f35; --erro: #ff6b6b; --sobre-erro: #0b0d10;
+      --musc: #3987e5; --jiu: #d95926; --bike: #199e70;
       color-scheme: dark;
     }
   }
@@ -45,18 +55,38 @@
   body {
     margin: 0; background: var(--gi); color: var(--tinta);
     font-family: var(--texto); font-size: 16px; line-height: 1.5; -webkit-font-smoothing: antialiased;
+    padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
   }
-  button, input { font: inherit; color: inherit; }
+  body.com-ativo { padding-bottom: calc(var(--nav-h) + var(--ativo-h) + env(safe-area-inset-bottom, 0px)); }
+  button, input, textarea { font: inherit; color: inherit; }
   button { cursor: pointer; }
-  :where(button, a, input, summary):focus-visible { outline: 2px solid var(--tatame-tinta); outline-offset: 2px; }
+  [hidden] { display: none !important; }
+  :where(button, a, input, summary, textarea):focus-visible { outline: 2px solid var(--tatame-tinta); outline-offset: 2px; }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
   }
-  .wrap { max-width: 760px; margin: 0 auto; padding: 0 16px; }
+  .wrap {
+    max-width: 760px; margin: 0 auto;
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
   h2.secao {
     margin: 0; font-family: var(--display); font-stretch: 80%; font-weight: 800;
     font-size: 26px; line-height: 1.1;
   }
+
+  /* Botões comuns */
+  .btn {
+    min-height: 48px; padding: 0 18px; border: 0; border-radius: 10px;
+    background: var(--tatame); color: var(--sobre-tatame); font-size: 15px; font-weight: 700;
+  }
+  .btn:hover { background: var(--tatame-forte); }
+  .btn-sec {
+    min-height: 44px; padding: 0 16px; border: 1px solid var(--fio); border-radius: 10px;
+    background: var(--papel); color: var(--tinta); font-size: 14px; font-weight: 600;
+  }
+  .btn-sec:hover { border-color: var(--tinta-2); }
+  .status-ok { display: inline-flex; align-items: center; gap: 6px; color: var(--tatame-tinta); font-size: 15px; font-weight: 600; }
+  .status-ok svg { flex: 0 0 auto; }
 
   /* Hoje */
   header.hoje { padding: 24px 0 20px; }
@@ -69,6 +99,7 @@
     font-size: clamp(56px, 16vw, 88px); line-height: .92; text-wrap: balance;
   }
   .nota { margin: 8px 0 0; font-size: 18px; color: var(--tinta-2); }
+  .hoje-acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; margin-top: 16px; }
   .medidas {
     display: flex; flex-wrap: wrap; gap: 8px 28px; margin: 22px 0 0; padding-top: 14px;
     border-top: 1px solid var(--fio);
@@ -117,7 +148,7 @@
   .sobre-dica { color: var(--tinta-2); font-size: 14px; }
   .sobre[open] .sobre-dica { display: none; }
   .chev { flex: 0 0 auto; color: var(--tinta-2); transition: transform .2s ease; }
-  .sobre[open] .chev { transform: rotate(180deg); }
+  .sobre[open] .chev, [aria-expanded="true"] .chev { transform: rotate(180deg); }
   .sobre-corpo { display: grid; gap: 14px; padding: 0 0 18px; }
   @media (min-width: 720px) { .sobre-corpo { grid-template-columns: repeat(3, 1fr); gap: 20px; } }
   .sobre-corpo h3 { margin: 0 0 4px; font-size: 14px; font-weight: 700; }
@@ -127,6 +158,9 @@
   .ficha { margin-top: 24px; }
   .ficha-topo { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 10px; }
   .ficha-topo span { color: var(--tinta-2); font-size: 14px; text-align: right; }
+  .ficha-checkin { margin: 0 0 12px; }
+  .ficha-checkin:empty { display: none; }
+  .ficha-nota { margin: 0; color: var(--tinta-2); font-size: 14px; }
   .exercicios {
     list-style: none; margin: 0; padding: 0;
     background: var(--papel); border: 1px solid var(--fio); border-radius: 14px;
@@ -179,10 +213,7 @@
   .video:hover { background: var(--gi); }
   .video svg { color: #e02424; }
   .vazio { padding: 32px 16px; text-align: center; color: var(--tinta-2); }
-  .vazio button {
-    margin-top: 10px; min-height: 44px; padding: 0 16px; border: 1px solid var(--fio); border-radius: 10px;
-    background: transparent; color: var(--tinta); font-weight: 600;
-  }
+  .vazio button { margin-top: 10px; }
 
   /* Semana */
   .semana { margin-top: 32px; }
@@ -194,25 +225,167 @@
   .dia-info b { display: block; font-weight: 700; }
   .dia-info span { display: block; font-size: 14px; color: var(--tinta-2); }
   .dia.hoje { background: var(--tatame-suave); }
+  .dia-tags { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; align-self: center; }
   .tag-hoje {
-    align-self: center; padding: 2px 10px; border-radius: 999px;
+    padding: 2px 10px; border-radius: 999px;
     background: var(--tatame); color: var(--sobre-tatame); font-size: 12px; font-weight: 700;
   }
+  .tag-feito { display: inline-flex; align-items: center; gap: 4px; color: var(--tatame-tinta); font-size: 13px; font-weight: 700; }
+  .tag-extra { color: var(--tinta-2); font-size: 12.5px; }
   .semana-nota { margin: 10px 0 0; color: var(--tinta-2); font-size: 14px; max-width: 65ch; }
 
   /* Rodapé */
-  footer { margin: 32px 0 48px; color: var(--tinta-2); font-size: 13px; }
+  footer { margin: 32px 0 32px; color: var(--tinta-2); font-size: 13px; }
   footer p { margin: 0 0 8px; max-width: 70ch; }
   .legenda { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 0 0 14px; padding: 0; list-style: none; }
   .legenda li { display: inline-flex; align-items: center; gap: 8px; }
 
-  /* Modal de pesos */
+  /* Selos de tipo de check-in */
+  .selo {
+    flex: 0 0 auto; display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 5px;
+    font-family: var(--display); font-size: 11px; font-weight: 800; line-height: 1; color: var(--selo-tinta);
+  }
+  .selo.musc { background: var(--musc); }
+  .selo.jiu { background: var(--jiu); }
+  .selo.bike { background: var(--bike); }
+  .selo.grande { width: 30px; height: 30px; border-radius: 8px; font-size: 16px; }
+
+  /* Navegação inferior e barra de treino em andamento */
+  .nav {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+    display: grid; grid-template-columns: 1fr 1fr;
+    background: var(--papel); border-top: 1px solid var(--fio);
+    padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+  }
+  .nav button {
+    min-height: var(--nav-h); border: 0; background: transparent;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    color: var(--tinta-2); font-size: 12.5px; font-weight: 600;
+  }
+  .nav button[aria-current="page"] { color: var(--tatame-tinta); }
+  .nav svg { width: 22px; height: 22px; }
+  .ativo {
+    position: fixed; left: 0; right: 0; z-index: 19;
+    bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
+    background: var(--tinta); color: var(--gi);
+  }
+  .ativo-in {
+    display: flex; align-items: center; gap: 12px; min-height: var(--ativo-h);
+    max-width: 760px; margin: 0 auto; padding: 8px 16px;
+  }
+  .ativo-pulso { flex: 0 0 auto; width: 10px; height: 10px; border-radius: 50%; background: var(--ao-vivo); animation: pulso 2s ease-in-out infinite; }
+  @keyframes pulso { 50% { opacity: .35; } }
+  .ativo-txt { flex: 1; min-width: 0; display: grid; line-height: 1.3; }
+  .ativo-txt b { font-weight: 700; }
+  .ativo-txt span { font-size: 13px; opacity: .8; }
+  .ativo button {
+    flex: 0 0 auto; min-height: 44px; padding: 0 16px; border: 0; border-radius: 10px;
+    background: var(--gi); color: var(--tinta); font-weight: 700;
+  }
+  .toast {
+    position: fixed; left: 50%; transform: translateX(-50%); z-index: 30;
+    bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + 12px);
+    width: max-content; max-width: calc(100vw - 32px); padding: 12px 16px; border-radius: 12px;
+    background: var(--tinta); color: var(--gi); font-size: 14px; box-shadow: 0 6px 24px rgba(0, 0, 0, .18);
+  }
+  body.com-ativo .toast { bottom: calc(var(--nav-h) + var(--ativo-h) + env(safe-area-inset-bottom, 0px) + 12px); }
+
+  /* Dashboard */
+  .dash-topo { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 24px 0 16px; }
+  .dash-topo h1 {
+    margin: 0; font-family: var(--display); font-stretch: 68%; font-weight: 850; font-size: 48px; line-height: 1;
+  }
+  .numeros {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1px; margin: 0;
+    background: var(--fio); border: 1px solid var(--fio); border-radius: 14px; overflow: hidden;
+  }
+  .numeros div { display: grid; align-content: start; gap: 2px; padding: 14px 16px; background: var(--papel); }
+  .numeros dt { font-size: 13px; color: var(--tinta-2); }
+  .numeros dd {
+    margin: 0; font-family: var(--display); font-stretch: 80%; font-weight: 800; font-size: 34px; line-height: 1.05;
+    font-variant-numeric: tabular-nums;
+  }
+  .numeros dd small { font-family: var(--texto); font-stretch: 100%; font-size: 14px; font-weight: 500; color: var(--tinta-2); }
+  .bloco { margin-top: 28px; }
+  .bloco-topo { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 10px; }
+  .bloco-topo span { color: var(--tinta-2); font-size: 14px; text-align: right; }
+  .metas, .barras {
+    list-style: none; margin: 0; padding: 14px 16px; display: grid; gap: 12px;
+    background: var(--papel); border: 1px solid var(--fio); border-radius: 14px;
+  }
+  .meta { display: grid; grid-template-columns: minmax(0, 1fr) 96px 56px; gap: 12px; align-items: center; font-size: 15px; }
+  .meta-nome, .barra-nome { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 3px; }
+  .seg i { height: 8px; border-radius: 4px; background: var(--fio); }
+  .seg i.on.musc { background: var(--musc); }
+  .seg i.on.jiu { background: var(--jiu); }
+  .seg i.on.bike { background: var(--bike); }
+  .meta-valor, .barra-valor { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .barra { display: grid; grid-template-columns: 112px minmax(0, 1fr) 28px; gap: 12px; align-items: center; font-size: 15px; }
+  .barra-trilho { height: 10px; border-radius: 5px; background: var(--gi); overflow: hidden; }
+  .barra-trilho i { display: block; height: 100%; border-radius: 0 4px 4px 0; }
+  .barra-trilho i.musc { background: var(--musc); }
+  .barra-trilho i.jiu { background: var(--jiu); }
+  .barra-trilho i.bike { background: var(--bike); }
+
+  .cal { padding: 12px; background: var(--papel); border: 1px solid var(--fio); border-radius: 14px; }
+  .cal-topo { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+  .cal-topo h2 { font-size: 22px; text-align: center; }
+  .cal-nav {
+    flex: 0 0 auto; width: 44px; height: 44px; border: 1px solid var(--fio); border-radius: 10px;
+    display: grid; place-items: center; background: transparent; color: var(--tinta);
+  }
+  .cal-nav:disabled { opacity: .35; cursor: default; }
+  .cal-grade { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; }
+  .cal-sem { padding: 4px 0; font-size: 12px; color: var(--tinta-2); text-align: center; }
+  .cal-dia {
+    min-width: 0; min-height: 58px; padding: 5px 4px; border: 1px solid transparent; border-radius: 9px;
+    display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; gap: 4px;
+    background: transparent; text-align: left; font-variant-numeric: tabular-nums;
+  }
+  .cal-dia .n { font-size: 14px; font-weight: 600; line-height: 1; }
+  .cal-dia.tem { background: var(--gi); }
+  .cal-dia.hoje { border-color: var(--tinta); }
+  .cal-dia[aria-pressed="true"] { background: var(--tatame-suave); border-color: var(--tatame-tinta); }
+  .cal-dia.futuro .n { color: var(--tinta-2); }
+  .cal-selos { display: flex; align-items: center; gap: 2px; font-size: 11px; font-weight: 700; color: var(--tinta-2); }
+  .legenda-cal { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 10px 2px 0; padding: 0; list-style: none; font-size: 13px; color: var(--tinta-2); }
+  .legenda-cal li { display: inline-flex; align-items: center; gap: 4px; }
+  .legenda-cal li span:last-child { margin-left: 4px; }
+
+  .cks { list-style: none; margin: 0; padding: 0; background: var(--papel); border: 1px solid var(--fio); border-radius: 14px; }
+  .ck + .ck { border-top: 1px solid var(--fio); }
+  .ck-head {
+    width: 100%; min-height: 64px; padding: 12px 16px; border: 0; background: transparent; text-align: left;
+    display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center;
+  }
+  .ck-head b { display: block; font-weight: 700; }
+  .ck-meta { display: block; font-size: 14px; color: var(--tinta-2); }
+  .ck-corpo { display: grid; gap: 12px; padding: 0 16px 16px; }
+  .ck-obs { margin: 0; font-size: 15px; max-width: 65ch; }
+  .ck-ex { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  .ck-ex li { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; }
+  .ck-ex .kg { font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .ck-ex .sem { color: var(--tinta-2); font-weight: 400; }
+  .ck-acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .ck-acoes p { flex-basis: 100%; margin: 0; font-size: 14px; }
+  .btn-perigo {
+    min-height: 44px; padding: 0 14px; border: 1px solid var(--erro); border-radius: 10px;
+    background: transparent; color: var(--erro); font-size: 14px; font-weight: 600;
+  }
+  .btn-perigo.cheio { background: var(--erro); color: var(--sobre-erro); }
+  .vazio-dia {
+    display: grid; justify-items: start; gap: 10px; padding: 18px 16px; color: var(--tinta-2);
+    background: var(--papel); border: 1px solid var(--fio); border-radius: 14px;
+  }
+  .vazio-dia p { margin: 0; }
+
+  /* Modais (folha inferior no celular) */
   dialog.modal {
     width: min(440px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); padding: 0;
     border: 1px solid var(--fio); border-radius: 18px; background: var(--papel); color: var(--tinta);
   }
   dialog.modal::backdrop { background: rgba(10, 12, 16, .55); }
-  /* No celular o modal abre como folha inferior, ao alcance do polegar. */
   @media (max-width: 560px) {
     dialog.modal {
       width: 100%; max-width: 100%; max-height: 90dvh; margin: auto 0 0;
@@ -230,6 +403,14 @@
     display: grid; place-items: center; background: transparent; color: var(--tinta-2);
   }
   .modal-close:hover { background: var(--gi); color: var(--tinta); }
+  .modal-done {
+    min-height: 52px; border: 0; border-radius: 10px;
+    background: var(--tatame); color: var(--sobre-tatame); font-size: 16px; font-weight: 700;
+  }
+  .modal-done:hover { background: var(--tatame-forte); }
+  .aviso { margin: 0; padding: 10px 12px; border-radius: 10px; background: var(--tatame-suave); color: var(--tinta); font-size: 14px; }
+  .resumo-enc { margin: 4px 0 0; color: var(--tinta-2); font-size: 15px; }
+
   .log { display: grid; gap: 8px; }
   .log-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 2px 8px; }
   .log-head h4 { margin: 0; font-size: 14px; font-weight: 700; white-space: nowrap; }
@@ -244,70 +425,162 @@
   .serie-row input::placeholder { color: var(--tinta-2); font-weight: 400; }
   .serie-row input:focus { outline: 2px solid var(--tatame-tinta); outline-offset: -1px; }
   .serie-row input[aria-invalid="true"] { border-color: var(--erro); }
-  .log-erro { margin: 0; color: var(--erro); font-size: 14px; }
-  .modal-done {
-    min-height: 52px; border: 0; border-radius: 10px;
-    background: var(--tatame); color: var(--sobre-tatame); font-size: 16px; font-weight: 700;
+  .log-erro, .form-erro { margin: 0; color: var(--erro); font-size: 14px; }
+
+  /* Formulários de check-in */
+  fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+  .campo { display: grid; gap: 6px; }
+  .campo > label, .campo > legend { padding: 0; font-size: 14px; font-weight: 700; }
+  .opcional { color: var(--tinta-2); font-weight: 400; }
+  .campo input:not([type="radio"]), .campo textarea {
+    width: 100%; min-height: 48px; padding: 10px 12px; border: 1px solid var(--fio); border-radius: 10px;
+    background: var(--gi); font-size: 16px;
   }
-  .modal-done:hover { background: var(--tatame-forte); }
+  .campo textarea { min-height: 84px; resize: vertical; }
+  .linha2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .opcoes { display: flex; flex-wrap: wrap; gap: 8px; }
+  .opcao { position: relative; }
+  .opcao input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+  .opcao > span {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%;
+    min-height: 44px; min-width: 48px; padding: 0 14px; border: 1px solid var(--fio); border-radius: 10px;
+    background: var(--papel); font-size: 15px; font-weight: 600;
+  }
+  .opcao input:checked + span { background: var(--tinta); border-color: var(--tinta); color: var(--gi); }
+  .opcao input:focus-visible + span { outline: 2px solid var(--tatame-tinta); outline-offset: 2px; }
+  .rec .opcoes { display: grid; grid-template-columns: repeat(5, 1fr); }
+  .rec-legenda { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--tinta-2); }
 </style>
 </head>
 <body>
 
-<header class="hoje">
-  <div class="wrap">
-    <p class="marca">Jiu-Jitsu + Hipertrofia</p>
-    <p class="data" id="data"></p>
-    <h1 class="atividade" id="atividade"></h1>
-    <p class="nota" id="nota"></p>
-    <dl class="medidas">
-      <div><dt>Peso atual</dt><dd>76 kg</dd></div>
-      <div><dt>Alvo</dt><dd>73–74 kg</dd></div>
-      <div><dt>Gordura</dt><dd>13,8%</dd></div>
-    </dl>
-  </div>
-</header>
+<div id="tela-treino">
+  <header class="hoje">
+    <div class="wrap">
+      <p class="marca">Jiu-Jitsu + Hipertrofia</p>
+      <p class="data" id="data"></p>
+      <h1 class="atividade" id="atividade"></h1>
+      <p class="nota" id="nota"></p>
+      <div class="hoje-acoes" id="hoje-acoes"></div>
+      <dl class="medidas">
+        <div><dt>Peso atual</dt><dd>76 kg</dd></div>
+        <div><dt>Alvo</dt><dd>73–74 kg</dd></div>
+        <div><dt>Gordura</dt><dd>13,8%</dd></div>
+      </dl>
+    </div>
+  </header>
 
-<div class="controles">
-  <div class="wrap">
-    <div class="treinos" id="treinos" role="tablist" aria-label="Treino"></div>
+  <div class="controles">
+    <div class="wrap">
+      <div class="treinos" id="treinos" role="tablist" aria-label="Treino"></div>
+    </div>
+  </div>
+
+  <main class="wrap">
+    <div class="chips" id="chips" role="group" aria-label="Filtrar por foco"></div>
+
+    <section id="sobre"></section>
+
+    <section class="ficha" aria-labelledby="ficha-titulo">
+      <div class="ficha-topo">
+        <h2 class="secao" id="ficha-titulo">Ficha</h2>
+        <span id="count"></span>
+      </div>
+      <div class="ficha-checkin" id="ficha-checkin"></div>
+      <ol class="exercicios" id="list" aria-live="polite"></ol>
+    </section>
+
+    <section class="semana" aria-labelledby="semana-titulo">
+      <h2 class="secao" id="semana-titulo">Semana</h2>
+      <ol class="dias" id="dias"></ol>
+      <p class="semana-nota">Pernas fica na sexta para ter o fim de semana de recuperação e não pesar antes do jiu de terça.</p>
+    </section>
+
+    <footer>
+      <ul class="legenda" aria-label="Legenda dos graus">
+        <li><span class="ponteira" data-nivel="3" aria-hidden="true"><i></i><i></i><i></i></span>Alta contribuição</li>
+        <li><span class="ponteira" data-nivel="2" aria-hidden="true"><i></i><i></i><i></i></span>Média</li>
+        <li><span class="ponteira" data-nivel="1" aria-hidden="true"><i></i><i></i><i></i></span>Baixa ou secundária</li>
+      </ul>
+      <p>PSE é a percepção subjetiva de esforço; o 10 fica reservado ao tatame. Use a carga que respeite a técnica e a recuperação.</p>
+      <p>Terça e quinta são de jiu-jitsu. Se houver aula extra na sexta, o Treino 3 (pernas) vai para sábado. Domingo é descanso.</p>
+      <p>Check-ins e cargas ficam salvos só neste navegador (ainda sem sincronização em nuvem).</p>
+      <p>Adaptação prática do PDF enviado. Não substitui avaliação de um profissional de educação física ou nutrição, especialmente se houver dor ou lesão.</p>
+    </footer>
+  </main>
+</div>
+
+<main class="wrap" id="tela-dashboard" hidden>
+  <div class="dash-topo">
+    <h1>Dashboard</h1>
+    <button class="btn-sec" type="button" data-novo-dash>Novo check-in</button>
+  </div>
+  <dl class="numeros" id="numeros"></dl>
+  <section class="bloco" aria-labelledby="semana-atual-titulo">
+    <div class="bloco-topo">
+      <h2 class="secao" id="semana-atual-titulo">Esta semana</h2>
+      <span id="semana-atual-datas"></span>
+    </div>
+    <ul class="metas" id="metas"></ul>
+  </section>
+  <section class="bloco" aria-labelledby="cal-titulo">
+    <div class="cal">
+      <div class="cal-topo">
+        <button class="cal-nav" type="button" data-mes="-1" aria-label="Mês anterior">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <h2 class="secao" id="cal-titulo"></h2>
+        <button class="cal-nav" type="button" data-mes="1" aria-label="Próximo mês">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+      </div>
+      <div class="cal-grade" id="cal-grade"></div>
+      <ul class="legenda-cal" aria-label="Legenda do calendário">
+        <li><span class="selo musc" aria-hidden="true">1</span><span class="selo musc" aria-hidden="true">2</span><span class="selo musc" aria-hidden="true">3</span><span>Musculação</span></li>
+        <li><span class="selo jiu" aria-hidden="true">J</span><span>Jiu-jitsu</span></li>
+        <li><span class="selo bike" aria-hidden="true">B</span><span>Bike</span></li>
+      </ul>
+    </div>
+  </section>
+  <section class="bloco" aria-labelledby="dia-titulo">
+    <div class="bloco-topo"><h2 class="secao" id="dia-titulo"></h2></div>
+    <div id="dia-lista"></div>
+  </section>
+  <section class="bloco" aria-labelledby="tipos-titulo">
+    <div class="bloco-topo"><h2 class="secao" id="tipos-titulo"></h2></div>
+    <ul class="barras" id="barras"></ul>
+  </section>
+</main>
+
+<div class="ativo" id="ativo" hidden>
+  <div class="ativo-in">
+    <span class="ativo-pulso" aria-hidden="true"></span>
+    <div class="ativo-txt"><b id="ativo-titulo"></b><span id="ativo-tempo"></span></div>
+    <button type="button" data-encerrar>Encerrar</button>
   </div>
 </div>
 
-<main class="wrap">
-  <div class="chips" id="chips" role="group" aria-label="Filtrar por foco"></div>
+<nav class="nav" aria-label="Telas">
+  <button type="button" data-tela="treino">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>
+    Treino
+  </button>
+  <button type="button" data-tela="dashboard">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+    Dashboard
+  </button>
+</nav>
 
-  <section id="sobre"></section>
-
-  <section class="ficha" aria-labelledby="ficha-titulo">
-    <div class="ficha-topo">
-      <h2 class="secao" id="ficha-titulo">Ficha</h2>
-      <span id="count"></span>
-    </div>
-    <ol class="exercicios" id="list" aria-live="polite"></ol>
-  </section>
-
-  <section class="semana" aria-labelledby="semana-titulo">
-    <h2 class="secao" id="semana-titulo">Semana</h2>
-    <ol class="dias" id="dias"></ol>
-    <p class="semana-nota">Pernas fica na sexta para ter o fim de semana de recuperação e não pesar antes do jiu de terça.</p>
-  </section>
-
-  <footer>
-    <ul class="legenda" aria-label="Legenda dos graus">
-      <li><span class="ponteira" data-nivel="3" aria-hidden="true"><i></i><i></i><i></i></span>Alta contribuição</li>
-      <li><span class="ponteira" data-nivel="2" aria-hidden="true"><i></i><i></i><i></i></span>Média</li>
-      <li><span class="ponteira" data-nivel="1" aria-hidden="true"><i></i><i></i><i></i></span>Baixa ou secundária</li>
-    </ul>
-    <p>PSE é a percepção subjetiva de esforço; o 10 fica reservado ao tatame. Use a carga que respeite a técnica e a recuperação.</p>
-    <p>Terça e quinta são de jiu-jitsu. Se houver aula extra na sexta, o Treino 3 (pernas) vai para sábado. Domingo é descanso.</p>
-    <p>As cargas registradas ficam salvas só neste navegador (ainda sem sincronização em nuvem).</p>
-    <p>Adaptação prática do PDF enviado. Não substitui avaliação de um profissional de educação física ou nutrição, especialmente se houver dor ou lesão.</p>
-  </footer>
-</main>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
 <dialog class="modal" id="log-dialog" aria-labelledby="log-title">
   <div class="modal-body" id="log-body"></div>
+</dialog>
+<dialog class="modal" id="enc-dialog" aria-labelledby="enc-title">
+  <div class="modal-body" id="enc-body"></div>
+</dialog>
+<dialog class="modal" id="form-dialog" aria-labelledby="form-title">
+  <div class="modal-body" id="form-body"></div>
 </dialog>
 
 <script>
@@ -394,16 +667,27 @@
 
   // Semana tipo; o índice segue Date.getDay() (0 = domingo).
   const SEMANA = [
-    { curto: 'Dom', atividade: 'Descanso', nota: 'Recuperação' },
-    { curto: 'Seg', treino: '2', nota: 'Peito, tríceps e ombro' },
-    { curto: 'Ter', atividade: 'Jiu-jitsu', nota: 'Prioridade técnica' },
-    { curto: 'Qua', treino: '1', nota: 'Costas + bíceps' },
-    { curto: 'Qui', atividade: 'Jiu-jitsu', nota: 'Prioridade técnica' },
-    { curto: 'Sex', treino: '3', nota: 'Pernas (se não houver jiu)' },
-    { curto: 'Sáb', atividade: 'Bike leve', nota: '20–40 min, ou Treino 3 deslocado' },
+    { curto: 'Dom', atividade: 'Descanso', nota: 'Recuperação', grupo: null },
+    { curto: 'Seg', treino: '2', nota: 'Peito, tríceps e ombro', grupo: 'musc' },
+    { curto: 'Ter', atividade: 'Jiu-jitsu', nota: 'Prioridade técnica', grupo: 'jiu' },
+    { curto: 'Qua', treino: '1', nota: 'Costas + bíceps', grupo: 'musc' },
+    { curto: 'Qui', atividade: 'Jiu-jitsu', nota: 'Prioridade técnica', grupo: 'jiu' },
+    { curto: 'Sex', treino: '3', nota: 'Pernas (se não houver jiu)', grupo: 'musc' },
+    { curto: 'Sáb', atividade: 'Bike leve', nota: '20–40 min, ou Treino 3 deslocado', grupo: 'bike' },
   ];
   const ORDEM_SEMANA = [1, 2, 3, 4, 5, 6, 0];
   const tituloDia = (d) => (d.treino ? TREINOS[d.treino].nome : d.atividade);
+
+  // Tipos de check-in. Musculação usa uma cor só; o número no selo diz qual treino foi.
+  const TIPOS = {
+    t1: { nome: 'Treino 1', selo: '1', grupo: 'musc', treino: '1' },
+    t2: { nome: 'Treino 2', selo: '2', grupo: 'musc', treino: '2' },
+    t3: { nome: 'Treino 3', selo: '3', grupo: 'musc', treino: '3' },
+    jiu: { nome: 'Jiu-jitsu', selo: 'J', grupo: 'jiu' },
+    bike: { nome: 'Bike', selo: 'B', grupo: 'bike' },
+  };
+  const ORDEM_TIPOS = ['t1', 't2', 't3', 'jiu', 'bike'];
+  const DURACAO_PADRAO = { musc: 60, jiu: 60, bike: 30 };
 
   const FOCOS = [
     { id: 'todos', label: 'Todos' },
@@ -445,13 +729,30 @@
   };
 
   // ---------- Datas ----------
+  // Horários são guardados como texto local "AAAA-MM-DDTHH:MM" (comparáveis como texto).
   const pad = (n) => String(n).padStart(2, '0');
-  function hoje() {
-    const d = new Date();
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const isoLocal = (d) =>
+    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  const agoraIso = () => isoLocal(new Date());
+  const hoje = () => agoraIso().slice(0, 10);
+  const deData = (s) => new Date(`${s}T00:00`);
+  const somarDias = (s, n) => { const d = deData(s); d.setDate(d.getDate() + n); return isoLocal(d).slice(0, 10); };
+  const segundaDe = (s) => somarDias(s, -((deData(s).getDay() + 6) % 7));
+  const horaDe = (s) => s.slice(11, 16);
+  const minutosEntre = (a, b) => Math.max(0, Math.round((new Date(b) - new Date(a)) / 60000));
+  const capitalizar = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+  const fmtData = (s, opts) => new Intl.DateTimeFormat('pt-BR', opts).format(deData(s));
+  const dataLonga = (s) => capitalizar(fmtData(s, { weekday: 'long', day: 'numeric', month: 'long' }));
+  const nomeMes = (ano, mes) => new Intl.DateTimeFormat('pt-BR', { month: 'long' }).format(new Date(ano, mes, 1));
+  const fmtNum = (n) => n.toLocaleString('pt-BR', { maximumFractionDigits: 1 });
+  function fmtDur(min) {
+    if (min < 60) return `${min} min`;
+    const h = Math.floor(min / 60), m = min % 60;
+    return m ? `${h} h ${m} min` : `${h} h`;
   }
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-  // ---------- Estado ----------
+  // ---------- Estado da tela ----------
   const KEY = 'bauer-treino-estado';
   let estado = { treino: '1', foco: 'todos', descAberta: false, dia: null };
   try {
@@ -473,7 +774,105 @@
   };
   salvar();
 
-  // ---------- Helpers ----------
+  // ---------- Check-ins ----------
+  // checkin = { id, tipo, inicio, fim (null = aberto), semHorario, recuperacao, obs, retroativo,
+  //             series: { [exercício]: [{ carga }] }, ultimaSerie }
+  const CK_KEY = 'bauer-checkins-v1';
+  const novoId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  const salvarCheckins = () => { try { localStorage.setItem(CK_KEY, JSON.stringify(checkins)); } catch (_) {} };
+
+  function carregarCheckins() {
+    try {
+      const v = JSON.parse(localStorage.getItem(CK_KEY) || 'null');
+      if (Array.isArray(v)) return v;
+    } catch (_) {}
+    return null;
+  }
+
+  // Converte as cargas salvas antes dos check-ins (por dia e exercício) em check-ins sem horário.
+  function migrarLogsAntigos() {
+    let antigos = {};
+    try { antigos = JSON.parse(localStorage.getItem('bauer-logs-v1') || '{}') || {}; } catch (_) {}
+    const porDia = {};
+    for (const [chave, datas] of Object.entries(antigos)) {
+      const [treino, ...resto] = chave.split(':');
+      const nome = resto.join(':');
+      if (!TREINOS[treino]) continue;
+      for (const [data, series] of Object.entries(datas || {})) {
+        const validas = (series || []).map((s) => (s && s.carga != null ? { carga: s.carga } : null));
+        if (!validas.some(Boolean)) continue;
+        const k = `${data}|${treino}`;
+        porDia[k] = porDia[k] || {
+          id: novoId(), tipo: `t${treino}`, inicio: `${data}T12:00`, fim: `${data}T13:00`,
+          semHorario: true, recuperacao: null, obs: '', retroativo: true, series: {},
+        };
+        porDia[k].series[nome] = validas;
+      }
+    }
+    return Object.values(porDia);
+  }
+
+  let checkins = carregarCheckins();
+  if (!checkins) { checkins = migrarLogsAntigos(); salvarCheckins(); }
+
+  const dataDe = (c) => c.inicio.slice(0, 10);
+  const checkinAberto = () => checkins.find((c) => !c.fim) || null;
+  const duracaoMin = (c) => (c.semHorario || !c.fim ? null : minutosEntre(c.inicio, c.fim));
+  const temCarga = (series) => (series || []).some((s) => s && s.carga != null);
+  const porInicio = (a, b) => a.inicio.localeCompare(b.inicio);
+  function horarioTexto(c) {
+    if (c.semHorario) return 'sem horário registrado';
+    if (!c.fim) return `em andamento desde ${horaDe(c.inicio)}`;
+    return `das ${horaDe(c.inicio)} às ${horaDe(c.fim)}`;
+  }
+  function agruparPorData() {
+    const m = {};
+    for (const c of checkins) (m[dataDe(c)] = m[dataDe(c)] || []).push(c);
+    for (const k in m) m[k].sort(porInicio);
+    return m;
+  }
+  const tipoPlanejado = (data) => {
+    const d = SEMANA[deData(data).getDay()];
+    return d.treino ? `t${d.treino}` : d.grupo || 'jiu';
+  };
+
+  // Sessão em que as cargas do treino vão: o check-in aberto desse treino ou o último de hoje.
+  function sessaoAtual(treino) {
+    const tipo = `t${treino}`;
+    const a = checkinAberto();
+    if (a && a.tipo === tipo) return a;
+    return checkins.filter((c) => c.tipo === tipo && c.fim && dataDe(c) === hoje()).sort(porInicio).pop() || null;
+  }
+
+  // Check-in anterior mais recente desse treino com carga no exercício (pré-preenchimento, RF-14).
+  function ultimaSessao(treino, nome) {
+    const atual = sessaoAtual(treino);
+    return checkins
+      .filter((c) => c !== atual && c.fim && c.tipo === `t${treino}` && temCarga(c.series[nome]))
+      .sort(porInicio).pop() || null;
+  }
+
+  function iniciarCheckin(tipo) {
+    const c = {
+      id: novoId(), tipo, inicio: agoraIso(), fim: null, semHorario: false,
+      recuperacao: null, obs: '', retroativo: false, series: {},
+    };
+    checkins.push(c);
+    salvarCheckins();
+    return c;
+  }
+
+  // Regra 14: check-in esquecido aberto por mais de 3 h é encerrado na hora da última série.
+  function encerrarEsquecidos() {
+    const a = checkinAberto();
+    if (!a || minutosEntre(a.inicio, agoraIso()) < 180) return null;
+    const umaHora = isoLocal(new Date(new Date(a.inicio).getTime() + 60 * 60000));
+    a.fim = a.ultimaSerie && a.ultimaSerie > a.inicio ? a.ultimaSerie : umaHora;
+    salvarCheckins();
+    return a;
+  }
+
+  // ---------- Helpers de interface ----------
   const $ = (id) => document.getElementById(id);
   const videoDe = (nome) => (VIDEOS[nome] ? `https://www.youtube.com/shorts/${VIDEOS[nome]}` : null);
   const exerciciosDoTreino = () => TREINOS[estado.treino].exercicios;
@@ -482,36 +881,37 @@
   const ICON_PLAY = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
   const ICON_CHECK = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
   const ICON_X = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+  const BOTAO_FECHAR = `<button class="modal-close" type="button" data-fechar aria-label="Fechar">${ICON_X}</button>`;
   const ponteiraHTML = (nivel) =>
     `<span class="ponteira" data-nivel="${GRAUS[nivel]}" aria-hidden="true"><i></i><i></i><i></i></span>`;
+  const seloHTML = (tipo, extra = '') =>
+    `<span class="selo ${TIPOS[tipo].grupo} ${extra}" aria-hidden="true">${TIPOS[tipo].selo}</span>`;
+
+  let toastTimer;
+  function toast(msg) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { t.hidden = true; }, 4000);
+  }
+
+  const recHTML = (nome, valor) => `
+    <fieldset class="campo rec">
+      <legend>Recuperação <span class="opcional">(opcional)</span></legend>
+      <div class="opcoes">
+        ${[1, 2, 3, 4, 5].map((n) => `
+          <label class="opcao"><input type="radio" name="${nome}" value="${n}"${valor === n ? ' checked' : ''}><span>${n}</span></label>`).join('')}
+      </div>
+      <div class="rec-legenda"><span>1 muito cansado</span><span>5 recuperado</span></div>
+    </fieldset>`;
+  const valorRec = (raiz, nome) => {
+    const r = raiz.querySelector(`input[name="${nome}"]:checked`);
+    return r ? Number(r.value) : null;
+  };
 
   // ---------- Registro de pesos ----------
-  // logs[chave][AAAA-MM-DD] = [{ carga }, ...] (uma entrada por série)
-  const LOGS_KEY = 'bauer-logs-v1';
-  let logs = {};
-  try { logs = JSON.parse(localStorage.getItem(LOGS_KEY) || '{}') || {}; } catch (_) {}
-  const salvarLogs = () => { try { localStorage.setItem(LOGS_KEY, JSON.stringify(logs)); } catch (_) {} };
-
-  const chaveEx = (ex) => `${estado.treino}:${ex.nome}`;
-  function numSeries(ex) {
-    const m = /^(\d+)\s*×/.exec(ex.dose);
-    return m ? parseInt(m[1], 10) : 3;
-  }
-
-  function ultimoAnterior(chave) {
-    const h = logs[chave] || {};
-    const datas = Object.keys(h).filter((d) => d < hoje() && h[d].some((s) => s && s.carga != null)).sort();
-    return datas.length ? h[datas[datas.length - 1]] : null;
-  }
-
-  function definirSerie(chave, n, campo, valor) {
-    const data = hoje();
-    logs[chave] = logs[chave] || {};
-    logs[chave][data] = logs[chave][data] || [];
-    logs[chave][data][n] = logs[chave][data][n] || {};
-    logs[chave][data][n][campo] = valor;
-    salvarLogs();
-  }
+  const numSeries = (ex) => { const m = /^(\d+)\s*×/.exec(ex.dose); return m ? parseInt(m[1], 10) : 3; };
 
   // Aceita vírgula ou ponto ("22,5" ou "22.5"); undefined = valor inválido.
   function lerKg(texto) {
@@ -523,35 +923,56 @@
   const fmtKg = (n) => String(n).replace('.', ',');
   const listaKg = (series) => series.map((s) => (s && s.carga != null ? fmtKg(s.carga) : '–')).join(' / ');
 
+  const logDialog = $('log-dialog');
+  let exAberto = null;
+  const camposDoModal = () => [...logDialog.querySelectorAll('[data-campo]')];
+
+  function definirSerie(nome, n, valor) {
+    let c = sessaoAtual(estado.treino);
+    if (!c) {
+      if (valor == null || checkinAberto()) return;
+      c = iniciarCheckin(`t${estado.treino}`);
+      const aviso = $('log-aviso');
+      aviso.textContent = `Check-in do ${TIPOS[c.tipo].nome} iniciado às ${horaDe(c.inicio)}.`;
+      aviso.hidden = false;
+      atualizarCheckinUI();
+    }
+    c.series[nome] = c.series[nome] || [];
+    c.series[nome][n] = valor == null ? null : { carga: valor };
+    if (!c.fim) c.ultimaSerie = agoraIso();
+    salvarCheckins();
+  }
+
   function salvarInput(el) {
     const v = lerKg(el.value);
     el.setAttribute('aria-invalid', String(v === undefined));
-    if (v !== undefined) definirSerie(el.dataset.ex, Number(el.dataset.serie), el.dataset.campo, v);
+    if (v !== undefined) definirSerie(el.dataset.ex, Number(el.dataset.serie), v);
     const erro = $('log-erro');
     if (erro) erro.hidden = !camposDoModal().some((c) => c.getAttribute('aria-invalid') === 'true');
   }
 
   function logHTML(ex) {
-    const chave = chaveEx(ex);
-    const ultimo = ultimoAnterior(chave);
-    const atual = (logs[chave] || {})[hoje()] || [];
+    const sessao = sessaoAtual(estado.treino);
+    const anterior = ultimaSessao(estado.treino, ex.nome);
+    const atual = (sessao && sessao.series[ex.nome]) || [];
+    const ultimo = anterior ? anterior.series[ex.nome] : null;
     const total = numSeries(ex);
     const linhas = Array.from({ length: total }, (_, n) => {
-      const a = atual[n] || {};
-      const ref = (ultimo && ultimo[n]) || {};
       // RF-14: a carga já vem preenchida com a da última sessão.
-      const carga = a.carga ?? ref.carga;
+      const carga = (atual[n] && atual[n].carga) ?? (ultimo && ultimo[n] && ultimo[n].carga);
       return `
         <div class="serie-row">
           <label for="kg-${n}">Série ${n + 1}</label>
           <input id="kg-${n}" type="text" inputmode="decimal" autocomplete="off" placeholder="kg"
             enterkeyhint="${n < total - 1 ? 'next' : 'done'}"
-            data-ex="${chave}" data-serie="${n}" data-campo="carga" value="${carga != null ? fmtKg(carga) : ''}"
-            aria-label="${ex.nome}: carga da série ${n + 1} (kg)" aria-describedby="log-erro">
+            data-ex="${esc(ex.nome)}" data-serie="${n}" data-campo="carga" value="${carga != null ? fmtKg(carga) : ''}"
+            aria-label="${esc(ex.nome)}: carga da série ${n + 1} (kg)" aria-describedby="log-erro">
         </div>`;
     }).join('');
     const hint = ultimo ? `<span class="log-hint">Última vez: ${listaKg(ultimo)} kg</span>` : '';
+    const nomeTreino = TREINOS[estado.treino].nome;
     return `
+      <p class="aviso" id="log-aviso"${sessao ? ' hidden' : ''}>O check-in do ${nomeTreino} começa quando você salvar o primeiro peso.</p>
       <div class="log">
         <div class="log-head"><h4>Carga por série (kg)</h4>${hint}</div>
         ${linhas}
@@ -560,8 +981,9 @@
   }
 
   function logBtnHTML(ex, i) {
-    const salvo = (logs[chaveEx(ex)] || {})[hoje()] || [];
-    if (!salvo.some((s) => s && s.carga != null)) {
+    const sessao = sessaoAtual(estado.treino);
+    const salvo = (sessao && sessao.series[ex.nome]) || [];
+    if (!temCarga(salvo)) {
       return `<button class="log-btn" type="button" data-log="${i}">Registrar pesos</button>`;
     }
     const series = Array.from({ length: numSeries(ex) }, (_, n) => salvo[n]);
@@ -569,14 +991,201 @@
       ${ICON_CHECK}<span>Hoje: ${listaKg(series)} kg</span></button>`;
   }
 
-  // ---------- Render ----------
+  function abrirLog(i) {
+    exAberto = i;
+    const ex = exerciciosDoTreino()[i];
+    const tipo = `t${estado.treino}`;
+    const aberto = checkinAberto();
+    const conflito = aberto && aberto.tipo !== tipo && !sessaoAtual(estado.treino);
+    const cabeca = `
+      <div class="modal-head">
+        <div>
+          <h3 id="log-title">${ex.nome}</h3>
+          <p class="ex-dose"><span>${ex.dose}</span><span class="pse">PSE ${ex.pse}</span></p>
+        </div>
+        ${BOTAO_FECHAR}
+      </div>`;
+    $('log-body').innerHTML = conflito
+      ? `${cabeca}
+        <p class="aviso">O check-in do ${TIPOS[aberto.tipo].nome} está aberto desde ${horaDe(aberto.inicio)}. Para registrar o ${TIPOS[tipo].nome}, encerre-o primeiro.</p>
+        <button class="modal-done" type="button" data-trocar>Encerrar ${TIPOS[aberto.tipo].nome} e iniciar ${TIPOS[tipo].nome}</button>`
+      : `${cabeca}${logHTML(ex)}
+        <button class="modal-done" type="button" data-concluir>Concluir</button>`;
+    if (!logDialog.open) logDialog.showModal();
+  }
+
+  // "Concluir" grava tudo o que está na tela, inclusive a carga pré-preenchida.
+  function concluirLog() {
+    const campos = camposDoModal();
+    campos.forEach(salvarInput);
+    const invalido = campos.find((el) => el.getAttribute('aria-invalid') === 'true');
+    if (invalido) invalido.focus();
+    else logDialog.close();
+  }
+
+  // ---------- Encerrar check-in ----------
+  const encDialog = $('enc-dialog');
+  let depoisEncerrar = null;
+
+  function abrirEncerrar({ motivo = '', depois = null } = {}) {
+    const a = checkinAberto();
+    if (!a) return;
+    depoisEncerrar = depois;
+    const min = minutosEntre(a.inicio, agoraIso());
+    let resumo = '';
+    if (TIPOS[a.tipo].grupo === 'musc') {
+      const exs = TREINOS[TIPOS[a.tipo].treino].exercicios;
+      const feitos = exs.filter((ex) => temCarga(a.series[ex.nome])).length;
+      resumo = `${feitos} de ${exs.length} exercícios com carga registrada.`;
+    }
+    $('enc-body').innerHTML = `
+      <div class="modal-head">
+        <div>
+          <h3 id="enc-title">Encerrar ${TIPOS[a.tipo].nome}</h3>
+          <p class="resumo-enc">Começou às ${horaDe(a.inicio)}, há ${fmtDur(min)}.</p>
+        </div>
+        ${BOTAO_FECHAR}
+      </div>
+      ${motivo ? `<p class="aviso">${motivo}</p>` : ''}
+      ${resumo ? `<p class="resumo-enc">${resumo}</p>` : ''}
+      ${recHTML('enc-rec', a.recuperacao)}
+      <div class="campo">
+        <label for="enc-obs">Observação <span class="opcional">(opcional)</span></label>
+        <textarea id="enc-obs" placeholder="Ex.: ombro incomodou no supino">${esc(a.obs)}</textarea>
+      </div>
+      <button class="modal-done" type="button" data-confirmar-enc>Encerrar check-in</button>`;
+    encDialog.showModal();
+  }
+
+  function confirmarEncerrar() {
+    const a = checkinAberto();
+    if (!a) return encDialog.close();
+    a.fim = agoraIso() > a.inicio ? agoraIso() : a.inicio;
+    a.recuperacao = valorRec(encDialog, 'enc-rec');
+    a.obs = $('enc-obs').value.trim();
+    salvarCheckins();
+    const depois = depoisEncerrar;
+    depoisEncerrar = null;
+    encDialog.close();
+    toast(`${TIPOS[a.tipo].nome} encerrado: ${fmtDur(duracaoMin(a))} de treino.`);
+    atualizarCheckinUI();
+    if (depois) depois();
+  }
+
+  // Regra 13: só um check-in aberto por vez; para iniciar outro, encerra o atual antes.
+  function pedirInicio(tipo, depois) {
+    const a = checkinAberto();
+    const comecar = () => {
+      const c = iniciarCheckin(tipo);
+      toast(`Check-in do ${TIPOS[tipo].nome} iniciado às ${horaDe(c.inicio)}.`);
+      atualizarCheckinUI();
+      if (depois) depois();
+    };
+    if (a && a.tipo === tipo) { if (depois) depois(); return; }
+    if (a) {
+      abrirEncerrar({
+        motivo: `Encerre o ${TIPOS[a.tipo].nome} para iniciar o ${TIPOS[tipo].nome}.`,
+        depois: comecar,
+      });
+      return;
+    }
+    comecar();
+  }
+
+  // ---------- Check-in rápido, extra ou retroativo ----------
+  const formDialog = $('form-dialog');
+  let durTocada = false;
+
+  function abrirFormCheckin({ tipo = 'jiu', data = hoje() } = {}) {
+    if (data > hoje()) data = hoje();
+    const dur = DURACAO_PADRAO[TIPOS[tipo].grupo];
+    let inicio = '19:00';
+    if (data === hoje()) {
+      const ini = new Date(Date.now() - dur * 60000);
+      inicio = isoLocal(ini).slice(0, 10) === data ? `${pad(ini.getHours())}:${pad(Math.floor(ini.getMinutes() / 5) * 5)}` : '00:00';
+    }
+    durTocada = false;
+    $('form-body').innerHTML = `
+      <div class="modal-head">
+        <div><h3 id="form-title">Novo check-in</h3></div>
+        ${BOTAO_FECHAR}
+      </div>
+      <fieldset class="campo">
+        <legend>Treino</legend>
+        <div class="opcoes">
+          ${ORDEM_TIPOS.map((t) => `
+            <label class="opcao"><input type="radio" name="f-tipo" value="${t}"${t === tipo ? ' checked' : ''}><span>${seloHTML(t)}${TIPOS[t].nome}</span></label>`).join('')}
+        </div>
+      </fieldset>
+      <div class="campo">
+        <label for="f-data">Data</label>
+        <input type="date" id="f-data" value="${data}" max="${hoje()}">
+      </div>
+      <div class="linha2">
+        <div class="campo"><label for="f-inicio">Início</label><input type="time" id="f-inicio" value="${inicio}"></div>
+        <div class="campo"><label for="f-dur">Duração (min)</label><input type="text" inputmode="numeric" id="f-dur" value="${dur}"></div>
+      </div>
+      ${recHTML('f-rec', null)}
+      <div class="campo">
+        <label for="f-obs">Observação <span class="opcional">(opcional)</span></label>
+        <textarea id="f-obs" placeholder="Ex.: aula de raspagens, muitos rolas"></textarea>
+      </div>
+      <p class="form-erro" id="f-erro" role="alert" hidden></p>
+      <button class="modal-done" type="button" data-salvar-form>Salvar check-in</button>`;
+    formDialog.showModal();
+  }
+
+  function salvarForm() {
+    const erro = (msg) => { $('f-erro').textContent = msg; $('f-erro').hidden = false; };
+    const tipo = formDialog.querySelector('input[name="f-tipo"]:checked').value;
+    const data = $('f-data').value;
+    const ini = $('f-inicio').value;
+    const dur = Number($('f-dur').value.trim());
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(data)) return erro('Escolha a data do treino.');
+    if (data > hoje()) return erro('A data não pode ser no futuro.');
+    if (!/^\d{2}:\d{2}$/.test(ini)) return erro('Informe o horário de início.');
+    if (!Number.isInteger(dur) || dur < 1 || dur > 600) return erro('Informe a duração em minutos, entre 1 e 600.');
+    const inicio = `${data}T${ini}`;
+    const fim = isoLocal(new Date(new Date(inicio).getTime() + dur * 60000));
+    // Regra 13: check-ins do mesmo dia não podem se sobrepor.
+    const choque = checkins.find((c) => !c.semHorario && dataDe(c) === data && inicio < (c.fim || agoraIso()) && c.inicio < fim);
+    if (choque) return erro(`Esse horário se sobrepõe ao ${TIPOS[choque.tipo].nome} ${horarioTexto(choque)}. Ajuste o início ou a duração.`);
+    checkins.push({
+      id: novoId(), tipo, inicio, fim, semHorario: false,
+      recuperacao: valorRec(formDialog, 'f-rec'), obs: $('f-obs').value.trim(),
+      retroativo: data < hoje(), series: {},
+    });
+    salvarCheckins();
+    formDialog.close();
+    toast(`Check-in de ${TIPOS[tipo].nome} salvo.`);
+    diaSel = data;
+    mesExibido = { ano: deData(data).getFullYear(), mes: deData(data).getMonth() };
+    atualizarCheckinUI();
+  }
+
+  // ---------- Render: tela Treino ----------
   function renderHoje() {
-    const agora = new Date();
-    const data = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }).format(agora);
-    const dia = SEMANA[agora.getDay()];
-    $('data').textContent = data.charAt(0).toUpperCase() + data.slice(1);
+    const dia = SEMANA[new Date().getDay()];
+    $('data').textContent = dataLonga(hoje());
     $('atividade').textContent = tituloDia(dia);
     $('nota').textContent = dia.nota;
+  }
+
+  function renderHojeAcoes() {
+    const d = SEMANA[new Date().getDay()];
+    const doDia = agruparPorData()[hoje()] || [];
+    const aberto = checkinAberto();
+    let principal = '';
+    if (d.grupo) {
+      const tipo = d.treino ? `t${d.treino}` : d.grupo;
+      const feito = doDia.filter((c) => c.fim && TIPOS[c.tipo].grupo === d.grupo).pop();
+      if (aberto && aberto.tipo === tipo) principal = '';
+      else if (feito) principal = `<span class="status-ok">${ICON_CHECK}Check-in feito ${horarioTexto(feito)}</span>`;
+      else if (d.treino) principal = `<button class="btn" type="button" data-iniciar="${tipo}">Iniciar ${TIPOS[tipo].nome}</button>`;
+      else principal = `<button class="btn" type="button" data-novo="${tipo}">Fazer check-in ${d.grupo === 'jiu' ? 'do jiu-jitsu' : 'da bike'}</button>`;
+    }
+    $('hoje-acoes').innerHTML = `${principal}
+      <button class="btn-sec" type="button" data-novo="${d.grupo === 'jiu' ? 'bike' : 'jiu'}">Outro treino</button>`;
   }
 
   function renderTreinos() {
@@ -611,6 +1220,21 @@
           </div>
         </div>
       </details>`;
+  }
+
+  function renderFichaCheckin() {
+    const tipo = `t${estado.treino}`;
+    const aberto = checkinAberto();
+    const sessao = sessaoAtual(estado.treino);
+    let html = '';
+    if (aberto && aberto.tipo !== tipo && !sessao) {
+      html = `<p class="ficha-nota">O ${TIPOS[aberto.tipo].nome} está em andamento. Encerre-o para registrar o ${TIPOS[tipo].nome}.</p>`;
+    } else if (sessao && sessao.fim) {
+      html = `<span class="status-ok">${ICON_CHECK}Check-in de hoje feito ${horarioTexto(sessao)}</span>`;
+    } else if (!sessao) {
+      html = `<button class="btn-sec" type="button" data-iniciar="${tipo}">Iniciar check-in do ${TIPOS[tipo].nome}</button>`;
+    }
+    $('ficha-checkin').innerHTML = html;
   }
 
   function exercicioHTML(ex, i) {
@@ -649,27 +1273,221 @@
     $('list').innerHTML = itens.length
       ? itens.map((ex) => exercicioHTML(ex, todos.indexOf(ex))).join('')
       : `<li class="vazio">Nenhum exercício do ${TREINOS[estado.treino].nome} tem alta contribuição em ${foco.label.toLowerCase()}.<br>
-           <button type="button" data-foco="todos">Ver todos os exercícios</button></li>`;
+           <button class="btn-sec" type="button" data-foco="todos">Ver todos os exercícios</button></li>`;
   }
 
   function renderSemana() {
     const hojeIdx = new Date().getDay();
-    $('dias').innerHTML = ORDEM_SEMANA.map((i) => {
+    const seg = segundaDe(hoje());
+    const porData = agruparPorData();
+    $('dias').innerHTML = ORDEM_SEMANA.map((i, pos) => {
       const d = SEMANA[i];
+      const doDia = porData[somarDias(seg, pos)] || [];
+      // Regra 12: check-in do tipo planejado marca o dia como feito; os demais contam como extra.
+      const feito = d.grupo && doDia.some((c) => c.fim && TIPOS[c.tipo].grupo === d.grupo);
+      const extras = doDia.filter((c) => TIPOS[c.tipo].grupo !== d.grupo);
+      const tags = [
+        i === hojeIdx ? '<span class="tag-hoje">Hoje</span>' : '',
+        feito ? `<span class="tag-feito">${ICON_CHECK}Feito</span>` : '',
+        extras.length ? `<span class="tag-extra">+ ${extras.map((c) => TIPOS[c.tipo].nome).join(', ')}</span>` : '',
+      ].join('');
       return `
         <li class="dia${i === hojeIdx ? ' hoje' : ''}">
           <span class="dia-curto">${d.curto}</span>
           <div class="dia-info"><b>${tituloDia(d)}</b><span>${d.nota}</span></div>
-          ${i === hojeIdx ? '<span class="tag-hoje">Hoje</span>' : '<span></span>'}
+          <div class="dia-tags">${tags}</div>
         </li>`;
     }).join('');
+  }
+
+  function renderAtivo() {
+    const a = checkinAberto();
+    $('ativo').hidden = !a;
+    document.body.classList.toggle('com-ativo', !!a);
+    if (!a) return;
+    const min = minutosEntre(a.inicio, agoraIso());
+    $('ativo-titulo').textContent = `${TIPOS[a.tipo].nome} em andamento`;
+    $('ativo-tempo').textContent = min >= 180
+      ? `Aberto há ${fmtDur(min)}. Encerre o check-in.`
+      : `Começou às ${horaDe(a.inicio)}, há ${fmtDur(min)}`;
   }
 
   function renderTudo() {
     renderTreinos();
     renderChips();
     renderSobre();
+    renderFichaCheckin();
     renderLista();
+  }
+
+  // ---------- Render: Dashboard ----------
+  let mesExibido = { ano: new Date().getFullYear(), mes: new Date().getMonth() };
+  let diaSel = hoje();
+  let ckExpandido = null;
+  let ckExcluindo = null;
+
+  function renderNumeros() {
+    const mesAtual = hoje().slice(0, 7);
+    const noMes = checkins.filter((c) => dataDe(c).startsWith(mesAtual));
+    const minutos = noMes.reduce((s, c) => s + (duracaoMin(c) || 0), 0);
+    const limite = somarDias(hoje(), -29);
+    const recs = checkins.filter((c) => c.recuperacao && dataDe(c) >= limite).map((c) => c.recuperacao);
+    const media = recs.length ? recs.reduce((s, n) => s + n, 0) / recs.length : null;
+    const agora = new Date();
+    const mes = nomeMes(agora.getFullYear(), agora.getMonth());
+    $('numeros').innerHTML = `
+      <div><dt>Check-ins no total</dt><dd>${checkins.length}</dd></div>
+      <div><dt>Check-ins em ${mes}</dt><dd>${noMes.length}</dd></div>
+      <div><dt>Horas treinadas em ${mes}</dt><dd>${fmtNum(minutos / 60)}<small> h</small></dd></div>
+      <div><dt>Recuperação média, 30 dias</dt><dd>${media == null ? '–' : fmtNum(media)}<small>${media == null ? ' sem notas' : ' de 5'}</small></dd></div>`;
+  }
+
+  function renderMetas() {
+    const seg = segundaDe(hoje());
+    const dom = somarDias(seg, 6);
+    const daSemana = checkins.filter((c) => dataDe(c) >= seg && dataDe(c) <= dom);
+    const conta = (g) => daSemana.filter((c) => TIPOS[c.tipo].grupo === g).length;
+    const linha = (rotulo, tipoSelo, grupo, feitos, plano) => `
+      <li class="meta">
+        <span class="meta-nome">${seloHTML(tipoSelo)}${rotulo}</span>
+        <span class="seg" aria-hidden="true">${Array.from({ length: plano }, (_, k) => `<i class="${k < feitos ? `on ${grupo}` : ''}"></i>`).join('')}</span>
+        <span class="meta-valor">${feitos} de ${plano}</span>
+      </li>`;
+    const ds = deData(seg), dd = deData(dom);
+    $('semana-atual-datas').textContent = ds.getMonth() === dd.getMonth()
+      ? `${ds.getDate()} a ${dd.getDate()} de ${nomeMes(dd.getFullYear(), dd.getMonth())}`
+      : `${ds.getDate()} de ${nomeMes(ds.getFullYear(), ds.getMonth())} a ${dd.getDate()} de ${nomeMes(dd.getFullYear(), dd.getMonth())}`;
+    $('metas').innerHTML =
+      linha('Musculação', 't1', 'musc', conta('musc'), 3) +
+      linha('Jiu-jitsu', 'jiu', 'jiu', conta('jiu'), 2) +
+      linha('Bike (opcional)', 'bike', 'bike', conta('bike'), 1);
+  }
+
+  function renderCalendario() {
+    const { ano, mes } = mesExibido;
+    const agora = new Date();
+    $('cal-titulo').textContent = capitalizar(new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(new Date(ano, mes, 1)));
+    document.querySelector('[data-mes="1"]').disabled = ano === agora.getFullYear() && mes === agora.getMonth();
+    const offset = (new Date(ano, mes, 1).getDay() + 6) % 7;
+    const totalDias = new Date(ano, mes + 1, 0).getDate();
+    const porData = agruparPorData();
+    const cab = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'].map((d) => `<span class="cal-sem" aria-hidden="true">${d}</span>`).join('');
+    const vazios = '<span></span>'.repeat(offset);
+    const dias = Array.from({ length: totalDias }, (_, k) => {
+      const data = `${ano}-${pad(mes + 1)}-${pad(k + 1)}`;
+      const lista = porData[data] || [];
+      const selos = lista.length > 2
+        ? `${seloHTML(lista[0].tipo)}+${lista.length - 1}`
+        : lista.map((c) => seloHTML(c.tipo)).join('');
+      const rotulo = `${k + 1} de ${nomeMes(ano, mes)}` +
+        (lista.length ? `, ${lista.length} check-in${lista.length > 1 ? 's' : ''}: ${lista.map((c) => TIPOS[c.tipo].nome).join(', ')}` : ', sem check-in');
+      const classes = ['cal-dia', lista.length ? 'tem' : '', data === hoje() ? 'hoje' : '', data > hoje() ? 'futuro' : ''].join(' ');
+      return `<button type="button" class="${classes}" data-dia="${data}" aria-pressed="${data === diaSel}" aria-label="${rotulo}">
+          <span class="n">${k + 1}</span><span class="cal-selos">${selos}</span>
+        </button>`;
+    }).join('');
+    $('cal-grade').innerHTML = cab + vazios + dias;
+  }
+
+  function detalheHTML(c) {
+    const partes = [];
+    if (c.obs) partes.push(`<p class="ck-obs">${esc(c.obs)}</p>`);
+    if (TIPOS[c.tipo].grupo === 'musc') {
+      const exs = TREINOS[TIPOS[c.tipo].treino].exercicios;
+      if (exs.some((ex) => temCarga(c.series[ex.nome]))) {
+        partes.push(`<ul class="ck-ex">${exs.map((ex) => {
+          const s = c.series[ex.nome];
+          return `<li><span>${ex.nome}</span>${temCarga(s)
+            ? `<span class="kg">${listaKg(Array.from({ length: numSeries(ex) }, (_, n) => s[n]))} kg</span>`
+            : '<span class="kg sem">sem registro</span>'}</li>`;
+        }).join('')}</ul>`);
+      } else {
+        partes.push('<p class="ck-obs">Nenhuma carga registrada neste check-in.</p>');
+      }
+    }
+    const acoes = !c.fim
+      ? `<button class="btn" type="button" data-encerrar>Encerrar check-in</button>`
+      : '';
+    const excluir = ckExcluindo === c.id
+      ? `<p>Excluir este check-in? As cargas registradas nele também serão apagadas.</p>
+         <button class="btn-perigo cheio" type="button" data-excluir-sim="${c.id}">Excluir</button>
+         <button class="btn-sec" type="button" data-excluir-nao>Cancelar</button>`
+      : `<button class="btn-perigo" type="button" data-excluir="${c.id}">Excluir check-in</button>`;
+    partes.push(`<div class="ck-acoes">${acoes}${excluir}</div>`);
+    return partes.join('');
+  }
+
+  function renderDia() {
+    $('dia-titulo').textContent = diaSel === hoje() ? `Hoje, ${fmtData(diaSel, { day: 'numeric', month: 'long' })}` : dataLonga(diaSel);
+    const lista = agruparPorData()[diaSel] || [];
+    if (!lista.length) {
+      $('dia-lista').innerHTML = `
+        <div class="vazio-dia">
+          <p>${diaSel > hoje() ? 'Este dia ainda não chegou.' : 'Nenhum check-in neste dia.'}</p>
+          ${diaSel > hoje() ? '' : `<button class="btn-sec" type="button" data-novo-dia="${diaSel}">Registrar check-in neste dia</button>`}
+        </div>`;
+      return;
+    }
+    $('dia-lista').innerHTML = `<ul class="cks">${lista.map((c) => {
+      const dur = duracaoMin(c);
+      const meta = [capitalizar(horarioTexto(c)), dur != null ? fmtDur(dur) : '', c.recuperacao ? `recuperação ${c.recuperacao} de 5` : '']
+        .filter(Boolean).join(', ');
+      const aberto = ckExpandido === c.id;
+      return `
+        <li class="ck">
+          <button class="ck-head" type="button" data-ck="${c.id}" aria-expanded="${aberto}">
+            ${seloHTML(c.tipo, 'grande')}
+            <span><b>${TIPOS[c.tipo].nome}</b><span class="ck-meta">${meta}</span></span>
+            ${CHEVRON}
+          </button>
+          ${aberto ? `<div class="ck-corpo">${detalheHTML(c)}</div>` : ''}
+        </li>`;
+    }).join('')}</ul>`;
+  }
+
+  function renderBarras() {
+    const { ano, mes } = mesExibido;
+    const prefixo = `${ano}-${pad(mes + 1)}`;
+    const doMes = checkins.filter((c) => dataDe(c).startsWith(prefixo));
+    const contagem = ORDEM_TIPOS.map((t) => [t, doMes.filter((c) => c.tipo === t).length]);
+    const max = Math.max(1, ...contagem.map(([, n]) => n));
+    $('tipos-titulo').textContent = `Por tipo em ${nomeMes(ano, mes)}`;
+    $('barras').innerHTML = contagem.map(([t, n]) => `
+      <li class="barra">
+        <span class="barra-nome">${seloHTML(t)}${TIPOS[t].nome}</span>
+        <span class="barra-trilho" aria-hidden="true">${n ? `<i class="${TIPOS[t].grupo}" style="width:${(n / max) * 100}%"></i>` : ''}</span>
+        <span class="barra-valor">${n}</span>
+      </li>`).join('');
+  }
+
+  function renderDashboard() {
+    renderNumeros();
+    renderMetas();
+    renderCalendario();
+    renderDia();
+    renderBarras();
+  }
+
+  // ---------- Telas ----------
+  const telaAtual = () => (location.hash === '#dashboard' ? 'dashboard' : 'treino');
+  function mostrarTela() {
+    const t = telaAtual();
+    $('tela-treino').hidden = t !== 'treino';
+    $('tela-dashboard').hidden = t !== 'dashboard';
+    document.querySelectorAll('[data-tela]').forEach((b) => {
+      if (b.dataset.tela === t) b.setAttribute('aria-current', 'page');
+      else b.removeAttribute('aria-current');
+    });
+    if (t === 'dashboard') renderDashboard();
+  }
+
+  function atualizarCheckinUI() {
+    renderAtivo();
+    renderHojeAcoes();
+    renderFichaCheckin();
+    renderLista();
+    renderSemana();
+    if (telaAtual() === 'dashboard') renderDashboard();
   }
 
   // ---------- Eventos ----------
@@ -678,11 +1496,15 @@
     salvar(); renderChips(); renderLista();
   }
 
+  function mostrarTreino(treino) {
+    if (estado.treino === treino) return;
+    estado.treino = treino;
+    salvar(); renderTudo();
+  }
+
   $('treinos').addEventListener('click', (e) => {
     const b = e.target.closest('[data-treino]');
-    if (!b) return;
-    estado.treino = b.dataset.treino;
-    salvar(); renderTudo();
+    if (b) mostrarTreino(b.dataset.treino);
   });
 
   $('sobre').addEventListener('toggle', (e) => {
@@ -696,68 +1518,139 @@
     if (b) mudarFoco(b.dataset.foco);
   });
 
-  const dialog = $('log-dialog');
-  let aberto = null;
-
   $('list').addEventListener('click', (e) => {
     const f = e.target.closest('[data-foco]');
     if (f) return mudarFoco(f.dataset.foco);
     const b = e.target.closest('[data-log]');
-    if (!b) return;
-    aberto = Number(b.dataset.log);
-    const ex = exerciciosDoTreino()[aberto];
-    $('log-body').innerHTML = `
-      <div class="modal-head">
-        <div>
-          <h3 id="log-title">${ex.nome}</h3>
-          <p class="ex-dose"><span>${ex.dose}</span><span class="pse">PSE ${ex.pse}</span></p>
-        </div>
-        <button class="modal-close" type="button" data-fechar aria-label="Fechar">${ICON_X}</button>
-      </div>
-      ${logHTML(ex)}
-      <button class="modal-done" type="button" data-concluir>Concluir</button>`;
-    dialog.showModal();
+    if (b) abrirLog(Number(b.dataset.log));
   });
 
-  const camposDoModal = () => [...dialog.querySelectorAll('[data-campo]')];
+  // Ações que aparecem em várias telas.
+  document.addEventListener('click', (e) => {
+    const t = e.target.closest('[data-tela]');
+    if (t) { location.hash = t.dataset.tela === 'dashboard' ? '#dashboard' : '#treino'; return; }
+    const ini = e.target.closest('[data-iniciar]');
+    if (ini) {
+      const tipo = ini.dataset.iniciar;
+      pedirInicio(tipo, () => mostrarTreino(TIPOS[tipo].treino));
+      return;
+    }
+    const novo = e.target.closest('[data-novo]');
+    if (novo) return abrirFormCheckin({ tipo: novo.dataset.novo });
+    if (e.target.closest('[data-encerrar]')) return abrirEncerrar();
+  });
 
-  // "Concluir" grava tudo o que está na tela, inclusive a carga pré-preenchida.
-  function concluir() {
-    const campos = camposDoModal();
-    campos.forEach(salvarInput);
-    const invalido = campos.find((el) => el.getAttribute('aria-invalid') === 'true');
-    if (invalido) invalido.focus();
-    else dialog.close();
-  }
+  window.addEventListener('hashchange', () => { mostrarTela(); window.scrollTo(0, 0); });
 
-  dialog.addEventListener('click', (e) => {
-    if (e.target.closest('[data-concluir]')) return concluir();
+  logDialog.addEventListener('click', (e) => {
+    if (e.target.closest('[data-concluir]')) return concluirLog();
+    if (e.target.closest('[data-trocar]')) {
+      const i = exAberto;
+      const a = checkinAberto();
+      logDialog.close();
+      abrirEncerrar({
+        motivo: `Encerre o ${TIPOS[a.tipo].nome} para iniciar o ${TREINOS[estado.treino].nome}.`,
+        depois: () => { iniciarCheckin(`t${estado.treino}`); atualizarCheckinUI(); abrirLog(i); },
+      });
+      return;
+    }
     // Clique no fundo escuro (fora do conteúdo) também fecha.
-    if (e.target === dialog || e.target.closest('[data-fechar]')) dialog.close();
+    if (e.target === logDialog || e.target.closest('[data-fechar]')) logDialog.close();
   });
 
-  dialog.addEventListener('input', (e) => {
+  logDialog.addEventListener('input', (e) => {
     const el = e.target.closest('[data-campo]');
     if (el) salvarInput(el);
   });
 
-  dialog.addEventListener('keydown', (e) => {
+  logDialog.addEventListener('keydown', (e) => {
     if (e.key !== 'Enter' || !e.target.matches('[data-campo]')) return;
     e.preventDefault();
     const campos = camposDoModal();
     const proximo = campos[campos.indexOf(e.target) + 1];
     if (proximo) proximo.focus();
-    else concluir();
+    else concluirLog();
   });
 
-  dialog.addEventListener('close', () => {
-    const b = $('list').querySelector(`[data-log="${aberto}"]`);
-    if (b) b.outerHTML = logBtnHTML(exerciciosDoTreino()[aberto], aberto);
+  logDialog.addEventListener('close', () => {
+    const b = $('list').querySelector(`[data-log="${exAberto}"]`);
+    if (b) b.outerHTML = logBtnHTML(exerciciosDoTreino()[exAberto], exAberto);
+    renderFichaCheckin();
   });
 
+  encDialog.addEventListener('click', (e) => {
+    if (e.target.closest('[data-confirmar-enc]')) return confirmarEncerrar();
+    if (e.target === encDialog || e.target.closest('[data-fechar]')) { depoisEncerrar = null; encDialog.close(); }
+  });
+  encDialog.addEventListener('cancel', () => { depoisEncerrar = null; });
+
+  formDialog.addEventListener('click', (e) => {
+    if (e.target.closest('[data-salvar-form]')) return salvarForm();
+    if (e.target === formDialog || e.target.closest('[data-fechar]')) formDialog.close();
+  });
+
+  formDialog.addEventListener('change', (e) => {
+    if (e.target.name === 'f-tipo' && !durTocada) $('f-dur').value = DURACAO_PADRAO[TIPOS[e.target.value].grupo];
+  });
+  formDialog.addEventListener('input', (e) => {
+    if (e.target.id === 'f-dur') durTocada = true;
+    $('f-erro').hidden = true;
+  });
+
+  $('tela-dashboard').addEventListener('click', (e) => {
+    const mesBtn = e.target.closest('[data-mes]');
+    if (mesBtn) {
+      const d = new Date(mesExibido.ano, mesExibido.mes + Number(mesBtn.dataset.mes), 1);
+      mesExibido = { ano: d.getFullYear(), mes: d.getMonth() };
+      const prefixo = `${mesExibido.ano}-${pad(mesExibido.mes + 1)}`;
+      if (!diaSel.startsWith(prefixo)) diaSel = hoje().startsWith(prefixo) ? hoje() : `${prefixo}-01`;
+      ckExpandido = null; ckExcluindo = null;
+      return renderDashboard();
+    }
+    const dia = e.target.closest('[data-dia]');
+    if (dia) {
+      diaSel = dia.dataset.dia;
+      ckExpandido = null; ckExcluindo = null;
+      renderCalendario(); renderDia();
+      return;
+    }
+    const ck = e.target.closest('[data-ck]');
+    if (ck) {
+      ckExpandido = ckExpandido === ck.dataset.ck ? null : ck.dataset.ck;
+      ckExcluindo = null;
+      return renderDia();
+    }
+    const exc = e.target.closest('[data-excluir]');
+    if (exc) { ckExcluindo = exc.dataset.excluir; return renderDia(); }
+    if (e.target.closest('[data-excluir-nao]')) { ckExcluindo = null; return renderDia(); }
+    const sim = e.target.closest('[data-excluir-sim]');
+    if (sim) {
+      const alvo = checkins.find((c) => c.id === sim.dataset.excluirSim);
+      checkins = checkins.filter((c) => c !== alvo);
+      salvarCheckins();
+      ckExpandido = null; ckExcluindo = null;
+      toast(`Check-in de ${TIPOS[alvo.tipo].nome} excluído.`);
+      atualizarCheckinUI();
+      return;
+    }
+    const novoDia = e.target.closest('[data-novo-dia]');
+    if (novoDia) return abrirFormCheckin({ tipo: tipoPlanejado(novoDia.dataset.novoDia), data: novoDia.dataset.novoDia });
+    if (e.target.closest('[data-novo-dash]')) {
+      const data = diaSel > hoje() ? hoje() : diaSel;
+      abrirFormCheckin({ tipo: tipoPlanejado(data), data });
+    }
+  });
+
+  // ---------- Início ----------
+  const esquecido = encerrarEsquecidos();
   renderHoje();
-  renderSemana();
   renderTudo();
+  atualizarCheckinUI();
+  mostrarTela();
+  if (esquecido) {
+    toast(`O check-in do ${TIPOS[esquecido.tipo].nome} ficou aberto e foi encerrado às ${horaDe(esquecido.fim)}.`);
+  }
+  setInterval(renderAtivo, 30000);
 })();
 </script>
 </body>
