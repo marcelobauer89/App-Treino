@@ -6,6 +6,14 @@
 <meta name="theme-color" content="#f3f4f6" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0f1115" media="(prefers-color-scheme: dark)">
 <title>Bauer • Jiu-Jitsu + Hipertrofia</title>
+<script>
+  // Aplica o tema escolhido antes da primeira pintura, para a tela não piscar.
+  try {
+    var temaSalvo = (JSON.parse(localStorage.getItem('bauer-config-v1') || '{}') || {}).tema;
+    if (temaSalvo === 'claro') document.documentElement.dataset.theme = 'light';
+    if (temaSalvo === 'escuro') document.documentElement.dataset.theme = 'dark';
+  } catch (_) {}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap">
@@ -40,14 +48,22 @@
     --ativo-h: 60px;
     color-scheme: light;
   }
+  /* Escuro: segue o celular, a menos que o tema seja escolhido em "Você" (data-theme). */
   @media (prefers-color-scheme: dark) {
-    :root {
+    :root:not([data-theme="light"]) {
       --gi: #0f1115; --papel: #171a20; --tinta: #f2f4f7; --tinta-2: #a3abb8; --fio: #2a2f38;
       --tatame: #3566d6; --tatame-forte: #2b57bf; --tatame-tinta: #8db0ff; --tatame-suave: #1b2740;
       --faixa: #000000; --fita: #f2f4f7; --fita-vazia: #2c2f35; --erro: #ff6b6b; --sobre-erro: #0b0d10;
       --musc: #3987e5; --jiu: #d95926; --bike: #199e70;
       color-scheme: dark;
     }
+  }
+  :root[data-theme="dark"] {
+    --gi: #0f1115; --papel: #171a20; --tinta: #f2f4f7; --tinta-2: #a3abb8; --fio: #2a2f38;
+    --tatame: #3566d6; --tatame-forte: #2b57bf; --tatame-tinta: #8db0ff; --tatame-suave: #1b2740;
+    --faixa: #000000; --fita: #f2f4f7; --fita-vazia: #2c2f35; --erro: #ff6b6b; --sobre-erro: #0b0d10;
+    --musc: #3987e5; --jiu: #d95926; --bike: #199e70;
+    color-scheme: dark;
   }
 
   * { box-sizing: border-box; }
@@ -253,7 +269,7 @@
   /* Navegação inferior e barra de treino em andamento */
   .nav {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
-    display: grid; grid-template-columns: 1fr 1fr;
+    display: grid; grid-template-columns: repeat(3, 1fr);
     background: var(--papel); border-top: 1px solid var(--fio);
     padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
   }
@@ -264,6 +280,30 @@
   }
   .nav button[aria-current="page"] { color: var(--tatame-tinta); }
   .nav svg { width: 22px; height: 22px; }
+  .nav-icone { display: grid; place-items: center; width: 24px; height: 24px; }
+  .nav-foto { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; }
+  .nav button[aria-current="page"] .nav-foto { box-shadow: 0 0 0 2px var(--tatame-tinta); }
+
+  /* Você */
+  .cartao { display: grid; gap: 16px; padding: 16px; background: var(--papel); border: 1px solid var(--fio); border-radius: 14px; }
+  .perfil-foto { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+  .avatar {
+    flex: 0 0 auto; width: 88px; height: 88px; border-radius: 50%; overflow: hidden;
+    display: grid; place-items: center; background: var(--tatame-suave); color: var(--tatame-tinta);
+    font-family: var(--display); font-stretch: 80%; font-weight: 800; font-size: 34px;
+  }
+  .avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .foto-acoes { display: flex; flex-wrap: wrap; gap: 8px; }
+  .botao-arquivo { position: relative; display: inline-flex; align-items: center; cursor: pointer; }
+  .botao-arquivo input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+  .botao-arquivo:focus-within { outline: 2px solid var(--tatame-tinta); outline-offset: 2px; }
+  .nota-campo { margin: 0; font-size: 13px; color: var(--tinta-2); }
+  .campo input[aria-invalid="true"] { border-color: var(--erro); }
+  .opcao input:disabled { cursor: not-allowed; }
+  .opcao input:disabled + span { opacity: .45; }
+  .campo > legend.nota-campo { margin-bottom: 8px; font-size: 13px; font-weight: 400; }
+  .avisos { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .avisos:empty { display: none; }
   .ativo {
     position: fixed; left: 0; right: 0; z-index: 19;
     bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
@@ -503,7 +543,7 @@
         <li><span class="ponteira" data-nivel="1" aria-hidden="true"><i></i><i></i><i></i></span>Baixa ou secundária</li>
       </ul>
       <p>PSE é a percepção subjetiva de esforço; o 10 fica reservado ao tatame. Use a carga que respeite a técnica e a recuperação.</p>
-      <p>Terça e quinta são de jiu-jitsu. Se houver aula extra na sexta, o Treino 3 (pernas) vai para sábado. Domingo é descanso.</p>
+      <p>Os dias de jiu-jitsu se escolhem em Você (padrão terça e quinta). Se houver aula extra na sexta, o Treino 3 (pernas) vai para sábado. Domingo é descanso.</p>
       <p>Check-ins e cargas ficam salvos só neste navegador (ainda sem sincronização em nuvem).</p>
       <p>Adaptação prática do PDF enviado. Não substitui avaliação de um profissional de educação física ou nutrição, especialmente se houver dor ou lesão.</p>
     </footer>
@@ -552,6 +592,63 @@
   </section>
 </main>
 
+<main class="wrap" id="tela-voce" hidden>
+  <div class="dash-topo"><h1>Você</h1></div>
+
+  <section class="bloco" aria-labelledby="dados-titulo">
+    <div class="bloco-topo"><h2 class="secao" id="dados-titulo">Dados pessoais</h2></div>
+    <form class="cartao" id="form-perfil" novalidate>
+      <div class="perfil-foto">
+        <div class="avatar" id="voce-avatar" aria-hidden="true"></div>
+        <div class="foto-acoes">
+          <label class="btn-sec botao-arquivo">
+            <span id="foto-label-texto">Escolher foto</span>
+            <input type="file" id="p-foto" accept="image/*">
+          </label>
+          <button class="btn-sec" type="button" id="remover-foto">Remover foto</button>
+        </div>
+      </div>
+      <p class="form-erro" id="foto-erro" role="alert" hidden></p>
+      <div class="campo">
+        <label for="p-nome">Nome</label>
+        <input type="text" id="p-nome" autocomplete="name" placeholder="Como você quer ser chamado">
+      </div>
+      <div class="campo">
+        <label for="p-email">E-mail</label>
+        <input type="email" id="p-email" autocomplete="email" inputmode="email" placeholder="nome@exemplo.com" aria-describedby="email-erro">
+      </div>
+      <p class="form-erro" id="email-erro" role="alert" hidden>Digite um e-mail válido, como nome@exemplo.com.</p>
+      <button class="btn" type="submit">Salvar dados</button>
+      <p class="nota-campo">Seus dados ficam só neste aparelho. A foto é salva assim que você escolhe.</p>
+    </form>
+  </section>
+
+  <section class="bloco" aria-labelledby="aparencia-titulo">
+    <div class="bloco-topo"><h2 class="secao" id="aparencia-titulo">Aparência</h2></div>
+    <div class="cartao">
+      <fieldset class="campo">
+        <legend class="nota-campo">Tema do app. Automático segue o tema do celular.</legend>
+        <div class="opcoes" id="opcoes-tema">
+          <label class="opcao"><input type="radio" name="tema" value="auto"><span>Automático</span></label>
+          <label class="opcao"><input type="radio" name="tema" value="claro"><span>Claro</span></label>
+          <label class="opcao"><input type="radio" name="tema" value="escuro"><span>Escuro</span></label>
+        </div>
+      </fieldset>
+    </div>
+  </section>
+
+  <section class="bloco" aria-labelledby="jiu-titulo">
+    <div class="bloco-topo"><h2 class="secao" id="jiu-titulo">Dias de jiu-jitsu</h2></div>
+    <div class="cartao">
+      <fieldset class="campo">
+        <legend class="nota-campo">Marque os dias de aula. A Semana e o topo da tela Treino se ajustam na hora. Domingo fica para descanso.</legend>
+        <div class="opcoes" id="opcoes-jiu"></div>
+      </fieldset>
+      <ul class="avisos" id="avisos-jiu"></ul>
+    </div>
+  </section>
+</main>
+
 <div class="ativo" id="ativo" hidden>
   <div class="ativo-in">
     <span class="ativo-pulso" aria-hidden="true"></span>
@@ -568,6 +665,10 @@
   <button type="button" data-tela="dashboard">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
     Dashboard
+  </button>
+  <button type="button" data-tela="voce">
+    <span class="nav-icone" id="nav-voce-icone"></span>
+    Você
   </button>
 </nav>
 
@@ -665,18 +766,35 @@
     },
   };
 
-  // Semana tipo; o índice segue Date.getDay() (0 = domingo).
-  const SEMANA = [
-    { curto: 'Dom', atividade: 'Descanso', nota: 'Recuperação', grupo: null },
-    { curto: 'Seg', treino: '2', nota: 'Peito, tríceps e ombro', grupo: 'musc' },
-    { curto: 'Ter', atividade: 'Jiu-jitsu', nota: 'Prioridade técnica', grupo: 'jiu' },
-    { curto: 'Qua', treino: '1', nota: 'Costas + bíceps', grupo: 'musc' },
-    { curto: 'Qui', atividade: 'Jiu-jitsu', nota: 'Prioridade técnica', grupo: 'jiu' },
-    { curto: 'Sex', treino: '3', nota: 'Pernas (se não houver jiu)', grupo: 'musc' },
-    { curto: 'Sáb', atividade: 'Bike leve', nota: '20–40 min, ou Treino 3 deslocado', grupo: 'bike' },
-  ];
+  // ---------- Perfil e configurações ----------
+  const CFG_KEY = 'bauer-config-v1';
+  const PERFIL_KEY = 'bauer-perfil-v1';
+  const lerJSON = (k) => {
+    try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return v && typeof v === 'object' ? v : {}; } catch (_) { return {}; }
+  };
+  const gravarJSON = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (_) { return false; } };
+  let config = { tema: 'auto', diasJiu: [2, 4], ...lerJSON(CFG_KEY) };
+  if (!Array.isArray(config.diasJiu)) config.diasJiu = [2, 4];
+  config.diasJiu = config.diasJiu.filter((i) => Number.isInteger(i) && i >= 1 && i <= 6);
+  let perfil = { nome: '', email: '', foto: '', ...lerJSON(PERFIL_KEY) };
+
+  // Semana tipo montada a partir dos dias de jiu; o índice segue Date.getDay() (0 = domingo).
+  const CURTOS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+  const NOMES_DIA = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
+  const TREINO_DO_DIA = { 1: '2', 3: '1', 5: '3' };
   const ORDEM_SEMANA = [1, 2, 3, 4, 5, 6, 0];
-  const tituloDia = (d) => (d.treino ? TREINOS[d.treino].nome : d.atividade);
+  function planoDoDia(i) {
+    const treino = TREINO_DO_DIA[i];
+    const jiu = config.diasJiu.includes(i);
+    const bike = i === 6 && !jiu;
+    const grupos = [treino && 'musc', jiu && 'jiu', bike && 'bike'].filter(Boolean);
+    let titulo = 'Descanso', nota = 'Recuperação';
+    if (treino && jiu) { titulo = `${TREINOS[treino].nome} + Jiu-jitsu`; nota = `${TREINOS[treino].subtitulo} e aula de jiu`; }
+    else if (treino) { titulo = TREINOS[treino].nome; nota = i === 5 ? 'Pernas (se não houver jiu)' : TREINOS[treino].subtitulo; }
+    else if (jiu) { titulo = 'Jiu-jitsu'; nota = 'Prioridade técnica'; }
+    else if (bike) { titulo = 'Bike leve'; nota = '20–40 min, ou Treino 3 deslocado'; }
+    return { curto: CURTOS[i], treino, jiu, bike, grupos, titulo, nota };
+  }
 
   // Tipos de check-in. Musculação usa uma cor só; o número no selo diz qual treino foi.
   const TIPOS = {
@@ -762,7 +880,7 @@
   if (!TREINOS[estado.treino]) estado.treino = '1';
   // Na primeira abertura do dia, a ficha já abre no treino de hoje.
   if (estado.dia !== hoje()) {
-    const treinoDeHoje = SEMANA[new Date().getDay()].treino;
+    const treinoDeHoje = planoDoDia(new Date().getDay()).treino;
     if (treinoDeHoje) estado.treino = treinoDeHoje;
     estado.dia = hoje();
   }
@@ -832,8 +950,8 @@
     return m;
   }
   const tipoPlanejado = (data) => {
-    const d = SEMANA[deData(data).getDay()];
-    return d.treino ? `t${d.treino}` : d.grupo || 'jiu';
+    const d = planoDoDia(deData(data).getDay());
+    return d.treino ? `t${d.treino}` : d.bike ? 'bike' : 'jiu';
   };
 
   // Sessão em que as cargas do treino vão: o check-in aberto desse treino ou o último de hoje.
@@ -1165,27 +1283,31 @@
 
   // ---------- Render: tela Treino ----------
   function renderHoje() {
-    const dia = SEMANA[new Date().getDay()];
+    const dia = planoDoDia(new Date().getDay());
     $('data').textContent = dataLonga(hoje());
-    $('atividade').textContent = tituloDia(dia);
+    $('atividade').textContent = dia.titulo;
     $('nota').textContent = dia.nota;
   }
 
   function renderHojeAcoes() {
-    const d = SEMANA[new Date().getDay()];
+    const d = planoDoDia(new Date().getDay());
     const doDia = agruparPorData()[hoje()] || [];
     const aberto = checkinAberto();
-    let principal = '';
-    if (d.grupo) {
-      const tipo = d.treino ? `t${d.treino}` : d.grupo;
-      const feito = doDia.filter((c) => c.fim && TIPOS[c.tipo].grupo === d.grupo).pop();
-      if (aberto && aberto.tipo === tipo) principal = '';
-      else if (feito) principal = `<span class="status-ok">${ICON_CHECK}Check-in feito ${horarioTexto(feito)}</span>`;
-      else if (d.treino) principal = `<button class="btn" type="button" data-iniciar="${tipo}">Iniciar ${TIPOS[tipo].nome}</button>`;
-      else principal = `<button class="btn" type="button" data-novo="${tipo}">Fazer check-in ${d.grupo === 'jiu' ? 'do jiu-jitsu' : 'da bike'}</button>`;
-    }
-    $('hoje-acoes').innerHTML = `${principal}
-      <button class="btn-sec" type="button" data-novo="${d.grupo === 'jiu' ? 'bike' : 'jiu'}">Outro treino</button>`;
+    const varios = d.grupos.length > 1;
+    // Um botão por atividade planejada para hoje que ainda não teve check-in.
+    const partes = d.grupos.map((g, k) => {
+      const tipo = g === 'musc' ? `t${d.treino}` : g;
+      const feito = doDia.filter((c) => c.fim && TIPOS[c.tipo].grupo === g).pop();
+      if (aberto && aberto.tipo === tipo) return '';
+      if (feito) {
+        return `<span class="status-ok">${ICON_CHECK}${varios ? `${TIPOS[tipo].nome}: check-in feito` : 'Check-in feito'} ${horarioTexto(feito)}</span>`;
+      }
+      const classe = k === 0 ? 'btn' : 'btn-sec';
+      if (g === 'musc') return `<button class="${classe}" type="button" data-iniciar="${tipo}">Iniciar ${TIPOS[tipo].nome}</button>`;
+      return `<button class="${classe}" type="button" data-novo="${tipo}">Fazer check-in ${g === 'jiu' ? 'do jiu-jitsu' : 'da bike'}</button>`;
+    });
+    $('hoje-acoes').innerHTML = `${partes.join('')}
+      <button class="btn-sec" type="button" data-novo="${d.jiu ? 'bike' : 'jiu'}">Outro treino</button>`;
   }
 
   function renderTreinos() {
@@ -1281,20 +1403,24 @@
     const seg = segundaDe(hoje());
     const porData = agruparPorData();
     $('dias').innerHTML = ORDEM_SEMANA.map((i, pos) => {
-      const d = SEMANA[i];
+      const d = planoDoDia(i);
       const doDia = porData[somarDias(seg, pos)] || [];
       // Regra 12: check-in do tipo planejado marca o dia como feito; os demais contam como extra.
-      const feito = d.grupo && doDia.some((c) => c.fim && TIPOS[c.tipo].grupo === d.grupo);
-      const extras = doDia.filter((c) => TIPOS[c.tipo].grupo !== d.grupo);
+      const feitos = d.grupos.filter((g) => doDia.some((c) => c.fim && TIPOS[c.tipo].grupo === g));
+      const nomeGrupo = (g) => (g === 'musc' ? TREINOS[d.treino].nome : TIPOS[g].nome);
+      let feito = '';
+      if (feitos.length && feitos.length === d.grupos.length) feito = `<span class="tag-feito">${ICON_CHECK}Feito</span>`;
+      else if (feitos.length) feito = `<span class="tag-feito">${ICON_CHECK}${feitos.map(nomeGrupo).join(', ')}</span>`;
+      const extras = doDia.filter((c) => !d.grupos.includes(TIPOS[c.tipo].grupo));
       const tags = [
         i === hojeIdx ? '<span class="tag-hoje">Hoje</span>' : '',
-        feito ? `<span class="tag-feito">${ICON_CHECK}Feito</span>` : '',
+        feito,
         extras.length ? `<span class="tag-extra">+ ${extras.map((c) => TIPOS[c.tipo].nome).join(', ')}</span>` : '',
       ].join('');
       return `
         <li class="dia${i === hojeIdx ? ' hoje' : ''}">
           <span class="dia-curto">${d.curto}</span>
-          <div class="dia-info"><b>${tituloDia(d)}</b><span>${d.nota}</span></div>
+          <div class="dia-info"><b>${d.titulo}</b><span>${d.nota}</span></div>
           <div class="dia-tags">${tags}</div>
         </li>`;
     }).join('');
@@ -1347,20 +1473,23 @@
     const dom = somarDias(seg, 6);
     const daSemana = checkins.filter((c) => dataDe(c) >= seg && dataDe(c) <= dom);
     const conta = (g) => daSemana.filter((c) => TIPOS[c.tipo].grupo === g).length;
-    const linha = (rotulo, tipoSelo, grupo, feitos, plano) => `
+    const linha = (rotulo, tipoSelo, grupo, feitos, plano) => {
+      if (!plano && !feitos) return '';
+      return `
       <li class="meta">
         <span class="meta-nome">${seloHTML(tipoSelo)}${rotulo}</span>
         <span class="seg" aria-hidden="true">${Array.from({ length: plano }, (_, k) => `<i class="${k < feitos ? `on ${grupo}` : ''}"></i>`).join('')}</span>
-        <span class="meta-valor">${feitos} de ${plano}</span>
+        <span class="meta-valor">${plano ? `${feitos} de ${plano}` : `${feitos} extra`}</span>
       </li>`;
+    };
     const ds = deData(seg), dd = deData(dom);
     $('semana-atual-datas').textContent = ds.getMonth() === dd.getMonth()
       ? `${ds.getDate()} a ${dd.getDate()} de ${nomeMes(dd.getFullYear(), dd.getMonth())}`
       : `${ds.getDate()} de ${nomeMes(ds.getFullYear(), ds.getMonth())} a ${dd.getDate()} de ${nomeMes(dd.getFullYear(), dd.getMonth())}`;
     $('metas').innerHTML =
       linha('Musculação', 't1', 'musc', conta('musc'), 3) +
-      linha('Jiu-jitsu', 'jiu', 'jiu', conta('jiu'), 2) +
-      linha('Bike (opcional)', 'bike', 'bike', conta('bike'), 1);
+      linha('Jiu-jitsu', 'jiu', 'jiu', conta('jiu'), config.diasJiu.length) +
+      linha(planoDoDia(6).bike ? 'Bike (opcional)' : 'Bike', 'bike', 'bike', conta('bike'), planoDoDia(6).bike ? 1 : 0);
   }
 
   function renderCalendario() {
@@ -1468,17 +1597,107 @@
     renderBarras();
   }
 
+  // ---------- Render: Você ----------
+  const ICON_PESSOA = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>';
+  const CORES_TEMA = { claro: '#f3f4f6', escuro: '#0f1115' };
+
+  function aplicarTema() {
+    const raiz = document.documentElement;
+    if (config.tema === 'claro') raiz.dataset.theme = 'light';
+    else if (config.tema === 'escuro') raiz.dataset.theme = 'dark';
+    else delete raiz.dataset.theme;
+    const [metaClaro, metaEscuro] = document.querySelectorAll('meta[name="theme-color"]');
+    const fixa = CORES_TEMA[config.tema];
+    metaClaro.content = fixa || CORES_TEMA.claro;
+    metaEscuro.content = fixa || CORES_TEMA.escuro;
+  }
+
+  function iniciais(nome) {
+    const p = nome.trim().split(/\s+/).filter(Boolean);
+    if (!p.length) return '';
+    return (p[0][0] + (p.length > 1 ? p[p.length - 1][0] : '')).toUpperCase();
+  }
+
+  function renderFoto() {
+    const ini = iniciais(perfil.nome);
+    $('voce-avatar').innerHTML = perfil.foto ? `<img src="${perfil.foto}" alt="">` : (ini ? esc(ini) : ICON_PESSOA);
+    $('foto-label-texto').textContent = perfil.foto ? 'Trocar foto' : 'Escolher foto';
+    $('remover-foto').hidden = !perfil.foto;
+    $('nav-voce-icone').innerHTML = perfil.foto ? `<img class="nav-foto" src="${perfil.foto}" alt="">` : ICON_PESSOA;
+  }
+
+  function avisosJiu() {
+    const av = config.diasJiu
+      .filter((i) => TREINO_DO_DIA[i])
+      .map((i) => `Na ${NOMES_DIA[i]} você terá ${TREINOS[TREINO_DO_DIA[i]].nome} e jiu-jitsu no mesmo dia; faça um check-in para cada.`);
+    // Regra 5: pernas pesadas na véspera do tatame.
+    if (config.diasJiu.includes(6)) {
+      av.push('O jiu de sábado vem logo depois do Treino 3 (pernas) de sexta. Se as pernas estiverem pesadas, vá mais leve no rola.');
+      av.push('Com jiu no sábado, a bike leve sai da semana.');
+    }
+    if (!config.diasJiu.length) av.push('Nenhum dia de jiu-jitsu marcado. A Semana mostra só musculação e bike.');
+    return av;
+  }
+
+  function renderConfig() {
+    document.querySelectorAll('input[name="tema"]').forEach((r) => { r.checked = r.value === config.tema; });
+    $('opcoes-jiu').innerHTML = ORDEM_SEMANA.map((i) => `
+      <label class="opcao"><input type="checkbox" name="dia-jiu" value="${i}"${config.diasJiu.includes(i) ? ' checked' : ''}${i === 0 ? ' disabled' : ''}>
+        <span>${CURTOS[i]}</span></label>`).join('');
+    $('avisos-jiu').innerHTML = avisosJiu().map((a) => `<li class="aviso">${a}</li>`).join('');
+  }
+
+  function preencherPerfil() {
+    $('p-nome').value = perfil.nome;
+    $('p-email').value = perfil.email;
+    $('p-email').removeAttribute('aria-invalid');
+    $('email-erro').hidden = true;
+  }
+
+  // Recorta a imagem no centro e reduz para 320×320, para caber no armazenamento do navegador.
+  function processarFoto(arquivo) {
+    return new Promise((resolve, reject) => {
+      if (!arquivo || !arquivo.type.startsWith('image/')) return reject();
+      const url = URL.createObjectURL(arquivo);
+      const img = new Image();
+      img.onload = () => {
+        const lado = Math.min(img.naturalWidth, img.naturalHeight);
+        const tela = document.createElement('canvas');
+        tela.width = tela.height = 320;
+        const ctx = tela.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, 320, 320);
+        ctx.drawImage(img, (img.naturalWidth - lado) / 2, (img.naturalHeight - lado) / 2, lado, lado, 0, 0, 320, 320);
+        URL.revokeObjectURL(url);
+        resolve(tela.toDataURL('image/jpeg', 0.85));
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(); };
+      img.src = url;
+    });
+  }
+
+  function erroFoto(msg) {
+    $('foto-erro').textContent = msg;
+    $('foto-erro').hidden = !msg;
+  }
+
   // ---------- Telas ----------
-  const telaAtual = () => (location.hash === '#dashboard' ? 'dashboard' : 'treino');
+  const TELAS = ['treino', 'dashboard', 'voce'];
+  const telaAtual = () => {
+    const t = location.hash.slice(1);
+    return TELAS.includes(t) ? t : 'treino';
+  };
   function mostrarTela() {
     const t = telaAtual();
     $('tela-treino').hidden = t !== 'treino';
     $('tela-dashboard').hidden = t !== 'dashboard';
+    $('tela-voce').hidden = t !== 'voce';
     document.querySelectorAll('[data-tela]').forEach((b) => {
       if (b.dataset.tela === t) b.setAttribute('aria-current', 'page');
       else b.removeAttribute('aria-current');
     });
     if (t === 'dashboard') renderDashboard();
+    if (t === 'voce') { renderConfig(); erroFoto(''); }
   }
 
   function atualizarCheckinUI() {
@@ -1528,7 +1747,7 @@
   // Ações que aparecem em várias telas.
   document.addEventListener('click', (e) => {
     const t = e.target.closest('[data-tela]');
-    if (t) { location.hash = t.dataset.tela === 'dashboard' ? '#dashboard' : '#treino'; return; }
+    if (t) { location.hash = `#${t.dataset.tela}`; return; }
     const ini = e.target.closest('[data-iniciar]');
     if (ini) {
       const tipo = ini.dataset.iniciar;
@@ -1641,7 +1860,74 @@
     }
   });
 
+  $('p-foto').addEventListener('change', async (e) => {
+    const arquivo = e.target.files[0];
+    e.target.value = '';
+    if (!arquivo) return;
+    let foto;
+    try { foto = await processarFoto(arquivo); } catch (_) {
+      return erroFoto('Não foi possível ler essa imagem. Escolha um arquivo JPG ou PNG.');
+    }
+    const anterior = perfil.foto;
+    perfil.foto = foto;
+    if (!gravarJSON(PERFIL_KEY, perfil)) {
+      perfil.foto = anterior;
+      return erroFoto('A foto não coube no armazenamento do navegador. Tente outra imagem.');
+    }
+    erroFoto('');
+    renderFoto();
+    toast('Foto atualizada.');
+  });
+
+  $('remover-foto').addEventListener('click', () => {
+    perfil.foto = '';
+    gravarJSON(PERFIL_KEY, perfil);
+    erroFoto('');
+    renderFoto();
+    toast('Foto removida.');
+  });
+
+  $('form-perfil').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const email = $('p-email');
+    email.value = email.value.trim();
+    const valido = !email.value || email.checkValidity();
+    email.setAttribute('aria-invalid', String(!valido));
+    $('email-erro').hidden = valido;
+    if (!valido) { email.focus(); return; }
+    perfil.nome = $('p-nome').value.trim();
+    perfil.email = email.value;
+    gravarJSON(PERFIL_KEY, perfil);
+    renderFoto();
+    toast('Dados salvos.');
+  });
+
+  $('p-email').addEventListener('input', () => {
+    if ($('p-email').getAttribute('aria-invalid') === 'true' && (!$('p-email').value || $('p-email').checkValidity())) {
+      $('p-email').setAttribute('aria-invalid', 'false');
+      $('email-erro').hidden = true;
+    }
+  });
+
+  $('tela-voce').addEventListener('change', (e) => {
+    if (e.target.name === 'tema') {
+      config.tema = e.target.value;
+      gravarJSON(CFG_KEY, config);
+      aplicarTema();
+    }
+    if (e.target.name === 'dia-jiu') {
+      config.diasJiu = [...document.querySelectorAll('input[name="dia-jiu"]:checked')].map((c) => Number(c.value)).sort();
+      gravarJSON(CFG_KEY, config);
+      $('avisos-jiu').innerHTML = avisosJiu().map((a) => `<li class="aviso">${a}</li>`).join('');
+      renderHoje();
+      atualizarCheckinUI();
+    }
+  });
+
   // ---------- Início ----------
+  aplicarTema();
+  renderFoto();
+  preencherPerfil();
   const esquecido = encerrarEsquecidos();
   renderHoje();
   renderTudo();
