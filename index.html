@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bauer • Jiu-Jitsu + Hipertrofia</title>
+<style>
+  :root {
+    --bg: #0e1014;
+    --surface: #161920;
+    --surface-2: #1d212a;
+    --border: #2a2f3a;
+    --text: #f2f3f5;
+    --muted: #9aa1ad;
+    --accent: #ff6b2c;
+    --accent-soft: rgba(255, 107, 44, .14);
+    --alta: #ff6b2c;
+    --media: #f7b955;
+    --baixa: #4b5263;
+    --radius: 16px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+    padding-bottom: 48px;
+  }
+  button, input { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 18px; }
+
+  /* Header */
+  header.top {
+    padding: 28px 0 18px;
+    background: radial-gradient(900px 260px at 20% -40%, rgba(255,107,44,.25), transparent 70%);
+    border-bottom: 1px solid var(--border);
+  }
+  .kicker {
+    display: inline-block; font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--accent); font-weight: 700; margin-bottom: 6px;
+  }
+  h1 { margin: 0; font-size: clamp(22px, 4vw, 32px); letter-spacing: -.02em; }
+  .meta { margin: 6px 0 0; color: var(--muted); font-size: 14px; }
+  .stats { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  .stat {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 999px;
+    padding: 6px 12px; font-size: 13px; color: var(--muted);
+  }
+  .stat b { color: var(--text); }
+
+  /* Controls */
+  .controls {
+    display: grid; gap: 12px; padding: 12px 0;
+    position: sticky; top: 0; z-index: 10;
+    background: rgba(14,16,20,.92); backdrop-filter: blur(10px);
+  }
+  @media (min-width: 720px) {
+    .controls { align-items: center; }
+  }
+  .treino-toggle {
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; max-width: 640px; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 4px; gap: 4px;
+  }
+  .treino-btn {
+    border: 0; background: transparent; padding: 10px 16px; border-radius: 10px;
+    text-align: left; color: var(--muted);
+  }
+  .treino-btn b { display: block; font-size: 15px; color: inherit; }
+  .treino-btn span { font-size: 12px; display: block; line-height: 1.25; }
+  .treino-btn[aria-selected="true"] { background: var(--surface-2); color: var(--text); box-shadow: inset 0 0 0 1px var(--border); }
+  .treino-btn[aria-selected="true"] b { color: var(--accent); }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; padding: 6px 0 4px; }
+  .chip {
+    padding: 7px 13px; border-radius: 999px; background: transparent;
+    border: 1px solid var(--border); color: var(--muted); font-size: 13px;
+  }
+  .chip:hover { color: var(--text); }
+  .chip[aria-pressed="true"] { background: var(--text); color: #111; border-color: var(--text); }
+
+  /* Phase / summary banner */
+  .phase {
+    margin: 14px 0 6px; padding: 16px 18px; border-radius: var(--radius);
+    background: var(--surface); border: 1px solid var(--border);
+    display: grid; gap: 4px;
+  }
+  .phase h2 { margin: 0; font-size: 17px; }
+  .phase p { margin: 0; color: var(--muted); font-size: 14px; }
+  .phase { padding: 0; overflow: hidden; }
+  .acc-treino summary {
+    list-style: none; cursor: pointer; user-select: none;
+    display: flex; align-items: center; justify-content: space-between; gap: 14px;
+    padding: 16px 18px;
+  }
+  .acc-treino summary::-webkit-details-marker { display: none; }
+  .acc-treino summary:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: var(--radius); }
+  .acc-head { display: grid; gap: 3px; min-width: 0; }
+  .acc-hint { color: var(--muted); font-size: 13px; }
+  .acc-treino[open] .acc-hint { display: none; }
+  .acc-treino .chev { flex: 0 0 auto; color: var(--muted); transition: transform .2s ease, color .15s; }
+  .acc-treino summary:hover .chev, .acc-treino[open] .chev { color: var(--accent); }
+  .acc-treino[open] .chev { transform: rotate(180deg); }
+  .acc-treino .acc-body {
+    display: grid; gap: 14px; padding: 2px 18px 18px;
+    border-top: 1px solid var(--border); padding-top: 14px; margin: 0 18px; padding-left: 0; padding-right: 0;
+    animation: rise .2s ease both;
+  }
+  @media (min-width: 720px) { .acc-treino .acc-body { grid-template-columns: repeat(3, 1fr); gap: 20px; } }
+  .info-item { display: grid; gap: 6px; align-content: start; }
+  .info-item h4 { margin: 0; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+  .info-item p { color: var(--text); font-size: 14px; margin: 0; }
+  .info-item p b { font-weight: 600; }
+  .phase .focus-line { color: var(--text); font-size: 14px; margin-top: 6px; }
+  .phase .focus-line em { font-style: normal; color: var(--accent); font-weight: 600; }
+
+  /* Count */
+  .count { color: var(--muted); font-size: 13px; margin: 14px 2px 4px; }
+
+  /* Cards grid */
+  .grid { display: grid; gap: 12px; margin-top: 8px; }
+  @media (min-width: 720px) { .grid { grid-template-columns: 1fr 1fr; } }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 16px; display: flex; flex-direction: column; gap: 12px;
+    animation: rise .28s ease both;
+  }
+  .card:hover { border-color: #3a404e; }
+  @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  .card-head { display: flex; gap: 12px; align-items: flex-start; }
+  .num {
+    flex: 0 0 auto; width: 34px; height: 34px; border-radius: 10px;
+    display: grid; place-items: center; background: var(--surface-2);
+    color: var(--muted); font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums;
+  }
+  .title { flex: 1; min-width: 0; }
+  .title h3 { margin: 0; font-size: 17px; letter-spacing: -.01em; }
+  .dose {
+    display: inline-block; margin-top: 4px; font-size: 14px; font-weight: 600;
+    color: var(--text); font-variant-numeric: tabular-nums;
+  }
+  .pse {
+    flex: 0 0 auto; font-size: 12px; font-weight: 700; padding: 5px 9px; border-radius: 8px;
+    background: var(--accent-soft); color: var(--accent); white-space: nowrap;
+  }
+  .why { margin: 0; color: var(--muted); font-size: 14px; }
+
+  .meters { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; }
+  .m { display: grid; gap: 4px; }
+  .m-top { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
+  .m-top b { font-weight: 600; }
+  .bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; }
+  .bar i { height: 6px; border-radius: 3px; background: var(--baixa); opacity: .45; }
+  .lvl-alta .bar i, .bar.lvl-alta i { background: var(--alta); opacity: 1; }
+  .bar.lvl-media i:nth-child(-n+2) { background: var(--media); opacity: 1; }
+  .bar.lvl-baixa i:nth-child(1) { background: var(--baixa); opacity: 1; }
+  .bar.lvl-baixa i:nth-child(n+2) { background: var(--baixa); opacity: .25; }
+  .bar.lvl-alta i { background: var(--alta); }
+  .bar.lvl-media i:nth-child(n+3) { background: var(--baixa); opacity: .25; }
+
+  .video {
+    margin-top: auto; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 11px 14px; border-radius: 12px; border: 1px solid var(--border);
+    background: var(--surface-2); color: var(--text); text-decoration: none; font-size: 14px; font-weight: 600;
+    transition: background .15s, border-color .15s;
+  }
+  .video:hover { background: #242936; border-color: #3a404e; }
+  .video svg { color: #ff4d4d; }
+
+  .empty {
+    grid-column: 1 / -1; text-align: center; padding: 40px 16px; color: var(--muted);
+    border: 1px dashed var(--border); border-radius: var(--radius);
+  }
+
+
+  /* Agenda */
+  .agenda { margin-top: 28px; }
+  .agenda h2 { font-size: 17px; margin: 0 0 10px; }
+  .dias { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); }
+  .dia { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; display: grid; gap: 2px; }
+  .dia small { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+  .dia b { font-size: 14px; }
+  .dia span { color: var(--muted); font-size: 12.5px; }
+  .dia.treino { border-color: rgba(255,107,44,.45); }
+  .dia.treino b { color: var(--accent); }
+  .agenda p { color: var(--muted); font-size: 13px; margin: 10px 0 0; }
+
+  /* Footer */
+  footer { margin-top: 28px; color: var(--muted); font-size: 12.5px; }
+  footer p { margin: 0 0 8px; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; color: var(--muted); font-size: 12.5px; margin-top: 4px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i { width: 14px; height: 6px; border-radius: 3px; display: inline-block; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <span class="kicker">Plano adaptado</span>
+    <h1>Jiu-Jitsu + Hipertrofia</h1>
+    <p class="meta">3 treinos (costas · peito/ombro · pernas) + 2× jiu-jitsu · alvo inicial 73–74 kg</p>
+    <div class="stats">
+      <span class="stat">Peso atual <b>76 kg</b></span>
+      <span class="stat">Gordura <b>13,8%</b></span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="controls">
+    <div class="treino-toggle" id="treinos" role="tablist" aria-label="Treino"></div>
+  </section>
+
+  <div class="chips" id="chips" role="group" aria-label="Filtrar por foco"></div>
+
+  <section class="phase" id="phase"></section>
+
+  <div class="count" id="count"></div>
+
+  <section class="grid" id="list" aria-live="polite"></section>
+
+  <section class="agenda" aria-label="Semana tipo">
+    <h2>Semana tipo</h2>
+    <div class="dias">
+      <div class="dia treino"><small>Segunda</small><b>Treino 2</b><span>Peito, tríceps e ombro</span></div>
+      <div class="dia"><small>Terça</small><b>Jiu-jitsu</b><span>Prioridade técnica</span></div>
+      <div class="dia treino"><small>Quarta</small><b>Treino 1</b><span>Costas + bíceps</span></div>
+      <div class="dia"><small>Quinta</small><b>Jiu-jitsu</b><span>Prioridade técnica</span></div>
+      <div class="dia treino"><small>Sexta</small><b>Treino 3</b><span>Pernas (se não houver jiu)</span></div>
+      <div class="dia"><small>Sábado</small><b>Bike leve</b><span>20–40 min, ou Treino 3 deslocado</span></div>
+      <div class="dia"><small>Domingo</small><b>Descanso</b><span>Recuperação</span></div>
+    </div>
+    <p>Pernas fica na sexta para ter o fim de semana de recuperação e não pesar antes do jiu de terça.</p>
+  </section>
+
+  <footer>
+    <div class="legend">
+      <span><i style="background:var(--alta)"></i>Alta contribuição</span>
+      <span><i style="background:var(--media)"></i>Média</span>
+      <span><i style="background:var(--baixa)"></i>Baixa / secundária</span>
+    </div>
+    <p style="margin-top:14px">PSE = percepção subjetiva de esforço (10 é reservado ao tatame). Use a carga que respeite a técnica e a recuperação.</p>
+    <p>Regra: terça e quinta são de jiu-jitsu. Se houver aula extra na sexta, o Treino 3 (pernas) vai para sábado. Domingo é descanso.</p>
+    <p>Adaptação prática do PDF enviado. Não substitui avaliação de um profissional de educação física ou nutrição, especialmente se houver dor ou lesão.</p>
+  </footer>
+</main>
+
+<script>
+(() => {
+  // ---------- Dados (do PDF) ----------
+  // Níveis: 'alta' | 'media' | 'baixa'
+  // H = Hipertrofia, M = Mobilidade, F = Força, E = Explosão
+  const TREINOS = {
+    '1': {
+      nome: 'Treino 1',
+      subtitulo: 'Costas + bíceps',
+      objetivo: 'Ganhar massa e força nas costas e nos bíceps, reforçando a pegada e o controle do tronco.',
+      esperado: 'Remada inversa e puxada em PSE 8, com técnica limpa e sem chegar à falha. Sair com costas e braços bem trabalhados e a pegada cansada, mas sem dor no cotovelo ou na lombar. Com o tempo, evoluir carga ou repetições na remada e na puxada.',
+      impacto_jiu: 'Puxadas mais fortes para controlar pegadas, quebrar a postura do oponente e manter a sua. Pegada que aguenta mais tempo no rola.',
+      impacto_fisico: 'Costas mais largas e braços maiores, com melhora da postura.',
+      exercicios: [
+        { nome: 'Escorpião', dose: '3×10', pse: 5, H: 'baixa', M: 'alta', F: 'baixa', E: 'baixa',
+          why: 'Mobilidade de quadril e coluna; preparação para movimentos de rotação.' },
+        { nome: 'Carregada na marcha', dose: '3×20', pse: 5, H: 'media', M: 'baixa', F: 'alta', E: 'media',
+          why: 'Pegada, core, estabilidade e força unilateral; grande transferência para grappling.' },
+        { nome: 'Alcance diagonal', dose: '3×10', pse: 7, H: 'baixa', M: 'media', F: 'media', E: 'media',
+          why: 'Coordenação diagonal, estabilidade e controle do tronco.' },
+        { nome: 'Remada inversa', dose: '3×10', pse: 8, H: 'alta', M: 'baixa', F: 'alta', E: 'media',
+          why: 'Costas, bíceps, escápulas e controle corporal; excelente para puxadas.' },
+        { nome: 'Rotação no cabo', dose: '3×10 / lado', pse: 8, H: 'media', M: 'media', F: 'alta', E: 'media',
+          why: 'Rotação e resistência do tronco, importantes para controlar e transferir força.' },
+        { nome: 'Puxada', dose: '3×10', pse: 8, H: 'alta', M: 'baixa', F: 'alta', E: 'media',
+          why: 'Dorsais e flexores do cotovelo; força de puxada e massa nas costas.' },
+        { nome: 'Superman', dose: '3×30 s', pse: 7, H: 'baixa', M: 'media', F: 'media', E: 'baixa',
+          why: 'Resistência da cadeia posterior e controle lombopélvico.' },
+        { nome: 'Rosca bíceps', dose: '3×10–15', pse: 8, H: 'alta', M: 'baixa', F: 'media', E: 'baixa',
+          why: 'Complemento direto para bíceps e hipertrofia do braço.' },
+      ],
+    },
+    '2': {
+      nome: 'Treino 2',
+      subtitulo: 'Peito, tríceps e ombro',
+      objetivo: 'Ganhar massa e força em peito, ombros e tríceps, mantendo os ombros estáveis e protegidos.',
+      esperado: 'Quadrupedia, TGU e halo deixam o ombro aquecido e firme antes do supino e do desenvolvimento. Empurrar com controle em PSE 8 e terminar sem desconforto articular no ombro.',
+      impacto_jiu: 'Mais força para enquadrar, criar distância e escapar de posições por baixo (cem quilos, montada). Base mais firme nos braços e ombros mais preparados para apoio e pressão.',
+      impacto_fisico: 'Peito e ombros mais cheios e braços mais volumosos com o tríceps.',
+      exercicios: [
+        { nome: 'Rolamento', dose: '3×10', pse: 5, H: 'baixa', M: 'media', F: 'baixa', E: 'media',
+          why: 'Controle corporal, orientação espacial e transferência para quedas e transições.' },
+        { nome: 'Quadrupedia tocando os ombros', dose: '3×20', pse: 6, H: 'baixa', M: 'media', F: 'media', E: 'media',
+          why: 'Estabilidade de core e cintura escapular; prepara para apoio e controle no chão.' },
+        { nome: 'Supino no chão', dose: '3×20', pse: 8, H: 'media', M: 'baixa', F: 'media', E: 'baixa',
+          why: 'Peitoral e tríceps com boa estabilidade; ajuda a manter massa da parte superior.' },
+        { nome: 'TGU parcial', dose: '3×5 / lado', pse: 8, H: 'baixa', M: 'alta', F: 'alta', E: 'media',
+          why: 'Estabilidade de ombro, core, quadril e controle global do corpo.' },
+        { nome: 'Desenvolvimento', dose: '3×10', pse: 8, H: 'alta', M: 'baixa', F: 'alta', E: 'baixa',
+          why: 'Deltoides e tríceps; força de empurrar e desenvolvimento de ombros.' },
+        { nome: 'Halo', dose: '3×10', pse: 8, H: 'media', M: 'alta', F: 'media', E: 'baixa',
+          why: 'Mobilidade e estabilidade dos ombros com controle do core.' },
+        { nome: 'Elevação lateral', dose: '3×12–15', pse: 8, H: 'alta', M: 'baixa', F: 'media', E: 'baixa',
+          why: 'Complemento estético para deltoide lateral, aumentando o estímulo de hipertrofia.' },
+        { nome: 'Tríceps', dose: '3×10–15', pse: 8, H: 'alta', M: 'baixa', F: 'media', E: 'baixa',
+          why: 'Complemento direto para tríceps e hipertrofia do braço.' },
+      ],
+    },
+    '3': {
+      nome: 'Treino 3',
+      subtitulo: 'Pernas',
+      objetivo: 'Desenvolver força e hipertrofia de pernas e cadeia posterior, com o quadril móvel para posições baixas.',
+      esperado: 'É o treino mais exigente da semana. Agachamento e deadlift com técnica impecável em PSE 8; as pernas podem ficar cansadas por 1–2 dias, por isso ele fica na sexta. Se o deadlift pesar após o agachamento, baixe para PSE 7.',
+      impacto_jiu: 'Base mais firme e mais força para quedas, raspagens, passagem com pressão e para levantar com o oponente. Quadril mais solto para guarda e transições.',
+      impacto_fisico: 'Pernas e glúteos maiores e maior gasto de energia, o que ajuda na perda de gordura rumo aos 73–74 kg.',
+      exercicios: [
+        { nome: 'Cócoras', dose: '3×1 min', pse: 5, H: 'baixa', M: 'alta', F: 'baixa', E: 'baixa',
+          why: 'Mobilidade de quadril/tornozelo e preparação para posições baixas do grappling.' },
+        { nome: 'Quadril alto/baixo', dose: '3×5', pse: 6, H: 'baixa', M: 'alta', F: 'media', E: 'media',
+          why: 'Controle do quadril e transição entre posições; útil para mobilidade no solo.' },
+        { nome: 'Agachamento', dose: '3×10', pse: 8, H: 'alta', M: 'media', F: 'alta', E: 'media',
+          why: 'Força de pernas e quadril; base, pressão e capacidade de produzir força.' },
+        { nome: 'Deadlift', dose: '3×10', pse: 8, H: 'alta', M: 'baixa', F: 'alta', E: 'alta',
+          why: 'Cadeia posterior, quadril e força de puxada; essencial para força global.' },
+        { nome: 'Passada para frente', dose: '3×10', pse: 8, H: 'alta', M: 'media', F: 'alta', E: 'media',
+          why: 'Força unilateral, equilíbrio e estabilidade de quadril e joelho.' },
+        { nome: 'Panturrilha', dose: '3×10–15', pse: 8, H: 'alta', M: 'baixa', F: 'media', E: 'baixa',
+          why: 'Complemento para panturrilha e capacidade de produzir força no apoio.' },
+      ],
+    },
+  };
+
+  const FOCOS = [
+    { id: 'todos', label: 'Todos' },
+    { id: 'H', label: 'Hipertrofia' },
+    { id: 'F', label: 'Força' },
+    { id: 'E', label: 'Explosão' },
+    { id: 'M', label: 'Mobilidade' },
+  ];
+  const DIMS = [
+    { k: 'H', label: 'Hipertrofia' },
+    { k: 'F', label: 'Força' },
+    { k: 'E', label: 'Explosão' },
+    { k: 'M', label: 'Mobilidade' },
+  ];
+  const NIVEL = { alta: 'Alta', media: 'Média', baixa: 'Baixa' };
+  const SEG = { alta: 3, media: 2, baixa: 1 };
+
+  // ---------- Estado ----------
+  const KEY = 'bauer-treino-estado';
+  let estado = { treino: '1', foco: 'todos', descAberta: false };
+  try {
+    const salvo = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (salvo) estado = { ...estado, ...salvo };
+  } catch (_) {}
+  if (!TREINOS[estado.treino]) estado.treino = '1';
+  const salvar = () => { try { localStorage.setItem(KEY, JSON.stringify({ treino: estado.treino, foco: estado.foco, descAberta: estado.descAberta })); } catch (_) {} };
+
+  // ---------- Helpers ----------
+  const $ = (id) => document.getElementById(id);
+  // Vídeos oficiais da planilha (YouTube Shorts).
+  // Exercícios sem entrada aqui não recebem botão de vídeo.
+  const VIDEOS = {
+    'Cócoras': 'JaAv-cI0HzU',
+    'Rolamento': 'kRTwSGEF1Bc',
+    'Quadrupedia tocando os ombros': 'gO3IW13ClpI',
+    'Agachamento': 'LJ5lSyQlLq8',
+    'Rotação no cabo': 'cWgGzry466w',
+    'Supino no chão': '_CqMCahSftU',
+    'TGU parcial': 'EkuB3_AF6nE',
+    'Desenvolvimento': 'ES6qvt5H2vs',
+    'Passada para frente': 'R1S0Oy028vo',
+    'Escorpião': 'V08dv4WqyUo',
+    'Quadril alto/baixo': '-fn08w4_6Sc',
+    'Carregada na marcha': 'Zzr3h6dIItE',
+    'Alcance diagonal': 'm5Qdad3pck4',
+    'Deadlift': 'BHI1j8w1eLo',
+    'Remada inversa': 'Ghd-vUvECZw',
+    'Superman': '0DxJJQkkBb8',
+    'Halo': '4sizzeQpT-k',
+    'Puxada': 'ptL4ALz_nXg',
+  };
+
+  function videoDe(nome) {
+    const id = VIDEOS[nome];
+    return id ? `https://www.youtube.com/shorts/${id}` : null;
+  }
+
+  const CHEVRON = '<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
+  const ICON_PLAY = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
+
+  function exerciciosDoTreino() {
+    return TREINOS[estado.treino].exercicios;
+  }
+
+  // ---------- Render ----------
+  function renderTreinos() {
+    $('treinos').innerHTML = Object.entries(TREINOS).map(([id, t]) => `
+      <button class="treino-btn" role="tab" data-treino="${id}" aria-selected="${id === estado.treino}">
+        <b>${t.nome}</b><span>${t.subtitulo}</span>
+      </button>`).join('');
+  }
+
+  function renderChips() {
+    $('chips').innerHTML = FOCOS.map((f) => `
+      <button class="chip" data-foco="${f.id}" aria-pressed="${f.id === estado.foco}">${f.label}</button>`).join('');
+  }
+
+  function renderFase() {
+    const t = TREINOS[estado.treino];
+    $('phase').innerHTML = `
+      <details class="acc-treino"${estado.descAberta ? ' open' : ''}>
+        <summary>
+          <div class="acc-head">
+            <h2>${t.nome} · ${t.subtitulo}</h2>
+            <span class="acc-hint">Objetivo, o que se espera e impacto</span>
+          </div>
+          ${CHEVRON}
+        </summary>
+        <div class="acc-body">
+          <div class="info-item"><h4>Objetivo</h4><p>${t.objetivo}</p></div>
+          <div class="info-item"><h4>O que se espera</h4><p>${t.esperado}</p></div>
+          <div class="info-item"><h4>Impacto</h4>
+            <p><b>No jiu-jitsu:</b> ${t.impacto_jiu}</p>
+            <p><b>No físico:</b> ${t.impacto_fisico}</p>
+          </div>
+        </div>
+      </details>`;
+  }
+
+  function cardHTML(ex, i) {
+    const video = videoDe(ex.nome);
+    const bars = DIMS.map(({ k, label }) => `
+      <div class="m">
+        <div class="m-top"><span>${label}</span><b>${NIVEL[ex[k]]}</b></div>
+        <div class="bar lvl-${ex[k]}" aria-label="${label}: ${NIVEL[ex[k]]}">
+          ${[1, 2, 3].map((n) => `<i></i>`).join('')}
+        </div>
+      </div>`).join('');
+    return `
+      <article class="card">
+        <div class="card-head">
+          <span class="num">${String(i + 1).padStart(2, '0')}</span>
+          <div class="title">
+            <h3>${ex.nome}</h3>
+            <span class="dose">${ex.dose}</span>
+          </div>
+          <span class="pse" title="Percepção subjetiva de esforço">PSE ${ex.pse}</span>
+        </div>
+        <p class="why">${ex.why}</p>
+        <div class="meters">${bars}</div>
+        ${video ? `<a class="video" href="${video}" target="_blank" rel="noopener">
+          ${ICON_PLAY} Ver execução no YouTube
+        </a>` : ''}
+      </article>`;
+  }
+
+  function renderLista() {
+    let itens = exerciciosDoTreino();
+    if (estado.foco !== 'todos') itens = itens.filter((ex) => ex[estado.foco] === 'alta');
+
+    $('count').textContent = `${itens.length} ${itens.length === 1 ? 'exercício' : 'exercícios'}` +
+      (estado.foco !== 'todos' ? ` com alta contribuição em ${FOCOS.find(f => f.id === estado.foco).label.toLowerCase()}` : '');
+
+    const todos = exerciciosDoTreino();
+    $('list').innerHTML = itens.length
+      ? itens.map((ex) => cardHTML(ex, todos.indexOf(ex))).join('')
+      : `<div class="empty">Nenhum exercício encontrado.<br>Tente remover o filtro de foco.</div>`;
+  }
+
+  function renderTudo() {
+    renderTreinos();
+    renderChips();
+    renderFase();
+    renderLista();
+  }
+
+  // ---------- Eventos ----------
+  $('treinos').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-treino]');
+    if (!b) return;
+    estado.treino = b.dataset.treino;
+    salvar(); renderTudo();
+  });
+
+  $('phase').addEventListener('toggle', (e) => {
+    if (!e.target.matches('.acc-treino')) return;
+    estado.descAberta = e.target.open;
+    salvar();
+  }, true);
+
+  $('chips').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-foco]');
+    if (!b) return;
+    estado.foco = b.dataset.foco;
+    salvar(); renderChips(); renderLista();
+  });
+
+  renderTudo();
+})();
+</script>
+</body>
+</html>
