@@ -631,7 +631,7 @@
         <li><span class="ponteira" data-nivel="1" aria-hidden="true"><i></i><i></i><i></i></span>Baixa ou secundária</li>
       </ul>
       <p>PSE é a percepção subjetiva de esforço; o 10 fica reservado ao tatame. Use a carga que respeite a técnica e a recuperação.</p>
-      <p>A semana se monta em Você: arraste os treinos, o jiu-jitsu e a bike para os dias (até 2 por dia). O padrão é Treino 2 na segunda, Treino 1 na quarta, Treino 3 na sexta, jiu na terça e na quinta e bike leve no sábado.</p>
+      <p>A semana se monta em Você: arraste os treinos, o jiu-jitsu e o cardio para os dias (até 2 por dia). O padrão é Treino 2 na segunda, Treino 1 na quarta, Treino 3 na sexta, jiu na terça e na quinta e cardio no sábado.</p>
       <p>Check-ins e cargas ficam salvos na sua conta e aparecem em qualquer aparelho em que você entrar.</p>
       <p>Adaptação prática do PDF enviado. Não substitui avaliação de um profissional de educação física ou nutrição, especialmente se houver dor ou lesão.</p>
     </footer>
@@ -666,7 +666,7 @@
       <ul class="legenda-cal" aria-label="Legenda do calendário">
         <li><span class="selo musc" aria-hidden="true">1</span><span class="selo musc" aria-hidden="true">2</span><span class="selo musc" aria-hidden="true">3</span><span>Musculação</span></li>
         <li><span class="selo jiu" aria-hidden="true">J</span><span>Jiu-jitsu</span></li>
-        <li><span class="selo bike" aria-hidden="true">B</span><span>Bike</span></li>
+        <li><span class="selo bike" aria-hidden="true">C</span><span>Cardio</span></li>
       </ul>
     </div>
   </section>
@@ -898,7 +898,7 @@
   const daDia = (i) => `${i === 0 || i === 6 ? 'do' : 'da'} ${NOMES_DIA[i]}`;
   const copiaSemana = (s) => s.map((d) => [...d]);
   const ehTreino = (t) => /^t[123]$/.test(t);
-  const nomeAtividade = (t) => (ehTreino(t) ? TREINOS[t.slice(1)].nome : t === 'jiu' ? 'Jiu-jitsu' : 'Bike leve');
+  const nomeAtividade = (t) => (ehTreino(t) ? TREINOS[t.slice(1)].nome : t === 'jiu' ? 'Jiu-jitsu' : 'Cardio');
   // Contas antigas só tinham os dias de jiu: a semana é montada com eles sobre o plano original.
   function semanaDeDiasJiu(dias) {
     const s = [[], ['t2'], [], ['t1'], [], ['t3'], []];
@@ -918,7 +918,7 @@
     const tipoTreino = tipos.find(ehTreino);
     const treino = tipoTreino ? tipoTreino.slice(1) : undefined;
     const grupos = [...new Set(tipos.map((t) => (ehTreino(t) ? 'musc' : t)))];
-    const notaDe = (t) => (ehTreino(t) ? TREINOS[t.slice(1)].subtitulo : t === 'jiu' ? 'aula de jiu' : 'bike leve');
+    const notaDe = (t) => (ehTreino(t) ? TREINOS[t.slice(1)].subtitulo : t === 'jiu' ? 'aula de jiu' : 'cardio leve');
     let titulo = 'Descanso', nota = 'Recuperação';
     if (tipos.length === 1) {
       titulo = nomeAtividade(tipos[0]);
@@ -936,7 +936,8 @@
     t2: { nome: 'Treino 2', selo: '2', grupo: 'musc', treino: '2' },
     t3: { nome: 'Treino 3', selo: '3', grupo: 'musc', treino: '3' },
     jiu: { nome: 'Jiu-jitsu', selo: 'J', grupo: 'jiu' },
-    bike: { nome: 'Bike', selo: 'B', grupo: 'bike' },
+    // A chave 'bike' fica no banco (check-ins e semana já salvos); na tela o tipo se chama Cardio.
+    bike: { nome: 'Cardio', selo: 'C', grupo: 'bike' },
   };
   const ORDEM_TIPOS = ['t1', 't2', 't3', 'jiu', 'bike'];
   const DURACAO_PADRAO = { musc: 60, jiu: 60, bike: 30 };
@@ -1801,7 +1802,7 @@
     $('metas').innerHTML =
       linha('Musculação', 't1', 'musc', conta('musc'), planejado('musc')) +
       linha('Jiu-jitsu', 'jiu', 'jiu', conta('jiu'), planejado('jiu')) +
-      linha('Bike', 'bike', 'bike', conta('bike'), planejado('bike'));
+      linha('Cardio', 'bike', 'bike', conta('bike'), planejado('bike'));
   }
 
   function renderCalendario() {
