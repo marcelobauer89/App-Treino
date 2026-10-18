@@ -10,9 +10,9 @@ O App Bauer transforma o plano de 6 semanas "Jiu-Jitsu + Hipertrofia" (hoje um P
 
 **Solução.** Um app que:
 
-- Mostra a atividade do dia (Treino 1, 2 ou 3, jiu-jitsu, bike ou descanso) com base na agenda semanal e nos dias de jiu-jitsu escolhidos pelo usuário.
+- Mostra a atividade do dia (Treino 1, 2 ou 3, jiu-jitsu, cardio ou descanso) com base na agenda semanal e nos dias de jiu-jitsu escolhidos pelo usuário.
 - Registra a carga de cada série por exercício, pré-preenchida com a da última vez, com vídeo de execução.
-- Faz check-in de cada treino (musculação, jiu-jitsu ou bike), quantas vezes for preciso no mesmo dia.
+- Faz check-in de cada treino (musculação, jiu-jitsu ou cardio), quantas vezes for preciso no mesmo dia.
 - Mostra um Dashboard com calendário de check-ins, os treinos feitos em cada um e a semana comparada ao plano.
 - Aplica as regras do plano automaticamente: fase da semana, passada em 3×16 nas semanas 5–6, deslocamento das pernas de sexta para sábado.
 - Acompanha peso médio semanal, % de gordura, proteína e recuperação.
@@ -42,7 +42,7 @@ O MVP atende um grupo fechado: o Bauer, criador do plano e administrador do grup
 | Peso atual | 76 kg |
 | Gordura corporal | 13,8% |
 | Primeiro alvo | 74 kg (73 kg só se desempenho e recuperação estiverem bons) |
-| Rotina | 3× musculação + 2× jiu-jitsu por semana; bike leve opcional |
+| Rotina | 3× musculação + 2× jiu-jitsu por semana; cardio leve opcional |
 | Dieta | Não conta calorias; referência de 140–165 g de proteína/dia |
 | Onde usa | Navegador do celular, na academia, entre séries, muitas vezes com uma mão só |
 
@@ -84,7 +84,7 @@ O MVP cobre um grupo de amigos convidados, cada um com conta e dados próprios, 
 - Filtro dos exercícios por foco e explicação de cada treino ("Sobre o treino").
 - Vídeo de referência por exercício (YouTube Shorts).
 - Progressão automática por fase (semanas 1–2, 3–4, 5–6).
-- Check-in de treino para musculação (Treinos 1, 2 e 3), jiu-jitsu e bike, com nota de recuperação; vários check-ins no mesmo dia.
+- Check-in de treino para musculação (Treinos 1, 2 e 3), jiu-jitsu e cardio, com nota de recuperação; vários check-ins no mesmo dia.
 - Dashboard com calendário de check-ins: visão do mês com os dias treinados e detalhe de cada check-in com os treinos e exercícios feitos.
 - Registro de peso diário e % de gordura opcional; média semanal calculada.
 - Registro simples de proteína diária.
@@ -133,7 +133,7 @@ São 35 requisitos em 9 grupos; os marcados P0 bloqueiam o lançamento do MVP. A
 | RF-33 | Filtro da ficha por foco (Hipertrofia, Força, Explosão, Mobilidade), mostrando só os exercícios de alta contribuição | P2 | Feito |
 | **Jiu-jitsu e cardio** |  |  |  |
 | RF-18 | Check-in de aula de jiu-jitsu com duração e nota de recuperação (1–5) | P0 | Feito |
-| RF-19 | Registro de bike (20–40 min, intensidade leve/moderada) | P1 | Parcial: check-in com duração, sem intensidade |
+| RF-19 | Registro de cardio (20–40 min, intensidade leve/moderada) | P1 | Parcial: check-in com duração, sem intensidade |
 | **Corpo e nutrição** |  |  |  |
 | RF-20 | Registro de peso diário; média semanal e tendência calculadas | P0 | Pendente |
 | RF-21 | Registro opcional de % de gordura e proteína diária, com meta calculada pelo peso do usuário (~1,8–2,2 g/kg) | P1 | Pendente |
@@ -146,11 +146,11 @@ São 35 requisitos em 9 grupos; os marcados P0 bloqueiam o lançamento do MVP. A
 | RF-26 | Permitir mais de um check-in no mesmo dia (ex.: musculação de manhã e jiu-jitsu à noite), cada um com horário, tipo e duração próprios | P0 | Feito |
 | RF-30 | Novo check-in rápido, extra ou retroativo (tipo, data até hoje, início, duração de 1 a 600 min, recuperação, observação); excluir check-in com confirmação; editar check-in | P1 | Parcial: falta editar |
 | **Dashboard e calendário** |  |  |  |
-| RF-27 | Calendário mensal no Dashboard: cada dia mostra selos por tipo (1, 2, 3 para musculação, J para jiu-jitsu, B para bike); com mais de dois check-ins mostra o primeiro e "+N"; navegação entre meses até o mês atual | P0 | Feito |
+| RF-27 | Calendário mensal no Dashboard: cada dia mostra selos por tipo (1, 2, 3 para musculação, J para jiu-jitsu, C para cardio); com mais de dois check-ins mostra o primeiro e "+N"; navegação entre meses até o mês atual | P0 | Feito |
 | RF-28 | Ao tocar num dia, listar os check-ins daquele dia em ordem de horário, com tipo, horário, duração e recuperação; dia sem check-in oferece "Registrar check-in neste dia" | P0 | Feito |
 | RF-29 | Ao abrir um check-in de musculação, mostrar a observação e cada exercício do treino com as cargas por série; exercícios sem carga aparecem como "sem registro" | P0 | Feito |
 | RF-34 | Números do Dashboard: check-ins no total, check-ins e horas treinadas no mês, recuperação média dos últimos 30 dias | P1 | Feito |
-| RF-35 | "Esta semana" × plano (musculação 3, jiu-jitsu = dias escolhidos, bike opcional) e barras com a contagem de check-ins por tipo no mês exibido | P1 | Feito |
+| RF-35 | "Esta semana" × plano (musculação 3, jiu-jitsu = dias escolhidos, cardio opcional) e barras com a contagem de check-ins por tipo no mês exibido | P1 | Feito |
 
 ### Modelo de dados
 
@@ -167,8 +167,8 @@ O plano é um modelo único, compartilhado por todos os usuários e guardado com
 | Treino-modelo | código (1, 2 ou 3), nome, subtítulo, objetivo, o que esperar, impacto no jiu-jitsu, impacto no físico, lista ordenada de exercícios |
 | Exercício | nome, dose (séries × reps/tempo/por lado), PSE-alvo, graus H/F/E/M (Alta/Média/Baixa), justificativa, vídeo, é principal (sim/não) |
 | Ajuste por fase | exercício, fase, nova dose (ex.: Passada 3×16 na fase 3) |
-| Sessão | inscrição, data, tipo (Treino 1, 2, 3, jiu-jitsu, bike, descanso), semana, status (planejada, feita, pulada, movida) |
-| Check-in | usuário, tipo (Treino 1, 2, 3, jiu-jitsu, bike), início, fim (vazio enquanto aberto), sem horário (sim/não), recuperação (1–5, opcional), observação, retroativo (sim/não), hora da última série |
+| Sessão | inscrição, data, tipo (Treino 1, 2, 3, jiu-jitsu, cardio, descanso), semana, status (planejada, feita, pulada, movida) |
+| Check-in | usuário, tipo (Treino 1, 2, 3, jiu-jitsu, cardio), início, fim (vazio enquanto aberto), sem horário (sim/não), recuperação (1–5, opcional), observação, retroativo (sim/não), hora da última série |
 | Série registrada | check-in, exercício, nº da série, carga (kg) |
 | Medida corporal | usuário, data, peso (kg), % de gordura (opcional) |
 | Proteína | usuário, data, gramas |
@@ -187,7 +187,7 @@ Agenda semanal padrão:
 
 | Seg | Ter | Qua | Qui | Sex | Sáb | Dom |
 | --- | --- | --- | --- | --- | --- | --- |
-| Treino 2 | Jiu-jitsu | Treino 1 | Jiu-jitsu | Treino 3 (pernas) | Bike leve ou Treino 3 deslocado | Descanso |
+| Treino 2 | Jiu-jitsu | Treino 1 | Jiu-jitsu | Treino 3 (pernas) | Cardio leve ou Treino 3 deslocado | Descanso |
 
 ### Fluxos e telas principais
 
@@ -195,7 +195,7 @@ O fluxo central começa na tela Treino: o app mostra a atividade do dia e todo t
 
 > [Diagrama: fluxo diário · 1 decisão, 3 caminhos]
 
-Todo treino passa por um check-in. Na musculação, o check-in é aberto ao iniciar o treino (ou ao salvar o primeiro peso) e fechado ao terminar, com o registro das cargas no meio. Jiu-jitsu e bike pedem apenas um check-in rápido pelo Dashboard. Depois de encerrado, o check-in aparece no calendário, e um novo check-in pode ser aberto no mesmo dia.
+Todo treino passa por um check-in. Na musculação, o check-in é aberto ao iniciar o treino (ou ao salvar o primeiro peso) e fechado ao terminar, com o registro das cargas no meio. Jiu-jitsu e cardio pedem apenas um check-in rápido pelo Dashboard. Depois de encerrado, o check-in aparece no calendário, e um novo check-in pode ser aberto no mesmo dia.
 
 | Tela | Conteúdo principal |
 | --- | --- |
@@ -215,20 +215,20 @@ Todas as regras vêm do plano original; o app as aplica sem que o usuário preci
 
 1. **Semana e fase (pendente):** semana = dias desde o início ÷ 7, arredondado para cima (1–6). Fase 1 = semanas 1–2, fase 2 = 3–4, fase 3 = 5–6.
 2. **Agenda dos treinos:** segunda = Treino 2, quarta = Treino 1, sexta = Treino 3 (pernas). Pernas ficam na sexta para ter o fim de semana de recuperação e não pesar antes do jiu de terça.
-3. **Conflito de sexta (pendente):** se houver jiu-jitsu na sexta, o Treino 3 vai para sábado; se sábado já tiver bike, a bike é substituída. Sem espaço, a sessão é marcada como pulada.
+3. **Conflito de sexta (pendente):** se houver jiu-jitsu na sexta, o Treino 3 vai para sábado; se sábado já tiver cardio, o cardio é substituído. Sem espaço, a sessão é marcada como pulada.
 4. **Domingo:** sempre descanso; não pode ser escolhido como dia de jiu-jitsu.
-5. **Avisos de jiu-jitsu:** se um dia de jiu coincidir com um treino de musculação, o app avisa para fazer um check-in de cada. Com jiu no sábado, o app alerta que ele vem logo depois das pernas de sexta e tira a bike da semana.
+5. **Avisos de jiu-jitsu:** se um dia de jiu coincidir com um treino de musculação, o app avisa para fazer um check-in de cada. Com jiu no sábado, o app alerta que ele vem logo depois das pernas de sexta e tira o cardio da semana.
 6. **Progressão de dose (pendente):** na fase 3, Passada para frente passa de 3×10 para 3×16.
 7. **Fase 2 (tempo sob tensão) (pendente):** o app exibe lembrete de cadência controlada nos exercícios principais.
 8. **PSE:** cada exercício mostra o PSE-alvo; o PSE real não é registrado. PSE 10 fica reservado ao tatame. Na fase 3, os complementos (elevação lateral, tríceps, rosca, panturrilha) devem mostrar "não ir à falha" (pendente).
 9. **Peso médio (pendente):** média das pesagens de seg–dom; ajustes só são sugeridos após 2 semanas de média.
 10. **Segundo alvo (pendente) (Bauer: 73 kg):** só é liberado depois de atingir o primeiro alvo (Bauer: 74 kg) com recuperação média ≥ 3 e cargas principais estáveis ou maiores.
-11. **Bike:** sábado tem bike leve opcional (20–40 min) quando não há jiu-jitsu; a meta da semana conta 1 bike. Marcar como dispensável se o peso cair no ritmo previsto (≥ 0,25 kg/semana) fica pendente.
+11. **Cardio:** sábado tem cardio leve opcional (20–40 min) quando não há jiu-jitsu; a meta da semana conta 1 cardio. Marcar como dispensável se o peso cair no ritmo previsto (≥ 0,25 kg/semana) fica pendente.
 12. **Check-in e sessão:** um check-in encerrado do tipo planejado marca o dia como feito na agenda. Check-ins de tipos não planejados aparecem como extras ("+ Jiu-jitsu") e não alteram a agenda.
 13. **Vários check-ins por dia:** não há limite de check-ins por dia, mas só um pode ficar aberto por vez; ao iniciar outro, o app pede para encerrar o que está aberto. Check-ins do mesmo dia não podem se sobrepor no horário.
 14. **Check-in esquecido:** um check-in aberto há mais de 3 horas gera aviso na barra "em andamento"; na próxima abertura do app, ele é encerrado na hora da última série registrada (ou 1 hora após o início, se não houver série) e o usuário é avisado.
 15. **Check-in retroativo:** a data não pode ser no futuro e a duração vai de 1 a 600 min; check-ins de datas passadas ficam marcados como retroativos.
-16. **Duração padrão:** 60 min para musculação e jiu-jitsu, 30 min para bike.
+16. **Duração padrão:** 60 min para musculação e jiu-jitsu, 30 min para cardio.
 17. **Exclusão:** excluir um check-in apaga também as cargas registradas nele, após confirmação.
 
 ### Requisitos não funcionais

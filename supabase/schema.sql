@@ -23,6 +23,7 @@ alter table public.perfis add column if not exists semana jsonb
 create table if not exists public.checkins (
   id uuid primary key default gen_random_uuid(),
   usuario_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  -- 'bike' aparece no app como Cardio.
   tipo text not null check (tipo in ('t1', 't2', 't3', 'jiu', 'bike')),
   inicio timestamp not null,
   fim timestamp check (fim is null or fim >= inicio),
