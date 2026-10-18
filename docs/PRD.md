@@ -12,6 +12,8 @@ O App Bauer transforma o plano de 6 semanas "Jiu-Jitsu + Hipertrofia" (hoje um P
 
 - Mostra o treino do dia (A, B, jiu-jitsu, bike ou descanso) com base na agenda semanal.
 - Registra séries, repetições, carga e PSE por exercício, com vídeo de execução.
+- Faz check-in de cada treino (musculação, jiu-jitsu ou bike), quantas vezes for preciso no mesmo dia.
+- Mostra um calendário com todos os check-ins e os treinos feitos em cada um.
 - Aplica as regras do plano automaticamente: fase da semana, passada em 3×16 nas semanas 5–6, deslocamento da sexta para sábado.
 - Acompanha peso médio semanal, % de gordura, proteína e recuperação.
 
@@ -46,7 +48,7 @@ O MVP é bem-sucedido se os usuários concluírem o bloco de 6 semanas registran
 
 | Métrica | Meta | Como medir |
 | --- | --- | --- |
-| Aderência à musculação | ≥ 90% das 18 sessões previstas | Sessões concluídas ÷ planejadas |
+| Aderência à musculação | ≥ 90% das 18 sessões previstas | Check-ins de musculação concluídos ÷ sessões planejadas |
 | Aderência ao jiu-jitsu | ≥ 10 de 12 aulas | Check-ins de jiu-jitsu |
 | Registro de cargas | ≥ 95% dos exercícios principais com carga e PSE | Agachamento, deadlift, supino, desenvolvimento, puxada, remada, passada |
 | Peso médio semanal | Alvo individual (Bauer: 76 → 74 kg, ~0,3 kg/semana) | Média das pesagens da semana |
@@ -68,7 +70,8 @@ O MVP cobre um grupo de amigos convidados, cada um com conta e dados próprios, 
 - Execução dos Treinos A e B com registro de séries, repetições, carga e PSE.
 - Vídeo de referência por exercício (link do YouTube já presente no plano).
 - Progressão automática por fase (semanas 1–2, 3–4, 5–6).
-- Check-in de jiu-jitsu e bike, com nota de recuperação.
+- Check-in de treino para musculação (A/B), jiu-jitsu e bike, com nota de recuperação; vários check-ins no mesmo dia.
+- Calendário de check-ins: visão do mês com os dias treinados e detalhe de cada check-in com os treinos e exercícios feitos.
 - Registro de peso diário e % de gordura opcional; média semanal calculada.
 - Registro simples de proteína diária.
 - Tela de progresso que substitui a página "Controle de progresso" do PDF.
@@ -86,7 +89,7 @@ O MVP cobre um grupo de amigos convidados, cada um com conta e dados próprios, 
 
 ### Requisitos funcionais
 
-São 24 requisitos em 7 grupos; os marcados P0 bloqueiam o lançamento do MVP.
+São 30 requisitos em 8 grupos; os marcados P0 bloqueiam o lançamento do MVP.
 
 | ID | Requisito | Prioridade |
 | --- | --- | --- |
@@ -121,6 +124,13 @@ São 24 requisitos em 7 grupos; os marcados P0 bloqueiam o lançamento do MVP.
 | RF-22 | Tela de progresso: peso médio, carga dos exercícios principais e aderência por semana | P0 |
 | RF-23 | Exportar o histórico do bloco em CSV ou PDF | P2 |
 | RF-24 | Compartilhar, se o usuário ativar, só a aderência semanal (treinos feitos) com o grupo | P2 |
+| **Check-in de treino e calendário** |  |  |
+| RF-25 | Check-in de treino de musculação: o usuário inicia o check-in ao começar o treino (A ou B) e o encerra ao terminar; as séries registradas ficam ligadas a esse check-in | P0 |
+| RF-26 | Permitir mais de um check-in no mesmo dia (ex.: musculação de manhã e jiu-jitsu à noite, ou dois treinos de jiu-jitsu), cada um com horário, tipo e duração próprios | P0 |
+| RF-27 | Tela Calendário com visão mensal: cada dia mostra marcadores dos check-ins feitos, por tipo (A, B, jiu-jitsu, bike), e indica quando há mais de um check-in no dia | P0 |
+| RF-28 | Ao tocar num dia do calendário, listar todos os check-ins daquele dia em ordem de horário, com tipo de treino, horário, duração, recuperação e observação | P0 |
+| RF-29 | Ao abrir um check-in de musculação, mostrar o treino feito (A ou B) e os exercícios concluídos, com séries, reps/tempo, carga e PSE; exercícios pulados aparecem como pulados | P0 |
+| RF-30 | Criar check-in retroativo (esqueceu de registrar), editar e excluir check-ins pelo calendário | P1 |
 
 ### Modelo de dados
 
@@ -137,10 +147,12 @@ O plano é um modelo único, compartilhado por todos os usuários e guardado com
 | Exercício | nome, dose (séries × reps/tempo/por lado), PSE-alvo, H/M/F/E (Alta/Média/Baixa), justificativa, URL do vídeo, é principal (sim/não) |
 | Ajuste por fase | exercício, fase, nova dose (ex.: Passada 3×16 na fase 3) |
 | Sessão | inscrição, data, tipo (A, B, jiu-jitsu, bike, descanso), semana, status (planejada, feita, pulada, movida) |
-| Série registrada | sessão, exercício, nº da série, reps ou segundos, carga (kg), PSE real |
-| Check-in | sessão, duração (min), recuperação (1–5), observação |
+| Check-in | usuário, sessão planejada (opcional, para check-ins extras), data, hora de início, hora de fim, duração (min), tipo (A, B, jiu-jitsu, bike), recuperação (1–5), observação, retroativo (sim/não) |
+| Série registrada | check-in, exercício, nº da série, reps ou segundos, carga (kg), PSE real, pulado (sim/não) |
 | Medida corporal | usuário, data, peso (kg), % de gordura (opcional) |
 | Proteína | usuário, data, gramas |
+
+Um dia pode ter vários check-ins (relação 1 dia → N check-ins), e cada check-in de musculação guarda as próprias séries. O calendário é montado agrupando os check-ins por data.
 
 Exercícios por treino, conforme o PDF:
 
@@ -153,7 +165,7 @@ O fluxo central começa na tela Hoje: o app escolhe a atividade do dia e todo ca
 
 > [Diagrama: fluxo diário · 1 decisão, 3 caminhos]
 
-Só a musculação passa pelo registro de séries; jiu-jitsu e bike pedem apenas um check-in rápido.
+Todo treino passa por um check-in. Na musculação, o check-in é aberto ao iniciar o treino e fechado ao terminar, com o registro de séries no meio. Jiu-jitsu e bike pedem apenas um check-in rápido. Depois de encerrado, o check-in aparece no calendário, e um novo check-in pode ser aberto no mesmo dia.
 
 | Tela | Conteúdo principal |
 | --- | --- |
@@ -161,7 +173,8 @@ Só a musculação passa pelo registro de séries; jiu-jitsu e bike pedem apenas
 | Hoje | Semana e fase, atividade do dia, botão "Teve jiu na sexta", pesagem rápida |
 | Treino | Lista dos 11 exercícios, dose, PSE-alvo, selos H/M/F/E |
 | Exercício | Séries com carga pré-preenchida, PSE real, timer de descanso, vídeo |
-| Check-in | Duração, recuperação 1–5, observação |
+| Check-in | Iniciar/encerrar check-in, tipo de treino, horário, duração, recuperação 1–5, observação |
+| Calendário | Visão mensal com marcadores por tipo de check-in em cada dia; ao tocar no dia, lista dos check-ins do dia; ao tocar num check-in, treino e exercícios feitos com séries, carga e PSE |
 | Semana | Agenda seg–dom com status de cada sessão e reagendamento |
 | Progresso | Peso médio por semana, cargas principais, aderência, % de gordura |
 | Ajustes | Dias de treino, unidades, exportação, privacidade, convidar amigos (administrador), excluir conta, aviso legal |
@@ -181,6 +194,10 @@ Todas as regras vêm do plano original; o app as aplica sem que o usuário preci
 9. **Peso médio:** média das pesagens de seg–dom; ajustes só são sugeridos após 2 semanas de média.
 10. **Segundo alvo (Bauer: 73 kg)****:** só é liberado depois de atingir o primeiro alvo (Bauer: 74 kg) com recuperação média ≥ 3 e cargas principais estáveis ou maiores.
 11. **Bike:** 1–2 sessões de 20–40 min, sugeridas longe do Treino A; o app marca como opcional se o peso cair no ritmo previsto (≥ 0,25 kg/semana).
+12. **Check-in e sessão:** um check-in de musculação marca a sessão planejada do dia como feita. Se o dia não tiver sessão planejada daquele tipo, o check-in conta como treino extra e não altera a agenda.
+13. **Vários check-ins por dia:** não há limite de check-ins por dia, mas só um pode ficar aberto por vez; ao iniciar outro, o app pede para encerrar o que está aberto. Check-ins do mesmo dia não podem se sobrepor no horário.
+14. **Check-in esquecido:** um check-in aberto há mais de 3 horas gera aviso para encerrar; se o usuário não responder, o app o encerra com a hora da última série registrada.
+15. **Domingo e check-ins:** a regra 4 vale só para o agendamento; o usuário pode fazer check-in de um treino extra no domingo, e ele aparece no calendário.
 
 ### Requisitos não funcionais
 
@@ -201,7 +218,7 @@ Todas as regras vêm do plano original; o app as aplica sem que o usuário preci
 **Roadmap**
 
 1. **MVP (web, grupo de amigos):** PWA responsiva, contas, convites, sincronização, requisitos P0 + P1, plano Bauer como modelo comum; acesso por link.
-2. **v1.1:** exportação CSV/PDF, gráficos de carga por exercício, lembretes por notificação web, aderência compartilhada opcional (RF-24).
+2. **v1.1:** exportação CSV/PDF (incluindo o histórico de check-ins), gráficos de carga por exercício, lembretes por notificação web, aderência compartilhada opcional (RF-24).
 3. **v2 (nativo e público):** apps iOS e Android, publicação nas lojas, editor de planos, novos blocos após as 6 semanas, integração com Apple Saúde / Health Connect.
 
 **Riscos**
