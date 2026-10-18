@@ -59,6 +59,10 @@ Em **Authentication → URL Configuration**:
 
 A chave **secreta** (`sb_secret_...` ou `service_role`) nunca vai no app nem no repositório, porque ela passa por cima das regras de acesso. Se ela vazar, crie outra em **Project Settings → API Keys** e apague a antiga.
 
+## Atualizar o banco depois de uma nova versão
+
+Quando uma versão nova do app precisar de mudanças no banco, rode de novo o `supabase/schema.sql` inteiro no **SQL Editor** (passo 1). Ele só cria o que falta e não apaga dados. A tela **Minha semana** precisa da coluna `perfis.semana`: se o app avisar "Para salvar a semana, rode de novo o supabase/schema.sql", é isso que falta.
+
 ## Testar no computador
 
 ```sh
@@ -69,7 +73,7 @@ Abra `http://localhost:8000/` (esse endereço precisa estar em **Redirect URLs**
 
 ## Como os dados ficam guardados
 
-- **perfis:** nome, e-mail e foto (vindos do Google no primeiro login), tema e dias de jiu-jitsu.
+- **perfis:** nome, e-mail e foto (vindos do Google no primeiro login), tema e a semana montada em **Você → Minha semana** (coluna `semana`: o que fazer em cada dia, até 2 atividades). Contas sem semana salva usam a padrão, montada com os antigos dias de jiu-jitsu (`dias_jiu`).
 - **checkins:** cada check-in de treino, com horário, recuperação, observação e as cargas por exercício.
 - O app funciona online: cada alteração vai para o Supabase na hora. Se a gravação falhar, o app avisa e recarrega os dados do servidor.
 - No primeiro login em cada aparelho, os check-ins e configurações que estavam salvos só no navegador (versões anteriores do app) são enviados para a conta.
