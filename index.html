@@ -12,6 +12,8 @@
     var temaSalvo = localStorage.getItem('bauer-tema');
     if (temaSalvo === 'claro') document.documentElement.dataset.theme = 'light';
     if (temaSalvo === 'escuro') document.documentElement.dataset.theme = 'dark';
+    // Quem já deslizou um cartão não precisa mais da dica.
+    if (localStorage.getItem('bauer-deslizou')) document.documentElement.classList.add('ja-deslizou');
   } catch (_) {}
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -231,7 +233,7 @@
     display: inline-flex; align-items: center; gap: 6px; min-height: 44px;
     color: var(--tatame-tinta); font-size: 14px; font-weight: 600; text-underline-offset: 3px;
   }
-  .ex-nav { display: flex; align-items: center; gap: 6px; margin: -6px 0 -4px -10px; }
+  .ex-nav { display: flex; flex-direction: column; align-items: center; margin: -6px 0 -2px; }
   .ex-pontos { display: flex; }
   .ex-ponto { width: 36px; height: 36px; padding: 0; border: 0; background: transparent; display: grid; place-items: center; }
   .ex-ponto::before {
@@ -239,7 +241,8 @@
     transition: width .2s ease, background .2s ease;
   }
   .ex-ponto[aria-current="true"]::before { width: 20px; background: var(--tatame-tinta); }
-  .ex-dica { font-size: 13px; color: var(--tinta-2); }
+  .ex-dica { font-size: 13px; color: var(--tinta-2); text-align: center; }
+  .ja-deslizou .ex-dica { display: none; }
   .vazio { padding: 32px 16px; text-align: center; color: var(--tinta-2); }
   .vazio button { margin-top: 10px; }
 
@@ -1565,6 +1568,11 @@
 
   function ajustarCarrossel(sl) {
     const idx = Math.min(painelAtivo(sl), sl.children.length - 1);
+    // Na primeira vez que chega ao vídeo, a dica "Deslize para ver a execução" deixa de aparecer.
+    if (idx === 1 && !document.documentElement.classList.contains('ja-deslizou')) {
+      document.documentElement.classList.add('ja-deslizou');
+      try { localStorage.setItem('bauer-deslizou', '1'); } catch (_) {}
+    }
     atualizarVideo(sl);
     sl.style.height = `${sl.children[idx].offsetHeight}px`;
     const card = sl.closest('.ex');
