@@ -502,6 +502,7 @@
     <p class="data">Plano de 6 semanas</p>
     <h1 class="atividade" id="entrar-titulo">Jiu-Jitsu + Hipertrofia</h1>
     <p class="entrar-texto" id="entrar-status" role="status">Carregando seus treinos…</p>
+    <p class="form-erro" id="entrar-erro" role="alert" hidden></p>
     <button class="btn-google" type="button" id="entrar-google" hidden></button>
     <button class="btn" type="button" id="entrar-tentar" hidden>Tentar de novo</button>
   </div>
@@ -925,6 +926,13 @@
       (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16)));
 
   // ---------- Supabase ----------
+  // Lido antes de criar o cliente, que limpa a URL: resultado da volta do login do Google.
+  const retornoLogin = (() => {
+    const busca = new URLSearchParams(location.search);
+    const hash = new URLSearchParams(location.hash.slice(1));
+    const erro = busca.get('error_description') || hash.get('error_description') || busca.get('error') || hash.get('error') || '';
+    return { erro, temCodigo: busca.has('code') };
+  })();
   const sb = configurado && window.supabase
     ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { flowType: 'pkce' } })
     : null;
@@ -2017,6 +2025,8 @@
     $('tela-entrar').hidden = false;
     $('entrar-google').hidden = modo !== 'login';
     $('entrar-tentar').hidden = modo !== 'erro';
+    $('entrar-erro').textContent = modo === 'login' ? msg : '';
+    $('entrar-erro').hidden = !(modo === 'login' && msg);
     $('entrar-status').textContent = {
       carregando: 'Carregando seus treinos…',
       config: 'O app ainda não está ligado ao Supabase. Preencha SUPABASE_URL e SUPABASE_KEY no index.html (o passo a passo está no README).',
@@ -2082,16 +2092,39 @@
     mostrarEntrada('config');
   } else {
     mostrarEntrada('carregando');
+    // Na volta do Google chegam dois eventos com a mesma sessão (INITIAL_SESSION e SIGNED_IN);
+    // entrandoId garante que os dados sejam carregados uma vez só.
+    let entrandoId = null;
     sb.auth.onAuthStateChange((evento, sessao) => {
       // Chamadas ao Supabase ficam fora do callback para não travar o cliente de autenticação.
-      if (sessao && (!usuario || usuario.id !== sessao.user.id)) setTimeout(() => entrarNoApp(sessao), 0);
-      if (!sessao) {
-        usuario = null;
-        checkins = [];
-        $('entrar-google').disabled = false;
-        mostrarEntrada('login');
+      if (sessao) {
+        if (entrandoId !== sessao.user.id) {
+          entrandoId = sessao.user.id;
+          setTimeout(() => entrarNoApp(sessao), 0);
+        }
+        return;
       }
+      entrandoId = null;
+      usuario = null;
+      checkins = [];
+      $('entrar-google').disabled = false;
+      setTimeout(() => mostrarLoginComMotivo(), 0);
     });
+  }
+
+  // Se a volta do Google não criou a sessão, mostra o motivo em vez de só pedir o login de novo.
+  async function mostrarLoginComMotivo() {
+    let motivo = retornoLogin.erro;
+    if (!motivo && retornoLogin.temCodigo) {
+      const { error } = await sb.auth.initialize();
+      motivo = error
+        ? error.message
+        : 'O Google aprovou o login, mas a sessão não foi criada neste navegador. Abra o app direto no Chrome ou no Safari (não pelo navegador de outro app) e tente de novo.';
+    }
+    retornoLogin.erro = '';
+    retornoLogin.temCodigo = false;
+    if (/[?&](code|error|error_description)=/.test(location.search)) history.replaceState(null, '', location.pathname + location.hash);
+    mostrarEntrada('login', motivo ? `Não foi possível concluir o login: ${motivo}` : '');
   }
 })();
 </script>
