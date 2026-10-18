@@ -177,10 +177,10 @@
 
   /* Registro de série */
   .log { border-top: 1px dashed var(--border); padding-top: 12px; display: grid; gap: 8px; }
-  .log-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
-  .log-head h4 { margin: 0; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
-  .log-hint { font-size: 12.5px; color: var(--muted); text-align: right; }
-  .serie-row { display: grid; grid-template-columns: 64px 1fr 92px; gap: 8px; align-items: center; }
+  .log-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 8px; }
+  .log-head h4 { margin: 0; white-space: nowrap; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .log-hint { font-size: 12.5px; color: var(--muted); margin-left: auto; }
+  .serie-row { display: grid; grid-template-columns: 64px 1fr; gap: 8px; align-items: center; }
   .serie-row span { font-size: 13px; color: var(--muted); }
   .serie-row input {
     background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px;
@@ -260,7 +260,7 @@
     </div>
     <p style="margin-top:14px">PSE = percepção subjetiva de esforço (10 é reservado ao tatame). Use a carga que respeite a técnica e a recuperação.</p>
     <p>Regra: terça e quinta são de jiu-jitsu. Se houver aula extra na sexta, o Treino 3 (pernas) vai para sábado. Domingo é descanso.</p>
-    <p>As cargas e PSE registrados ficam salvos só neste navegador (ainda sem sincronização em nuvem).</p>
+    <p>As cargas registradas ficam salvas só neste navegador (ainda sem sincronização em nuvem).</p>
     <p>Adaptação prática do PDF enviado. Não substitui avaliação de um profissional de educação física ou nutrição, especialmente se houver dor ou lesão.</p>
   </footer>
 </main>
@@ -411,7 +411,7 @@
   }
 
   // ---------- Registro de séries ----------
-  // logs[chave][AAAA-MM-DD] = [{ carga, pse }, ...] (uma entrada por série)
+  // logs[chave][AAAA-MM-DD] = [{ carga }, ...] (uma entrada por série)
   const LOGS_KEY = 'bauer-logs-v1';
   let logs = {};
   try { logs = JSON.parse(localStorage.getItem(LOGS_KEY) || '{}') || {}; } catch (_) {}
@@ -458,9 +458,6 @@
           <input type="number" inputmode="decimal" step="0.5" min="0" placeholder="kg"
             data-ex="${chave}" data-serie="${n}" data-campo="carga" value="${carga}"
             aria-label="${ex.nome}: carga da série ${n + 1} (kg)">
-          <input type="number" inputmode="numeric" min="1" max="10" placeholder="PSE ${ex.pse}"
-            data-ex="${chave}" data-serie="${n}" data-campo="pse" value="${a.pse ?? ''}"
-            aria-label="${ex.nome}: PSE real da série ${n + 1}">
         </div>`;
     }).join('');
     const cargas = ultimo ? ultimo.map((s) => (s && s.carga != null ? s.carga : '–')).join(' / ') : null;
@@ -570,11 +567,9 @@
   }, true);
 
   $('list').addEventListener('input', (e) => {
-    if (!e.target.closest('[data-campo]')) return;
-    // Salva a linha inteira para que a carga pré-preenchida também fique registrada.
-    e.target.closest('.serie-row').querySelectorAll('[data-campo]').forEach((el) => {
-      definirSerie(el.dataset.ex, Number(el.dataset.serie), el.dataset.campo, el.value);
-    });
+    const el = e.target.closest('[data-campo]');
+    if (!el) return;
+    definirSerie(el.dataset.ex, Number(el.dataset.serie), el.dataset.campo, el.value);
   });
 
   $('chips').addEventListener('click', (e) => {
