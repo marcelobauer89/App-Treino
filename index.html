@@ -206,13 +206,40 @@
     background: var(--tatame-suave); color: var(--tatame-tinta); font-size: 14px; font-variant-numeric: tabular-nums;
   }
   .log-btn.feito svg { flex: 0 0 auto; }
-  .video {
-    flex: 0 0 auto; min-height: 48px; padding: 0 14px; border: 1px solid var(--fio); border-radius: 10px;
-    display: inline-flex; align-items: center; gap: 6px;
-    color: var(--tinta); text-decoration: none; font-size: 15px; font-weight: 600;
+  /* Carrossel do cartão: informações ↔ vídeo da execução. A altura acompanha o painel ativo (via JS). */
+  .ex-slides {
+    display: flex; align-items: flex-start; margin: 0 -16px;
+    overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory; scrollbar-width: none; transition: height .25s ease;
   }
-  .video:hover { background: var(--gi); }
-  .video svg { color: #e02424; }
+  .ex-slides::-webkit-scrollbar { display: none; }
+  .ex-slide {
+    flex: 0 0 100%; min-width: 0; display: grid; gap: 12px; padding: 0 16px;
+    scroll-snap-align: start; scroll-snap-stop: always;
+  }
+  .ex-video { justify-items: center; gap: 6px; }
+  .video-quadro {
+    position: relative; height: min(420px, 62vh); aspect-ratio: 9 / 16; max-width: 100%;
+    border-radius: 12px; overflow: hidden; background: #000;
+  }
+  .video-quadro img, .video-quadro iframe {
+    position: absolute; inset: 0; width: 100%; height: 100%; border: 0; object-fit: cover;
+  }
+  .video-play { position: absolute; inset: 0; display: grid; place-items: center; color: #fff; pointer-events: none; }
+  .video-play svg { width: 56px; height: 56px; filter: drop-shadow(0 2px 8px rgba(0, 0, 0, .55)); }
+  .video-link {
+    display: inline-flex; align-items: center; gap: 6px; min-height: 44px;
+    color: var(--tatame-tinta); font-size: 14px; font-weight: 600; text-underline-offset: 3px;
+  }
+  .ex-nav { display: flex; align-items: center; gap: 6px; margin: -6px 0 -4px -10px; }
+  .ex-pontos { display: flex; }
+  .ex-ponto { width: 36px; height: 36px; padding: 0; border: 0; background: transparent; display: grid; place-items: center; }
+  .ex-ponto::before {
+    content: ''; width: 8px; height: 8px; border-radius: 4px; background: var(--fio);
+    transition: width .2s ease, background .2s ease;
+  }
+  .ex-ponto[aria-current="true"]::before { width: 20px; background: var(--tatame-tinta); }
+  .ex-dica { font-size: 13px; color: var(--tinta-2); }
   .vazio { padding: 32px 16px; text-align: center; color: var(--tinta-2); }
   .vazio button { margin-top: 10px; }
 
@@ -1121,7 +1148,6 @@
 
   // ---------- Helpers de interface ----------
   const $ = (id) => document.getElementById(id);
-  const videoDe = (nome) => (VIDEOS[nome] ? `https://www.youtube.com/shorts/${VIDEOS[nome]}` : null);
   const exerciciosDoTreino = () => TREINOS[estado.treino].exercicios;
 
   const CHEVRON = '<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
@@ -1468,14 +1494,13 @@
   }
 
   function exercicioHTML(ex, i) {
-    const video = videoDe(ex.nome);
+    const id = VIDEOS[ex.nome];
     const graus = DIMS.map(({ k, label }) => `
       <div>
         <dt>${label}</dt>
         <dd>${ponteiraHTML(ex[k])}${NIVEL[ex[k]]}</dd>
       </div>`).join('');
-    return `
-      <li class="ex">
+    const info = `
         <div class="ex-topo">
           <span class="ex-num">${pad(i + 1)}</span>
           <div>
@@ -1484,13 +1509,69 @@
           </div>
         </div>
         <p class="ex-why">${ex.why}</p>
-        <dl class="graus">${graus}</dl>
-        <div class="ex-acoes">
-          ${logBtnHTML(ex, i)}
-          ${video ? `<a class="video" href="${video}" target="_blank" rel="noopener">${ICON_PLAY} Vídeo</a>` : ''}
+        <dl class="graus">${graus}</dl>`;
+    // Com vídeo, o cartão vira um carrossel: deslizando para o lado aparece a execução.
+    const corpo = !id ? info : `
+        <div class="ex-slides" data-ex="${i}" role="group" aria-label="${esc(ex.nome)}: informações e vídeo">
+          <div class="ex-slide">${info}</div>
+          <div class="ex-slide ex-video" data-video="${id}" data-nome="${esc(ex.nome)}">
+            <div class="video-quadro">
+              <img src="https://i.ytimg.com/vi/${id}/hqdefault.jpg" alt="Execução: ${esc(ex.nome)}" loading="lazy">
+              <span class="video-play" aria-hidden="true">${ICON_PLAY}</span>
+            </div>
+            <a class="video-link" href="https://www.youtube.com/shorts/${id}" target="_blank" rel="noopener">${ICON_PLAY} Abrir no YouTube</a>
+          </div>
         </div>
+        <div class="ex-nav">
+          <div class="ex-pontos">
+            <button class="ex-ponto" type="button" data-ponto="0" aria-label="Informações" aria-current="true"></button>
+            <button class="ex-ponto" type="button" data-ponto="1" aria-label="Vídeo da execução" aria-current="false"></button>
+          </div>
+          <span class="ex-dica">Deslize para ver a execução</span>
+        </div>`;
+    return `
+      <li class="ex">
+        ${corpo}
+        <div class="ex-acoes">${logBtnHTML(ex, i)}</div>
       </li>`;
   }
+
+  // ---------- Vídeo de execução no cartão ----------
+  const iframeVideo = (id, nome) => `<iframe
+    src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&amp;mute=1&amp;loop=1&amp;playlist=${id}&amp;playsinline=1&amp;rel=0"
+    title="Execução: ${nome}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen
+    referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
+
+  const painelAtivo = (sl) => Math.round(sl.scrollLeft / Math.max(1, sl.clientWidth));
+
+  // O vídeo só carrega com o cartão na tela e no painel do vídeo; sai ao voltar, ao rolar para longe ou ao trocar de
+  // tela (para de tocar e de gastar dados).
+  function atualizarVideo(sl) {
+    const painel = sl.querySelector('.ex-video');
+    const quadro = painel.querySelector('.video-quadro');
+    const iframe = quadro.querySelector('iframe');
+    const mostrar = sl.dataset.visivel === '1' && painelAtivo(sl) === 1;
+    if (mostrar && !iframe) quadro.insertAdjacentHTML('beforeend', iframeVideo(painel.dataset.video, painel.dataset.nome));
+    if (!mostrar && iframe) iframe.remove();
+  }
+  const observadorVideo = 'IntersectionObserver' in window
+    ? new IntersectionObserver((entradas) => {
+      for (const en of entradas) {
+        en.target.dataset.visivel = en.isIntersecting ? '1' : '0';
+        atualizarVideo(en.target);
+      }
+    })
+    : null;
+
+  function ajustarCarrossel(sl) {
+    const idx = Math.min(painelAtivo(sl), sl.children.length - 1);
+    atualizarVideo(sl);
+    sl.style.height = `${sl.children[idx].offsetHeight}px`;
+    const card = sl.closest('.ex');
+    card.querySelectorAll('.ex-ponto').forEach((p, k) => p.setAttribute('aria-current', String(k === idx)));
+    card.querySelector('.ex-dica').textContent = idx ? 'Deslize para voltar' : 'Deslize para ver a execução';
+  }
+  const ajustarTodos = () => document.querySelectorAll('.ex-slides').forEach(ajustarCarrossel);
 
   function renderLista() {
     const todos = exerciciosDoTreino();
@@ -1500,11 +1581,26 @@
     $('count').textContent = `${itens.length} ${itens.length === 1 ? 'exercício' : 'exercícios'}` +
       (estado.foco !== 'todos' ? ` com alta ${foco.label.toLowerCase()}` : '');
 
+    // Cartões que estavam mostrando o vídeo continuam nele depois de redesenhar a lista.
+    const noVideo = treinoRenderizado === estado.treino
+      ? new Set([...$('list').querySelectorAll('.ex-slides')].filter((s) => painelAtivo(s) > 0).map((s) => s.dataset.ex))
+      : new Set();
+    treinoRenderizado = estado.treino;
+    if (observadorVideo) observadorVideo.disconnect();
+
     $('list').innerHTML = itens.length
       ? itens.map((ex) => exercicioHTML(ex, todos.indexOf(ex))).join('')
       : `<li class="vazio">Nenhum exercício do ${TREINOS[estado.treino].nome} tem alta contribuição em ${foco.label.toLowerCase()}.<br>
            <button class="btn-sec" type="button" data-foco="todos">Ver todos os exercícios</button></li>`;
+
+    $('list').querySelectorAll('.ex-slides').forEach((sl) => {
+      if (noVideo.has(sl.dataset.ex)) sl.scrollLeft = sl.scrollWidth;
+      ajustarCarrossel(sl);
+      if (observadorVideo) observadorVideo.observe(sl);
+      else sl.dataset.visivel = '1';
+    });
   }
+  let treinoRenderizado = null;
 
   function renderSemana() {
     const hojeIdx = new Date().getDay();
@@ -1844,9 +1940,33 @@
     if (b) mudarFoco(b.dataset.foco);
   });
 
+  // Deslizar o carrossel: atualiza altura, pontinhos e dica no próximo quadro.
+  const carrosseisPendentes = new Set();
+  $('list').addEventListener('scroll', (e) => {
+    if (!e.target.classList || !e.target.classList.contains('ex-slides')) return;
+    if (!carrosseisPendentes.size) {
+      requestAnimationFrame(() => { carrosseisPendentes.forEach(ajustarCarrossel); carrosseisPendentes.clear(); });
+    }
+    carrosseisPendentes.add(e.target);
+  }, true);
+  window.addEventListener('resize', () => {
+    document.querySelectorAll('.ex-slides').forEach((sl) => {
+      sl.scrollLeft = painelAtivo(sl) * sl.clientWidth;
+      ajustarCarrossel(sl);
+    });
+  });
+  if (document.fonts) document.fonts.ready.then(ajustarTodos);
+
   $('list').addEventListener('click', (e) => {
     const f = e.target.closest('[data-foco]');
     if (f) return mudarFoco(f.dataset.foco);
+    const ponto = e.target.closest('[data-ponto]');
+    if (ponto) {
+      const sl = ponto.closest('.ex').querySelector('.ex-slides');
+      const suave = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+      sl.scrollTo({ left: Number(ponto.dataset.ponto) * sl.clientWidth, behavior: suave ? 'smooth' : 'auto' });
+      return;
+    }
     const b = e.target.closest('[data-log]');
     if (b) abrirLog(Number(b.dataset.log));
   });
