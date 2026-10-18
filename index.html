@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0e1014">
 <title>Bauer • Jiu-Jitsu + Hipertrofia</title>
 <style>
   :root {
@@ -14,12 +15,15 @@
     --muted: #9aa1ad;
     --accent: #ff6b2c;
     --accent-soft: rgba(255, 107, 44, .14);
-    --alta: #ff6b2c;
-    --media: #f7b955;
-    --baixa: #4b5263;
+    --track: #2a2f3a;
     --radius: 16px;
+    color-scheme: dark;
   }
   * { box-sizing: border-box; }
+  :where(button, a, input, summary):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
   html, body { margin: 0; background: var(--bg); color: var(--text); }
   body {
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -64,18 +68,22 @@
     border-radius: 14px; padding: 4px; gap: 4px;
   }
   .treino-btn {
-    border: 0; background: transparent; padding: 10px 16px; border-radius: 10px;
+    border: 0; background: transparent; padding: 10px 12px; border-radius: 10px;
     text-align: left; color: var(--muted);
+    display: flex; flex-direction: column; justify-content: flex-start; min-width: 0;
   }
   .treino-btn b { display: block; font-size: 15px; color: inherit; }
   .treino-btn span { font-size: 12px; display: block; line-height: 1.25; }
   .treino-btn[aria-selected="true"] { background: var(--surface-2); color: var(--text); box-shadow: inset 0 0 0 1px var(--border); }
   .treino-btn[aria-selected="true"] b { color: var(--accent); }
 
-  .chips { display: flex; flex-wrap: wrap; gap: 8px; padding: 6px 0 4px; }
+  .chips {
+    display: flex; gap: 8px; padding: 6px 2px 4px; overflow-x: auto; scrollbar-width: none;
+  }
+  .chips::-webkit-scrollbar { display: none; }
   .chip {
-    padding: 7px 13px; border-radius: 999px; background: transparent;
-    border: 1px solid var(--border); color: var(--muted); font-size: 13px;
+    flex: 0 0 auto; min-height: 44px; padding: 0 16px; border-radius: 999px; background: transparent;
+    border: 1px solid var(--border); color: var(--muted); font-size: 14px;
   }
   .chip:hover { color: var(--text); }
   .chip[aria-pressed="true"] { background: var(--text); color: #111; border-color: var(--text); }
@@ -153,13 +161,9 @@
   .m-top { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
   .m-top b { font-weight: 600; }
   .bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; }
-  .bar i { height: 6px; border-radius: 3px; background: var(--baixa); opacity: .45; }
-  .lvl-alta .bar i, .bar.lvl-alta i { background: var(--alta); opacity: 1; }
-  .bar.lvl-media i:nth-child(-n+2) { background: var(--media); opacity: 1; }
-  .bar.lvl-baixa i:nth-child(1) { background: var(--baixa); opacity: 1; }
-  .bar.lvl-baixa i:nth-child(n+2) { background: var(--baixa); opacity: .25; }
-  .bar.lvl-alta i { background: var(--alta); }
-  .bar.lvl-media i:nth-child(n+3) { background: var(--baixa); opacity: .25; }
+  /* Nível = quantos segmentos estão preenchidos, sempre na mesma cor. */
+  .bar i { height: 6px; border-radius: 3px; background: var(--track); }
+  .bar.lvl-alta i, .bar.lvl-media i:nth-child(-n+2), .bar.lvl-baixa i:first-child { background: var(--accent); }
 
   .video {
     margin-top: auto; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
@@ -183,6 +187,9 @@
     font-size: 14px; font-weight: 600; transition: background .15s;
   }
   .log-btn:hover { background: rgba(255,107,44,.22); }
+  .log-btn.feito { gap: 8px; background: var(--surface-2); border-color: var(--border); color: var(--text); font-variant-numeric: tabular-nums; }
+  .log-btn.feito svg { color: var(--accent); flex: 0 0 auto; }
+  .log-btn.feito:hover { background: #242936; }
   .log-btn + .video { margin-top: 0; }
 
   dialog.modal {
@@ -191,6 +198,16 @@
     background: var(--surface); color: var(--text);
   }
   dialog.modal::backdrop { background: rgba(0,0,0,.65); }
+  /* No celular o modal abre como folha inferior, ao alcance do polegar. */
+  @media (max-width: 560px) {
+    dialog.modal {
+      width: 100%; max-width: 100%; max-height: 90dvh; margin: auto 0 0;
+      border-bottom: 0; border-radius: var(--radius) var(--radius) 0 0;
+    }
+    dialog.modal[open] { animation: sheet .22s ease-out both; }
+    .modal-body { padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px)); }
+  }
+  @keyframes sheet { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
   .modal-body { padding: 18px; display: grid; gap: 16px; }
   .modal-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
   .modal-head h3 { margin: 0; font-size: 18px; letter-spacing: -.01em; }
@@ -209,12 +226,13 @@
   .log-head h4 { margin: 0; white-space: nowrap; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
   .log-hint { font-size: 12.5px; color: var(--muted); margin-left: auto; }
   .serie-row { display: grid; grid-template-columns: 64px 1fr; gap: 8px; align-items: center; }
-  .serie-row span { font-size: 13px; color: var(--muted); }
+  .serie-row label { font-size: 13px; color: var(--muted); }
   .serie-row input {
     background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px;
     padding: 9px 10px; font-size: 16px; width: 100%; min-height: 48px; text-align: center;
   }
   .serie-row input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .serie-row input[aria-invalid="true"] { border-color: #ff5a5a; }
 
 
   /* Agenda */
@@ -227,6 +245,8 @@
   .dia span { color: var(--muted); font-size: 12.5px; }
   .dia.treino { border-color: rgba(255,107,44,.45); }
   .dia.treino b { color: var(--accent); }
+  .dia.hoje { border-color: var(--text); box-shadow: inset 0 0 0 1px var(--text); }
+  .dia.hoje small::after { content: " · hoje"; color: var(--text); font-weight: 700; }
   .agenda p { color: var(--muted); font-size: 13px; margin: 10px 0 0; }
 
   /* Footer */
@@ -235,7 +255,7 @@
 
   .legend { display: flex; flex-wrap: wrap; gap: 14px; color: var(--muted); font-size: 12.5px; margin-top: 4px; }
   .legend span { display: inline-flex; align-items: center; gap: 6px; }
-  .legend i { width: 14px; height: 6px; border-radius: 3px; display: inline-block; }
+  .legend .bar { display: grid; width: 54px; }
 </style>
 </head>
 <body>
@@ -269,22 +289,22 @@
   <section class="agenda" aria-label="Semana tipo">
     <h2>Semana tipo</h2>
     <div class="dias">
-      <div class="dia treino"><small>Segunda</small><b>Treino 2</b><span>Peito, tríceps e ombro</span></div>
-      <div class="dia"><small>Terça</small><b>Jiu-jitsu</b><span>Prioridade técnica</span></div>
-      <div class="dia treino"><small>Quarta</small><b>Treino 1</b><span>Costas + bíceps</span></div>
-      <div class="dia"><small>Quinta</small><b>Jiu-jitsu</b><span>Prioridade técnica</span></div>
-      <div class="dia treino"><small>Sexta</small><b>Treino 3</b><span>Pernas (se não houver jiu)</span></div>
-      <div class="dia"><small>Sábado</small><b>Bike leve</b><span>20–40 min, ou Treino 3 deslocado</span></div>
-      <div class="dia"><small>Domingo</small><b>Descanso</b><span>Recuperação</span></div>
+      <div class="dia treino" data-dow="1"><small>Segunda</small><b>Treino 2</b><span>Peito, tríceps e ombro</span></div>
+      <div class="dia" data-dow="2"><small>Terça</small><b>Jiu-jitsu</b><span>Prioridade técnica</span></div>
+      <div class="dia treino" data-dow="3"><small>Quarta</small><b>Treino 1</b><span>Costas + bíceps</span></div>
+      <div class="dia" data-dow="4"><small>Quinta</small><b>Jiu-jitsu</b><span>Prioridade técnica</span></div>
+      <div class="dia treino" data-dow="5"><small>Sexta</small><b>Treino 3</b><span>Pernas (se não houver jiu)</span></div>
+      <div class="dia" data-dow="6"><small>Sábado</small><b>Bike leve</b><span>20–40 min, ou Treino 3 deslocado</span></div>
+      <div class="dia" data-dow="0"><small>Domingo</small><b>Descanso</b><span>Recuperação</span></div>
     </div>
     <p>Pernas fica na sexta para ter o fim de semana de recuperação e não pesar antes do jiu de terça.</p>
   </section>
 
   <footer>
     <div class="legend">
-      <span><i style="background:var(--alta)"></i>Alta contribuição</span>
-      <span><i style="background:var(--media)"></i>Média</span>
-      <span><i style="background:var(--baixa)"></i>Baixa / secundária</span>
+      <span><span class="bar lvl-alta" aria-hidden="true"><i></i><i></i><i></i></span>Alta contribuição</span>
+      <span><span class="bar lvl-media" aria-hidden="true"><i></i><i></i><i></i></span>Média</span>
+      <span><span class="bar lvl-baixa" aria-hidden="true"><i></i><i></i><i></i></span>Baixa / secundária</span>
     </div>
     <p style="margin-top:14px">PSE = percepção subjetiva de esforço (10 é reservado ao tatame). Use a carga que respeite a técnica e a recuperação.</p>
     <p>Regra: terça e quinta são de jiu-jitsu. Se houver aula extra na sexta, o Treino 3 (pernas) vai para sábado. Domingo é descanso.</p>
@@ -471,34 +491,64 @@
     logs[chave] = logs[chave] || {};
     logs[chave][data] = logs[chave][data] || [];
     logs[chave][data][n] = logs[chave][data][n] || {};
-    logs[chave][data][n][campo] = valor === '' ? null : Number(valor);
+    logs[chave][data][n][campo] = valor;
     salvarLogs();
+  }
+
+  // Aceita vírgula ou ponto ("22,5" ou "22.5"); undefined = valor inválido.
+  function lerKg(texto) {
+    const t = texto.trim().replace(',', '.');
+    if (t === '') return null;
+    const n = Number(t);
+    return Number.isFinite(n) && n >= 0 ? n : undefined;
+  }
+  const fmtKg = (n) => String(n).replace('.', ',');
+  const listaKg = (series) => series.map((s) => (s && s.carga != null ? fmtKg(s.carga) : '–')).join(' / ');
+
+  function salvarInput(el) {
+    const v = lerKg(el.value);
+    el.setAttribute('aria-invalid', String(v === undefined));
+    if (v !== undefined) definirSerie(el.dataset.ex, Number(el.dataset.serie), el.dataset.campo, v);
   }
 
   function logHTML(ex) {
     const chave = chaveEx(ex);
     const ultimo = ultimoAnterior(chave);
     const atual = (logs[chave] || {})[hoje()] || [];
-    const linhas = Array.from({ length: numSeries(ex) }, (_, n) => {
+    const total = numSeries(ex);
+    const linhas = Array.from({ length: total }, (_, n) => {
       const a = atual[n] || {};
       const ref = (ultimo && ultimo[n]) || {};
       // RF-14: a carga já vem preenchida com a da última sessão.
-      const carga = a.carga ?? ref.carga ?? '';
+      const carga = a.carga ?? ref.carga;
       return `
         <div class="serie-row">
-          <span>Série ${n + 1}</span>
-          <input type="number" inputmode="decimal" step="0.5" min="0" placeholder="kg"
-            data-ex="${chave}" data-serie="${n}" data-campo="carga" value="${carga}"
+          <label for="kg-${n}">Série ${n + 1}</label>
+          <input id="kg-${n}" type="text" inputmode="decimal" autocomplete="off" placeholder="kg"
+            enterkeyhint="${n < total - 1 ? 'next' : 'done'}"
+            data-ex="${chave}" data-serie="${n}" data-campo="carga" value="${carga != null ? fmtKg(carga) : ''}"
             aria-label="${ex.nome}: carga da série ${n + 1} (kg)">
         </div>`;
     }).join('');
-    const cargas = ultimo ? ultimo.map((s) => (s && s.carga != null ? s.carga : '–')).join(' / ') : null;
+    const cargas = ultimo ? listaKg(ultimo) : null;
     const hint = cargas ? `<span class="log-hint">Última vez: ${cargas} kg</span>` : '';
     return `
       <div class="log">
         <div class="log-head"><h4>Registrar séries</h4>${hint}</div>
         ${linhas}
       </div>`;
+  }
+
+  const ICON_CHECK = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
+
+  function logBtnHTML(ex, i) {
+    const salvo = (logs[chaveEx(ex)] || {})[hoje()] || [];
+    if (!salvo.some((s) => s && s.carga != null)) {
+      return `<button class="log-btn" type="button" data-log="${i}">Registrar pesos</button>`;
+    }
+    const series = Array.from({ length: numSeries(ex) }, (_, n) => salvo[n]);
+    return `<button class="log-btn feito" type="button" data-log="${i}" title="Editar pesos de hoje">
+      ${ICON_CHECK}<span>Hoje: ${listaKg(series)} kg</span></button>`;
   }
 
   // ---------- Render ----------
@@ -557,7 +607,7 @@
         </div>
         <p class="why">${ex.why}</p>
         <div class="meters">${bars}</div>
-        <button class="log-btn" type="button" data-log="${i}">Registrar pesos</button>
+        ${logBtnHTML(ex, i)}
         ${video ? `<a class="video" href="${video}" target="_blank" rel="noopener">
           ${ICON_PLAY} Ver execução no YouTube
         </a>` : ''}
@@ -601,10 +651,13 @@
   const dialog = $('log-dialog');
   const ICON_X = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>';
 
+  let aberto = null;
+
   $('list').addEventListener('click', (e) => {
     const b = e.target.closest('[data-log]');
     if (!b) return;
-    const ex = exerciciosDoTreino()[Number(b.dataset.log)];
+    aberto = Number(b.dataset.log);
+    const ex = exerciciosDoTreino()[aberto];
     $('log-body').innerHTML = `
       <div class="modal-head">
         <div>
@@ -614,20 +667,47 @@
         <button class="modal-close" type="button" data-fechar aria-label="Fechar">${ICON_X}</button>
       </div>
       ${logHTML(ex)}
-      <button class="modal-done" type="button" data-fechar>Concluir</button>`;
+      <button class="modal-done" type="button" data-concluir>Concluir</button>`;
     dialog.showModal();
   });
 
+  const camposDoModal = () => [...dialog.querySelectorAll('[data-campo]')];
+
+  // "Concluir" grava tudo o que está na tela, inclusive a carga pré-preenchida.
+  function concluir() {
+    const campos = camposDoModal();
+    campos.forEach(salvarInput);
+    const invalido = campos.find((el) => el.getAttribute('aria-invalid') === 'true');
+    if (invalido) invalido.focus();
+    else dialog.close();
+  }
+
   dialog.addEventListener('click', (e) => {
+    if (e.target.closest('[data-concluir]')) return concluir();
     // Clique no fundo escuro (fora do conteúdo) também fecha.
     if (e.target === dialog || e.target.closest('[data-fechar]')) dialog.close();
   });
 
   dialog.addEventListener('input', (e) => {
     const el = e.target.closest('[data-campo]');
-    if (!el) return;
-    definirSerie(el.dataset.ex, Number(el.dataset.serie), el.dataset.campo, el.value);
+    if (el) salvarInput(el);
   });
+
+  dialog.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' || !e.target.matches('[data-campo]')) return;
+    e.preventDefault();
+    const campos = camposDoModal();
+    const proximo = campos[campos.indexOf(e.target) + 1];
+    if (proximo) proximo.focus();
+    else concluir();
+  });
+
+  dialog.addEventListener('close', () => {
+    const b = $('list').querySelector(`[data-log="${aberto}"]`);
+    if (b) b.outerHTML = logBtnHTML(exerciciosDoTreino()[aberto], aberto);
+  });
+
+  document.querySelector(`.dia[data-dow="${new Date().getDay()}"]`)?.classList.add('hoje');
 
   $('chips').addEventListener('click', (e) => {
     const b = e.target.closest('[data-foco]');
