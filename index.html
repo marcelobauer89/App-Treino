@@ -464,10 +464,10 @@
         </div>`;
     }).join('');
     const cargas = ultimo ? ultimo.map((s) => (s && s.carga != null ? s.carga : '–')).join(' / ') : null;
-    const hint = cargas ? `Última vez: ${cargas} kg` : 'Primeiro registro';
+    const hint = cargas ? `<span class="log-hint">Última vez: ${cargas} kg</span>` : '';
     return `
       <div class="log">
-        <div class="log-head"><h4>Registrar séries</h4><span class="log-hint">${hint}</span></div>
+        <div class="log-head"><h4>Registrar séries</h4>${hint}</div>
         ${linhas}
       </div>`;
   }
