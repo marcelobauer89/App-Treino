@@ -169,12 +169,10 @@
   .ficha-checkin { margin: 0 0 12px; }
   .ficha-checkin:empty { display: none; }
   .ficha-nota { margin: 0; color: var(--tinta-2); font-size: 14px; }
-  .exercicios {
-    list-style: none; margin: 0; padding: 0;
-    background: var(--papel); border: 1px solid var(--fio); border-radius: 14px;
-  }
-  .ex { display: grid; gap: 12px; padding: 18px 16px; }
-  .ex + .ex { border-top: 1px solid var(--fio); }
+  /* Cada exercício num cartão próprio */
+  .exercicios { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+  .exercicios > li { background: var(--papel); border: 1px solid var(--fio); border-radius: 14px; }
+  .ex { display: grid; gap: 12px; padding: 18px 16px; min-width: 0; }
   .ex-topo { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 10px; align-items: start; }
   .ex-num {
     font-family: var(--display); font-stretch: 75%; font-weight: 800; font-size: 22px; line-height: 1.15;
