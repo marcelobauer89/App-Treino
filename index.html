@@ -39,6 +39,9 @@
     --erro: #c62828;
     --sobre-erro: #ffffff;
     --ao-vivo: #22c55e;
+    /* Botão de check-in: verde escuro o bastante para o texto branco (contraste 5:1) */
+    --checkin: #15803d;
+    --checkin-forte: #166534;
     /* Tipos de check-in (paleta categórica validada; a letra no selo garante a leitura sem cor) */
     --musc: #2a78d6;
     --jiu: #eb6834;
@@ -478,13 +481,13 @@
     position: fixed; z-index: 18; right: max(16px, env(safe-area-inset-right, 0px));
     bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + 16px);
     display: flex; align-items: center; gap: 10px; height: 56px; max-width: 220px; padding: 0 22px 0 16px;
-    border: 0; border-radius: 28px; background: var(--tatame); color: var(--sobre-tatame);
+    border: 0; border-radius: 28px; background: var(--checkin); color: #ffffff;
     font-size: 16px; font-weight: 700; white-space: nowrap; overflow: hidden;
     box-shadow: 0 8px 24px rgba(16, 19, 24, .28), 0 2px 6px rgba(16, 19, 24, .18);
     transition: max-width .22s ease, padding .22s ease, gap .22s ease;
   }
-  .fab:hover { background: var(--tatame-forte); }
-  .fab:focus-visible { outline: 3px solid var(--tatame-tinta); outline-offset: 3px; }
+  .fab:hover { background: var(--checkin-forte); }
+  .fab:focus-visible { outline: 3px solid var(--checkin); outline-offset: 3px; }
   .fab svg { flex: 0 0 auto; width: 24px; height: 24px; }
   .fab-txt { transition: opacity .15s ease; }
   .fab.encolhido { max-width: 56px; padding: 0 16px; gap: 0; }
