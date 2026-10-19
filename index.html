@@ -2553,6 +2553,8 @@
       mostrarEntrada('erro', 'Não foi possível carregar seus dados. Confira a internet e tente de novo.');
       return;
     }
+    // Conta o acesso (último acesso e quantidade, vistos só no Supabase). Sem a função no banco, segue normal.
+    sb.rpc('registrar_acesso').then(() => {}, () => {});
     guardarTemaLocal();
     aplicarTema();
     document.body.classList.remove('deslogado');
