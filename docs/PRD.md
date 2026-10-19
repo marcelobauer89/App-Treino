@@ -1,6 +1,6 @@
 ## PRD — App Bauer: Jiu-Jitsu + Hipertrofia
 
-2026-10-18 · @Bauer
+2026-10-19 · @Bauer
 
 ### Visão geral
 
@@ -10,26 +10,26 @@ O App Bauer transforma o plano de 6 semanas "Jiu-Jitsu + Hipertrofia" (hoje um P
 
 **Solução.** Um app que:
 
-- Mostra a atividade do dia (Treino 1, 2 ou 3, jiu-jitsu, cardio ou descanso) com base na agenda semanal e nos dias de jiu-jitsu escolhidos pelo usuário.
-- Registra a carga de cada série por exercício, pré-preenchida com a da última vez, com vídeo de execução.
-- Faz check-in de cada treino (musculação, jiu-jitsu ou cardio), quantas vezes for preciso no mesmo dia.
+- Mostra a atividade do dia (Treino 1, 2 ou 3, jiu-jitsu, cardio ou descanso) com base na semana que o próprio usuário monta.
+- Registra a carga de cada série por exercício, pré-preenchida com a da última vez, com vídeo de execução no próprio cartão.
+- Faz check-in de cada treino (musculação, jiu-jitsu ou cardio) por um botão fixo, quantas vezes for preciso no mesmo dia.
 - Mostra um Dashboard com calendário de check-ins, os treinos feitos em cada um e a semana comparada ao plano.
-- Aplica as regras do plano automaticamente: fase da semana, passada em 3×16 nas semanas 5–6, deslocamento das pernas de sexta para sábado.
+- Aplica as regras do plano automaticamente: fase da semana, passada em 3×16 nas semanas 5–6, avisos de conflito na semana.
 - Acompanha peso médio semanal, % de gordura, proteína e recuperação.
 
 **Objetivo do produto.** Fazer cada usuário completar as 6 semanas com aderência alta, perdendo gordura de forma gradual (no caso do Bauer, 76 → 74 kg) sem perder força nem desempenho no tatame.
 
 ### Estado atual do app
 
-Existe um protótipo funcional (um único `index.html`, sem build) que roda no navegador do celular. Ele guarda tudo no `localStorage` do aparelho, ainda sem contas nem sincronização. A navegação é feita por uma barra inferior com três telas:
+O app está no ar em https://marcelobauer89.github.io/App-Treino/ (GitHub Pages). É um único `index.html`, sem build, que funciona online: o login é feito com a conta Google e os dados de cada usuário ficam no **Supabase** (Postgres com regras de acesso por usuário). Na tela de entrada aparecem o título "OSS", a descrição "Exercícios de Jiu Jitsu e hipertrofia", o botão "Continuar com o Google" e o crédito "Desenvolvido por Marcelo Bauer". A navegação é feita por uma barra inferior com três telas, e um botão verde fixo, "Fazer check-in", fica no canto inferior direito das telas Treino e Dashboard.
 
 | Tela | O que já faz |
 | --- | --- |
-| **Treino** | Data, hora e atividade de hoje no topo; abas Treino 1, 2 e 3 (abre no treino do dia); filtro por foco (Hipertrofia, Força, Explosão, Mobilidade); "Sobre o treino" com objetivo, o que esperar e impacto no jiu e no físico; ficha com os exercícios, dose, PSE-alvo, graus H/F/E/M, botão "Registrar pesos" e vídeo; botão de check-in; agenda da semana com dias feitos e treinos extras |
-| **Dashboard** | Números (check-ins no total, no mês, horas treinadas no mês, recuperação média em 30 dias); esta semana × plano; calendário mensal com selos por tipo; lista dos check-ins do dia com detalhe dos exercícios e cargas; exclusão de check-in; novo check-in (rápido, extra ou retroativo); barras por tipo no mês |
-| **Você** | Dados pessoais (nome, e-mail validado, foto recortada no aparelho e exibida na barra inferior); tema (automático, claro, escuro); dias de jiu-jitsu, com avisos de conflito |
+| **Treino** | Data, hora e atividade de hoje no topo; abas Treino 1, 2 e 3 (abre no treino do dia); filtro por foco (Hipertrofia, Força, Explosão, Mobilidade); "Sobre o treino" com objetivo, o que esperar e impacto no jiu e no físico; cada exercício num cartão próprio com dose, PSE-alvo, graus H/F/E/M e botão "Registrar pesos"; deslizando o cartão para o lado aparece o vídeo de execução, que toca sem som; agenda da semana com dias feitos e treinos extras |
+| **Dashboard** | Números (check-ins no total, no mês, horas treinadas no mês, recuperação média em 30 dias); esta semana × plano; calendário mensal com selos por tipo; lista dos check-ins do dia com detalhe dos exercícios e cargas; exclusão de check-in; barras por tipo no mês |
+| **Você** | Dados pessoais (nome, e-mail da conta Google, foto recortada no aparelho e exibida na barra inferior); tema (automático, claro, escuro); **Minha semana**, para montar a semana arrastando as atividades para os dias, com avisos; conta e saída |
 
-Ainda não existem: contas, convites, sincronização em nuvem, onboarding com peso e alvo, semana/fase do bloco de 6 semanas, registro de peso e proteína, tela de progresso, timer de descanso, exportação e instalação como PWA. A seção de requisitos mostra o status de cada item.
+Ainda não existem: convites, modo offline, onboarding com peso e alvo, semana/fase do bloco de 6 semanas, registro de peso e proteína, tela de progresso, timer de descanso, exportação, edição de check-in e instalação como PWA. A seção de requisitos mostra o status de cada item.
 
 ### Público-alvo e persona
 
@@ -52,7 +52,7 @@ O MVP atende um grupo fechado: o Bauer, criador do plano e administrador do grup
 
 **Persona secundária: amigo convidado**
 
-Pratica jiu-jitsu, tem peso e alvo próprios e recebe o link de convite do Bauer. Quer seguir o mesmo plano sem montar nada, ver os próprios números e ter a segurança de que seus dados de corpo não ficam visíveis para o grupo sem sua permissão.
+Pratica jiu-jitsu, tem peso e alvo próprios e recebe o link do app do Bauer. Quer seguir o mesmo plano sem montar nada, ver os próprios números e ter a segurança de que seus dados de corpo não ficam visíveis para o grupo sem sua permissão.
 
 ### Objetivos e métricas de sucesso
 
@@ -60,29 +60,30 @@ O MVP é bem-sucedido se os usuários concluírem o bloco de 6 semanas registran
 
 | Métrica | Meta | Como medir |
 | --- | --- | --- |
-| Aderência à musculação | ≥ 90% das 18 sessões previstas | Check-ins de musculação concluídos ÷ sessões planejadas |
+| Aderência à musculação | ≥ 90% das 18 sessões previstas | Check-ins de musculação ÷ sessões planejadas |
 | Aderência ao jiu-jitsu | ≥ 10 de 12 aulas | Check-ins de jiu-jitsu |
 | Registro de cargas | ≥ 95% dos exercícios principais com carga registrada | Agachamento, deadlift, supino no chão, desenvolvimento, puxada, remada inversa, passada |
 | Peso médio semanal | Alvo individual (Bauer: 76 → 74 kg, ~0,3 kg/semana) | Média das pesagens da semana |
 | Força preservada | Carga dos exercícios principais igual ou maior que na semana 1 | Comparação semana 1 × semana 6 |
 | Tempo para registrar uma série | ≤ 5 s | Teste de usabilidade |
+| Uso do app | Acessos frequentes durante o bloco | Último acesso e quantidade de acessos por usuário, consultados no Supabase |
 
 Métricas do grupo (metas propostas): ≥ 70% dos amigos convidados criam conta e ≥ 50% concluem as 6 semanas.
 
 ### Escopo do MVP
 
-O MVP cobre um grupo de amigos convidados, cada um com conta e dados próprios, um único bloco de 6 semanas e funciona offline, sincronizando com a nuvem quando houver internet.
+O MVP cobre um grupo de amigos convidados, cada um com conta e dados próprios, e um único bloco de 6 semanas. Hoje o app funciona online; o modo offline com sincronização segue no escopo do MVP.
 
 **Dentro do escopo**
 
-- Contas individuais com login e convite por link ou código, gerado pelo administrador.
-- Dados de cada usuário separados e privados; sincronização entre aparelho e nuvem.
+- Contas individuais com login pela conta Google; convite por link ou código, gerado pelo administrador.
+- Dados de cada usuário separados e privados, guardados na nuvem; uso offline com sincronização.
 - Plano Bauer como modelo comum; cada usuário define peso, alvo e data de início.
-- Perfil do usuário (nome, e-mail, foto), tema claro/escuro e dias de jiu-jitsu.
-- Agenda semanal com a atividade do dia e regra de deslocamento das pernas de sexta para sábado.
+- Perfil do usuário (nome, e-mail, foto) e tema claro/escuro.
+- Semana montada pelo usuário (até 2 atividades por dia), com a atividade do dia no topo da tela Treino.
 - Execução dos Treinos 1, 2 e 3 com registro da carga de cada série.
 - Filtro dos exercícios por foco e explicação de cada treino ("Sobre o treino").
-- Vídeo de referência por exercício (YouTube Shorts).
+- Vídeo de referência por exercício (YouTube Shorts), dentro do cartão.
 - Progressão automática por fase (semanas 1–2, 3–4, 5–6).
 - Check-in de treino para musculação (Treinos 1, 2 e 3), jiu-jitsu e cardio, com nota de recuperação; vários check-ins no mesmo dia.
 - Dashboard com calendário de check-ins: visão do mês com os dias treinados e detalhe de cada check-in com os treinos e exercícios feitos.
@@ -103,31 +104,33 @@ O MVP cobre um grupo de amigos convidados, cada um com conta e dados próprios, 
 
 ### Requisitos funcionais
 
-São 35 requisitos em 9 grupos; os marcados P0 bloqueiam o lançamento do MVP. A coluna Status mostra o que o protótipo atual já entrega: **Feito**, **Parcial** ou **Pendente**.
+São 38 requisitos em 9 grupos; os marcados P0 bloqueiam o lançamento do MVP. A coluna Status mostra o que o app atual já entrega: **Feito**, **Parcial** ou **Pendente**.
 
 | ID | Requisito | Prioridade | Status |
 | --- | --- | --- | --- |
 | **Contas e convites** |  |  |  |
-| RF-01 | Cadastro e login por e-mail ou conta Google/Apple | P0 | Pendente |
-| RF-02 | Administrador (Bauer) gera link ou código de convite; só entra quem foi convidado | P0 | Pendente |
-| RF-03 | Cada usuário vê apenas os próprios registros; nada é compartilhado sem ele ativar | P0 | Parcial: dados ficam só no aparelho |
-| RF-04 | Sincronização dos dados entre aparelho e nuvem, mantendo o uso offline | P0 | Parcial: funciona offline, sem nuvem |
+| RF-01 | Cadastro e login por e-mail ou conta Google/Apple | P0 | Parcial: login com Google (Supabase Auth); sem e-mail e Apple |
+| RF-02 | Administrador (Bauer) gera link ou código de convite; só entra quem foi convidado | P0 | Pendente: hoje qualquer conta Google com o link entra |
+| RF-03 | Cada usuário vê apenas os próprios registros; nada é compartilhado sem ele ativar | P0 | Feito: regras de acesso (RLS) por usuário em todas as tabelas |
+| RF-04 | Sincronização dos dados entre aparelho e nuvem, mantendo o uso offline | P0 | Parcial: dados na nuvem e em qualquer aparelho; sem modo offline (falha ao salvar avisa e recarrega do servidor) |
 | RF-05 | Usuário pode excluir a conta e todos os seus dados | P0 | Pendente |
+| RF-36 | Tela de entrada com título "OSS", descrição, botão "Continuar com o Google" em largura total, crédito do desenvolvedor e mensagens claras para login cancelado, erro de configuração e falha de rede | P1 | Feito |
+| RF-37 | Registrar o último acesso e a quantidade de acessos de cada usuário (1 acesso a cada 30 min no máximo, pela hora do servidor), visíveis só para o administrador no Supabase | P2 | Feito |
 | **Onboarding e configuração** |  |  |  |
 | RF-06 | Usuário informa peso atual, % de gordura, alvo próprio e data de início do bloco | P0 | Pendente |
-| RF-07 | Usuário escolhe os dias de jiu-jitsu (padrão: terça e quinta; segunda a sábado, domingo bloqueado); a agenda, o topo da tela Treino e as metas do Dashboard se ajustam na hora | P0 | Feito |
-| RF-31 | Tela Você com dados pessoais: nome, e-mail (validado) e foto, recortada e reduzida no aparelho e exibida na barra inferior | P1 | Feito |
+| RF-07 | Em Você → Minha semana, o usuário monta a semana arrastando Treino 1, 2, 3, Jiu-jitsu e Cardio para qualquer dia (domingo incluso), até 2 por dia, ou pelo botão + de cada dia; a terceira atividade toma o lugar da mais antiga; soltar fora tira do dia; "Voltar à semana padrão"; a agenda, o topo da tela Treino e as metas do Dashboard se ajustam na hora | P0 | Feito |
+| RF-31 | Tela Você com dados pessoais: nome, e-mail da conta Google e foto, recortada e reduzida no aparelho e exibida na barra inferior | P1 | Feito |
 | RF-32 | Tema do app: automático (segue o celular), claro ou escuro, aplicado antes da primeira pintura | P1 | Feito |
 | **Agenda e treino do dia** |  |  |  |
 | RF-08 | Tela Treino mostra data, hora e atividade do dia; mostra também semana atual (1–6) e fase | P0 | Parcial: falta semana e fase |
-| RF-09 | Agenda fixa: segunda Treino 2, quarta Treino 1, sexta Treino 3 (pernas); a ficha abre no treino do dia na primeira visita de cada dia | P0 | Feito |
-| RF-10 | Botão "Teve jiu na sexta" move o Treino 3 para sábado ou o marca como pulado | P0 | Pendente |
-| RF-11 | Usuário pode reagendar manualmente qualquer sessão dentro da semana | P1 | Pendente |
+| RF-09 | Semana padrão: segunda Treino 2, terça e quinta jiu-jitsu, quarta Treino 1, sexta Treino 3 (pernas), sábado cardio, domingo descanso; a ficha abre no treino do dia na primeira visita de cada dia | P0 | Feito |
+| RF-10 | Aula extra de jiu na sexta: Treino 3 vai para sábado ou é marcado como pulado | P0 | Parcial: o usuário move as atividades em Minha semana; sem ajuste automático |
+| RF-11 | Usuário pode reagendar qualquer sessão dentro da semana | P1 | Parcial: edita a semana-tipo em Minha semana, não uma semana específica |
 | **Execução do treino** |  |  |  |
-| RF-12 | Lista os exercícios do treino na ordem do plano, com dose, PSE-alvo e graus de contribuição H/F/E/M (Alta/Média/Baixa) | P0 | Feito |
-| RF-13 | Registro da carga (kg) de cada série num painel "Registrar pesos"; aceita vírgula ou ponto, Enter passa para a próxima série; o botão do exercício mostra as cargas de hoje | P0 | Feito |
-| RF-14 | Pré-preenche a carga com o valor do último check-in do mesmo treino e mostra "Última vez: …" | P0 | Feito |
-| RF-15 | Abre o vídeo de execução do exercício | P1 | Parcial: 18 de 22 exercícios com vídeo |
+| RF-12 | Lista os exercícios do treino na ordem do plano, cada um num cartão, com dose, PSE-alvo e graus de contribuição H/F/E/M (Alta/Média/Baixa) | P0 | Feito |
+| RF-13 | Registro da carga (kg) de cada série num painel "Registrar pesos"; aceita vírgula ou ponto, Enter passa para a próxima série; salvar só grava o peso do dia (não abre check-in nem temporizador); o botão do exercício mostra as cargas de hoje | P0 | Feito |
+| RF-14 | Pré-preenche a carga com a do último dia em que o exercício teve peso e mostra "Última vez: …" | P0 | Feito |
+| RF-15 | Vídeo de execução no próprio cartão: deslizando para o lado aparece o vídeo, que toca sem som e em repetição; dica de deslizar some depois do primeiro uso | P1 | Parcial: 18 de 22 exercícios com vídeo |
 | RF-16 | Timer de descanso configurável, iniciado ao concluir a série | P1 | Pendente |
 | RF-17 | Exibe "Sobre o treino" (objetivo, o que esperar, impacto no jiu-jitsu e no físico) e o motivo de cada exercício | P2 | Feito |
 | RF-33 | Filtro da ficha por foco (Hipertrofia, Força, Explosão, Mobilidade), mostrando só os exercícios de alta contribuição | P2 | Feito |
@@ -142,15 +145,16 @@ São 35 requisitos em 9 grupos; os marcados P0 bloqueiam o lançamento do MVP. A
 | RF-23 | Exportar o histórico do bloco em CSV ou PDF | P2 | Pendente |
 | RF-24 | Compartilhar, se o usuário ativar, só a aderência semanal (treinos feitos) com o grupo | P2 | Pendente |
 | **Check-in de treino** |  |  |  |
-| RF-25 | Check-in de musculação: começa pelo botão "Iniciar check-in" ou ao salvar o primeiro peso; uma barra "em andamento" fica visível em todas as telas; ao encerrar, mostra quantos exercícios tiveram carga e pede recuperação (opcional) e observação; as cargas ficam ligadas ao check-in | P0 | Feito |
+| RF-38 | Botão fixo "Fazer check-in" (verde, canto inferior direito, nas telas Treino e Dashboard) é o único botão para registrar check-in: vira um círculo ao rolar para baixo e volta a mostrar o texto ao rolar para cima; abre o formulário já com o treino da aba aberta (no Dashboard, o tipo planejado do dia selecionado no calendário); fica acima da barra "em andamento" quando ela aparece | P0 | Feito |
+| RF-25 | Check-in de musculação pelo formulário (tipo, data, início, duração, recuperação, observação). Registrar pesos não abre check-in. Check-ins abertos de versões anteriores aparecem numa barra "em andamento" com "Encerrar", que mostra quantos exercícios tiveram carga no dia e pede recuperação e observação | P0 | Feito |
 | RF-26 | Permitir mais de um check-in no mesmo dia (ex.: musculação de manhã e jiu-jitsu à noite), cada um com horário, tipo e duração próprios | P0 | Feito |
-| RF-30 | Novo check-in rápido, extra ou retroativo (tipo, data até hoje, início, duração de 1 a 600 min, recuperação, observação); excluir check-in com confirmação; editar check-in | P1 | Parcial: falta editar |
+| RF-30 | Check-in rápido, extra ou retroativo (tipo, data até hoje, início, duração de 1 a 600 min, recuperação, observação); excluir check-in com confirmação; editar check-in | P1 | Parcial: falta editar |
 | **Dashboard e calendário** |  |  |  |
 | RF-27 | Calendário mensal no Dashboard: cada dia mostra selos por tipo (1, 2, 3 para musculação, J para jiu-jitsu, C para cardio); com mais de dois check-ins mostra o primeiro e "+N"; navegação entre meses até o mês atual | P0 | Feito |
-| RF-28 | Ao tocar num dia, listar os check-ins daquele dia em ordem de horário, com tipo, horário, duração e recuperação; dia sem check-in oferece "Registrar check-in neste dia" | P0 | Feito |
-| RF-29 | Ao abrir um check-in de musculação, mostrar a observação e cada exercício do treino com as cargas por série; exercícios sem carga aparecem como "sem registro" | P0 | Feito |
+| RF-28 | Ao tocar num dia, listar os check-ins daquele dia em ordem de horário, com tipo, horário, duração e recuperação; dia sem check-in orienta tocar em "Fazer check-in", que já usa o dia selecionado | P0 | Feito |
+| RF-29 | Ao abrir um check-in de musculação, mostrar a observação e cada exercício do treino com as cargas do dia por série; exercícios sem carga aparecem como "sem registro" | P0 | Feito |
 | RF-34 | Números do Dashboard: check-ins no total, check-ins e horas treinadas no mês, recuperação média dos últimos 30 dias | P1 | Feito |
-| RF-35 | "Esta semana" × plano (musculação 3, jiu-jitsu = dias escolhidos, cardio opcional) e barras com a contagem de check-ins por tipo no mês exibido | P1 | Feito |
+| RF-35 | "Esta semana" × plano (quantas vezes musculação, jiu-jitsu e cardio aparecem na semana montada) e barras com a contagem de check-ins por tipo no mês exibido | P1 | Feito |
 
 ### Modelo de dados
 
@@ -158,8 +162,8 @@ O plano é um modelo único, compartilhado por todos os usuários e guardado com
 
 | Entidade | Campos principais |
 | --- | --- |
-| Usuário | nome, e-mail, foto, papel (administrador ou membro), data de cadastro |
-| Configuração | usuário, tema (automático, claro, escuro), dias de jiu-jitsu |
+| Usuário | nome, e-mail, foto, papel (administrador ou membro), data de cadastro, último acesso, quantidade de acessos |
+| Configuração | usuário, tema (automático, claro, escuro), semana (7 dias, até 2 atividades cada) |
 | Convite | código, criado por, validade, usado por |
 | Plano (modelo) | nome, duração (6 semanas) |
 | Inscrição no plano | usuário, plano, data de início, peso inicial, alvo, compartilha aderência (sim/não) |
@@ -168,14 +172,19 @@ O plano é um modelo único, compartilhado por todos os usuários e guardado com
 | Exercício | nome, dose (séries × reps/tempo/por lado), PSE-alvo, graus H/F/E/M (Alta/Média/Baixa), justificativa, vídeo, é principal (sim/não) |
 | Ajuste por fase | exercício, fase, nova dose (ex.: Passada 3×16 na fase 3) |
 | Sessão | inscrição, data, tipo (Treino 1, 2, 3, jiu-jitsu, cardio, descanso), semana, status (planejada, feita, pulada, movida) |
-| Check-in | usuário, tipo (Treino 1, 2, 3, jiu-jitsu, cardio), início, fim (vazio enquanto aberto), sem horário (sim/não), recuperação (1–5, opcional), observação, retroativo (sim/não), hora da última série |
-| Série registrada | check-in, exercício, nº da série, carga (kg) |
+| Check-in | usuário, tipo (Treino 1, 2, 3, jiu-jitsu, cardio), início, fim (vazio enquanto aberto), sem horário (sim/não), recuperação (1–5, opcional), observação, retroativo (sim/não) |
+| Cargas do dia | usuário, data, treino (1, 2 ou 3), cargas por exercício e série (kg) |
 | Medida corporal | usuário, data, peso (kg), % de gordura (opcional) |
 | Proteína | usuário, data, gramas |
 
-Um dia pode ter vários check-ins (relação 1 dia → N check-ins), e cada check-in de musculação guarda as próprias séries. O calendário é montado agrupando os check-ins por data. No protótipo, a sessão planejada não é gravada: ela é calculada pela agenda semanal, e o dia conta como feito quando há check-in encerrado do tipo planejado.
+Um dia pode ter vários check-ins (relação 1 dia → N check-ins). As cargas ficam por dia e treino, sem depender do check-in: o detalhe de um check-in de musculação mostra as cargas daquele treino no mesmo dia. O calendário é montado agrupando os check-ins por data. A sessão planejada não é gravada: ela é calculada pela semana montada, e o dia conta como feito quando há check-in encerrado do tipo planejado.
 
-No protótipo, os dados ficam em quatro chaves do `localStorage`: check-ins com suas séries, configuração, perfil e estado da tela (treino aberto, filtro). Cargas salvas antes da criação dos check-ins são convertidas em check-ins retroativos "sem horário".
+No Supabase, os dados ficam em três tabelas, todas com regras de acesso por usuário (`supabase/schema.sql`):
+- **`perfis`:** nome, e-mail, foto, tema, `semana`, `dias_jiu` (legado), `ultimo_acesso` e `acessos`. Os dois últimos só mudam pela função `registrar_acesso()`.
+- **`checkins`:** check-ins de versões anteriores também guardavam as cargas.
+- **`cargas`:** pesos por usuário, dia e treino.
+
+No primeiro login em cada aparelho, os check-ins e configurações que estavam só no navegador (versões anteriores) são enviados para a conta. Contas sem semana salva usam a padrão, montada com os antigos dias de jiu-jitsu.
 
 Exercícios por treino, conforme o app:
 
@@ -183,66 +192,73 @@ Exercícios por treino, conforme o app:
 - **Treino 2 — Peito, tríceps e ombro (8):** Rolamento, Quadrupedia tocando os ombros, Supino no chão, TGU parcial, Desenvolvimento, Halo, Elevação lateral, Tríceps.
 - **Treino 3 — Pernas (6):** Cócoras, Quadril alto/baixo, Agachamento, Deadlift, Passada para frente, Panturrilha.
 
-Agenda semanal padrão:
+Semana padrão (editável em Você → Minha semana):
 
 | Seg | Ter | Qua | Qui | Sex | Sáb | Dom |
 | --- | --- | --- | --- | --- | --- | --- |
-| Treino 2 | Jiu-jitsu | Treino 1 | Jiu-jitsu | Treino 3 (pernas) | Cardio leve ou Treino 3 deslocado | Descanso |
+| Treino 2 | Jiu-jitsu | Treino 1 | Jiu-jitsu | Treino 3 (pernas) | Cardio | Descanso |
 
 ### Fluxos e telas principais
 
-O fluxo central começa na tela Treino: o app mostra a atividade do dia e todo treino termina num check-in encerrado, que aparece no Dashboard e alimenta a semana.
+O fluxo central começa na tela Treino: o app mostra a atividade do dia, o usuário registra as cargas de cada exercício e, ao terminar, faz o check-in pelo botão verde. O check-in aparece no Dashboard e alimenta a semana.
 
 > [Diagrama: fluxo diário · 1 decisão, 3 caminhos]
 
-Todo treino passa por um check-in. Na musculação, o check-in é aberto ao iniciar o treino (ou ao salvar o primeiro peso) e fechado ao terminar, com o registro das cargas no meio. Jiu-jitsu e cardio pedem apenas um check-in rápido pelo Dashboard. Depois de encerrado, o check-in aparece no calendário, e um novo check-in pode ser aberto no mesmo dia.
+Registrar pesos e fazer check-in são ações separadas. As cargas são salvas por dia e treino assim que o usuário conclui o painel, sem abrir check-in nem temporizador. O check-in de qualquer tipo é feito pelo botão fixo "Fazer check-in", que abre o formulário já com o treino da aba (o usuário pode trocar tipo, data e horário). Depois de salvo, o check-in aparece no calendário, e outro pode ser feito no mesmo dia.
 
 | Tela | Conteúdo principal |
 | --- | --- |
-| Onboarding | Entrar pelo convite, criar conta; depois peso, % de gordura, alvo, data de início, dias de jiu-jitsu (pendente) |
-| Treino | Data, hora e atividade de hoje; abas Treino 1, 2 e 3; filtro por foco; "Sobre o treino"; ficha com exercícios, dose, PSE-alvo, graus H/F/E/M, "Registrar pesos" e vídeo; iniciar check-in; agenda da semana com dias feitos e extras |
+| Entrada | Painel azul com a faixa branca de 4 graus, título "OSS", "Exercícios de Jiu Jitsu e hipertrofia", "Continuar com o Google", crédito com link para o LinkedIn |
+| Onboarding | Peso, % de gordura, alvo, data de início (pendente) |
+| Treino | Data, hora e atividade de hoje; abas Treino 1, 2 e 3; filtro por foco; "Sobre o treino"; um cartão por exercício com dose, PSE-alvo, graus H/F/E/M, "Registrar pesos" e vídeo ao deslizar; agenda da semana com dias feitos e extras; botão fixo "Fazer check-in" |
 | Registrar pesos | Painel (folha inferior no celular) com uma linha por série, carga pré-preenchida, "Última vez", Concluir |
-| Encerrar check-in | Início e duração, exercícios com carga, recuperação 1–5, observação |
-| Novo check-in | Tipo, data, início, duração, recuperação 1–5, observação |
-| Dashboard | Números, esta semana × plano, calendário mensal, check-ins do dia com detalhe e exclusão, barras por tipo no mês |
-| Você | Dados pessoais e foto, tema, dias de jiu-jitsu com avisos |
+| Novo check-in | Aberto pelo botão fixo: tipo, data, início, duração, recuperação 1–5, observação |
+| Encerrar check-in | Só para check-ins que ficaram abertos: início e duração, exercícios com carga no dia, recuperação 1–5, observação |
+| Dashboard | Números, esta semana × plano, calendário mensal, check-ins do dia com detalhe e exclusão, barras por tipo no mês; botão fixo "Fazer check-in" |
+| Você | Dados pessoais e foto, tema, Minha semana (arrastar e soltar, botão +, avisos, voltar ao padrão), conta |
 | Progresso | Peso médio por semana, cargas principais, aderência, % de gordura (pendente) |
 | Ajustes | Unidades, exportação, privacidade, convidar amigos (administrador), excluir conta, aviso legal (pendente; parte já está em Você) |
 
 ### Regras de negócio
 
-Todas as regras vêm do plano original; o app as aplica sem que o usuário precise lembrar delas. As marcadas como pendentes ainda não estão no protótipo.
+Todas as regras vêm do plano original; o app as aplica sem que o usuário precise lembrar delas. As marcadas como pendentes ainda não estão no app.
 
 1. **Semana e fase (pendente):** semana = dias desde o início ÷ 7, arredondado para cima (1–6). Fase 1 = semanas 1–2, fase 2 = 3–4, fase 3 = 5–6.
-2. **Agenda dos treinos:** segunda = Treino 2, quarta = Treino 1, sexta = Treino 3 (pernas). Pernas ficam na sexta para ter o fim de semana de recuperação e não pesar antes do jiu de terça.
-3. **Conflito de sexta (pendente):** se houver jiu-jitsu na sexta, o Treino 3 vai para sábado; se sábado já tiver cardio, o cardio é substituído. Sem espaço, a sessão é marcada como pulada.
-4. **Domingo:** sempre descanso; não pode ser escolhido como dia de jiu-jitsu.
-5. **Avisos de jiu-jitsu:** se um dia de jiu coincidir com um treino de musculação, o app avisa para fazer um check-in de cada. Com jiu no sábado, o app alerta que ele vem logo depois das pernas de sexta e tira o cardio da semana.
+2. **Semana padrão:** segunda = Treino 2, quarta = Treino 1, sexta = Treino 3 (pernas), terça e quinta = jiu-jitsu, sábado = cardio, domingo = descanso. Pernas ficam na sexta para ter o fim de semana de recuperação e não pesar antes do jiu de terça. O usuário pode mudar tudo em Minha semana.
+3. **Semana montada:** cada dia aceita até 2 atividades; ao colocar uma terceira, sai a mais antiga e o app avisa. Dia vazio é descanso. Todos os 7 dias podem receber atividades.
+4. **Conflito de sexta:** com jiu-jitsu na sexta, o usuário move o Treino 3 em Minha semana. O ajuste automático (Treino 3 para sábado ou marcado como pulado) fica pendente.
+5. **Avisos da semana:** o app avisa quando:
+   - um dos três treinos ficou fora da semana ou aparece mais de uma vez;
+   - um dia tem 2 atividades (fazer um check-in para cada);
+   - o jiu-jitsu vem no dia seguinte ao Treino 3 (pernas) ou no mesmo dia;
+   - a semana não tem dia de descanso.
 6. **Progressão de dose (pendente):** na fase 3, Passada para frente passa de 3×10 para 3×16.
 7. **Fase 2 (tempo sob tensão) (pendente):** o app exibe lembrete de cadência controlada nos exercícios principais.
 8. **PSE:** cada exercício mostra o PSE-alvo; o PSE real não é registrado. PSE 10 fica reservado ao tatame. Na fase 3, os complementos (elevação lateral, tríceps, rosca, panturrilha) devem mostrar "não ir à falha" (pendente).
 9. **Peso médio (pendente):** média das pesagens de seg–dom; ajustes só são sugeridos após 2 semanas de média.
 10. **Segundo alvo (pendente) (Bauer: 73 kg):** só é liberado depois de atingir o primeiro alvo (Bauer: 74 kg) com recuperação média ≥ 3 e cargas principais estáveis ou maiores.
-11. **Cardio:** sábado tem cardio leve opcional (20–40 min) quando não há jiu-jitsu; a meta da semana conta 1 cardio. Marcar como dispensável se o peso cair no ritmo previsto (≥ 0,25 kg/semana) fica pendente.
-12. **Check-in e sessão:** um check-in encerrado do tipo planejado marca o dia como feito na agenda. Check-ins de tipos não planejados aparecem como extras ("+ Jiu-jitsu") e não alteram a agenda.
-13. **Vários check-ins por dia:** não há limite de check-ins por dia, mas só um pode ficar aberto por vez; ao iniciar outro, o app pede para encerrar o que está aberto. Check-ins do mesmo dia não podem se sobrepor no horário.
-14. **Check-in esquecido:** um check-in aberto há mais de 3 horas gera aviso na barra "em andamento"; na próxima abertura do app, ele é encerrado na hora da última série registrada (ou 1 hora após o início, se não houver série) e o usuário é avisado.
+11. **Cardio:** a meta da semana conta quantas vezes o cardio aparece na semana montada (1 no padrão, sábado, 20–40 min). Marcar como dispensável se o peso cair no ritmo previsto (≥ 0,25 kg/semana) fica pendente.
+12. **Check-in e sessão:** um check-in encerrado do tipo planejado (ou de outro treino de musculação, se o planejado era musculação) marca a atividade como feita na agenda. Check-ins de grupos não planejados aparecem como extras ("+ Jiu-jitsu") e não alteram a agenda.
+13. **Vários check-ins por dia:** não há limite de check-ins por dia, mas check-ins do mesmo dia não podem se sobrepor no horário. Só um check-in pode ficar aberto por vez.
+14. **Check-in esquecido:** um check-in que ficou aberto há mais de 3 horas gera aviso na barra "em andamento"; na próxima abertura do app, ele é encerrado na hora da última série registrada (ou 1 hora após o início) e o usuário é avisado. Vale para check-ins abertos em versões anteriores, já que o formulário atual registra o check-in encerrado.
 15. **Check-in retroativo:** a data não pode ser no futuro e a duração vai de 1 a 600 min; check-ins de datas passadas ficam marcados como retroativos.
 16. **Duração padrão:** 60 min para musculação e jiu-jitsu, 30 min para cardio.
-17. **Exclusão:** excluir um check-in apaga também as cargas registradas nele, após confirmação.
+17. **Exclusão:** excluir um check-in pede confirmação; os pesos registrados na ficha continuam salvos.
+18. **Pesos:** salvar um peso grava as cargas do dia daquele treino e não abre check-in nem temporizador. Editar um peso de hoje mantém as outras séries já registradas.
+19. **Acessos:** cada abertura do app já logado atualiza o último acesso; a quantidade só sobe se o acesso anterior foi há mais de 30 min. A hora é a do servidor, e o usuário não consegue alterar esses campos.
 
 ### Requisitos não funcionais
 
 | Área | Requisito |
 | --- | --- |
-| Plataforma | Aplicação web responsiva, mobile first, como PWA instalável (ex.: Next.js ou React + Vite); funciona em Chrome, Safari e Edge atuais. Protótipo atual: um único HTML com JavaScript puro, ainda sem manifesto nem service worker |
-| Distribuição | Amigos acessam por um link (domínio próprio, HTTPS); sem lojas de apps |
-| Offline | Service worker e cache local: registro de treino, peso e check-ins funciona sem internet e sincroniza ao reconectar; vídeos abrem com conexão |
-| Desempenho | Primeira carga ≤ 3 s em 4G; tela inicial em ≤ 1 s após instalada; registrar uma série em ≤ 2 toques |
-| Usabilidade | Layout para telas a partir de 360 px, botões ≥ 48 px, uso com uma mão, tema claro por padrão para academia iluminada e escuro opcional; painéis abrem como folha inferior no celular; foco visível no teclado e respeito a "reduzir movimento" |
-| Visual | Tipografia Archivo; paleta do kimono (fundo claro), azul do tatame para ações e preto da faixa; graus de contribuição mostrados como fitas na ponteira da faixa |
-| Dados | Armazenamento local no navegador (IndexedDB) + backend na nuvem com autenticação (ex.: Supabase ou Firebase). Protótipo atual: `localStorage`, com aviso na tela de que os dados ficam só neste navegador |
-| Privacidade e segurança | Regras de acesso por usuário no backend; dados de saúde não são vendidos nem enviados a terceiros; consentimento no cadastro e exclusão de conta (LGPD) |
+| Plataforma | Aplicação web responsiva, mobile first, como PWA instalável; funciona em Chrome, Safari e Edge atuais. Hoje: um único HTML com JavaScript puro, sem build, ainda sem manifesto nem service worker |
+| Distribuição | Amigos acessam por um link HTTPS, sem lojas de apps. Hoje: GitHub Pages (https://marcelobauer89.github.io/App-Treino/) |
+| Offline | Service worker e cache local: registro de treino, peso e check-ins funciona sem internet e sincroniza ao reconectar; vídeos abrem com conexão. Hoje o app é só online: se uma gravação falhar, avisa e recarrega os dados do servidor |
+| Desempenho | Primeira carga ≤ 3 s em 4G; tela inicial em ≤ 1 s após instalada; registrar uma série em ≤ 2 toques; pesos digitados são enviados depois de uma pausa de 0,8 s, não a cada tecla |
+| Usabilidade | Layout para telas a partir de 360 px, botões ≥ 48 px, uso com uma mão; botão de check-in fixo ao alcance do polegar; tema claro por padrão para academia iluminada e escuro opcional; painéis abrem como folha inferior no celular; foco visível no teclado e respeito a "reduzir movimento" |
+| Visual | Tipografia Archivo; paleta do kimono (fundo claro), azul vivo do tatame (#2563eb) para ações e seleções, contorno azul nos botões secundários, verde (#16a34a, ícone e texto brancos) para o check-in e verde suave para pesos registrados; graus de contribuição mostrados como fitas na ponteira da faixa; contraste AA em todos os pares de texto e fundo, nos dois temas |
+| Dados | Supabase (Postgres) com login Google (PKCE) e regras de acesso por usuário (RLS) em `perfis`, `checkins` e `cargas`; schema idempotente em `supabase/schema.sql`. A chave secreta nunca vai no app nem no repositório; só a chave publicável |
+| Privacidade e segurança | Regras de acesso por usuário no backend; colunas de controle (`acessos`, `ultimo_acesso`) protegidas contra edição pelo usuário; dados de saúde não são vendidos nem enviados a terceiros; consentimento no cadastro e exclusão de conta (LGPD) |
 | Idioma | Português do Brasil; unidades em kg e minutos; cargas aceitam vírgula decimal |
 | Aviso legal | Onboarding, tela de progresso e rodapé da tela Treino exibem que o app não substitui profissional de educação física ou nutrição |
 
@@ -250,8 +266,18 @@ Todas as regras vêm do plano original; o app as aplica sem que o usuário preci
 
 **Roadmap**
 
-1. **Protótipo (atual):** telas Treino, Dashboard e Você; registro de cargas; check-ins com calendário; dias de jiu-jitsu; dados no navegador.
-2. **MVP (web, grupo de amigos):** PWA responsiva, contas, convites, sincronização, onboarding com peso e alvo, semana e fase, peso e proteína, tela de progresso, timer de descanso, requisitos P0 + P1 pendentes, plano Bauer como modelo comum; acesso por link.
+1. **Versão atual (no ar):**
+   - telas Treino, Dashboard e Você;
+   - login Google e dados no Supabase;
+   - registro de cargas e check-ins com calendário;
+   - semana montada pelo usuário;
+   - vídeos nos cartões e botão fixo de check-in;
+   - registro de acessos.
+2. **MVP (web, grupo de amigos):**
+   - PWA responsiva com modo offline, convites e exclusão de conta;
+   - onboarding com peso e alvo, semana e fase, peso e proteína;
+   - tela de progresso, timer de descanso e edição de check-in;
+   - os demais requisitos P0 e P1 pendentes.
 3. **v1.1:** exportação CSV/PDF (incluindo o histórico de check-ins), gráficos de carga por exercício, lembretes por notificação web, aderência compartilhada opcional (RF-24).
 4. **v2 (nativo e público):** apps iOS e Android, publicação nas lojas, editor de planos, novos blocos após as 6 semanas, integração com Apple Saúde / Health Connect.
 
@@ -259,10 +285,12 @@ Todas as regras vêm do plano original; o app as aplica sem que o usuário preci
 
 | Risco | Mitigação |
 | --- | --- |
-| Registrar séries atrapalha o treino e o usuário abandona | Carga pré-preenchida, Enter passa para a próxima série, Concluir salva o que está na tela; opção "repetir sessão anterior" |
+| Registrar séries atrapalha o treino e o usuário abandona | Carga pré-preenchida, Enter passa para a próxima série, Concluir salva o que está na tela; salvar peso não abre check-in nem temporizador |
+| Sem internet na academia o app não salva | Hoje o app avisa e recarrega do servidor; o modo offline com sincronização está no MVP |
+| Qualquer conta Google com o link consegue entrar | Os dados de cada um ficam isolados pelas regras de acesso; convites (RF-02) estão no MVP; os acessos podem ser acompanhados no Supabase |
+| Esquecer de rodar o `schema.sql` após uma atualização | O app abre normalmente e avisa ao salvar ("rode de novo o supabase/schema.sql"); o README explica o passo |
 | No iPhone, o navegador limita notificações e armazenamento offline | Orientar a instalar na tela inicial; sincronizar sempre que houver conexão |
-| Navegador apaga os dados locais antes da sincronização | Hoje não há nuvem: o protótipo avisa que os dados ficam só no navegador. No MVP, sincronizar após cada check-in e avisar quando houver registros pendentes |
-| O plano foi montado para o perfil do Bauer e pode não servir a todos os amigos | Cada um define alvo e cargas; aviso para buscar profissional antes de começar |
+| O plano foi montado para o perfil do Bauer e pode não servir a todos os amigos | Cada um monta a semana, define alvo e cargas; aviso para buscar profissional antes de começar |
 | Vazamento de dados de saúde de terceiros | Acesso restrito por usuário, nada compartilhado por padrão, exclusão de conta |
 | Peso oscila e gera ajustes precipitados | Decisões só pela média de 2 semanas (regra 9) |
 | Usuário treina até a falha | PSE-alvo visível em cada exercício e lembrete "não ir à falha" nos complementos |
@@ -272,10 +300,12 @@ Todas as regras vêm do plano original; o app as aplica sem que o usuário preci
 **Questões em aberto**
 
 - Quantos amigos entram no grupo inicial?
+- O acesso deve ser restrito a convidados (RF-02) ou basta o link?
 - Os amigos podem ver o progresso uns dos outros ou cada um vê só o seu?
 - Todos seguem exatamente o plano do Bauer ou alguns precisam de variações?
 - Quais são os vídeos de Rosca bíceps, Elevação lateral, Tríceps e Panturrilha (os outros 18 exercícios já têm)?
 - O PSE real por série volta a ser registrado ou fica só o PSE-alvo?
 - Qual cadência exata usar na fase 2 (ex.: 3 s na descida)?
 - Após a semana 6, o app repete o bloco, sugere deload ou encerra?
+- A semana montada deve valer para o bloco todo ou poder mudar semana a semana?
 - Algum recurso exige app nativo já no MVP (ex.: notificações confiáveis no iPhone)?
