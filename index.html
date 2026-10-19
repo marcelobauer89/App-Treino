@@ -730,7 +730,6 @@
 <main class="wrap" id="tela-dashboard" hidden>
   <div class="dash-topo">
     <h1>Dashboard</h1>
-    <button class="btn-sec" type="button" data-novo-dash>Novo check-in</button>
   </div>
   <dl class="numeros" id="numeros"></dl>
   <section class="bloco" aria-labelledby="semana-atual-titulo">
@@ -1530,26 +1529,6 @@
     if (depois) depois();
   }
 
-  // Regra 13: só um check-in aberto por vez; para iniciar outro, encerra o atual antes.
-  function pedirInicio(tipo, depois) {
-    const a = checkinAberto();
-    const comecar = () => {
-      const c = iniciarCheckin(tipo);
-      toast(`Check-in do ${TIPOS[tipo].nome} iniciado às ${horaDe(c.inicio)}.`);
-      atualizarCheckinUI();
-      if (depois) depois();
-    };
-    if (a && a.tipo === tipo) { if (depois) depois(); return; }
-    if (a) {
-      abrirEncerrar({
-        motivo: `Encerre o ${TIPOS[a.tipo].nome} para iniciar o ${TIPOS[tipo].nome}.`,
-        depois: comecar,
-      });
-      return;
-    }
-    comecar();
-  }
-
   // ---------- Check-in rápido, extra ou retroativo ----------
   const formDialog = $('form-dialog');
   let durTocada = false;
@@ -1671,8 +1650,6 @@
       html = `<p class="ficha-nota">O ${TIPOS[aberto.tipo].nome} está em andamento. Encerre-o para registrar o ${TIPOS[tipo].nome}.</p>`;
     } else if (sessao && sessao.fim) {
       html = `<span class="status-ok">${ICON_CHECK}Check-in de hoje feito ${horarioTexto(sessao)}</span>`;
-    } else if (!sessao) {
-      html = `<button class="btn-sec" type="button" data-iniciar="${tipo}">Iniciar check-in do ${TIPOS[tipo].nome}</button>`;
     }
     $('ficha-checkin').innerHTML = html;
   }
@@ -1959,8 +1936,7 @@
     if (!lista.length) {
       $('dia-lista').innerHTML = `
         <div class="vazio-dia">
-          <p>${diaSel > hoje() ? 'Este dia ainda não chegou.' : 'Nenhum check-in neste dia.'}</p>
-          ${diaSel > hoje() ? '' : `<button class="btn-sec" type="button" data-novo-dia="${diaSel}">Registrar check-in neste dia</button>`}
+          <p>${diaSel > hoje() ? 'Este dia ainda não chegou.' : 'Nenhum check-in neste dia. Toque em Fazer check-in para registrar.'}</p>
         </div>`;
       return;
     }
@@ -2362,12 +2338,6 @@
   document.addEventListener('click', (e) => {
     const t = e.target.closest('[data-tela]');
     if (t) { location.hash = `#${t.dataset.tela}`; return; }
-    const ini = e.target.closest('[data-iniciar]');
-    if (ini) {
-      const tipo = ini.dataset.iniciar;
-      pedirInicio(tipo, () => mostrarTreino(TIPOS[tipo].treino));
-      return;
-    }
     if (e.target.closest('[data-encerrar]')) return abrirEncerrar();
   });
 
@@ -2481,12 +2451,6 @@
       toast(`Check-in de ${TIPOS[alvo.tipo].nome} excluído.`);
       atualizarCheckinUI();
       return;
-    }
-    const novoDia = e.target.closest('[data-novo-dia]');
-    if (novoDia) return abrirFormCheckin({ tipo: tipoPlanejado(novoDia.dataset.novoDia), data: novoDia.dataset.novoDia });
-    if (e.target.closest('[data-novo-dash]')) {
-      const data = diaSel > hoje() ? hoje() : diaSel;
-      abrirFormCheckin({ tipo: tipoPlanejado(data), data });
     }
   });
 
