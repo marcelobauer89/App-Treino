@@ -63,6 +63,18 @@ A chave **secreta** (`sb_secret_...` ou `service_role`) nunca vai no app nem no 
 
 Quando uma versão nova do app precisar de mudanças no banco, rode de novo o `supabase/schema.sql` inteiro no **SQL Editor** (passo 1). Ele só cria o que falta e não apaga dados. A tela **Minha semana** precisa da coluna `perfis.semana` e o registro de pesos precisa da tabela `cargas`: se o app avisar "Para salvar a semana…" ou "Para salvar os pesos, rode de novo o supabase/schema.sql", é isso que falta.
 
+## Ver acessos dos usuários
+
+Cada vez que alguém abre o app já logado, o Supabase guarda no perfil o **último acesso** (`ultimo_acesso`) e soma 1 em **acessos** (`acessos`). Reabrir em menos de 30 minutos não soma de novo. Esses dados não aparecem no app.
+
+Para ver, abra **Table Editor → perfis** ou rode no **SQL Editor**:
+
+```sql
+select nome, email, acessos,
+       to_char(ultimo_acesso at time zone 'America/Sao_Paulo', 'DD/MM/YYYY HH24:MI') as ultimo_acesso
+from public.perfis order by ultimo_acesso desc nulls last;
+```
+
 ## Testar no computador
 
 ```sh

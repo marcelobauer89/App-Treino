@@ -98,3 +98,32 @@ drop trigger if exists ao_criar_usuario on auth.users;
 create trigger ao_criar_usuario
   after insert on auth.users
   for each row execute function public.criar_perfil();
+
+-- Acessos: último acesso e quantidade de acessos de cada usuário (vistos só no Supabase).
+alter table public.perfis add column if not exists ultimo_acesso timestamptz;
+alter table public.perfis add column if not exists acessos integer not null default 0;
+
+-- O app chama ao abrir. Usa a hora do servidor e só soma 1 se o acesso anterior foi há mais de
+-- 30 min, para recarregar a página não inflar o número.
+create or replace function public.registrar_acesso()
+returns void
+language sql
+security definer
+set search_path = ''
+as $$
+  update public.perfis set
+    acessos = acessos + case when ultimo_acesso is null or ultimo_acesso < now() - interval '30 minutes' then 1 else 0 end,
+    ultimo_acesso = now()
+  where id = (select auth.uid());
+$$;
+revoke execute on function public.registrar_acesso() from public, anon;
+grant execute on function public.registrar_acesso() to authenticated;
+
+-- O usuário edita só as colunas que o app usa; acessos e ultimo_acesso mudam só pela função acima.
+revoke update on public.perfis from authenticated;
+grant update (id, nome, email, foto, tema, dias_jiu, semana) on public.perfis to authenticated;
+
+-- Para ver os acessos (SQL Editor):
+-- select nome, email, acessos,
+--        to_char(ultimo_acesso at time zone 'America/Sao_Paulo', 'DD/MM/YYYY HH24:MI') as ultimo_acesso
+-- from public.perfis order by ultimo_acesso desc nulls last;
