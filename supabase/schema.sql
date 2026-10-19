@@ -41,9 +41,20 @@ create index if not exists checkins_usuario_inicio on public.checkins (usuario_i
 -- Regra 13 do PRD: só um check-in aberto por vez para cada usuário.
 create unique index if not exists checkins_um_aberto on public.checkins (usuario_id) where fim is null;
 
+-- Pesos registrados na ficha, por dia e treino, sem depender de check-in.
+-- series: { "Remada inversa": [{"carga": 20}, null, {"carga": 22.5}] }
+create table if not exists public.cargas (
+  usuario_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  data date not null,
+  treino text not null check (treino in ('t1', 't2', 't3')),
+  series jsonb not null default '{}' check (jsonb_typeof(series) = 'object'),
+  primary key (usuario_id, data, treino)
+);
+
 -- Cada usuário só lê e altera os próprios dados.
 alter table public.perfis enable row level security;
 alter table public.checkins enable row level security;
+alter table public.cargas enable row level security;
 
 drop policy if exists "perfil próprio" on public.perfis;
 create policy "perfil próprio" on public.perfis
@@ -53,6 +64,12 @@ create policy "perfil próprio" on public.perfis
 
 drop policy if exists "check-ins próprios" on public.checkins;
 create policy "check-ins próprios" on public.checkins
+  for all to authenticated
+  using (usuario_id = (select auth.uid()))
+  with check (usuario_id = (select auth.uid()));
+
+drop policy if exists "cargas próprias" on public.cargas;
+create policy "cargas próprias" on public.cargas
   for all to authenticated
   using (usuario_id = (select auth.uid()))
   with check (usuario_id = (select auth.uid()));
