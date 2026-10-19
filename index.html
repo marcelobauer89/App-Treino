@@ -376,19 +376,80 @@
   body.deslogado { padding-bottom: 0; }
   body.deslogado #tela-treino, body.deslogado #tela-dashboard, body.deslogado #tela-voce,
   body.deslogado .nav, body.deslogado .ativo { display: none !important; }
-  .entrar { min-height: 100dvh; display: grid; align-items: center; }
-  .entrar-in { display: grid; justify-items: start; gap: 16px; padding-block: 48px; }
-  .entrar .atividade { margin: 0; }
+  /* Celular: painel azul no topo, cortado em diagonal, com a faixa atravessando e saindo pela direita;
+     título, texto e botão em largura total embaixo, perto do polegar. */
+  .entrar { min-height: 100dvh; display: grid; grid-template-rows: auto 1fr; overflow-x: hidden; }
+  .entrar-arte {
+    position: relative; height: clamp(230px, 42dvh, 400px); overflow: hidden;
+    background: var(--tatame); clip-path: polygon(0 0, 100% 0, 100% 100%, 0 84%);
+  }
+  .marca {
+    position: absolute; top: calc(20px + env(safe-area-inset-top, 0px)); left: max(16px, env(safe-area-inset-left, 0px));
+    font-family: var(--display); font-stretch: 80%; font-weight: 800; font-size: 19px; color: var(--sobre-tatame);
+  }
+  .faixa-arte {
+    position: absolute; left: -12%; width: 135%; top: 46%; height: 54px;
+    background-color: var(--fita);
+    /* costuras do tecido */
+    background-image: repeating-linear-gradient(to bottom, transparent 0 8px, rgba(16, 19, 24, .08) 8px 9px);
+    transform: rotate(-9deg); box-shadow: 0 16px 36px rgba(0, 0, 0, .28);
+    animation: faixa-entra .55s cubic-bezier(.2, .8, .2, 1) both;
+  }
+  .faixa-ponta {
+    position: absolute; top: 0; bottom: 0; left: 60%; width: 132px;
+    display: flex; gap: 8px; padding-left: 16px; background: var(--faixa);
+  }
+  .faixa-ponta i { width: 9px; background: var(--fita); }
+  @keyframes faixa-entra { from { transform: translateX(-28%) rotate(-9deg); opacity: 0; } }
+  .entrar-corpo {
+    display: flex; flex-direction: column; gap: 14px; width: 100%; max-width: 480px;
+    padding: 0 max(16px, env(safe-area-inset-right, 0px)) calc(20px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  }
+  /* O título sobe para o espaço livre que o corte diagonal deixa à esquerda. */
+  .entrar-titulo {
+    position: relative; margin: clamp(-40px, -5dvh, -20px) 0 0;
+    font-family: var(--display); font-stretch: 68%; font-weight: 850;
+    font-size: clamp(50px, 14.5vw, 76px); line-height: .92;
+  }
   .entrar-texto { margin: 0; max-width: 36ch; font-size: 17px; color: var(--tinta-2); }
-  .credito { margin: 16px 0 0; font-size: 14px; color: var(--tinta-2); }
-  .credito a { color: var(--tatame-tinta); font-weight: 600; text-underline-offset: 3px; }
+  /* Ações descem para perto do polegar, como nos apps de treino. */
+  .entrar-acoes { display: grid; gap: 12px; margin-top: auto; padding-top: 20px; }
+  .entrar-acoes .btn { min-height: 52px; }
   .btn-google {
-    display: inline-flex; align-items: center; gap: 12px; min-height: 52px; padding: 0 22px;
-    border: 1px solid var(--fio); border-radius: 10px; background: var(--papel); color: var(--tinta);
+    display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; min-height: 52px; padding: 0 20px;
+    border: 1px solid var(--fio); border-radius: 12px; background: var(--papel); color: var(--tinta);
     font-size: 16px; font-weight: 700;
   }
   .btn-google:hover { border-color: var(--tinta-2); }
+  .btn-google:focus-visible, .entrar-acoes .btn:focus-visible { outline: 2px solid var(--tatame-tinta); outline-offset: 2px; }
   .btn-google:disabled { opacity: .6; cursor: wait; }
+  .entrar-privacidade { margin: 0; font-size: 13px; color: var(--tinta-2); text-align: center; }
+  /* Enquanto a sessão carrega, uma barra fina corre no lugar do botão. */
+  .entrar-carga { position: relative; height: 3px; border-radius: 2px; overflow: hidden; background: var(--fio); }
+  .entrar-carga::after {
+    content: ""; position: absolute; inset: 0 auto 0 0; width: 35%; border-radius: 2px; background: var(--tatame);
+    animation: carga 1.1s ease-in-out infinite;
+  }
+  @keyframes carga { from { transform: translateX(-100%); } to { transform: translateX(290%); } }
+  .credito { margin: 8px 0 0; font-size: 14px; color: var(--tinta-2); text-align: center; }
+  .credito a { color: var(--tatame-tinta); font-weight: 600; text-underline-offset: 3px; }
+  /* Computador: tela dividida, painel largo à esquerda com corte inclinado e o formulário à direita. */
+  @media (min-width: 900px) {
+    .entrar { grid-template-rows: none; grid-template-columns: 7fr 5fr; align-items: center; }
+    .entrar-arte { height: 100dvh; clip-path: polygon(0 0, 100% 0, 86% 100%, 0 100%); }
+    .marca { top: 32px; left: 40px; font-size: 22px; }
+    .faixa-arte { top: 50%; height: 72px; left: -10%; width: 125%; }
+    .faixa-ponta { width: 176px; gap: 11px; padding-left: 22px; }
+    .faixa-ponta i { width: 12px; }
+    .entrar-corpo { max-width: 440px; padding: 48px 40px; justify-self: start; min-height: 0; }
+    .entrar-titulo { margin: 0; font-size: 80px; }
+    .entrar-acoes { margin-top: 16px; }
+    .credito { margin-top: 16px; text-align: left; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .faixa-arte { animation: none; }
+    .entrar-carga::after { animation: none; width: 100%; opacity: .5; }
+  }
   .ativo {
     position: fixed; left: 0; right: 0; z-index: 19;
     bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
@@ -580,12 +641,21 @@
 <body class="deslogado">
 
 <section class="entrar" id="tela-entrar" aria-labelledby="entrar-titulo">
-  <div class="wrap entrar-in">
-    <h1 class="atividade" id="entrar-titulo">Jiu-Jitsu + Hipertrofia</h1>
+  <!-- Arte: a faixa branca com a ponteira e 4 graus, a mesma figura que marca os níveis dos exercícios. -->
+  <div class="entrar-arte" aria-hidden="true">
+    <span class="marca">App Treino</span>
+    <span class="faixa-arte"><span class="faixa-ponta"><i></i><i></i><i></i><i></i></span></span>
+  </div>
+  <div class="entrar-corpo">
+    <h1 class="entrar-titulo" id="entrar-titulo">Jiu-Jitsu<br>+&nbsp;Hipertrofia</h1>
     <p class="entrar-texto" id="entrar-status" role="status">Carregando seus treinos…</p>
     <p class="form-erro" id="entrar-erro" role="alert" hidden></p>
-    <button class="btn-google" type="button" id="entrar-google" hidden></button>
-    <button class="btn" type="button" id="entrar-tentar" hidden>Tentar de novo</button>
+    <div class="entrar-acoes">
+      <span class="entrar-carga" id="entrar-carga" aria-hidden="true"></span>
+      <button class="btn-google" type="button" id="entrar-google" hidden></button>
+      <button class="btn" type="button" id="entrar-tentar" hidden>Tentar de novo</button>
+      <p class="entrar-privacidade" id="entrar-privacidade" hidden>Usamos sua conta Google só para entrar e guardar seus treinos.</p>
+    </div>
     <p class="credito">Desenvolvido por <a href="https://www.linkedin.com/in/marcelo-bauer" target="_blank" rel="noopener">Marcelo Bauer</a></p>
   </div>
 </section>
@@ -2431,12 +2501,14 @@
     $('tela-entrar').hidden = false;
     $('entrar-google').hidden = modo !== 'login';
     $('entrar-tentar').hidden = modo !== 'erro';
+    $('entrar-privacidade').hidden = modo !== 'login';
+    $('entrar-carga').hidden = modo !== 'carregando';
     $('entrar-erro').textContent = modo === 'login' ? msg : '';
     $('entrar-erro').hidden = !(modo === 'login' && msg);
     $('entrar-status').textContent = {
       carregando: 'Carregando seus treinos…',
       config: 'O app ainda não está ligado ao Supabase. Preencha SUPABASE_URL e SUPABASE_KEY no index.html (o passo a passo está no README).',
-      login: 'Entre com sua conta Google para ver o treino do dia, registrar cargas e acompanhar seus check-ins em qualquer aparelho.',
+      login: 'Treino do dia, cargas e check-ins salvos na sua conta, em qualquer aparelho.',
       erro: msg,
     }[modo];
   }
@@ -2477,7 +2549,7 @@
     if (!relogio) relogio = setInterval(() => { renderHoje(); renderAtivo(); }, 15000);
   }
 
-  $('entrar-google').innerHTML = `${ICONE_GOOGLE}<span>Entrar com Google</span>`;
+  $('entrar-google').innerHTML = `${ICONE_GOOGLE}<span>Continuar com o Google</span>`;
   $('entrar-google').addEventListener('click', async () => {
     $('entrar-google').disabled = true;
     const { error } = await sb.auth.signInWithOAuth({
