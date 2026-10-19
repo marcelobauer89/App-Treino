@@ -28,10 +28,13 @@
     --tinta: #101318;
     --tinta-2: #4b5361;
     --fio: #dde1e7;
-    --tatame: #1f4e9e;        /* ações: azul do tatame */
-    --tatame-forte: #183f80;
-    --tatame-tinta: #1f4e9e;
-    --tatame-suave: #e6edf8;
+    /* Ações. Três níveis: sólido vivo só na ação principal; tonal (fundo suave + texto azul)
+       em ações repetidas e seleções; verde só para check-in e "feito". */
+    --tatame: #2563eb;        /* azul do tatame: branco por cima 5,2:1 */
+    --tatame-forte: #1d4ed8;
+    --tatame-tinta: #1d4ed8;  /* texto azul sobre o tonal 5,8:1 */
+    --tatame-suave: #e8effd;
+    --tatame-suave-forte: #d6e3fc;
     --sobre-tatame: #ffffff;
     --faixa: #111111;         /* ponteira da faixa */
     --fita: #ffffff;          /* grau de fita */
@@ -39,9 +42,13 @@
     --erro: #c62828;
     --sobre-erro: #ffffff;
     --ao-vivo: #22c55e;
-    /* Botão de check-in: verde escuro o bastante para o texto branco (contraste 5:1) */
-    --checkin: #15803d;
-    --checkin-forte: #166534;
+    /* Botão de check-in: verde claro com texto verde-escuríssimo (6,5:1) */
+    --checkin: #22c55e;
+    --checkin-forte: #16a34a;
+    --sobre-checkin: #052e16;
+    /* Peso registrado ("Hoje: … kg") */
+    --feito-suave: #e7f8ee;
+    --feito-tinta: #166534;
     /* Tipos de check-in (paleta categórica validada; a letra no selo garante a leitura sem cor) */
     --musc: #2a78d6;
     --jiu: #eb6834;
@@ -58,6 +65,7 @@
     :root:not([data-theme="light"]) {
       --gi: #0f1115; --papel: #171a20; --tinta: #f2f4f7; --tinta-2: #a3abb8; --fio: #2a2f38;
       --tatame: #3566d6; --tatame-forte: #2b57bf; --tatame-tinta: #8db0ff; --tatame-suave: #1b2740;
+      --tatame-suave-forte: #24365a; --feito-suave: #12301f; --feito-tinta: #6ee7a0;
       --faixa: #000000; --fita: #f2f4f7; --fita-vazia: #2c2f35; --erro: #ff6b6b; --sobre-erro: #0b0d10;
       --musc: #3987e5; --jiu: #d95926; --bike: #199e70;
       color-scheme: dark;
@@ -66,6 +74,7 @@
   :root[data-theme="dark"] {
     --gi: #0f1115; --papel: #171a20; --tinta: #f2f4f7; --tinta-2: #a3abb8; --fio: #2a2f38;
     --tatame: #3566d6; --tatame-forte: #2b57bf; --tatame-tinta: #8db0ff; --tatame-suave: #1b2740;
+    --tatame-suave-forte: #24365a; --feito-suave: #12301f; --feito-tinta: #6ee7a0;
     --faixa: #000000; --fita: #f2f4f7; --fita-vazia: #2c2f35; --erro: #ff6b6b; --sobre-erro: #0b0d10;
     --musc: #3987e5; --jiu: #d95926; --bike: #199e70;
     color-scheme: dark;
@@ -142,7 +151,7 @@
     border: 1px solid var(--fio); background: var(--papel); color: var(--tinta-2); font-size: 14px;
   }
   .chip:hover { color: var(--tinta); }
-  .chip[aria-pressed="true"] { background: var(--tinta); border-color: var(--tinta); color: var(--gi); }
+  .chip[aria-pressed="true"] { background: var(--tatame-suave); border-color: var(--tatame); color: var(--tatame-tinta); font-weight: 600; }
 
   /* Sobre o treino */
   .sobre { margin-top: 16px; border-block: 1px solid var(--fio); }
@@ -204,12 +213,13 @@
   .log-btn {
     flex: 1 1 auto; min-width: 0; min-height: 48px; padding: 0 14px; border: 0; border-radius: 10px;
     display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-    background: var(--tatame); color: var(--sobre-tatame); font-size: 15px; font-weight: 700;
+    background: var(--tatame-suave); color: var(--tatame-tinta); font-size: 15px; font-weight: 700;
   }
-  .log-btn:hover { background: var(--tatame-forte); }
+  .log-btn:hover { background: var(--tatame-suave-forte); }
   .log-btn.feito {
-    background: var(--tatame-suave); color: var(--tatame-tinta); font-size: 14px; font-variant-numeric: tabular-nums;
+    background: var(--feito-suave); color: var(--feito-tinta); font-size: 14px; font-variant-numeric: tabular-nums;
   }
+  .log-btn.feito:hover { background: var(--feito-suave); filter: saturate(1.3); }
   .log-btn.feito svg { flex: 0 0 auto; }
   /* Carrossel do cartão: informações ↔ vídeo da execução. A altura acompanha o painel ativo (via JS). */
   .ex-slides {
@@ -479,13 +489,13 @@
     position: fixed; z-index: 18; right: max(16px, env(safe-area-inset-right, 0px));
     bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + 16px);
     display: flex; align-items: center; gap: 10px; height: 56px; max-width: 220px; padding: 0 22px 0 16px;
-    border: 0; border-radius: 28px; background: var(--checkin); color: #ffffff;
+    border: 1px solid rgba(5, 46, 22, .14); border-radius: 28px; background: var(--checkin); color: var(--sobre-checkin);
     font-size: 16px; font-weight: 700; white-space: nowrap; overflow: hidden;
     box-shadow: 0 8px 24px rgba(16, 19, 24, .28), 0 2px 6px rgba(16, 19, 24, .18);
     transition: max-width .22s ease, padding .22s ease, gap .22s ease;
   }
   .fab:hover { background: var(--checkin-forte); }
-  .fab:focus-visible { outline: 3px solid var(--checkin); outline-offset: 3px; }
+  .fab:focus-visible { outline: 3px solid var(--checkin-forte); outline-offset: 3px; }
   .fab svg { flex: 0 0 auto; width: 24px; height: 24px; }
   .fab-txt { transition: opacity .15s ease; }
   .fab.encolhido { max-width: 56px; padding: 0 16px; gap: 0; }
@@ -658,7 +668,7 @@
     min-height: 44px; min-width: 48px; padding: 0 14px; border: 1px solid var(--fio); border-radius: 10px;
     background: var(--papel); font-size: 15px; font-weight: 600;
   }
-  .opcao input:checked + span { background: var(--tinta); border-color: var(--tinta); color: var(--gi); }
+  .opcao input:checked + span { background: var(--tatame-suave); border-color: var(--tatame); color: var(--tatame-tinta); box-shadow: inset 0 0 0 1px var(--tatame); }
   .opcao input:focus-visible + span { outline: 2px solid var(--tatame-tinta); outline-offset: 2px; }
   .rec .opcoes { display: grid; grid-template-columns: repeat(5, 1fr); }
   .rec-legenda { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--tinta-2); }
