@@ -633,7 +633,7 @@
 
   /* Formulários de check-in */
   fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
-  .campo { display: grid; gap: 6px; }
+  .campo { display: grid; gap: 6px; min-width: 0; }
   .campo > label, .campo > legend { padding: 0; font-size: 14px; font-weight: 700; }
   .opcional { color: var(--tinta-2); font-weight: 400; }
   .campo input:not([type="radio"]), .campo textarea {
@@ -641,7 +641,15 @@
     background: var(--gi); font-size: 16px;
   }
   .campo textarea { min-height: 84px; resize: vertical; }
-  .linha2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  /* Data e hora: no iPhone o campo nativo tem largura mínima própria e centraliza o valor,
+     o que estourava a coluna do Início; aqui ele ocupa a coluna e alinha à esquerda. */
+  .campo input[type="date"], .campo input[type="time"] {
+    -webkit-appearance: none; appearance: none; display: block; min-width: 0; max-width: 100%;
+    line-height: 24px; text-align: left; color: var(--tinta);
+  }
+  .campo input::-webkit-date-and-time-value { text-align: left; margin: 0; }
+  .campo input::-webkit-datetime-edit { padding: 0; }
+  .linha2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
   .opcoes { display: flex; flex-wrap: wrap; gap: 8px; }
   .opcao { position: relative; }
   .opcao input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
