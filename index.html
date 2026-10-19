@@ -219,6 +219,9 @@
   .log-btn.feito {
     background: var(--feito-suave); color: var(--feito-tinta); font-size: 14px; font-variant-numeric: tabular-nums;
   }
+  .log-btn.sem-peso { background: var(--gi); border: 1px solid var(--fio); color: var(--tinta-2); }
+  .log-btn.sem-peso:hover { background: var(--gi); border-color: var(--tinta-2); }
+  .log-btn.sem-peso svg { flex: 0 0 auto; width: 18px; height: 18px; }
   .log-btn.feito:hover { background: var(--feito-suave); filter: saturate(1.3); }
   .log-btn.feito svg { flex: 0 0 auto; }
   /* Carrossel do cartão: informações ↔ vídeo da execução. A altura acompanha o painel ativo (via JS). */
@@ -627,6 +630,26 @@
   .resumo-enc { margin: 4px 0 0; color: var(--tinta-2); font-size: 15px; }
 
   .log { display: grid; gap: 8px; }
+  .sem-peso-linha {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px;
+    padding: 8px 12px; border: 1px solid var(--fio); border-radius: 12px; cursor: pointer;
+  }
+  .sem-peso-linha span { display: grid; }
+  .sem-peso-linha b { font-size: 15px; }
+  .sem-peso-linha small { font-size: 13px; color: var(--tinta-2); }
+  /* Interruptor desenhado sobre o checkbox nativo (continua acessível por teclado e leitor de tela). */
+  .sem-peso-linha input {
+    -webkit-appearance: none; appearance: none; flex: 0 0 auto; position: relative; width: 48px; height: 28px; margin: 0;
+    border-radius: 999px; background: var(--fio); cursor: pointer; transition: background-color .15s ease;
+  }
+  .sem-peso-linha input::after {
+    content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%;
+    background: #ffffff; box-shadow: 0 1px 3px rgba(0, 0, 0, .3); transition: transform .15s ease;
+  }
+  .sem-peso-linha input:checked { background: var(--tatame); }
+  .sem-peso-linha input:checked::after { transform: translateX(20px); }
+  .sem-peso-linha input:focus-visible { outline: 2px solid var(--tatame-tinta); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { .sem-peso-linha input, .sem-peso-linha input::after { transition: none; } }
   .log-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 2px 8px; }
   .log-head h4 { margin: 0; font-size: 14px; font-weight: 700; white-space: nowrap; }
   .log-hint { margin-left: auto; font-size: 13px; color: var(--tinta-2); font-variant-numeric: tabular-nums; }
@@ -990,7 +1013,8 @@
   const lerJSON = (k) => {
     try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return v && typeof v === 'object' ? v : {}; } catch (_) { return {}; }
   };
-  let config = { tema: 'auto', semana: [[], ['t2'], ['jiu'], ['t1'], ['jiu'], ['t3'], ['bike']] };
+  // semPeso: exercícios que o usuário faz só com o corpo (o painel não pede carga).
+  let config = { tema: 'auto', semana: [[], ['t2'], ['jiu'], ['t1'], ['jiu'], ['t3'], ['bike']], semPeso: new Set() };
   // A conta já tem a semana salva (coluna perfis.semana)? Senão, ela vem dos antigos dias de jiu.
   let semanaDaConta = false;
   let perfil = { nome: '', email: '', foto: '' };
@@ -1189,6 +1213,7 @@
     // Banco com o schema.sql antigo: sem a coluna perfis.semana ou sem a tabela cargas.
     const msg = (erro && erro.message) || '';
     if (/semana/.test(msg)) toast('Para salvar a semana, rode de novo o supabase/schema.sql no Supabase (veja o README).');
+    else if (/sem_peso/.test(msg)) toast('Para salvar essa opção, rode de novo o supabase/schema.sql no Supabase (veja o README).');
     else if (/cargas/.test(msg)) toast('Para salvar os pesos, rode de novo o supabase/schema.sql no Supabase (veja o README).');
     else toast('Não foi possível salvar. Confira a internet; os dados foram recarregados do servidor.');
     try { await carregarDados(); renderizarApp(); } catch (_) {}
@@ -1240,6 +1265,7 @@
     config = {
       tema: linha.tema || 'auto',
       semana: semana || semanaDeDiasJiu((linha.dias_jiu || [2, 4]).map(Number)),
+      semPeso: new Set(Array.isArray(linha.sem_peso) ? linha.sem_peso : []),
     };
     checkins = (c.data || []).map(deLinha);
   }
@@ -1455,7 +1481,17 @@
         </div>`;
     }).join('');
     const hint = ultimo ? `<span class="log-hint">Última vez: ${listaKg(ultimo)} kg</span>` : '';
-    return `
+    const semPeso = config.semPeso.has(ex.nome);
+    const chave = `
+      <label class="sem-peso-linha">
+        <span><b>Sem peso</b><small>Exercício feito só com o corpo</small></span>
+        <input type="checkbox" role="switch" data-sem-peso="${esc(ex.nome)}"${semPeso ? ' checked' : ''}>
+      </label>`;
+    if (semPeso) {
+      return `${chave}
+      <p class="aviso">Este exercício não pede peso. Desmarque "Sem peso" para registrar cargas.</p>`;
+    }
+    return `${chave}
       <div class="log">
         <div class="log-head"><h4>Carga por série (kg)</h4>${hint}</div>
         ${linhas}
@@ -1464,6 +1500,9 @@
   }
 
   function logBtnHTML(ex, i) {
+    if (config.semPeso.has(ex.nome)) {
+      return `<button class="log-btn sem-peso" type="button" data-log="${i}" title="Exercício sem peso; toque para alterar">${ICON_PESSOA}<span>Sem peso</span></button>`;
+    }
     const salvo = pesosDoDia(hoje(), `t${estado.treino}`)[ex.nome] || [];
     if (!temCarga(salvo)) {
       return `<button class="log-btn" type="button" data-log="${i}">Registrar pesos</button>`;
@@ -1511,8 +1550,9 @@
     if (TIPOS[a.tipo].grupo === 'musc') {
       const exs = TREINOS[TIPOS[a.tipo].treino].exercicios;
       const pesos = pesosDoDia(dataDe(a), a.tipo);
-      const feitos = exs.filter((ex) => temCarga(pesos[ex.nome])).length;
-      resumo = `${feitos} de ${exs.length} exercícios com carga registrada.`;
+      const comPeso = exs.filter((ex) => !config.semPeso.has(ex.nome));
+      const feitos = comPeso.filter((ex) => temCarga(pesos[ex.nome])).length;
+      resumo = `${feitos} de ${comPeso.length} exercícios com carga registrada.`;
     }
     $('enc-body').innerHTML = `
       <div class="modal-head">
@@ -1933,7 +1973,7 @@
           const s = pesos[ex.nome];
           return `<li><span>${ex.nome}</span>${temCarga(s)
             ? `<span class="kg">${listaKg(Array.from({ length: numSeries(ex) }, (_, n) => s[n]))} kg</span>`
-            : '<span class="kg sem">sem registro</span>'}</li>`;
+            : `<span class="kg sem">${config.semPeso.has(ex.nome) ? 'sem peso' : 'sem registro'}</span>`}</li>`;
         }).join('')}</ul>`);
       } else {
         partes.push('<p class="ck-obs">Nenhum peso registrado neste dia.</p>');
@@ -2385,6 +2425,17 @@
     if (e.target.closest('[data-concluir]')) return concluirLog();
     // Clique no fundo escuro (fora do conteúdo) também fecha.
     if (e.target === logDialog || e.target.closest('[data-fechar]')) logDialog.close();
+  });
+
+  // Interruptor "Sem peso": fica salvo no exercício e redesenha o painel na hora.
+  logDialog.addEventListener('change', (e) => {
+    const chave = e.target.closest('[data-sem-peso]');
+    if (!chave) return;
+    const nome = chave.dataset.semPeso;
+    if (chave.checked) config.semPeso.add(nome); else config.semPeso.delete(nome);
+    salvarPerfil({ sem_peso: [...config.semPeso] });
+    abrirLog(exAberto);
+    logDialog.querySelector('[data-sem-peso]').focus();
   });
 
   logDialog.addEventListener('input', (e) => {

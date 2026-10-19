@@ -104,7 +104,7 @@ O MVP cobre um grupo de amigos convidados, cada um com conta e dados próprios, 
 
 ### Requisitos funcionais
 
-São 38 requisitos em 9 grupos; os marcados P0 bloqueiam o lançamento do MVP. A coluna Status mostra o que o app atual já entrega: **Feito**, **Parcial** ou **Pendente**.
+São 39 requisitos em 9 grupos; os marcados P0 bloqueiam o lançamento do MVP. A coluna Status mostra o que o app atual já entrega: **Feito**, **Parcial** ou **Pendente**.
 
 | ID | Requisito | Prioridade | Status |
 | --- | --- | --- | --- |
@@ -129,6 +129,7 @@ São 38 requisitos em 9 grupos; os marcados P0 bloqueiam o lançamento do MVP. A
 | **Execução do treino** |  |  |  |
 | RF-12 | Lista os exercícios do treino na ordem do plano, cada um num cartão, com dose, PSE-alvo e graus de contribuição H/F/E/M (Alta/Média/Baixa) | P0 | Feito |
 | RF-13 | Registro da carga (kg) de cada série num painel "Registrar pesos"; aceita vírgula ou ponto, Enter passa para a próxima série; salvar só grava o peso do dia (não abre check-in nem temporizador); o botão do exercício mostra as cargas de hoje | P0 | Feito |
+| RF-39 | Opção "Sem peso" em cada exercício, no painel "Registrar pesos": marcada, esconde os campos de carga, o cartão mostra "Sem peso" e o exercício deixa de contar no resumo de cargas; fica salva para o usuário em todos os treinos e aparelhos até ser desmarcada; pesos já registrados não são apagados | P1 | Feito |
 | RF-14 | Pré-preenche a carga com a do último dia em que o exercício teve peso e mostra "Última vez: …" | P0 | Feito |
 | RF-15 | Vídeo de execução no próprio cartão: deslizando para o lado aparece o vídeo, que toca sem som e em repetição; dica de deslizar some depois do primeiro uso | P1 | Parcial: 18 de 22 exercícios com vídeo |
 | RF-16 | Timer de descanso configurável, iniciado ao concluir a série | P1 | Pendente |
@@ -163,7 +164,7 @@ O plano é um modelo único, compartilhado por todos os usuários e guardado com
 | Entidade | Campos principais |
 | --- | --- |
 | Usuário | nome, e-mail, foto, papel (administrador ou membro), data de cadastro, último acesso, quantidade de acessos |
-| Configuração | usuário, tema (automático, claro, escuro), semana (7 dias, até 2 atividades cada) |
+| Configuração | usuário, tema (automático, claro, escuro), semana (7 dias, até 2 atividades cada), exercícios sem peso |
 | Convite | código, criado por, validade, usado por |
 | Plano (modelo) | nome, duração (6 semanas) |
 | Inscrição no plano | usuário, plano, data de início, peso inicial, alvo, compartilha aderência (sim/não) |
@@ -180,7 +181,7 @@ O plano é um modelo único, compartilhado por todos os usuários e guardado com
 Um dia pode ter vários check-ins (relação 1 dia → N check-ins). As cargas ficam por dia e treino, sem depender do check-in: o detalhe de um check-in de musculação mostra as cargas daquele treino no mesmo dia. O calendário é montado agrupando os check-ins por data. A sessão planejada não é gravada: ela é calculada pela semana montada, e o dia conta como feito quando há check-in encerrado do tipo planejado.
 
 No Supabase, os dados ficam em três tabelas, todas com regras de acesso por usuário (`supabase/schema.sql`):
-- **`perfis`:** nome, e-mail, foto, tema, `semana`, `dias_jiu` (legado), `ultimo_acesso` e `acessos`. Os dois últimos só mudam pela função `registrar_acesso()`.
+- **`perfis`:** nome, e-mail, foto, tema, `semana`, `sem_peso`, `dias_jiu` (legado), `ultimo_acesso` e `acessos`. Os dois últimos só mudam pela função `registrar_acesso()`.
 - **`checkins`:** check-ins de versões anteriores também guardavam as cargas.
 - **`cargas`:** pesos por usuário, dia e treino.
 
@@ -246,6 +247,7 @@ Todas as regras vêm do plano original; o app as aplica sem que o usuário preci
 17. **Exclusão:** excluir um check-in pede confirmação; os pesos registrados na ficha continuam salvos.
 18. **Pesos:** salvar um peso grava as cargas do dia daquele treino e não abre check-in nem temporizador. Editar um peso de hoje mantém as outras séries já registradas.
 19. **Acessos:** cada abertura do app já logado atualiza o último acesso; a quantidade só sobe se o acesso anterior foi há mais de 30 min. A hora é a do servidor, e o usuário não consegue alterar esses campos.
+20. **Exercício sem peso:** marcado pelo usuário, vale para aquele exercício em todos os treinos; o painel não pede carga, o resumo ao encerrar e o detalhe do check-in mostram "sem peso" em vez de cobrar a carga.
 
 ### Requisitos não funcionais
 

@@ -85,7 +85,7 @@ Abra `http://localhost:8000/` (esse endereço precisa estar em **Redirect URLs**
 
 ## Como os dados ficam guardados
 
-- **perfis:** nome, e-mail e foto (vindos do Google no primeiro login), tema e a semana montada em **Você → Minha semana** (coluna `semana`: o que fazer em cada dia, até 2 atividades). Contas sem semana salva usam a padrão, montada com os antigos dias de jiu-jitsu (`dias_jiu`).
+- **perfis:** nome, e-mail e foto (vindos do Google no primeiro login), tema, os exercícios marcados como **Sem peso** (coluna `sem_peso`) e a semana montada em **Você → Minha semana** (coluna `semana`: o que fazer em cada dia, até 2 atividades). Contas sem semana salva usam a padrão, montada com os antigos dias de jiu-jitsu (`dias_jiu`).
 - **checkins:** cada check-in de treino, com horário, recuperação e observação (check-ins de versões anteriores também guardavam as cargas).
 - **cargas:** os pesos registrados na ficha, por dia e treino. Salvar um peso não abre check-in.
 - O app funciona online: cada alteração vai para o Supabase na hora. Se a gravação falhar, o app avisa e recarrega os dados do servidor.
