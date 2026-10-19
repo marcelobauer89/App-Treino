@@ -73,9 +73,11 @@
   body {
     margin: 0; background: var(--gi); color: var(--tinta);
     font-family: var(--texto); font-size: 16px; line-height: 1.5; -webkit-font-smoothing: antialiased;
-    padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
+    /* --fab-espaco: folga para o botão de check-in não cobrir o fim da tela */
+    --fab-espaco: 80px;
+    padding-bottom: calc(var(--nav-h) + var(--fab-espaco) + env(safe-area-inset-bottom, 0px));
   }
-  body.com-ativo { padding-bottom: calc(var(--nav-h) + var(--ativo-h) + env(safe-area-inset-bottom, 0px)); }
+  body.com-ativo { padding-bottom: calc(var(--nav-h) + var(--ativo-h) + var(--fab-espaco) + env(safe-area-inset-bottom, 0px)); }
   button, input, textarea { font: inherit; color: inherit; }
   button { cursor: pointer; }
   [hidden] { display: none !important; }
@@ -465,11 +467,31 @@
   }
   .toast {
     position: fixed; left: 50%; transform: translateX(-50%); z-index: 30;
-    bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + 12px);
+    bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + 84px);
     width: max-content; max-width: calc(100vw - 32px); padding: 12px 16px; border-radius: 12px;
     background: var(--tinta); color: var(--gi); font-size: 14px; box-shadow: 0 6px 24px rgba(0, 0, 0, .18);
   }
-  body.com-ativo .toast { bottom: calc(var(--nav-h) + var(--ativo-h) + env(safe-area-inset-bottom, 0px) + 12px); }
+  body.com-ativo .toast { bottom: calc(var(--nav-h) + var(--ativo-h) + env(safe-area-inset-bottom, 0px) + 84px); }
+
+  /* Botão fixo de check-in: pílula com texto que vira círculo ao rolar para baixo. */
+  .fab {
+    position: fixed; z-index: 18; right: max(16px, env(safe-area-inset-right, 0px));
+    bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + 16px);
+    display: flex; align-items: center; gap: 10px; height: 56px; max-width: 220px; padding: 0 22px 0 16px;
+    border: 0; border-radius: 28px; background: var(--tatame); color: var(--sobre-tatame);
+    font-size: 16px; font-weight: 700; white-space: nowrap; overflow: hidden;
+    box-shadow: 0 8px 24px rgba(16, 19, 24, .28), 0 2px 6px rgba(16, 19, 24, .18);
+    transition: max-width .22s ease, padding .22s ease, gap .22s ease;
+  }
+  .fab:hover { background: var(--tatame-forte); }
+  .fab:focus-visible { outline: 3px solid var(--tatame-tinta); outline-offset: 3px; }
+  .fab svg { flex: 0 0 auto; width: 24px; height: 24px; }
+  .fab-txt { transition: opacity .15s ease; }
+  .fab.encolhido { max-width: 56px; padding: 0 16px; gap: 0; }
+  .fab.encolhido .fab-txt { opacity: 0; }
+  body.com-ativo .fab { bottom: calc(var(--nav-h) + var(--ativo-h) + env(safe-area-inset-bottom, 0px) + 16px); }
+  body.deslogado .fab { display: none !important; }
+  @media (prefers-reduced-motion: reduce) { .fab, .fab-txt { transition: none; } }
 
   /* Dashboard */
   .dash-topo { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 24px 0 16px; }
@@ -816,6 +838,11 @@
     <button type="button" data-encerrar>Encerrar</button>
   </div>
 </div>
+
+<button class="fab" id="fab-checkin" type="button" aria-label="Fazer check-in">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="m7.8 12.3 2.8 2.8 5.6-5.8"/></svg>
+  <span class="fab-txt">Fazer check-in</span>
+</button>
 
 <nav class="nav" aria-label="Telas">
   <button type="button" data-tela="treino">
@@ -2257,6 +2284,8 @@
     });
     if (t === 'dashboard') renderDashboard();
     if (t === 'voce') { renderConfig(); erroFoto(''); }
+    $('fab-checkin').hidden = t === 'voce';
+    $('fab-checkin').classList.remove('encolhido');
   }
 
   function atualizarCheckinUI() {
@@ -2340,6 +2369,23 @@
   });
 
   window.addEventListener('hashchange', () => { mostrarTela(); window.scrollTo(0, 0); });
+
+  // Botão fixo de check-in: abre o formulário já com o treino da aba (ou o planejado do dia no Dashboard).
+  $('fab-checkin').addEventListener('click', () => {
+    if (telaAtual() === 'dashboard') {
+      const data = diaSel > hoje() ? hoje() : diaSel;
+      return abrirFormCheckin({ tipo: tipoPlanejado(data), data });
+    }
+    abrirFormCheckin({ tipo: `t${estado.treino}` });
+  });
+  // Encolhe ao rolar para baixo e volta a mostrar o texto ao rolar para cima.
+  let ultimoScroll = 0;
+  window.addEventListener('scroll', () => {
+    const y = window.scrollY;
+    if (Math.abs(y - ultimoScroll) < 8) return;
+    $('fab-checkin').classList.toggle('encolhido', y > ultimoScroll && y > 80);
+    ultimoScroll = y;
+  }, { passive: true });
 
   logDialog.addEventListener('click', (e) => {
     if (e.target.closest('[data-concluir]')) return concluirLog();
