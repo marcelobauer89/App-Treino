@@ -61,7 +61,7 @@ A chave **secreta** (`sb_secret_...` ou `service_role`) nunca vai no app nem no 
 
 ## Atualizar o banco depois de uma nova versão
 
-Quando uma versão nova do app precisar de mudanças no banco, rode de novo o `supabase/schema.sql` inteiro no **SQL Editor** (passo 1). Ele só cria o que falta e não apaga dados. A tela **Minha semana** precisa da coluna `perfis.semana`: se o app avisar "Para salvar a semana, rode de novo o supabase/schema.sql", é isso que falta.
+Quando uma versão nova do app precisar de mudanças no banco, rode de novo o `supabase/schema.sql` inteiro no **SQL Editor** (passo 1). Ele só cria o que falta e não apaga dados. A tela **Minha semana** precisa da coluna `perfis.semana` e o registro de pesos precisa da tabela `cargas`: se o app avisar "Para salvar a semana…" ou "Para salvar os pesos, rode de novo o supabase/schema.sql", é isso que falta.
 
 ## Testar no computador
 
@@ -74,6 +74,7 @@ Abra `http://localhost:8000/` (esse endereço precisa estar em **Redirect URLs**
 ## Como os dados ficam guardados
 
 - **perfis:** nome, e-mail e foto (vindos do Google no primeiro login), tema e a semana montada em **Você → Minha semana** (coluna `semana`: o que fazer em cada dia, até 2 atividades). Contas sem semana salva usam a padrão, montada com os antigos dias de jiu-jitsu (`dias_jiu`).
-- **checkins:** cada check-in de treino, com horário, recuperação, observação e as cargas por exercício.
+- **checkins:** cada check-in de treino, com horário, recuperação e observação (check-ins de versões anteriores também guardavam as cargas).
+- **cargas:** os pesos registrados na ficha, por dia e treino. Salvar um peso não abre check-in.
 - O app funciona online: cada alteração vai para o Supabase na hora. Se a gravação falhar, o app avisa e recarrega os dados do servidor.
 - No primeiro login em cada aparelho, os check-ins e configurações que estavam salvos só no navegador (versões anteriores do app) são enviados para a conta.

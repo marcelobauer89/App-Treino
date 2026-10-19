@@ -1123,8 +1123,10 @@
 
   // ---------- Check-ins ----------
   // checkin = { id, tipo, inicio, fim (null = aberto), semHorario, recuperacao, obs, retroativo,
-  //             series: { [exercício]: [{ carga }] }, ultimaSerie }
+  //             series (pesos de versões anteriores, hoje ficam em "cargas"), ultimaSerie }
   let checkins = [];
+  // Pesos registrados na ficha, independentes do check-in: { data, treino: 't1'|'t2'|'t3', series: { [exercício]: [{ carga }] } }
+  let cargas = [];
   const novoId = () => (crypto.randomUUID
     ? crypto.randomUUID()
     : '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, (c) =>
@@ -1165,36 +1167,43 @@
     return fila;
   }
   async function falhaAoSalvar(erro) {
-    // Banco ainda sem a coluna perfis.semana (schema.sql antigo).
-    if (/semana/.test((erro && erro.message) || '')) toast('Para salvar a semana, rode de novo o supabase/schema.sql no Supabase (veja o README).');
+    // Banco com o schema.sql antigo: sem a coluna perfis.semana ou sem a tabela cargas.
+    const msg = (erro && erro.message) || '';
+    if (/semana/.test(msg)) toast('Para salvar a semana, rode de novo o supabase/schema.sql no Supabase (veja o README).');
+    else if (/cargas/.test(msg)) toast('Para salvar os pesos, rode de novo o supabase/schema.sql no Supabase (veja o README).');
     else toast('Não foi possível salvar. Confira a internet; os dados foram recarregados do servidor.');
     try { await carregarDados(); renderizarApp(); } catch (_) {}
   }
   const salvarCheckin = (c) => enviar(() => sb.from('checkins').upsert(paraLinha(c)));
   const excluirCheckinRemoto = (id) => enviar(() => sb.from('checkins').delete().eq('id', id));
   const salvarPerfil = (campos) => enviar(() => sb.from('perfis').update(campos).eq('id', usuario.id));
+  const salvarCarga = (r) => enviar(() => sb.from('cargas')
+    .upsert({ usuario_id: usuario.id, data: r.data, treino: r.treino, series: r.series }, { onConflict: 'usuario_id,data,treino' }));
 
-  // Cargas digitadas são enviadas depois de uma pausa, para não gravar a cada tecla.
+  // Pesos digitados são enviados depois de uma pausa, para não gravar a cada tecla.
   const timersSeries = new Map();
-  function salvarSeriesDepois(c) {
-    clearTimeout(timersSeries.get(c.id));
-    timersSeries.set(c.id, setTimeout(() => { timersSeries.delete(c.id); salvarCheckin(c); }, 800));
+  function salvarCargaDepois(r) {
+    const chave = `${r.data}|${r.treino}`;
+    if (timersSeries.has(chave)) clearTimeout(timersSeries.get(chave).timer);
+    timersSeries.set(chave, { r, timer: setTimeout(() => { timersSeries.delete(chave); salvarCarga(r); }, 800) });
   }
   function salvarSeriesPendentes() {
-    for (const [id, t] of timersSeries) {
-      clearTimeout(t);
-      const c = checkins.find((x) => x.id === id);
-      if (c) salvarCheckin(c);
+    for (const { r, timer } of timersSeries.values()) {
+      clearTimeout(timer);
+      salvarCarga(r);
     }
     timersSeries.clear();
   }
 
   async function carregarDados() {
-    const [p, c] = await Promise.all([
+    const [p, c, k] = await Promise.all([
       sb.from('perfis').select('*').eq('id', usuario.id).maybeSingle(),
       sb.from('checkins').select('*').order('inicio'),
+      sb.from('cargas').select('*').order('data'),
     ]);
     if (p.error || c.error) throw p.error || c.error;
+    // Sem a tabela cargas (schema.sql antigo) o app abre do mesmo jeito; o aviso aparece ao salvar um peso.
+    cargas = k.error ? [] : (k.data || []).map((r) => ({ data: String(r.data).slice(0, 10), treino: r.treino, series: r.series || {} }));
     let linha = p.data;
     if (!linha) {
       // Conta criada antes do schema: cria o perfil com os dados do Google.
@@ -1301,22 +1310,25 @@
     return checkins.filter((c) => c.tipo === tipo && c.fim && dataDe(c) === hoje()).sort(porInicio).pop() || null;
   }
 
-  // Check-in anterior mais recente desse treino com carga no exercício (pré-preenchimento, RF-14).
-  function ultimaSessao(treino, nome) {
-    const atual = sessaoAtual(treino);
-    return checkins
-      .filter((c) => c !== atual && c.fim && c.tipo === `t${treino}` && temCarga(c.series[nome]))
-      .sort(porInicio).pop() || null;
+  const cargaDoDia = (data, tipo) => cargas.find((r) => r.data === data && r.treino === tipo);
+  // Pesos de um treino num dia: os da tabela cargas e, de versões anteriores, os guardados nos check-ins.
+  function pesosDoDia(data, tipo) {
+    const antigos = Object.assign({}, ...checkins
+      .filter((c) => c.tipo === tipo && dataDe(c) === data).sort(porInicio).map((c) => c.series || {}));
+    const r = cargaDoDia(data, tipo);
+    return r ? { ...antigos, ...r.series } : antigos;
   }
-
-  function iniciarCheckin(tipo) {
-    const c = {
-      id: novoId(), tipo, inicio: agoraIso(), fim: null, semHorario: false,
-      recuperacao: null, obs: '', retroativo: false, series: {},
-    };
-    checkins.push(c);
-    salvarCheckin(c);
-    return c;
+  // Pesos do dia anterior mais recente com carga no exercício (pré-preenchimento, RF-14).
+  function ultimasCargas(tipo, nome) {
+    const datas = new Set([
+      ...cargas.filter((r) => r.treino === tipo).map((r) => r.data),
+      ...checkins.filter((c) => c.tipo === tipo).map(dataDe),
+    ]);
+    for (const d of [...datas].filter((d) => d < hoje()).sort().reverse()) {
+      const s = pesosDoDia(d, tipo)[nome];
+      if (temCarga(s)) return s;
+    }
+    return null;
   }
 
   // Regra 14: check-in esquecido aberto por mais de 3 h é encerrado na hora da última série.
@@ -1383,20 +1395,19 @@
   let exAberto = null;
   const camposDoModal = () => [...logDialog.querySelectorAll('[data-campo]')];
 
+  // Salvar um peso só grava o peso do dia: não abre check-in nem temporizador.
   function definirSerie(nome, n, valor) {
-    let c = sessaoAtual(estado.treino);
-    if (!c) {
-      if (valor == null || checkinAberto()) return;
-      c = iniciarCheckin(`t${estado.treino}`);
-      const aviso = $('log-aviso');
-      aviso.textContent = `Check-in do ${TIPOS[c.tipo].nome} iniciado às ${horaDe(c.inicio)}.`;
-      aviso.hidden = false;
-      atualizarCheckinUI();
+    const tipo = `t${estado.treino}`;
+    let r = cargaDoDia(hoje(), tipo);
+    if (!r) {
+      if (valor == null) return;
+      r = { data: hoje(), treino: tipo, series: {} };
+      cargas.push(r);
     }
-    c.series[nome] = c.series[nome] || [];
-    c.series[nome][n] = valor == null ? null : { carga: valor };
-    if (!c.fim) c.ultimaSerie = agoraIso();
-    salvarSeriesDepois(c);
+    // Começa das séries que já existiam hoje (inclusive as guardadas num check-in antigo).
+    r.series[nome] = r.series[nome] || [...(pesosDoDia(hoje(), tipo)[nome] || [])];
+    r.series[nome][n] = valor == null ? null : { carga: valor };
+    salvarCargaDepois(r);
   }
 
   function salvarInput(el) {
@@ -1408,10 +1419,9 @@
   }
 
   function logHTML(ex) {
-    const sessao = sessaoAtual(estado.treino);
-    const anterior = ultimaSessao(estado.treino, ex.nome);
-    const atual = (sessao && sessao.series[ex.nome]) || [];
-    const ultimo = anterior ? anterior.series[ex.nome] : null;
+    const tipo = `t${estado.treino}`;
+    const atual = pesosDoDia(hoje(), tipo)[ex.nome] || [];
+    const ultimo = ultimasCargas(tipo, ex.nome);
     const total = numSeries(ex);
     const linhas = Array.from({ length: total }, (_, n) => {
       // RF-14: a carga já vem preenchida com a da última sessão.
@@ -1426,9 +1436,7 @@
         </div>`;
     }).join('');
     const hint = ultimo ? `<span class="log-hint">Última vez: ${listaKg(ultimo)} kg</span>` : '';
-    const nomeTreino = TREINOS[estado.treino].nome;
     return `
-      <p class="aviso" id="log-aviso"${sessao ? ' hidden' : ''}>O check-in do ${nomeTreino} começa quando você salvar o primeiro peso.</p>
       <div class="log">
         <div class="log-head"><h4>Carga por série (kg)</h4>${hint}</div>
         ${linhas}
@@ -1437,8 +1445,7 @@
   }
 
   function logBtnHTML(ex, i) {
-    const sessao = sessaoAtual(estado.treino);
-    const salvo = (sessao && sessao.series[ex.nome]) || [];
+    const salvo = pesosDoDia(hoje(), `t${estado.treino}`)[ex.nome] || [];
     if (!temCarga(salvo)) {
       return `<button class="log-btn" type="button" data-log="${i}">Registrar pesos</button>`;
     }
@@ -1450,23 +1457,16 @@
   function abrirLog(i) {
     exAberto = i;
     const ex = exerciciosDoTreino()[i];
-    const tipo = `t${estado.treino}`;
-    const aberto = checkinAberto();
-    const conflito = aberto && aberto.tipo !== tipo && !sessaoAtual(estado.treino);
-    const cabeca = `
+    $('log-body').innerHTML = `
       <div class="modal-head">
         <div>
           <h3 id="log-title">${ex.nome}</h3>
           <p class="ex-dose"><span>${ex.dose}</span><span class="pse">PSE ${ex.pse}</span></p>
         </div>
         ${BOTAO_FECHAR}
-      </div>`;
-    $('log-body').innerHTML = conflito
-      ? `${cabeca}
-        <p class="aviso">O check-in do ${TIPOS[aberto.tipo].nome} está aberto desde ${horaDe(aberto.inicio)}. Para registrar o ${TIPOS[tipo].nome}, encerre-o primeiro.</p>
-        <button class="modal-done" type="button" data-trocar>Encerrar ${TIPOS[aberto.tipo].nome} e iniciar ${TIPOS[tipo].nome}</button>`
-      : `${cabeca}${logHTML(ex)}
-        <button class="modal-done" type="button" data-concluir>Concluir</button>`;
+      </div>
+      ${logHTML(ex)}
+      <button class="modal-done" type="button" data-concluir>Concluir</button>`;
     if (!logDialog.open) logDialog.showModal();
   }
 
@@ -1491,7 +1491,8 @@
     let resumo = '';
     if (TIPOS[a.tipo].grupo === 'musc') {
       const exs = TREINOS[TIPOS[a.tipo].treino].exercicios;
-      const feitos = exs.filter((ex) => temCarga(a.series[ex.nome])).length;
+      const pesos = pesosDoDia(dataDe(a), a.tipo);
+      const feitos = exs.filter((ex) => temCarga(pesos[ex.nome])).length;
       resumo = `${feitos} de ${exs.length} exercícios com carga registrada.`;
     }
     $('enc-body').innerHTML = `
@@ -1907,22 +1908,23 @@
     if (c.obs) partes.push(`<p class="ck-obs">${esc(c.obs)}</p>`);
     if (TIPOS[c.tipo].grupo === 'musc') {
       const exs = TREINOS[TIPOS[c.tipo].treino].exercicios;
-      if (exs.some((ex) => temCarga(c.series[ex.nome]))) {
+      const pesos = pesosDoDia(dataDe(c), c.tipo);
+      if (exs.some((ex) => temCarga(pesos[ex.nome]))) {
         partes.push(`<ul class="ck-ex">${exs.map((ex) => {
-          const s = c.series[ex.nome];
+          const s = pesos[ex.nome];
           return `<li><span>${ex.nome}</span>${temCarga(s)
             ? `<span class="kg">${listaKg(Array.from({ length: numSeries(ex) }, (_, n) => s[n]))} kg</span>`
             : '<span class="kg sem">sem registro</span>'}</li>`;
         }).join('')}</ul>`);
       } else {
-        partes.push('<p class="ck-obs">Nenhuma carga registrada neste check-in.</p>');
+        partes.push('<p class="ck-obs">Nenhum peso registrado neste dia.</p>');
       }
     }
     const acoes = !c.fim
       ? `<button class="btn" type="button" data-encerrar>Encerrar check-in</button>`
       : '';
     const excluir = ckExcluindo === c.id
-      ? `<p>Excluir este check-in? As cargas registradas nele também serão apagadas.</p>
+      ? `<p>Excluir este check-in? Os pesos registrados na ficha continuam salvos.</p>
          <button class="btn-perigo cheio" type="button" data-excluir-sim="${c.id}">Excluir</button>
          <button class="btn-sec" type="button" data-excluir-nao>Cancelar</button>`
       : `<button class="btn-perigo" type="button" data-excluir="${c.id}">Excluir check-in</button>`;
@@ -2362,16 +2364,6 @@
 
   logDialog.addEventListener('click', (e) => {
     if (e.target.closest('[data-concluir]')) return concluirLog();
-    if (e.target.closest('[data-trocar]')) {
-      const i = exAberto;
-      const a = checkinAberto();
-      logDialog.close();
-      abrirEncerrar({
-        motivo: `Encerre o ${TIPOS[a.tipo].nome} para iniciar o ${TREINOS[estado.treino].nome}.`,
-        depois: () => { iniciarCheckin(`t${estado.treino}`); atualizarCheckinUI(); abrirLog(i); },
-      });
-      return;
-    }
     // Clique no fundo escuro (fora do conteúdo) também fecha.
     if (e.target === logDialog || e.target.closest('[data-fechar]')) logDialog.close();
   });
