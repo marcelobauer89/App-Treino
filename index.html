@@ -219,9 +219,12 @@
   .log-btn.feito {
     background: var(--feito-suave); color: var(--feito-tinta); font-size: 14px; font-variant-numeric: tabular-nums;
   }
-  .log-btn.sem-peso { background: var(--gi); border: 1px solid var(--fio); color: var(--tinta-2); }
-  .log-btn.sem-peso:hover { background: var(--gi); border-color: var(--tinta-2); }
-  .log-btn.sem-peso svg { flex: 0 0 auto; width: 18px; height: 18px; }
+  .aviso.feito-aviso { display: flex; align-items: center; gap: 8px; background: var(--feito-suave); color: var(--feito-tinta); font-weight: 600; }
+  .feito-aviso svg { flex: 0 0 auto; }
+  .link-btn {
+    margin-left: auto; min-height: 36px; padding: 0 8px; border: 0; background: transparent;
+    color: inherit; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; cursor: pointer;
+  }
   .log-btn.feito:hover { background: var(--feito-suave); filter: saturate(1.3); }
   .log-btn.feito svg { flex: 0 0 auto; }
   /* Carrossel do cartão: informações ↔ vídeo da execução. A altura acompanha o painel ativo (via JS). */
@@ -1330,6 +1333,9 @@
   const checkinAberto = () => checkins.find((c) => !c.fim) || null;
   const duracaoMin = (c) => (c.semHorario || !c.fim ? null : minutosEntre(c.inicio, c.fim));
   const temCarga = (series) => (series || []).some((s) => s && s.carga != null);
+  // Exercício sem peso concluído no dia: guardado nas cargas do dia como [{ feito: true }].
+  const temFeito = (series) => (series || []).some((s) => s && s.feito);
+  const exercicioFeito = (ex, pesos) => temCarga(pesos[ex.nome]) || (config.semPeso.has(ex.nome) && temFeito(pesos[ex.nome]));
   const porInicio = (a, b) => a.inicio.localeCompare(b.inicio);
   function horarioTexto(c) {
     if (c.semHorario) return 'sem horário registrado';
@@ -1450,8 +1456,26 @@
       cargas.push(r);
     }
     // Começa das séries que já existiam hoje (inclusive as guardadas num check-in antigo).
-    r.series[nome] = r.series[nome] || [...(pesosDoDia(hoje(), tipo)[nome] || [])];
+    r.series[nome] = r.series[nome] || (pesosDoDia(hoje(), tipo)[nome] || []).map((x) => (x && x.feito ? null : x));
     r.series[nome][n] = valor == null ? null : { carga: valor };
+    salvarCargaDepois(r);
+  }
+
+  // "Terminei o exercício" num exercício sem peso: marca (ou desmarca) como feito hoje.
+  function marcarFeito(nome, feito) {
+    const tipo = `t${estado.treino}`;
+    let r = cargaDoDia(hoje(), tipo);
+    if (!r) {
+      if (!feito) return;
+      r = { data: hoje(), treino: tipo, series: {} };
+      cargas.push(r);
+    }
+    if (feito) {
+      if (temCarga(pesosDoDia(hoje(), tipo)[nome]) || temFeito(r.series[nome])) return;
+      r.series[nome] = [{ feito: true }];
+    } else {
+      delete r.series[nome];
+    }
     salvarCargaDepois(r);
   }
 
@@ -1488,8 +1512,11 @@
         <input type="checkbox" role="switch" data-sem-peso="${esc(ex.nome)}"${semPeso ? ' checked' : ''}>
       </label>`;
     if (semPeso) {
-      return `${chave}
-      <p class="aviso">Este exercício não pede peso. Desmarque "Sem peso" para registrar cargas.</p>`;
+      return temFeito(atual) || temCarga(atual)
+        ? `${chave}
+      <p class="aviso feito-aviso">${ICON_CHECK}Feito hoje. <button class="link-btn" type="button" data-desfazer="${esc(ex.nome)}">Desfazer</button></p>`
+        : `${chave}
+      <p class="aviso">Exercício sem peso: toque em Concluir para marcar como feito hoje.</p>`;
     }
     return `${chave}
       <div class="log">
@@ -1500,12 +1527,13 @@
   }
 
   function logBtnHTML(ex, i) {
-    if (config.semPeso.has(ex.nome)) {
-      return `<button class="log-btn sem-peso" type="button" data-log="${i}" title="Exercício sem peso; toque para alterar">${ICON_PESSOA}<span>Sem peso</span></button>`;
-    }
     const salvo = pesosDoDia(hoje(), `t${estado.treino}`)[ex.nome] || [];
+    if (config.semPeso.has(ex.nome) && (temFeito(salvo) || temCarga(salvo))) {
+      return `<button class="log-btn feito" type="button" data-log="${i}" title="Exercício sem peso feito hoje">
+      ${ICON_CHECK}<span>Feito hoje</span></button>`;
+    }
     if (!temCarga(salvo)) {
-      return `<button class="log-btn" type="button" data-log="${i}">Registrar pesos</button>`;
+      return `<button class="log-btn" type="button" data-log="${i}">Terminei o exercício</button>`;
     }
     const series = Array.from({ length: numSeries(ex) }, (_, n) => salvo[n]);
     return `<button class="log-btn feito" type="button" data-log="${i}" title="Editar pesos de hoje">
@@ -1530,6 +1558,8 @@
 
   // "Concluir" grava tudo o que está na tela, inclusive a carga pré-preenchida.
   function concluirLog() {
+    const ex = exerciciosDoTreino()[exAberto];
+    if (config.semPeso.has(ex.nome)) { marcarFeito(ex.nome, true); return logDialog.close(); }
     const campos = camposDoModal();
     campos.forEach(salvarInput);
     const invalido = campos.find((el) => el.getAttribute('aria-invalid') === 'true');
@@ -1550,9 +1580,8 @@
     if (TIPOS[a.tipo].grupo === 'musc') {
       const exs = TREINOS[TIPOS[a.tipo].treino].exercicios;
       const pesos = pesosDoDia(dataDe(a), a.tipo);
-      const comPeso = exs.filter((ex) => !config.semPeso.has(ex.nome));
-      const feitos = comPeso.filter((ex) => temCarga(pesos[ex.nome])).length;
-      resumo = `${feitos} de ${comPeso.length} exercícios com carga registrada.`;
+      const feitos = exs.filter((ex) => exercicioFeito(ex, pesos)).length;
+      resumo = `${feitos} de ${exs.length} exercícios feitos.`;
     }
     $('enc-body').innerHTML = `
       <div class="modal-head">
@@ -1968,15 +1997,17 @@
     if (TIPOS[c.tipo].grupo === 'musc') {
       const exs = TREINOS[TIPOS[c.tipo].treino].exercicios;
       const pesos = pesosDoDia(dataDe(c), c.tipo);
-      if (exs.some((ex) => temCarga(pesos[ex.nome]))) {
+      if (exs.some((ex) => exercicioFeito(ex, pesos))) {
         partes.push(`<ul class="ck-ex">${exs.map((ex) => {
           const s = pesos[ex.nome];
-          return `<li><span>${ex.nome}</span>${temCarga(s)
+          const valor = temCarga(s)
             ? `<span class="kg">${listaKg(Array.from({ length: numSeries(ex) }, (_, n) => s[n]))} kg</span>`
-            : `<span class="kg sem">${config.semPeso.has(ex.nome) ? 'sem peso' : 'sem registro'}</span>`}</li>`;
+            : exercicioFeito(ex, pesos) ? '<span class="kg">feito (sem peso)</span>'
+              : `<span class="kg sem">${config.semPeso.has(ex.nome) ? 'sem peso' : 'sem registro'}</span>`;
+          return `<li><span>${ex.nome}</span>${valor}</li>`;
         }).join('')}</ul>`);
       } else {
-        partes.push('<p class="ck-obs">Nenhum peso registrado neste dia.</p>');
+        partes.push('<p class="ck-obs">Nenhum exercício registrado neste dia.</p>');
       }
     }
     const acoes = !c.fim
@@ -2423,6 +2454,8 @@
 
   logDialog.addEventListener('click', (e) => {
     if (e.target.closest('[data-concluir]')) return concluirLog();
+    const desfazer = e.target.closest('[data-desfazer]');
+    if (desfazer) { marcarFeito(desfazer.dataset.desfazer, false); return abrirLog(exAberto); }
     // Clique no fundo escuro (fora do conteúdo) também fecha.
     if (e.target === logDialog || e.target.closest('[data-fechar]')) logDialog.close();
   });
