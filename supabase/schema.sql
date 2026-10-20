@@ -99,6 +99,9 @@ create trigger ao_criar_usuario
   after insert on auth.users
   for each row execute function public.criar_perfil();
 
+-- Exercícios que o usuário faz sem peso (o painel "Registrar pesos" não pede carga).
+alter table public.perfis add column if not exists sem_peso text[] not null default '{}';
+
 -- Acessos: último acesso e quantidade de acessos de cada usuário (vistos só no Supabase).
 alter table public.perfis add column if not exists ultimo_acesso timestamptz;
 alter table public.perfis add column if not exists acessos integer not null default 0;
@@ -121,7 +124,7 @@ grant execute on function public.registrar_acesso() to authenticated;
 
 -- O usuário edita só as colunas que o app usa; acessos e ultimo_acesso mudam só pela função acima.
 revoke update on public.perfis from authenticated;
-grant update (id, nome, email, foto, tema, dias_jiu, semana) on public.perfis to authenticated;
+grant update (id, nome, email, foto, tema, dias_jiu, semana, sem_peso) on public.perfis to authenticated;
 
 -- Para ver os acessos (SQL Editor):
 -- select nome, email, acessos,
