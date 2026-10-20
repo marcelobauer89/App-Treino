@@ -2000,10 +2000,12 @@
       if (exs.some((ex) => exercicioFeito(ex, pesos))) {
         partes.push(`<ul class="ck-ex">${exs.map((ex) => {
           const s = pesos[ex.nome];
-          const valor = temCarga(s)
-            ? `<span class="kg">${listaKg(Array.from({ length: numSeries(ex) }, (_, n) => s[n]))} kg</span>`
-            : exercicioFeito(ex, pesos) ? '<span class="kg">feito (sem peso)</span>'
-              : `<span class="kg sem">${config.semPeso.has(ex.nome) ? 'sem peso' : 'sem registro'}</span>`;
+          // Exercício sem peso concluído aparece como feito, mesmo com cargas antigas (ex.: zeros).
+          const valor = config.semPeso.has(ex.nome)
+            ? (exercicioFeito(ex, pesos) ? '<span class="kg">feito (sem peso)</span>' : '<span class="kg sem">sem peso</span>')
+            : temCarga(s)
+              ? `<span class="kg">${listaKg(Array.from({ length: numSeries(ex) }, (_, n) => s[n]))} kg</span>`
+              : '<span class="kg sem">sem registro</span>';
           return `<li><span>${ex.nome}</span>${valor}</li>`;
         }).join('')}</ul>`);
       } else {
