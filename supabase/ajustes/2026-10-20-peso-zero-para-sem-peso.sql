@@ -17,9 +17,10 @@ with series as (
 ), so_zero as (
   select usuario_id, exercicio
   from series
-  where jsonb_typeof(serie) = 'object' and jsonb_typeof(serie -> 'carga') = 'number'
+  where jsonb_typeof(serie) = 'object' and jsonb_typeof(serie -> 'carga') in ('number', 'string')
   group by usuario_id, exercicio
-  having bool_and((serie ->> 'carga')::numeric = 0)
+  -- Carga 0 gravada como número ou como texto ("0", "0,0"); qualquer outro valor conta como peso.
+  having bool_and(replace(serie ->> 'carga', ',', '.') ~ '^\s*0+(\.0+)?\s*$')
 )
 select p.nome, p.email, z.exercicio
 from so_zero z join public.perfis p on p.id = z.usuario_id
@@ -40,9 +41,9 @@ with series as (
   from (
     select usuario_id, exercicio
     from series
-    where jsonb_typeof(serie) = 'object' and jsonb_typeof(serie -> 'carga') = 'number'
+    where jsonb_typeof(serie) = 'object' and jsonb_typeof(serie -> 'carga') in ('number', 'string')
     group by usuario_id, exercicio
-    having bool_and((serie ->> 'carga')::numeric = 0)
+    having bool_and(replace(serie ->> 'carga', ',', '.') ~ '^\s*0+(\.0+)?\s*$')
   ) e
   group by usuario_id
 )
