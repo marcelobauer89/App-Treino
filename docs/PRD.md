@@ -25,7 +25,7 @@ O app está no ar em https://marcelobauer89.github.io/App-Treino/ (GitHub Pages)
 
 | Tela | O que já faz |
 | --- | --- |
-| **Treino** | Data, hora e atividade de hoje no topo; abas Treino 1, 2 e 3 (abre no treino do dia); filtro por foco (Hipertrofia, Força, Explosão, Mobilidade); "Sobre o treino" com objetivo, o que esperar e impacto no jiu e no físico; cada exercício num cartão próprio com dose, PSE-alvo, graus H/F/E/M e botão "Registrar pesos"; deslizando o cartão para o lado aparece o vídeo de execução, que toca sem som; agenda da semana com dias feitos e treinos extras |
+| **Treino** | Data, hora e atividade de hoje no topo; abas Treino 1, 2 e 3 (abre no treino do dia); filtro por foco (Hipertrofia, Força, Explosão, Mobilidade); "Sobre o treino" com objetivo, o que esperar e impacto no jiu e no físico; cada exercício num cartão próprio com dose, PSE-alvo, graus H/F/E/M e botão "Terminei o exercício" (com peso: cargas por série; sem peso: marca como feito); deslizando o cartão para o lado aparece o vídeo de execução, que toca sem som; agenda da semana com dias feitos e treinos extras |
 | **Dashboard** | Números (check-ins no total, no mês, horas treinadas no mês, recuperação média em 30 dias); esta semana × plano; calendário mensal com selos por tipo; lista dos check-ins do dia com detalhe dos exercícios e cargas; exclusão de check-in; barras por tipo no mês |
 | **Você** | Dados pessoais (nome, e-mail da conta Google, foto recortada no aparelho e exibida na barra inferior); tema (automático, claro, escuro); **Minha semana**, para montar a semana arrastando as atividades para os dias, com avisos; conta e saída |
 
@@ -128,8 +128,8 @@ São 39 requisitos em 9 grupos; os marcados P0 bloqueiam o lançamento do MVP. A
 | RF-11 | Usuário pode reagendar qualquer sessão dentro da semana | P1 | Parcial: edita a semana-tipo em Minha semana, não uma semana específica |
 | **Execução do treino** |  |  |  |
 | RF-12 | Lista os exercícios do treino na ordem do plano, cada um num cartão, com dose, PSE-alvo e graus de contribuição H/F/E/M (Alta/Média/Baixa) | P0 | Feito |
-| RF-13 | Registro da carga (kg) de cada série num painel "Registrar pesos"; aceita vírgula ou ponto, Enter passa para a próxima série; salvar só grava o peso do dia (não abre check-in nem temporizador); o botão do exercício mostra as cargas de hoje | P0 | Feito |
-| RF-39 | Opção "Sem peso" em cada exercício, no painel "Registrar pesos": marcada, esconde os campos de carga, o cartão mostra "Sem peso" e o exercício deixa de contar no resumo de cargas; fica salva para o usuário em todos os treinos e aparelhos até ser desmarcada; pesos já registrados não são apagados | P1 | Feito |
+| RF-13 | Botão "Terminei o exercício" em cada cartão abre o painel de registro da carga (kg) de cada série; aceita vírgula ou ponto, Enter passa para a próxima série; salvar só grava o peso do dia (não abre check-in nem temporizador); o botão do exercício mostra as cargas de hoje ("Hoje: … kg") | P0 | Feito |
+| RF-39 | Opção "Sem peso" em cada exercício, no painel do exercício: marcada, esconde os campos de carga e "Concluir" marca o exercício como feito no dia (o cartão mostra "Feito hoje", com "Desfazer" no painel), do mesmo jeito que os exercícios com peso mostram "Hoje: … kg"; fica salva para o usuário em todos os treinos e aparelhos até ser desmarcada; pesos já registrados não são apagados | P1 | Feito |
 | RF-14 | Pré-preenche a carga com a do último dia em que o exercício teve peso e mostra "Última vez: …" | P0 | Feito |
 | RF-15 | Vídeo de execução no próprio cartão: deslizando para o lado aparece o vídeo, que toca sem som e em repetição; dica de deslizar some depois do primeiro uso | P1 | Parcial: 18 de 22 exercícios com vídeo |
 | RF-16 | Timer de descanso configurável, iniciado ao concluir a série | P1 | Pendente |
@@ -147,7 +147,7 @@ São 39 requisitos em 9 grupos; os marcados P0 bloqueiam o lançamento do MVP. A
 | RF-24 | Compartilhar, se o usuário ativar, só a aderência semanal (treinos feitos) com o grupo | P2 | Pendente |
 | **Check-in de treino** |  |  |  |
 | RF-38 | Botão fixo "Fazer check-in" (verde, canto inferior direito, nas telas Treino e Dashboard) é o único botão para registrar check-in: vira um círculo ao rolar para baixo e volta a mostrar o texto ao rolar para cima; abre o formulário já com o treino da aba aberta (no Dashboard, o tipo planejado do dia selecionado no calendário); fica acima da barra "em andamento" quando ela aparece | P0 | Feito |
-| RF-25 | Check-in de musculação pelo formulário (tipo, data, início, duração, recuperação, observação). Registrar pesos não abre check-in. Check-ins abertos de versões anteriores aparecem numa barra "em andamento" com "Encerrar", que mostra quantos exercícios tiveram carga no dia e pede recuperação e observação | P0 | Feito |
+| RF-25 | Check-in de musculação pelo formulário (tipo, data, início, duração, recuperação, observação). Terminar um exercício (registrar pesos) não abre check-in. Check-ins abertos de versões anteriores aparecem numa barra "em andamento" com "Encerrar", que mostra quantos exercícios foram feitos no dia e pede recuperação e observação | P0 | Feito |
 | RF-26 | Permitir mais de um check-in no mesmo dia (ex.: musculação de manhã e jiu-jitsu à noite), cada um com horário, tipo e duração próprios | P0 | Feito |
 | RF-30 | Check-in rápido, extra ou retroativo (tipo, data até hoje, início, duração de 1 a 600 min, recuperação, observação); excluir check-in com confirmação; editar check-in | P1 | Parcial: falta editar |
 | **Dashboard e calendário** |  |  |  |
@@ -205,14 +205,14 @@ O fluxo central começa na tela Treino: o app mostra a atividade do dia, o usuá
 
 > [Diagrama: fluxo diário · 1 decisão, 3 caminhos]
 
-Registrar pesos e fazer check-in são ações separadas. As cargas são salvas por dia e treino assim que o usuário conclui o painel, sem abrir check-in nem temporizador. O check-in de qualquer tipo é feito pelo botão fixo "Fazer check-in", que abre o formulário já com o treino da aba (o usuário pode trocar tipo, data e horário). Depois de salvo, o check-in aparece no calendário, e outro pode ser feito no mesmo dia.
+Terminar exercícios (registrar pesos) e fazer check-in são ações separadas. As cargas são salvas por dia e treino assim que o usuário conclui o painel, sem abrir check-in nem temporizador. O check-in de qualquer tipo é feito pelo botão fixo "Fazer check-in", que abre o formulário já com o treino da aba (o usuário pode trocar tipo, data e horário). Depois de salvo, o check-in aparece no calendário, e outro pode ser feito no mesmo dia.
 
 | Tela | Conteúdo principal |
 | --- | --- |
 | Entrada | Painel azul com a faixa branca de 4 graus, título "OSS", "Exercícios de Jiu Jitsu e hipertrofia", "Continuar com o Google", crédito com link para o LinkedIn |
 | Onboarding | Peso, % de gordura, alvo, data de início (pendente) |
-| Treino | Data, hora e atividade de hoje; abas Treino 1, 2 e 3; filtro por foco; "Sobre o treino"; um cartão por exercício com dose, PSE-alvo, graus H/F/E/M, "Registrar pesos" e vídeo ao deslizar; agenda da semana com dias feitos e extras; botão fixo "Fazer check-in" |
-| Registrar pesos | Painel (folha inferior no celular) com uma linha por série, carga pré-preenchida, "Última vez", Concluir |
+| Treino | Data, hora e atividade de hoje; abas Treino 1, 2 e 3; filtro por foco; "Sobre o treino"; um cartão por exercício com dose, PSE-alvo, graus H/F/E/M, "Terminei o exercício" e vídeo ao deslizar; agenda da semana com dias feitos e extras; botão fixo "Fazer check-in" |
+| Terminei o exercício | Painel (folha inferior no celular) com o interruptor "Sem peso", uma linha por série, carga pré-preenchida, "Última vez", Concluir; sem peso, só Concluir (marca como feito) |
 | Novo check-in | Aberto pelo botão fixo: tipo, data, início, duração, recuperação 1–5, observação |
 | Encerrar check-in | Só para check-ins que ficaram abertos: início e duração, exercícios com carga no dia, recuperação 1–5, observação |
 | Dashboard | Números, esta semana × plano, calendário mensal, check-ins do dia com detalhe e exclusão, barras por tipo no mês; botão fixo "Fazer check-in" |
@@ -247,7 +247,7 @@ Todas as regras vêm do plano original; o app as aplica sem que o usuário preci
 17. **Exclusão:** excluir um check-in pede confirmação; os pesos registrados na ficha continuam salvos.
 18. **Pesos:** salvar um peso grava as cargas do dia daquele treino e não abre check-in nem temporizador. Editar um peso de hoje mantém as outras séries já registradas.
 19. **Acessos:** cada abertura do app já logado atualiza o último acesso; a quantidade só sobe se o acesso anterior foi há mais de 30 min. A hora é a do servidor, e o usuário não consegue alterar esses campos.
-20. **Exercício sem peso:** marcado pelo usuário, vale para aquele exercício em todos os treinos; o painel não pede carga, o resumo ao encerrar e o detalhe do check-in mostram "sem peso" em vez de cobrar a carga.
+20. **Exercício sem peso:** marcado pelo usuário, vale para aquele exercício em todos os treinos; o painel não pede carga e "Concluir" registra o exercício como feito no dia. O resumo ao encerrar conta os exercícios feitos (com carga ou sem peso concluído), e o detalhe do check-in mostra "feito (sem peso)", "sem peso" ou "sem registro".
 
 ### Requisitos não funcionais
 
