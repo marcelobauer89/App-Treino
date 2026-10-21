@@ -586,6 +586,17 @@
   .ck-obs { margin: 0; font-size: 15px; max-width: 65ch; }
   .ck-ex { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
   .ck-ex li { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; }
+  /* Exercício tocável no detalhe de um check-in encerrado (corrige os pesos daquele dia). */
+  .ck-ex li:has(.ck-ex-btn) { display: block; }
+  .ck-ex-btn {
+    display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; margin: -4px 0; padding: 0 8px;
+    border: 0; border-radius: 8px; background: transparent; color: inherit; font: inherit; font-size: 14px; text-align: left; cursor: pointer;
+  }
+  .ck-ex-btn > span:first-child { flex: 1; min-width: 0; }
+  .ck-ex-btn:hover, .ck-ex-btn:focus-visible { background: var(--gi); }
+  .ck-ex-btn:focus-visible { outline: 2px solid var(--tatame-tinta); outline-offset: 1px; }
+  .ck-ex-btn svg { flex: 0 0 auto; width: 16px; height: 16px; color: var(--tinta-2); }
+  .log-quando { margin: 2px 0 0; color: var(--tatame-tinta); font-size: 14px; font-weight: 700; }
   .ck-ex .kg { font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; }
   .ck-ex .sem { color: var(--tinta-2); font-weight: 400; }
   .ck-acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
@@ -1370,12 +1381,12 @@
     return r ? { ...antigos, ...r.series } : antigos;
   }
   // Pesos do dia anterior mais recente com carga no exercício (pré-preenchimento, RF-14).
-  function ultimasCargas(tipo, nome) {
+  function ultimasCargas(tipo, nome, antesDe = hoje()) {
     const datas = new Set([
       ...cargas.filter((r) => r.treino === tipo).map((r) => r.data),
       ...checkins.filter((c) => c.tipo === tipo).map(dataDe),
     ]);
-    for (const d of [...datas].filter((d) => d < hoje()).sort().reverse()) {
+    for (const d of [...datas].filter((d) => d < antesDe).sort().reverse()) {
       const s = pesosDoDia(d, tipo)[nome];
       if (temCarga(s)) return s;
     }
@@ -1398,6 +1409,7 @@
 
   const CHEVRON = '<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
   const ICON_PLAY = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
+  const ICON_LAPIS = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
   const ICON_CHECK = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
   const ICON_X = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>';
   const BOTAO_FECHAR = `<button class="modal-close" type="button" data-fechar aria-label="Fechar">${ICON_X}</button>`;
@@ -1444,34 +1456,38 @@
 
   const logDialog = $('log-dialog');
   let exAberto = null;
+  // Painel do exercício: na tela Treino vale para hoje e o treino da aba; pelo Dashboard, para o
+  // dia e o treino do check-in. { data, tipo, origem: 'treino' | 'dash' }
+  let logCtx = null;
+  const exsDoCtx = () => TREINOS[logCtx.tipo.slice(1)].exercicios;
   const camposDoModal = () => [...logDialog.querySelectorAll('[data-campo]')];
 
   // Salvar um peso só grava o peso do dia: não abre check-in nem temporizador.
   function definirSerie(nome, n, valor) {
-    const tipo = `t${estado.treino}`;
-    let r = cargaDoDia(hoje(), tipo);
+    const { data, tipo } = logCtx;
+    let r = cargaDoDia(data, tipo);
     if (!r) {
       if (valor == null) return;
-      r = { data: hoje(), treino: tipo, series: {} };
+      r = { data, treino: tipo, series: {} };
       cargas.push(r);
     }
-    // Começa das séries que já existiam hoje (inclusive as guardadas num check-in antigo).
-    r.series[nome] = r.series[nome] || (pesosDoDia(hoje(), tipo)[nome] || []).map((x) => (x && x.feito ? null : x));
+    // Começa das séries que já existiam no dia (inclusive as guardadas num check-in antigo).
+    r.series[nome] = r.series[nome] || (pesosDoDia(data, tipo)[nome] || []).map((x) => (x && x.feito ? null : x));
     r.series[nome][n] = valor == null ? null : { carga: valor };
     salvarCargaDepois(r);
   }
 
   // "Terminei o exercício" num exercício sem peso: marca (ou desmarca) como feito hoje.
   function marcarFeito(nome, feito) {
-    const tipo = `t${estado.treino}`;
-    let r = cargaDoDia(hoje(), tipo);
+    const { data, tipo } = logCtx;
+    let r = cargaDoDia(data, tipo);
     if (!r) {
       if (!feito) return;
-      r = { data: hoje(), treino: tipo, series: {} };
+      r = { data, treino: tipo, series: {} };
       cargas.push(r);
     }
     if (feito) {
-      if (temCarga(pesosDoDia(hoje(), tipo)[nome]) || temFeito(r.series[nome])) return;
+      if (temCarga(pesosDoDia(data, tipo)[nome]) || temFeito(r.series[nome])) return;
       r.series[nome] = [{ feito: true }];
     } else {
       delete r.series[nome];
@@ -1488,9 +1504,10 @@
   }
 
   function logHTML(ex) {
-    const tipo = `t${estado.treino}`;
-    const atual = pesosDoDia(hoje(), tipo)[ex.nome] || [];
-    const ultimo = ultimasCargas(tipo, ex.nome);
+    const { data, tipo } = logCtx;
+    const atual = pesosDoDia(data, tipo)[ex.nome] || [];
+    const ultimo = ultimasCargas(tipo, ex.nome, data);
+    const quando = data === hoje() ? 'hoje' : `em ${fmtData(data, { day: 'numeric', month: 'long' })}`;
     const total = numSeries(ex);
     const linhas = Array.from({ length: total }, (_, n) => {
       // RF-14: a carga já vem preenchida com a da última sessão.
@@ -1514,9 +1531,9 @@
     if (semPeso) {
       return temFeito(atual) || temCarga(atual)
         ? `${chave}
-      <p class="aviso feito-aviso">${ICON_CHECK}Feito hoje. <button class="link-btn" type="button" data-desfazer="${esc(ex.nome)}">Desfazer</button></p>`
+      <p class="aviso feito-aviso">${ICON_CHECK}Feito ${quando}. <button class="link-btn" type="button" data-desfazer="${esc(ex.nome)}">Desfazer</button></p>`
         : `${chave}
-      <p class="aviso">Exercício sem peso: toque em Concluir para marcar como feito hoje.</p>`;
+      <p class="aviso">Exercício sem peso: toque em Concluir para marcar como feito ${quando}.</p>`;
     }
     return `${chave}
       <div class="log">
@@ -1540,13 +1557,18 @@
       ${ICON_CHECK}<span>Hoje: ${listaKg(series)} kg</span></button>`;
   }
 
-  function abrirLog(i) {
+  function abrirLog(i, ctx = null) {
     exAberto = i;
-    const ex = exerciciosDoTreino()[i];
+    if (ctx) logCtx = ctx;
+    else if (!logDialog.open || !logCtx) logCtx = { data: hoje(), tipo: `t${estado.treino}`, origem: 'treino' };
+    const ex = exsDoCtx()[i];
+    const deOutroDia = logCtx.origem === 'dash'
+      ? `<p class="log-quando">${TIPOS[logCtx.tipo].nome}, ${fmtData(logCtx.data, { day: 'numeric', month: 'long' })}</p>` : '';
     $('log-body').innerHTML = `
       <div class="modal-head">
         <div>
           <h3 id="log-title">${ex.nome}</h3>
+          ${deOutroDia}
           <p class="ex-dose"><span>${ex.dose}</span><span class="pse">PSE ${ex.pse}</span></p>
         </div>
         ${BOTAO_FECHAR}
@@ -1558,7 +1580,7 @@
 
   // "Concluir" grava tudo o que está na tela, inclusive a carga pré-preenchida.
   function concluirLog() {
-    const ex = exerciciosDoTreino()[exAberto];
+    const ex = exsDoCtx()[exAberto];
     if (config.semPeso.has(ex.nome)) { marcarFeito(ex.nome, true); return logDialog.close(); }
     const campos = camposDoModal();
     campos.forEach(salvarInput);
@@ -1622,18 +1644,31 @@
   const formDialog = $('form-dialog');
   let durTocada = false;
 
-  function abrirFormCheckin({ tipo = 'jiu', data = hoje() } = {}) {
-    if (data > hoje()) data = hoje();
-    const dur = DURACAO_PADRAO[TIPOS[tipo].grupo];
-    let inicio = '19:00';
-    if (data === hoje()) {
-      const ini = new Date(Date.now() - dur * 60000);
-      inicio = isoLocal(ini).slice(0, 10) === data ? `${pad(ini.getHours())}:${pad(Math.floor(ini.getMinutes() / 5) * 5)}` : '00:00';
+  function abrirFormCheckin({ tipo = 'jiu', data = hoje(), editar = null } = {}) {
+    let dur, inicio, rec = null, obs = '';
+    if (editar) {
+      // Edição: o formulário abre com os dados do check-in (o "sem horário" ganha horário ao salvar).
+      ({ tipo } = editar);
+      data = dataDe(editar);
+      inicio = horaDe(editar.inicio);
+      dur = duracaoMin(editar) ?? DURACAO_PADRAO[TIPOS[tipo].grupo];
+      rec = editar.recuperacao ?? null;
+      obs = editar.obs || '';
+      formDialog.dataset.editar = editar.id;
+    } else {
+      if (data > hoje()) data = hoje();
+      dur = DURACAO_PADRAO[TIPOS[tipo].grupo];
+      inicio = '19:00';
+      if (data === hoje()) {
+        const ini = new Date(Date.now() - dur * 60000);
+        inicio = isoLocal(ini).slice(0, 10) === data ? `${pad(ini.getHours())}:${pad(Math.floor(ini.getMinutes() / 5) * 5)}` : '00:00';
+      }
+      delete formDialog.dataset.editar;
     }
-    durTocada = false;
+    durTocada = !!editar;
     $('form-body').innerHTML = `
       <div class="modal-head">
-        <div><h3 id="form-title">Novo check-in</h3></div>
+        <div><h3 id="form-title">${editar ? 'Editar check-in' : 'Novo check-in'}</h3></div>
         ${BOTAO_FECHAR}
       </div>
       <fieldset class="campo">
@@ -1651,13 +1686,14 @@
         <div class="campo"><label for="f-inicio">Início</label><input type="time" id="f-inicio" value="${inicio}"></div>
         <div class="campo"><label for="f-dur">Duração (min)</label><input type="text" inputmode="numeric" id="f-dur" value="${dur}"></div>
       </div>
-      ${recHTML('f-rec', null)}
+      ${recHTML('f-rec', rec)}
       <div class="campo">
         <label for="f-obs">Observação <span class="opcional">(opcional)</span></label>
-        <textarea id="f-obs" placeholder="Ex.: aula de raspagens, muitos rolas"></textarea>
+        <textarea id="f-obs" placeholder="Ex.: aula de raspagens, muitos rolas">${esc(obs)}</textarea>
       </div>
+      ${editar && TIPOS[tipo].grupo === 'musc' ? '<p class="nota-campo">Os pesos ficam guardados no dia e no treino; para corrigi-los, toque no exercício no detalhe do check-in.</p>' : ''}
       <p class="form-erro" id="f-erro" role="alert" hidden></p>
-      <button class="modal-done" type="button" data-salvar-form>Salvar check-in</button>`;
+      <button class="modal-done" type="button" data-salvar-form>${editar ? 'Salvar alterações' : 'Salvar check-in'}</button>`;
     formDialog.showModal();
   }
 
@@ -1674,8 +1710,23 @@
     const inicio = `${data}T${ini}`;
     const fim = isoLocal(new Date(new Date(inicio).getTime() + dur * 60000));
     // Regra 13: check-ins do mesmo dia não podem se sobrepor.
-    const choque = checkins.find((c) => !c.semHorario && dataDe(c) === data && inicio < (c.fim || agoraIso()) && c.inicio < fim);
+    const editado = checkins.find((c) => c.id === formDialog.dataset.editar);
+    const choque = checkins.find((c) => c !== editado && !c.semHorario && dataDe(c) === data && inicio < (c.fim || agoraIso()) && c.inicio < fim);
     if (choque) return erro(`Esse horário se sobrepõe ao ${TIPOS[choque.tipo].nome} ${horarioTexto(choque)}. Ajuste o início ou a duração.`);
+    if (editado) {
+      Object.assign(editado, {
+        tipo, inicio, fim, semHorario: false,
+        recuperacao: valorRec(formDialog, 'f-rec'), obs: $('f-obs').value.trim(), retroativo: data < hoje(),
+      });
+      salvarCheckin(editado);
+      formDialog.close();
+      toast(`Check-in de ${TIPOS[tipo].nome} atualizado.`);
+      diaSel = data;
+      mesExibido = { ano: deData(data).getFullYear(), mes: deData(data).getMonth() };
+      ckExpandido = editado.id;
+      atualizarCheckinUI();
+      return;
+    }
     const novo = {
       id: novoId(), tipo, inicio, fim, semHorario: false,
       recuperacao: valorRec(formDialog, 'f-rec'), obs: $('f-obs').value.trim(),
@@ -1997,8 +2048,8 @@
     if (TIPOS[c.tipo].grupo === 'musc') {
       const exs = TREINOS[TIPOS[c.tipo].treino].exercicios;
       const pesos = pesosDoDia(dataDe(c), c.tipo);
-      if (exs.some((ex) => exercicioFeito(ex, pesos))) {
-        partes.push(`<ul class="ck-ex">${exs.map((ex) => {
+      if (exs.some((ex) => exercicioFeito(ex, pesos)) || c.fim) {
+        partes.push(`<ul class="ck-ex">${exs.map((ex, i) => {
           const s = pesos[ex.nome];
           // Exercício sem peso concluído aparece como feito, mesmo com cargas antigas (ex.: zeros).
           const valor = config.semPeso.has(ex.nome)
@@ -2006,7 +2057,11 @@
             : temCarga(s)
               ? `<span class="kg">${listaKg(Array.from({ length: numSeries(ex) }, (_, n) => s[n]))} kg</span>`
               : '<span class="kg sem">sem registro</span>';
-          return `<li><span>${ex.nome}</span>${valor}</li>`;
+          // Check-in encerrado: tocar no exercício abre o painel para corrigir os pesos daquele dia.
+          return c.fim
+            ? `<li><button class="ck-ex-btn" type="button" data-editar-ex="${i}" data-ex-ck="${c.id}" aria-label="Editar ${esc(ex.nome)}">
+                <span>${ex.nome}</span>${valor}${ICON_LAPIS}</button></li>`
+            : `<li><span>${ex.nome}</span>${valor}</li>`;
         }).join('')}</ul>`);
       } else {
         partes.push('<p class="ck-obs">Nenhum exercício registrado neste dia.</p>');
@@ -2014,7 +2069,7 @@
     }
     const acoes = !c.fim
       ? `<button class="btn" type="button" data-encerrar>Encerrar check-in</button>`
-      : '';
+      : ckExcluindo === c.id ? '' : `<button class="btn-sec" type="button" data-editar="${c.id}">Editar check-in</button>`;
     const excluir = ckExcluindo === c.id
       ? `<p>Excluir este check-in? Os pesos registrados na ficha continuam salvos.</p>
          <button class="btn-perigo cheio" type="button" data-excluir-sim="${c.id}">Excluir</button>
@@ -2489,8 +2544,14 @@
 
   logDialog.addEventListener('close', () => {
     salvarSeriesPendentes();
-    const b = $('list').querySelector(`[data-log="${exAberto}"]`);
-    if (b) b.outerHTML = logBtnHTML(exerciciosDoTreino()[exAberto], exAberto);
+    const origem = logCtx && logCtx.origem;
+    logCtx = null;
+    // Pesos editados pelo Dashboard: redesenha o detalhe e também a ficha (o dia pode ser hoje).
+    if (origem === 'dash') { renderLista(); renderDashboard(); }
+    else {
+      const b = $('list').querySelector(`[data-log="${exAberto}"]`);
+      if (b) b.outerHTML = logBtnHTML(exerciciosDoTreino()[exAberto], exAberto);
+    }
     renderFichaCheckin();
   });
 
@@ -2536,6 +2597,13 @@
       ckExcluindo = null;
       return renderDia();
     }
+    const edEx = e.target.closest('[data-editar-ex]');
+    if (edEx) {
+      const c = checkins.find((x) => x.id === edEx.dataset.exCk);
+      return abrirLog(Number(edEx.dataset.editarEx), { data: dataDe(c), tipo: c.tipo, origem: 'dash' });
+    }
+    const ed = e.target.closest('[data-editar]');
+    if (ed) return abrirFormCheckin({ editar: checkins.find((x) => x.id === ed.dataset.editar) });
     const exc = e.target.closest('[data-excluir]');
     if (exc) { ckExcluindo = exc.dataset.excluir; return renderDia(); }
     if (e.target.closest('[data-excluir-nao]')) { ckExcluindo = null; return renderDia(); }
