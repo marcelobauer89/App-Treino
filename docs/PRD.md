@@ -28,7 +28,7 @@ O app está no ar em https://marcelobauer89.github.io/App-Treino/ (GitHub Pages)
 | **Treino** | Data, hora e atividade de hoje no topo; abas Treino 1, 2 e 3 (abre no treino do dia); filtro por foco (Hipertrofia, Força, Explosão, Mobilidade); "Sobre o treino" com objetivo, o que esperar e impacto no jiu e no físico; cada exercício num cartão próprio com dose, PSE-alvo, graus H/F/E/M e botão "Terminei o exercício" (com peso: cargas por série; sem peso: marca como feito) e troféu quando a carga do dia é recorde; deslizando o cartão para o lado aparece o vídeo de execução, que toca sem som; agenda da semana com dias feitos e treinos extras |
 | **Dashboard** | Números (check-ins no total, no mês, horas treinadas no mês, recuperação média em 30 dias); esta semana × plano; calendário mensal com selos por tipo; lista dos check-ins do dia com detalhe dos exercícios e cargas; edição do check-in e correção dos pesos de cada exercício naquele dia; exclusão de check-in; barras por tipo no mês |
 | **Você** | Dados pessoais salvos automaticamente (nome, e-mail da conta Google, foto recortada no aparelho e exibida na barra inferior); tema (automático, claro, escuro); **Minha semana**, para montar a semana arrastando as atividades para os dias, com avisos; conta, aviso de que o uso do app é registrado (sem pesos, cargas ou observações) e saída |
-| **Monitoramento** (`admin.html`, só administradores) | On-line agora (ao vivo, com a tela atual e há quanto tempo está no app); números do período (7, 30, 90 dias ou tudo): usuários ativos, check-ins, treinos por semana, aderência e retorno; gráficos de check-ins por tipo e de usuários ativos por dia, com "Ver tabela"; lista de usuários com situação, busca, ordenação e exportação em CSV; detalhe de cada usuário (check-ins das últimas 8 semanas, semana montada, exercícios sem peso, último treino e atividade recente). Nunca mostra pesos, cargas nem observações |
+| **Monitoramento** (`admin.html`, só administradores) | On-line agora (ao vivo, com a tela atual e há quanto tempo está no app); números do período (7, 30, 90 dias ou tudo): usuários ativos, check-ins, treinos por semana, aderência e retorno, cada um com seta de comparação com o período anterior (sem comparação em Tudo) e um ícone de informação que explica o que o número mede e como é calculado; status da conexão ao vivo ("Ao vivo", "Ao vivo em X de Y usuários" ou o erro exato); gráficos de check-ins por tipo e de usuários ativos por dia, com "Ver tabela"; lista de usuários com situação, busca, ordenação e exportação em CSV; detalhe de cada usuário (check-ins das últimas 8 semanas, semana montada, exercícios sem peso, último treino e atividade recente). Nunca mostra pesos, cargas nem observações |
 
 Ainda não existem: convites, modo offline, onboarding com peso e alvo, semana/fase do bloco de 6 semanas, registro de peso e proteína, tela de progresso, timer de descanso, exportação e instalação como PWA. A seção de requisitos mostra o status de cada item.
 
@@ -105,7 +105,7 @@ O MVP cobre um grupo de amigos convidados, cada um com conta e dados próprios, 
 
 ### Requisitos funcionais
 
-São 42 requisitos em 9 grupos; os marcados P0 bloqueiam o lançamento do MVP. A coluna Status mostra o que o app atual já entrega: **Feito**, **Parcial** ou **Pendente**.
+São 43 requisitos em 9 grupos; os marcados P0 bloqueiam o lançamento do MVP. A coluna Status mostra o que o app atual já entrega: **Feito**, **Parcial** ou **Pendente**.
 
 | ID | Requisito | Prioridade | Status |
 | --- | --- | --- | --- |
@@ -117,7 +117,8 @@ São 42 requisitos em 9 grupos; os marcados P0 bloqueiam o lançamento do MVP. A
 | RF-05 | Usuário pode excluir a conta e todos os seus dados | P0 | Pendente |
 | RF-36 | Tela de entrada com título "OSS", descrição, botão "Continuar com o Google" em largura total, crédito do desenvolvedor e mensagens claras para login cancelado, erro de configuração e falha de rede | P1 | Feito |
 | RF-41 | Registro de eventos de uso (telas, exercícios concluídos, check-ins criados/editados/excluídos, recordes, vídeos, "Sem peso", semana, tema, foto, erros e sessões perdidas, com navegador e aparelho), enviados em lote e sem pesos, cargas ou observações; base do dashboard de monitoramento (`admin.html`, só administradores) | P1 | Parcial: eventos e dashboard (números principais, gráficos, usuários e detalhe) feitos; falta a análise de recursos, jornada e saúde do app |
-| RF-42 | Ver no monitoramento quem está on-line agora, ao vivo, com a tela atual e há quanto tempo está no app (Supabase Realtime Presence em canal privado por usuário; só administradores leem) | P2 | Feito |
+| RF-42 | Ver no monitoramento quem está on-line agora, ao vivo, com a tela atual e há quanto tempo está no app (Supabase Realtime Presence em canal privado por usuário; só administradores leem). O painel mostra o status por canal: "Ao vivo" quando todos conectaram, "Ao vivo em X de Y usuários" com o detalhe do erro quando parte falha, e o erro exato quando nenhum conecta; o app registra falhas da presença como evento de erro | P2 | Feito |
+| RF-43 | Cada número principal do monitoramento tem um ícone de informação que abre um balão explicando o que mede e como é calculado (um balão aberto por vez; fecha ao tocar fora, no balão ou com Esc) | P2 | Feito |
 | RF-37 | Registrar o último acesso e a quantidade de acessos de cada usuário (1 acesso a cada 30 min no máximo, pela hora do servidor), visíveis só para o administrador no Supabase | P2 | Feito |
 | **Onboarding e configuração** |  |  |  |
 | RF-06 | Usuário informa peso atual, % de gordura, alvo próprio e data de início do bloco | P0 | Pendente |
@@ -234,7 +235,7 @@ Terminar exercícios (registrar pesos) e fazer check-in são ações separadas. 
 | Encerrar check-in | Só para check-ins que ficaram abertos: início e duração, exercícios com carga no dia, recuperação 1–5, observação |
 | Dashboard | Números, esta semana × plano, calendário mensal, check-ins do dia com detalhe, "Editar check-in", exclusão e exercícios que abrem o painel para corrigir os pesos daquele dia; barras por tipo no mês; botão fixo "Fazer check-in" |
 | Você | Dados pessoais e foto (salvos sozinhos, sem botão), tema, Minha semana (arrastar e soltar, botão +, avisos, voltar ao padrão), conta com aviso sobre o registro de uso |
-| Monitoramento (`admin.html`) | Só administradores, com login Google: On-line agora, números do período, gráficos com visão em tabela, usuários (busca, ordenação, CSV) e detalhe de cada usuário; no celular, números em 2 colunas e usuários em cartões compactos |
+| Monitoramento (`admin.html`) | Só administradores, com login Google: On-line agora com status da conexão, números do período com explicação de cada um, gráficos com visão em tabela, usuários (busca, ordenação, CSV) e detalhe de cada usuário; no celular, números em 2 colunas e usuários em cartões compactos |
 | Progresso | Peso médio por semana, cargas principais, aderência, % de gordura (pendente) |
 | Ajustes | Unidades, exportação, privacidade, convidar amigos (administrador), excluir conta, aviso legal (pendente; parte já está em Você) |
 
@@ -268,7 +269,15 @@ Todas as regras vêm do plano original; o app as aplica sem que o usuário preci
 20. **Exercício sem peso:** marcado pelo usuário, vale para aquele exercício em todos os treinos; o painel não pede carga e "Concluir" registra o exercício como feito no dia. O resumo ao encerrar conta os exercícios feitos (com carga ou sem peso concluído), e o detalhe do check-in mostra "feito (sem peso)", "sem peso" ou "sem registro".
 21. **Recorde pessoal:** é a maior carga de uma série num exercício. Um dia é recorde quando a maior carga dele supera a maior carga de todos os dias anteriores (empate não conta, e o primeiro registro do exercício também não). Corrigir pesos de dias antigos recalcula os recordes.
 22. **Salvamento dos dados pessoais:** o nome é salvo após 1 s de pausa na digitação, ao sair do campo, com Enter, ao sair da conta e ao fechar a página, sem mensagem; a foto é salva ao escolher ou remover, com "Foto salva com sucesso." ou "Foto alterada com sucesso."
-23. **Registro de uso:** só administradores veem eventos e presença; usuários comuns não leem nem os próprios eventos. Um usuário é "ativo" no dia em que abriu o app ou fez check-in.
+23. **Registro de uso:** só administradores veem eventos e presença; usuários comuns não leem nem os próprios eventos. Um usuário é "ativo" no dia em que abriu o app ou fez check-in. Falhas ao conectar ou publicar a presença são registradas uma vez por sessão como evento de erro (origem "presença").
+24. **Números do monitoramento:**
+   - **Usuários ativos:** quem abriu o app ou fez check-in ao menos uma vez no período, sobre o total de cadastrados.
+   - **Check-ins:** total do período, de todos os usuários e tipos, incluindo os retroativos.
+   - **Treinos por semana:** check-ins do período ÷ usuários ativos ÷ semanas do período.
+   - **Aderência ao plano:** média, entre os ativos, de check-ins ÷ treinos planejados no período (pela semana montada ou pela padrão), com limite de 100%; a variação aparece em pontos percentuais.
+   - **Voltaram nesta semana:** dos que usaram o app entre 8 e 14 dias atrás, quantos voltaram nos últimos 7 dias; não depende do período escolhido.
+   - **Comparação:** a seta compara com os mesmos dias imediatamente anteriores; no período Tudo não há comparação.
+   - **Situação do usuário:** Ativo (último uso há até 7 dias), Em risco (8 a 14 dias), Inativo (mais de 14 dias) ou Nunca usou.
 
 ### Requisitos não funcionais
 
