@@ -861,15 +861,13 @@
       <p class="form-erro" id="foto-erro" role="alert" hidden></p>
       <div class="campo">
         <label for="p-nome">Nome</label>
-        <input type="text" id="p-nome" autocomplete="name" placeholder="Como você quer ser chamado">
+        <input type="text" id="p-nome" autocomplete="name" maxlength="120" enterkeyhint="done" placeholder="Como você quer ser chamado">
       </div>
       <div class="campo">
         <label for="p-email">E-mail</label>
         <input type="email" id="p-email" readonly aria-describedby="email-nota">
         <p class="nota-campo" id="email-nota">E-mail da sua conta Google.</p>
       </div>
-      <button class="btn" type="submit">Salvar dados</button>
-      <p class="nota-campo">A foto é salva assim que você escolhe.</p>
     </form>
   </section>
 
@@ -2689,11 +2687,12 @@
     try { foto = await processarFoto(arquivo); } catch (_) {
       return erroFoto('Não foi possível ler essa imagem. Escolha um arquivo JPG ou PNG.');
     }
+    const tinhaFoto = !!perfil.foto;
     perfil.foto = foto;
     salvarPerfil({ foto });
     erroFoto('');
     renderFoto();
-    toast('Foto atualizada.');
+    toast(tinhaFoto ? 'Foto alterada com sucesso.' : 'Foto salva com sucesso.');
   });
 
   $('remover-foto').addEventListener('click', () => {
@@ -2704,13 +2703,26 @@
     toast('Foto removida.');
   });
 
-  $('form-perfil').addEventListener('submit', (e) => {
-    e.preventDefault();
-    perfil.nome = $('p-nome').value.trim();
-    salvarPerfil({ nome: perfil.nome });
+  // Nome salvo sozinho: depois de uma pausa na digitação e ao sair do campo (ou Enter).
+  // Sem aviso para o nome: um toast cobriria o botão tocado logo em seguida (ex.: "Sair da conta").
+  let timerNome;
+  function salvarNome() {
+    clearTimeout(timerNome);
+    const nome = $('p-nome').value.trim().slice(0, 120);
+    if (nome === perfil.nome) return;
+    perfil.nome = nome;
+    salvarPerfil({ nome });
     renderFoto();
-    toast('Dados salvos.');
+  }
+  $('p-nome').addEventListener('input', () => {
+    clearTimeout(timerNome);
+    timerNome = setTimeout(salvarNome, 1000);
   });
+  $('p-nome').addEventListener('blur', salvarNome);
+  // Sem botão de enviar, o Enter não submete o formulário: ele mesmo encerra a edição do nome.
+  $('p-nome').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); $('p-nome').blur(); } });
+  $('form-perfil').addEventListener('submit', (e) => e.preventDefault());
+  window.addEventListener('pagehide', () => { if (usuario) salvarNome(); });
 
   $('tela-voce').addEventListener('change', (e) => {
     if (e.target.name === 'tema') {
@@ -2722,6 +2734,7 @@
   });
 
   $('sair').addEventListener('click', async () => {
+    salvarNome();
     salvarSeriesPendentes();
     await fila;
     await sb.auth.signOut();
