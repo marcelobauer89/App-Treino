@@ -97,6 +97,21 @@
   .kpi .valor { font-family: var(--display); font-stretch: 75%; font-weight: 800; font-size: 40px; line-height: 1; font-variant-numeric: tabular-nums; }
   .kpi .valor small { font-family: var(--texto); font-stretch: 100%; font-size: 15px; font-weight: 500; color: var(--tinta-2); }
   .kpi .ctx { font-size: 13px; color: var(--tinta-2); }
+  .kpi .curto { display: none; }
+  @media (max-width: 720px) {
+    .kpis { grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 24px; }
+    .kpi { padding: 12px; gap: 2px; }
+    .kpi dt { font-size: 13px; line-height: 1.3; }
+    .kpi .valor { font-size: 32px; }
+    .kpi .valor small { font-size: 13px; }
+    .kpi .longo { display: none; }
+    .kpi .curto { display: inline; }
+    .kpi .ctx { display: flex; flex-wrap: wrap; align-items: center; gap: 0 8px; }
+    .kpi .curto:empty { display: none; }
+    /* Último card na linha inteira: número à esquerda, explicação ao lado */
+    .kpi.largo { grid-column: 1 / -1; grid-template-columns: auto 1fr; column-gap: 14px; align-items: center; }
+    .kpi.largo dt { grid-column: 1 / -1; }
+  }
   .delta { display: inline-flex; align-items: center; gap: 3px; font-size: 13px; font-weight: 700; }
   .delta svg { width: 14px; height: 14px; }
   .delta.sobe { color: var(--feito-tinta); }
@@ -151,6 +166,7 @@
   .quem button { border: 0; background: transparent; padding: 0; text-align: left; display: grid; min-width: 0; }
   .quem b { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .quem small { color: var(--tinta-2); font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .resumo-cel, .chev { display: none; }
   .avatar {
     flex: 0 0 auto; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center;
     background: var(--tatame-suave); color: var(--tatame-tinta); font-family: var(--display); font-stretch: 80%; font-weight: 800; font-size: 15px;
@@ -174,11 +190,19 @@
   @media (max-width: 720px) {
     .usuarios thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
     .usuarios, .usuarios tbody, .usuarios tr, .usuarios td { display: block; }
-    .usuarios tr { padding: 12px 0; border-bottom: 1px solid var(--fio); display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; }
+    /* Cartão compacto: nome e situação, e-mail, resumo numa linha; o resto fica no detalhe */
+    .usuarios tr { position: relative; padding: 12px 0; border-bottom: 1px solid var(--fio); }
+    .usuarios tbody tr:last-child { border-bottom: 0; }
     .usuarios td { padding: 0; border: 0; }
-    .usuarios td:first-child { grid-column: 1 / -1; }
-    .usuarios td[data-rotulo]::before { content: attr(data-rotulo); display: block; font-size: 12px; color: var(--tinta-2); }
-    .num { text-align: left; }
+    .usuarios td[data-rotulo] { display: none; }
+    .usuarios td.cel-situacao { display: block; position: absolute; top: 12px; right: 0; }
+    .quem { align-items: flex-start; }
+    .quem button { flex: 1 1 auto; }
+    .quem b { padding-right: 116px; }
+    .resumo-cel { display: block; margin-top: 2px; font-size: 13px; color: var(--tinta-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .chev { display: grid; align-self: flex-end; color: var(--tinta-2); }
+    .chev svg { width: 18px; height: 18px; }
+    .nenhum { display: block; }
     .ordenar-cel { display: flex; }
     .filtros { justify-content: stretch; flex-basis: 100%; }
     .busca { width: 100%; }
@@ -385,6 +409,7 @@
     alerta: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>',
     lua: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>',
     x: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+    chev: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>',
     seta: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg>',
     abrir: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="3"/><path d="M11 18h2"/></svg>',
     peso: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"/></svg>',
@@ -520,16 +545,17 @@
     const r = retencao(ativosMap);
     const total = dados.usuarios.length;
     const rotuloPeriodo = periodo === 'tudo' ? 'desde o início' : `nos últimos ${periodo} dias`;
-    const tile = (titulo, valor, ctx, d) => `
-      <div class="kpi"><dt>${titulo}</dt><dd><span class="valor">${valor}</span></dd>
-      <dd class="ctx">${ctx}${d ? ` · ${d}` : ''}</dd></div>`;
+    // No celular o contexto usa a versão curta (o período já aparece no seletor).
+    const tile = (titulo, valor, { longo, curto = longo, d = '', largo = false }) => `
+      <div class="kpi${largo ? ' largo' : ''}"><dt>${titulo}</dt><dd><span class="valor">${valor}</span></dd>
+      <dd class="ctx"><span class="longo">${longo}${d ? ' · ' : ''}</span><span class="curto">${curto}</span>${d}</dd></div>`;
     $('kpis').innerHTML = [
-      tile('Usuários ativos', `${m.ativos}<small> de ${total}</small>`, rotuloPeriodo, a && delta(m.ativos, a.ativos)),
-      tile('Check-ins', fmtNum(m.checkins), rotuloPeriodo, a && delta(m.checkins, a.checkins)),
-      tile('Treinos por semana', fmtNum(m.treinosSemana, 1), 'por usuário ativo', a && delta(Math.round(m.treinosSemana * 10) / 10, Math.round(a.treinosSemana * 10) / 10)),
-      tile('Aderência ao plano', `${fmtNum(m.aderencia * 100)}<small>%</small>`, 'feito ÷ planejado na semana montada', a && delta(m.aderencia, a.aderencia, { pct: true })),
+      tile('Usuários ativos', `${m.ativos}<small> de ${total}</small>`, { longo: rotuloPeriodo, curto: '', d: a && delta(m.ativos, a.ativos) }),
+      tile('Check-ins', fmtNum(m.checkins), { longo: rotuloPeriodo, curto: '', d: a && delta(m.checkins, a.checkins) }),
+      tile('Treinos por semana', fmtNum(m.treinosSemana, 1), { longo: 'por usuário ativo', curto: 'por ativo', d: a && delta(Math.round(m.treinosSemana * 10) / 10, Math.round(a.treinosSemana * 10) / 10) }),
+      tile('Aderência ao plano', `${fmtNum(m.aderencia * 100)}<small>%</small>`, { longo: 'feito ÷ planejado na semana montada', curto: 'do planejado', d: a && delta(m.aderencia, a.aderencia, { pct: true }) }),
       tile('Voltaram nesta semana', r.base ? `${fmtNum(r.voltaram / r.base * 100)}<small>%</small>` : '—',
-        r.base ? `${r.voltaram} de ${r.base} que usaram na semana anterior` : 'sem uso na semana anterior', ''),
+        { longo: r.base ? `${r.voltaram} de ${r.base} que usaram na semana anterior` : 'sem uso na semana anterior', largo: true }),
     ].join('');
   }
 
@@ -690,8 +716,10 @@
     $('usuarios-corpo').innerHTML = linhas.length ? linhas.map((l) => `
       <tr data-usuario="${l.u.id}">
         <td><div class="quem"><span class="avatar" aria-hidden="true">${esc(iniciais(l.u.nome, l.u.email))}</span>
-          <button type="button" data-abrir="${l.u.id}"><b>${esc(l.u.nome || 'Sem nome')}</b><small>${esc(l.u.email)}</small></button></div></td>
-        <td data-rotulo="Situação"><span class="situacao ${l.sit.chave}">${l.sit.icone}${l.sit.rotulo}</span></td>
+          <button type="button" data-abrir="${l.u.id}"><b>${esc(l.u.nome || 'Sem nome')}</b><small>${esc(l.u.email)}</small>
+            <span class="resumo-cel">${l.ultimo ? relativo(l.ultimo) : 'sem uso'} · ${fmtNum(l.checkins)} check-in${l.checkins === 1 ? '' : 's'} · ${fmtNum(l.aderencia * 100)}% do plano</span></button>
+          <span class="chev" aria-hidden="true">${ICON.chev}</span></div></td>
+        <td data-rotulo="Situação" class="cel-situacao"><span class="situacao ${l.sit.chave}">${l.sit.icone}${l.sit.rotulo}</span></td>
         <td data-rotulo="Último uso">${relativo(l.ultimo)}</td>
         <td data-rotulo="Acessos" class="num">${fmtNum(l.acessos)}</td>
         <td data-rotulo="Check-ins" class="num">${fmtNum(l.checkins)}</td>
@@ -778,7 +806,7 @@
         <button class="fechar" type="button" data-fechar aria-label="Fechar">${ICON.x}</button>
       </div>
       <p><span class="situacao ${l.sit.chave}">${l.sit.icone}${l.sit.rotulo}</span>
-        <span class="nota" style="display:inline">&nbsp;Cadastro em ${u.cadastro ? fmtData(diaDeInstante(u.cadastro), { day: 'numeric', month: 'short', year: 'numeric' }) : '—'} · último uso ${relativo(l.ultimo)}</span></p>
+        <span class="nota" style="display:inline">&nbsp;Cadastro em ${u.cadastro ? fmtData(diaDeInstante(u.cadastro), { day: 'numeric', month: 'short', year: 'numeric' }) : '—'} · último uso ${relativo(l.ultimo)} · último treino ${l.ultimoTreino ? fmtData(l.ultimoTreino) : '—'}</span></p>
       <dl class="mini">
         <div><dt>Check-ins no período</dt><dd>${fmtNum(l.checkins)}</dd></div>
         <div><dt>Aderência no período</dt><dd>${fmtNum(l.aderencia * 100)}%</dd></div>
