@@ -235,3 +235,25 @@ revoke execute on function public.admin_eventos(timestamptz) from public, anon;
 grant execute on function public.admin_usuarios() to authenticated;
 grant execute on function public.admin_checkins(timestamp) to authenticated;
 grant execute on function public.admin_eventos(timestamptz) to authenticated;
+
+-- ---------- On-line agora (Supabase Realtime Presence) ----------
+-- Cada pessoa publica a própria presença no canal privado "online:<id>" enquanto o app está aberto.
+-- Ela lê e publica só no próprio canal; administradores leem o canal de todos (dashboard /admin).
+-- Em Realtime → Settings, desligue "Allow public access" para que só canais privados funcionem.
+drop policy if exists "presenca: le o proprio canal ou admin" on realtime.messages;
+create policy "presenca: le o proprio canal ou admin" on realtime.messages
+  for select to authenticated
+  using (
+    realtime.messages.extension = 'presence'
+    and (
+      (select realtime.topic()) = 'online:' || (select auth.uid())::text
+      or ((select realtime.topic()) like 'online:%' and (select public.eh_admin()))
+    )
+  );
+drop policy if exists "presenca: publica no proprio canal" on realtime.messages;
+create policy "presenca: publica no proprio canal" on realtime.messages
+  for insert to authenticated
+  with check (
+    realtime.messages.extension = 'presence'
+    and (select realtime.topic()) = 'online:' || (select auth.uid())::text
+  );

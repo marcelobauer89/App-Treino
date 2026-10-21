@@ -22,6 +22,7 @@
     --gi: #f3f4f6; --papel: #ffffff; --tinta: #101318; --tinta-2: #4b5361; --fio: #dde1e7;
     --tatame: #2563eb; --tatame-forte: #1d4ed8; --tatame-tinta: #1d4ed8; --tatame-suave: #e8effd; --sobre-tatame: #ffffff;
     --feito-suave: #e7f8ee; --feito-tinta: #166534;
+    --online: #16a34a; --online-anel: rgba(22, 163, 74, .45);
     --recorde-suave: #fef3c7; --recorde-tinta: #92400e;
     --erro: #c62828;
     /* Tipos de treino (paleta categórica do app, validada para daltonismo) */
@@ -36,7 +37,7 @@
     :root:not([data-theme="light"]) {
       --gi: #0f1115; --papel: #171a20; --tinta: #f2f4f7; --tinta-2: #a3abb8; --fio: #2a2f38;
       --tatame: #3566d6; --tatame-forte: #2b57bf; --tatame-tinta: #8db0ff; --tatame-suave: #1b2740;
-      --feito-suave: #12301f; --feito-tinta: #6ee7a0; --recorde-suave: #33270a; --recorde-tinta: #fcd34d; --erro: #ff6b6b;
+      --feito-suave: #12301f; --feito-tinta: #6ee7a0; --online: #22c55e; --online-anel: rgba(34, 197, 94, .45); --recorde-suave: #33270a; --recorde-tinta: #fcd34d; --erro: #ff6b6b;
       --musc: #3987e5; --jiu: #d95926; --bike: #199e70;
       --int-0: #1f242c; --int-1: #1e3561; --int-2: #2b57bf; --int-3: #5b8ef0; --int-4: #a9c4ff;
       color-scheme: dark;
@@ -45,7 +46,7 @@
   :root[data-theme="dark"] {
     --gi: #0f1115; --papel: #171a20; --tinta: #f2f4f7; --tinta-2: #a3abb8; --fio: #2a2f38;
     --tatame: #3566d6; --tatame-forte: #2b57bf; --tatame-tinta: #8db0ff; --tatame-suave: #1b2740;
-    --feito-suave: #12301f; --feito-tinta: #6ee7a0; --recorde-suave: #33270a; --recorde-tinta: #fcd34d; --erro: #ff6b6b;
+    --feito-suave: #12301f; --feito-tinta: #6ee7a0; --online: #22c55e; --online-anel: rgba(34, 197, 94, .45); --recorde-suave: #33270a; --recorde-tinta: #fcd34d; --erro: #ff6b6b;
     --musc: #3987e5; --jiu: #d95926; --bike: #199e70;
     --int-0: #1f242c; --int-1: #1e3561; --int-2: #2b57bf; --int-3: #5b8ef0; --int-4: #a9c4ff;
     color-scheme: dark;
@@ -88,6 +89,39 @@
   /* Estados (login, acesso restrito, erro, carregando) */
   .estado { display: grid; justify-items: start; gap: 14px; max-width: 520px; padding: 40px 0; }
   .estado p { margin: 0; color: var(--tinta-2); }
+
+  /* On-line agora: ponto verde com um anel que pulsa (parado se o sistema pede menos movimento) */
+  .online { margin-bottom: 20px; }
+  .online h2 { display: flex; align-items: center; gap: 10px; }
+  .on-conta { color: var(--tinta-2); font-weight: 700; }
+  .on-status { font-size: 13px; color: var(--tinta-2); }
+  .on-status .link-btn { font-size: 13px; }
+  .ponto { flex: 0 0 auto; width: 10px; height: 10px; border-radius: 50%; background: var(--fio); }
+  .online.tem h2 .ponto, .ponto.on { background: var(--online); }
+  .on-lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+  .on-lista button {
+    width: 100%; display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 8px 10px;
+    border: 1px solid var(--fio); border-radius: 12px; background: var(--papel); text-align: left;
+  }
+  .on-lista button:hover { background: var(--gi); }
+  .on-lista span:last-child { display: grid; min-width: 0; }
+  .on-lista b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .on-lista small { color: var(--tinta-2); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .on-vazio { margin: 0; color: var(--tinta-2); font-size: 14px; }
+  .avatar { position: relative; }
+  .avatar.on::after {
+    content: ""; position: absolute; right: -1px; bottom: -1px; width: 12px; height: 12px; border-radius: 50%;
+    background: var(--online); border: 2px solid var(--papel);
+  }
+  .situacao.online { background: var(--feito-suave); color: var(--feito-tinta); }
+  .situacao.online .ponto { width: 8px; height: 8px; }
+  @media (prefers-reduced-motion: no-preference) {
+    .online.tem h2 .ponto, .ponto.on, .avatar.on::after { animation: pulso 2s ease-out infinite; }
+    @keyframes pulso {
+      0% { box-shadow: 0 0 0 0 var(--online-anel); }
+      70%, 100% { box-shadow: 0 0 0 7px rgba(0, 0, 0, 0); }
+    }
+  }
 
   /* Números principais */
   .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 0 0 28px; }
@@ -295,6 +329,13 @@
   </section>
 
   <div id="painel" hidden>
+    <section class="bloco cartao online" id="online" aria-labelledby="on-titulo">
+      <div class="bloco-topo">
+        <h2 id="on-titulo"><span class="ponto" aria-hidden="true"></span>On-line agora <span class="on-conta" id="on-conta"></span></h2>
+        <span class="on-status" id="on-status" aria-live="polite"></span>
+      </div>
+      <div id="on-corpo"></div>
+    </section>
     <dl class="kpis" id="kpis"></dl>
 
     <div class="graficos">
@@ -466,7 +507,70 @@
     $('painel').hidden = false;
     $('controles').hidden = false;
     render();
+    ligarOnline();
   }
+
+  // ---------- On-line agora (Supabase Realtime Presence) ----------
+  // Cada pessoa publica a própria presença no canal privado "online:<id>"; o admin escuta o canal de cada usuário.
+  const NOMES_TELA = { treino: 'Treino', dashboard: 'Dashboard', voce: 'Você' };
+  const canais = new Map(); // id do usuário → canal
+  const online = new Map(); // id do usuário → { tela, desde, sistema }
+  let detalheId = null;
+  async function ligarOnline() {
+    if (!sb.channel) return;
+    try { if (sb.realtime && sb.realtime.setAuth) await sb.realtime.setAuth(); } catch (_) {}
+    dados.usuarios.forEach((u) => {
+      if (canais.has(u.id)) return;
+      const canal = sb.channel(`online:${u.id}`, { config: { private: true } });
+      canal.on('presence', { event: 'sync' }, () => {
+        // Mais de um aparelho aberto: vale o que entrou por último.
+        const metas = Object.values(canal.presenceState()).flat().sort((a, b) => ((a.desde || '') < (b.desde || '') ? 1 : -1));
+        if (metas.length) online.set(u.id, metas[0]); else online.delete(u.id);
+        atualizarOnline();
+      });
+      canal.subscribe((status) => { canal.situacaoOnline = status; atualizarOnline(); });
+      canais.set(u.id, canal);
+    });
+    atualizarOnline();
+  }
+  function desligarOnline() {
+    canais.forEach((c) => sb.removeChannel(c));
+    canais.clear();
+    online.clear();
+  }
+  function noApp(desde) {
+    const min = Math.max(0, Math.floor((Date.now() - new Date(desde)) / 6e4));
+    if (!desde || Number.isNaN(min)) return '';
+    if (min < 1) return 'agora mesmo';
+    return min < 60 ? `há ${min} min` : `há ${Math.floor(min / 60)} h ${min % 60} min`;
+  }
+  const descricaoOnline = (m) => [NOMES_TELA[m.tela] || m.tela, noApp(m.desde)].filter(Boolean).join(' · ');
+  const seloOnline = (id) => (online.has(id)
+    ? `<span class="situacao online"><span class="ponto on" aria-hidden="true"></span>On-line · ${esc(descricaoOnline(online.get(id)))}</span>` : '');
+  function atualizarOnline() {
+    if (!dados) return;
+    const status = [...canais.values()].map((c) => c.situacaoOnline);
+    const estado = status.includes('SUBSCRIBED') ? 'vivo'
+      : status.length && status.every((s) => ['CHANNEL_ERROR', 'TIMED_OUT', 'CLOSED'].includes(s)) ? 'erro' : 'conectando';
+    const lista = dados.usuarios.filter((u) => online.has(u.id))
+      .sort((a, b) => (a.nome || a.email).localeCompare(b.nome || b.email, 'pt-BR'));
+    $('online').classList.toggle('tem', lista.length > 0);
+    $('on-conta').textContent = estado === 'erro' ? '' : `· ${lista.length}`;
+    $('on-status').innerHTML = estado === 'vivo' ? 'Ao vivo' : estado === 'erro' ? '' : 'Conectando…';
+    $('on-corpo').innerHTML = estado === 'erro'
+      ? '<p class="on-vazio">Ao vivo indisponível. Confira o passo do Realtime no README. <button class="link-btn" type="button" id="tentar-online">Tentar de novo</button></p>'
+      : lista.length ? `<ul class="on-lista">${lista.map((u) => `<li><button type="button" data-abrir="${u.id}">
+          <span class="avatar on" aria-hidden="true">${esc(iniciais(u.nome, u.email))}</span>
+          <span><b>${esc(u.nome || u.email)}</b><small>${esc(descricaoOnline(online.get(u.id)))}</small></span></button></li>`).join('')}</ul>`
+        : `<p class="on-vazio">${estado === 'vivo' ? 'Ninguém on-line agora.' : 'Conectando ao vivo…'}</p>`;
+    document.querySelectorAll('#usuarios-corpo tr[data-usuario]').forEach((tr) => {
+      const on = online.has(tr.dataset.usuario);
+      tr.querySelector('.avatar').classList.toggle('on', on);
+      tr.querySelector('.on-sr').hidden = !on;
+    });
+    if ($('detalhe').open && $('det-online')) $('det-online').innerHTML = seloOnline(detalheId);
+  }
+  setInterval(atualizarOnline, 30000);
 
   // ---------- Cálculos ----------
   // Atividades planejadas por semana: semana montada em Você ou, sem ela, a padrão com os dias de jiu.
@@ -527,6 +631,7 @@
     renderKpis(j, ativosMap);
     renderGraficos(j, ativosMap);
     renderUsuarios(j, ativosMap);
+    atualizarOnline();
   }
 
   function delta(atual, anterior, { pct = false } = {}) {
@@ -715,8 +820,8 @@
     $('ordenar-cel').value = ordem.col;
     $('usuarios-corpo').innerHTML = linhas.length ? linhas.map((l) => `
       <tr data-usuario="${l.u.id}">
-        <td><div class="quem"><span class="avatar" aria-hidden="true">${esc(iniciais(l.u.nome, l.u.email))}</span>
-          <button type="button" data-abrir="${l.u.id}"><b>${esc(l.u.nome || 'Sem nome')}</b><small>${esc(l.u.email)}</small>
+        <td><div class="quem"><span class="avatar${online.has(l.u.id) ? ' on' : ''}" aria-hidden="true">${esc(iniciais(l.u.nome, l.u.email))}</span>
+          <button type="button" data-abrir="${l.u.id}"><b>${esc(l.u.nome || 'Sem nome')}</b><span class="sr on-sr"${online.has(l.u.id) ? '' : ' hidden'}>, on-line agora</span><small>${esc(l.u.email)}</small>
             <span class="resumo-cel">${l.ultimo ? relativo(l.ultimo) : 'sem uso'} · ${fmtNum(l.checkins)} check-in${l.checkins === 1 ? '' : 's'} · ${fmtNum(l.aderencia * 100)}% do plano</span></button>
           <span class="chev" aria-hidden="true">${ICON.chev}</span></div></td>
         <td data-rotulo="Situação" class="cel-situacao"><span class="situacao ${l.sit.chave}">${l.sit.icone}${l.sit.rotulo}</span></td>
@@ -745,7 +850,7 @@
   // ---------- Detalhe do usuário ----------
   const NOMES_EVENTO = {
     sessao: (d) => `Abriu o app${d.navegador ? ` (${d.navegador}, ${d.sistema}${d.instalado ? ', instalado' : ''})` : ''}`,
-    tela: (d) => `Abriu a tela ${({ treino: 'Treino', dashboard: 'Dashboard', voce: 'Você' })[d.tela] || d.tela}`,
+    tela: (d) => `Abriu a tela ${NOMES_TELA[d.tela] || d.tela}`,
     exercicio_concluido: (d) => `Concluiu ${d.exercicio}${d.sem_peso ? ' (sem peso)' : ''}${d.origem === 'dash' ? ' pelo Dashboard' : ''}`,
     recorde: (d) => `Novo recorde em ${d.exercicio}`,
     checkin_criado: (d) => `Fez check-in de ${(TIPOS[d.tipo] || {}).nome || d.tipo}${d.retroativo ? ' (retroativo)' : ''}`,
@@ -765,6 +870,7 @@
   const quando = (iso) => { const d = new Date(iso); return `${fmtData(ymd(d))}, ${pad(d.getHours())}:${pad(d.getMinutes())}`; };
 
   function abrirDetalhe(id) {
+    detalheId = id;
     const j = janela(periodo);
     const ativosMap = diasAtivos();
     const l = linhasUsuarios(j, ativosMap).find((x) => x.u.id === id);
@@ -805,7 +911,7 @@
         <div><h2 id="det-nome">${esc(u.nome || 'Sem nome')}</h2><p>${esc(u.email)}</p></div>
         <button class="fechar" type="button" data-fechar aria-label="Fechar">${ICON.x}</button>
       </div>
-      <p><span class="situacao ${l.sit.chave}">${l.sit.icone}${l.sit.rotulo}</span>
+      <p><span class="situacao ${l.sit.chave}">${l.sit.icone}${l.sit.rotulo}</span> <span id="det-online">${seloOnline(id)}</span>
         <span class="nota" style="display:inline">&nbsp;Cadastro em ${u.cadastro ? fmtData(diaDeInstante(u.cadastro), { day: 'numeric', month: 'short', year: 'numeric' }) : '—'} · último uso ${relativo(l.ultimo)} · último treino ${l.ultimoTreino ? fmtData(l.ultimoTreino) : '—'}</span></p>
       <dl class="mini">
         <div><dt>Check-ins no período</dt><dd>${fmtNum(l.checkins)}</dd></div>
@@ -842,7 +948,10 @@
       await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.origin + location.pathname } });
       return;
     }
-    if (e.target.closest('#sair')) { await sb.auth.signOut(); return iniciar(); }
+    if (e.target.closest('#sair')) { desligarOnline(); await sb.auth.signOut(); return iniciar(); }
+    if (e.target.closest('#tentar-online')) { desligarOnline(); return ligarOnline(); }
+    const abrir = e.target.closest('#on-corpo [data-abrir]');
+    if (abrir) return abrirDetalhe(abrir.dataset.abrir);
     if (e.target.closest('#tentar')) return iniciar();
     const p = e.target.closest('[data-periodo]');
     if (p) {
@@ -891,6 +1000,7 @@
 
   if (sb) {
     sb.auth.onAuthStateChange((evento) => {
+      if (evento === 'SIGNED_OUT') { desligarOnline(); dados = null; }
       if (evento === 'SIGNED_IN' || evento === 'SIGNED_OUT') setTimeout(iniciar, 0);
     });
   }
