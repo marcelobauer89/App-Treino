@@ -1314,19 +1314,33 @@
   // Presença ao vivo (Supabase Realtime): cada pessoa publica só no próprio canal privado "online:<id>",
   // que só ela e os administradores conseguem ler. Mostra no monitoramento quem está com o app aberto e em que tela.
   let canalOnline = null, presencaDesde = null;
+  let erroPresencaAvisado = false;
+  function avisarErroPresenca(msg) {
+    if (erroPresencaAvisado) return;
+    erroPresencaAvisado = true;
+    registrarErro('presenca', msg);
+  }
   async function ligarPresenca() {
     if (!sb.channel || (canalOnline && canalOnline.topic === `realtime:online:${usuario.id}`)) return;
     desligarPresenca();
     presencaDesde = new Date().toISOString();
     try {
       if (sb.realtime && sb.realtime.setAuth) await sb.realtime.setAuth();
-      canalOnline = sb.channel(`online:${usuario.id}`, { config: { private: true, presence: { key: usuario.id } } });
-      canalOnline.subscribe((status) => { if (status === 'SUBSCRIBED') marcarPresenca(); });
-    } catch (_) { canalOnline = null; }
+      // O ouvinte e "enabled" ligam a presença no servidor para este canal.
+      const canal = sb.channel(`online:${usuario.id}`, { config: { private: true, presence: { key: usuario.id, enabled: true } } });
+      canal.on('presence', { event: 'sync' }, () => {});
+      canalOnline = canal;
+      canal.subscribe((status, err) => {
+        if (status === 'SUBSCRIBED') return marcarPresenca();
+        // CLOSED depois de sair da conta é esperado; com o canal ainda em uso, é falha.
+        if (canalOnline === canal) avisarErroPresenca(`${status}${err ? `: ${err.message || err}` : ''}`);
+      });
+    } catch (e) { canalOnline = null; avisarErroPresenca(e && e.message); }
   }
   function marcarPresenca() {
     if (!canalOnline || !usuario || document.visibilityState === 'hidden') return;
-    canalOnline.track({ tela: telaAtual(), desde: presencaDesde, sistema: infoAparelho().sistema }).catch(() => {});
+    canalOnline.track({ tela: telaAtual(), desde: presencaDesde, sistema: infoAparelho().sistema })
+      .then((r) => { if (r !== 'ok') avisarErroPresenca(`track: ${r}`); }, (e) => avisarErroPresenca(`track: ${e && e.message}`));
   }
   function desligarPresenca() {
     if (!canalOnline) return;
