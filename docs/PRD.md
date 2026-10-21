@@ -104,7 +104,7 @@ O MVP cobre um grupo de amigos convidados, cada um com conta e dados próprios, 
 
 ### Requisitos funcionais
 
-São 39 requisitos em 9 grupos; os marcados P0 bloqueiam o lançamento do MVP. A coluna Status mostra o que o app atual já entrega: **Feito**, **Parcial** ou **Pendente**.
+São 40 requisitos em 9 grupos; os marcados P0 bloqueiam o lançamento do MVP. A coluna Status mostra o que o app atual já entrega: **Feito**, **Parcial** ou **Pendente**.
 
 | ID | Requisito | Prioridade | Status |
 | --- | --- | --- | --- |
@@ -130,6 +130,7 @@ São 39 requisitos em 9 grupos; os marcados P0 bloqueiam o lançamento do MVP. A
 | RF-12 | Lista os exercícios do treino na ordem do plano, cada um num cartão, com dose, PSE-alvo e graus de contribuição H/F/E/M (Alta/Média/Baixa) | P0 | Feito |
 | RF-13 | Botão "Terminei o exercício" em cada cartão abre o painel de registro da carga (kg) de cada série; aceita vírgula ou ponto, Enter passa para a próxima série; salvar só grava o peso do dia (não abre check-in nem temporizador); o botão do exercício mostra as cargas de hoje ("Hoje: … kg") | P0 | Feito |
 | RF-39 | Opção "Sem peso" em cada exercício, no painel do exercício: marcada, esconde os campos de carga e "Concluir" marca o exercício como feito no dia (o cartão mostra "Feito hoje", com "Desfazer" no painel), do mesmo jeito que os exercícios com peso mostram "Hoje: … kg"; fica salva para o usuário em todos os treinos e aparelhos até ser desmarcada; pesos já registrados não são apagados | P1 | Feito |
+| RF-40 | Recorde pessoal no exercício: o painel mostra "Recorde: X kg em dd/mm" (maior carga de uma série em dias anteriores); ao digitar uma carga acima dele aparece o selo "Novo recorde"; ao concluir, aviso "Novo recorde em …"; o cartão mostra um troféu quando a carga do dia é recorde. Primeiro registro e empate não contam; exercícios sem peso ficam de fora | P2 | Feito |
 | RF-14 | Pré-preenche a carga com a do último dia em que o exercício teve peso e mostra "Última vez: …" | P0 | Feito |
 | RF-15 | Vídeo de execução no próprio cartão: deslizando para o lado aparece o vídeo, que toca sem som e em repetição; dica de deslizar some depois do primeiro uso | P1 | Parcial: 18 de 22 exercícios com vídeo |
 | RF-16 | Timer de descanso configurável, iniciado ao concluir a série | P1 | Pendente |
@@ -248,6 +249,7 @@ Todas as regras vêm do plano original; o app as aplica sem que o usuário preci
 18. **Pesos:** salvar um peso grava as cargas do dia daquele treino e não abre check-in nem temporizador. Editar um peso de hoje mantém as outras séries já registradas.
 19. **Acessos:** cada abertura do app já logado atualiza o último acesso; a quantidade só sobe se o acesso anterior foi há mais de 30 min. A hora é a do servidor, e o usuário não consegue alterar esses campos.
 20. **Exercício sem peso:** marcado pelo usuário, vale para aquele exercício em todos os treinos; o painel não pede carga e "Concluir" registra o exercício como feito no dia. O resumo ao encerrar conta os exercícios feitos (com carga ou sem peso concluído), e o detalhe do check-in mostra "feito (sem peso)", "sem peso" ou "sem registro".
+21. **Recorde pessoal:** é a maior carga de uma série num exercício. Um dia é recorde quando a maior carga dele supera a maior carga de todos os dias anteriores (empate não conta, e o primeiro registro do exercício também não). Corrigir pesos de dias antigos recalcula os recordes.
 
 ### Requisitos não funcionais
 

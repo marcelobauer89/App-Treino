@@ -49,6 +49,10 @@
     /* Peso registrado ("Hoje: … kg") */
     --feito-suave: #e7f8ee;
     --feito-tinta: #166534;
+    /* Recorde pessoal: âmbar (troféu 4,6:1 sobre o verde suave; selo 6,4:1) */
+    --recorde: #b45309;
+    --recorde-suave: #fef3c7;
+    --recorde-tinta: #92400e;
     /* Tipos de check-in (paleta categórica validada; a letra no selo garante a leitura sem cor) */
     --musc: #2a78d6;
     --jiu: #eb6834;
@@ -66,6 +70,7 @@
       --gi: #0f1115; --papel: #171a20; --tinta: #f2f4f7; --tinta-2: #a3abb8; --fio: #2a2f38;
       --tatame: #3566d6; --tatame-forte: #2b57bf; --tatame-tinta: #8db0ff; --tatame-suave: #1b2740;
       --feito-suave: #12301f; --feito-tinta: #6ee7a0;
+      --recorde: #fbbf24; --recorde-suave: #33270a; --recorde-tinta: #fcd34d;
       --faixa: #000000; --fita: #f2f4f7; --fita-vazia: #2c2f35; --erro: #ff6b6b; --sobre-erro: #0b0d10;
       --musc: #3987e5; --jiu: #d95926; --bike: #199e70;
       color-scheme: dark;
@@ -75,6 +80,7 @@
     --gi: #0f1115; --papel: #171a20; --tinta: #f2f4f7; --tinta-2: #a3abb8; --fio: #2a2f38;
     --tatame: #3566d6; --tatame-forte: #2b57bf; --tatame-tinta: #8db0ff; --tatame-suave: #1b2740;
     --feito-suave: #12301f; --feito-tinta: #6ee7a0;
+    --recorde: #fbbf24; --recorde-suave: #33270a; --recorde-tinta: #fcd34d;
     --faixa: #000000; --fita: #f2f4f7; --fita-vazia: #2c2f35; --erro: #ff6b6b; --sobre-erro: #0b0d10;
     --musc: #3987e5; --jiu: #d95926; --bike: #199e70;
     color-scheme: dark;
@@ -667,7 +673,19 @@
   .log-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 2px 8px; }
   .log-head h4 { margin: 0; font-size: 14px; font-weight: 700; white-space: nowrap; }
   .log-hint { margin-left: auto; font-size: 13px; color: var(--tinta-2); font-variant-numeric: tabular-nums; }
-  .serie-row { display: grid; grid-template-columns: 64px 1fr; gap: 8px; align-items: center; }
+  .serie-row { display: grid; grid-template-columns: 64px 1fr; gap: 4px 8px; align-items: center; }
+  /* Recordes: troféu + texto (a cor não é o único sinal). */
+  .log-recorde { display: flex; align-items: center; gap: 6px; margin: 0; font-size: 13px; color: var(--tinta-2); }
+  .log-recorde svg { flex: 0 0 auto; color: var(--recorde); }
+  .selo-recorde {
+    grid-column: 2; justify-self: start; display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px; border-radius: 999px; background: var(--recorde-suave); color: var(--recorde-tinta);
+    font-size: 12.5px; font-weight: 700;
+  }
+  .selo-recorde[hidden] { display: none; }
+  .selo-recorde svg { width: 14px; height: 14px; }
+  .log-btn .trofeu { display: inline-grid; color: var(--recorde); }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   .serie-row label { font-size: 14px; color: var(--tinta-2); }
   .serie-row input {
     width: 100%; min-height: 52px; padding: 8px 12px; border: 1px solid var(--fio); border-radius: 10px;
@@ -1380,17 +1398,37 @@
     const r = cargaDoDia(data, tipo);
     return r ? { ...antigos, ...r.series } : antigos;
   }
+  // Dias com pesos de um treino (tabela cargas e check-ins antigos).
+  const datasDoTreino = (tipo) => [...new Set([
+    ...cargas.filter((r) => r.treino === tipo).map((r) => r.data),
+    ...checkins.filter((c) => c.tipo === tipo).map(dataDe),
+  ])];
   // Pesos do dia anterior mais recente com carga no exercício (pré-preenchimento, RF-14).
   function ultimasCargas(tipo, nome, antesDe = hoje()) {
-    const datas = new Set([
-      ...cargas.filter((r) => r.treino === tipo).map((r) => r.data),
-      ...checkins.filter((c) => c.tipo === tipo).map(dataDe),
-    ]);
-    for (const d of [...datas].filter((d) => d < antesDe).sort().reverse()) {
+    for (const d of datasDoTreino(tipo).filter((d) => d < antesDe).sort().reverse()) {
       const s = pesosDoDia(d, tipo)[nome];
       if (temCarga(s)) return s;
     }
     return null;
+  }
+
+  // Recorde: maior carga de uma série no exercício, só em dias anteriores a `antesDe`.
+  const maxDoDia = (series) => Math.max(0, ...(series || []).filter((x) => x && x.carga != null).map((x) => Number(x.carga) || 0));
+  function recordeAntes(tipo, nome, antesDe) {
+    let rec = null;
+    for (const d of datasDoTreino(tipo)) {
+      if (d >= antesDe) continue;
+      const kg = maxDoDia(pesosDoDia(d, tipo)[nome]);
+      if (kg > 0 && (!rec || kg > rec.kg || (kg === rec.kg && d < rec.data))) rec = { kg, data: d };
+    }
+    return rec;
+  }
+  // Novo recorde no dia: a maior carga do dia supera o recorde anterior (o primeiro registro não conta).
+  function recordeNoDia(tipo, nome, data) {
+    if (config.semPeso.has(nome)) return null;
+    const antes = recordeAntes(tipo, nome, data);
+    const kg = maxDoDia(pesosDoDia(data, tipo)[nome]);
+    return antes && kg > antes.kg ? { kg, antes: antes.kg } : null;
   }
 
   // Regra 14: check-in esquecido aberto por mais de 3 h é encerrado na hora da última série.
@@ -1409,6 +1447,7 @@
 
   const CHEVRON = '<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
   const ICON_PLAY = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
+  const ICON_TROFEU = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0Z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>';
   const ICON_LAPIS = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
   const ICON_CHECK = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
   const ICON_X = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>';
@@ -1495,6 +1534,17 @@
     salvarCargaDepois(r);
   }
 
+  // Mostra "Novo recorde" no campo cuja carga passa do recorde anterior ao dia.
+  function marcarRecordes() {
+    const log = logDialog.querySelector('.log[data-recorde]');
+    if (!log || !log.dataset.recorde) return;
+    const rec = Number(log.dataset.recorde);
+    camposDoModal().forEach((el) => {
+      const v = lerKg(el.value);
+      el.parentElement.querySelector('.selo-recorde').hidden = !(typeof v === 'number' && v > rec);
+    });
+  }
+
   function salvarInput(el) {
     const v = lerKg(el.value);
     el.setAttribute('aria-invalid', String(v === undefined));
@@ -1519,9 +1569,14 @@
             enterkeyhint="${n < total - 1 ? 'next' : 'done'}"
             data-ex="${esc(ex.nome)}" data-serie="${n}" data-campo="carga" value="${carga != null ? fmtKg(carga) : ''}"
             aria-label="${esc(ex.nome)}: carga da série ${n + 1} (kg)" aria-describedby="log-erro">
+          <span class="selo-recorde" hidden>${ICON_TROFEU}Novo recorde</span>
         </div>`;
     }).join('');
     const hint = ultimo ? `<span class="log-hint">Última vez: ${listaKg(ultimo)} kg</span>` : '';
+    const rec = recordeAntes(tipo, ex.nome, data);
+    const linhaRec = rec
+      ? `<p class="log-recorde">${ICON_TROFEU}Recorde: <b>${fmtKg(rec.kg)} kg</b> em ${fmtData(rec.data, { day: '2-digit', month: '2-digit' })}</p>`
+      : '';
     const semPeso = config.semPeso.has(ex.nome);
     const chave = `
       <label class="sem-peso-linha">
@@ -1536,8 +1591,9 @@
       <p class="aviso">Exercício sem peso: toque em Concluir para marcar como feito ${quando}.</p>`;
     }
     return `${chave}
-      <div class="log">
+      <div class="log" data-recorde="${rec ? rec.kg : ''}">
         <div class="log-head"><h4>Carga por série (kg)</h4>${hint}</div>
+        ${linhaRec}
         ${linhas}
         <p class="log-erro" id="log-erro" hidden>Use só números, como 22,5.</p>
       </div>`;
@@ -1553,8 +1609,9 @@
       return `<button class="log-btn" type="button" data-log="${i}">Terminei o exercício</button>`;
     }
     const series = Array.from({ length: numSeries(ex) }, (_, n) => salvo[n]);
+    const rec = recordeNoDia(`t${estado.treino}`, ex.nome, hoje());
     return `<button class="log-btn feito" type="button" data-log="${i}" title="Editar pesos de hoje">
-      ${ICON_CHECK}<span>Hoje: ${listaKg(series)} kg</span></button>`;
+      ${ICON_CHECK}<span>Hoje: ${listaKg(series)} kg${rec ? '<span class="sr-only">, novo recorde</span>' : ''}</span>${rec ? `<span class="trofeu" title="Novo recorde">${ICON_TROFEU}</span>` : ''}</button>`;
   }
 
   function abrirLog(i, ctx = null) {
@@ -1575,6 +1632,9 @@
       </div>
       ${logHTML(ex)}
       <button class="modal-done" type="button" data-concluir>Concluir</button>`;
+    // Carga máxima do dia ao abrir: o aviso de recorde só aparece se ela subir neste painel.
+    logCtx.maxAoAbrir = maxDoDia(pesosDoDia(logCtx.data, logCtx.tipo)[ex.nome]);
+    marcarRecordes();
     if (!logDialog.open) logDialog.showModal();
   }
 
@@ -1585,8 +1645,10 @@
     const campos = camposDoModal();
     campos.forEach(salvarInput);
     const invalido = campos.find((el) => el.getAttribute('aria-invalid') === 'true');
-    if (invalido) invalido.focus();
-    else logDialog.close();
+    if (invalido) return invalido.focus();
+    const rec = recordeNoDia(logCtx.tipo, ex.nome, logCtx.data);
+    if (rec && rec.kg > logCtx.maxAoAbrir) toast(`Novo recorde em ${ex.nome}: ${fmtKg(rec.kg)} kg (antes ${fmtKg(rec.antes)} kg).`);
+    logDialog.close();
   }
 
   // ---------- Encerrar check-in ----------
@@ -2530,7 +2592,7 @@
 
   logDialog.addEventListener('input', (e) => {
     const el = e.target.closest('[data-campo]');
-    if (el) salvarInput(el);
+    if (el) { salvarInput(el); marcarRecordes(); }
   });
 
   logDialog.addEventListener('keydown', (e) => {
