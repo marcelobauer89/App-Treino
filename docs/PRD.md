@@ -1,6 +1,6 @@
 ## PRD — App Bauer: Jiu-Jitsu + Hipertrofia
 
-2026-10-19 · @Bauer
+2026-10-21 · @Bauer
 
 ### Visão geral
 
@@ -25,11 +25,11 @@ O app está no ar em https://marcelobauer89.github.io/App-Treino/ (GitHub Pages)
 
 | Tela | O que já faz |
 | --- | --- |
-| **Treino** | Data, hora e atividade de hoje no topo; abas Treino 1, 2 e 3 (abre no treino do dia); filtro por foco (Hipertrofia, Força, Explosão, Mobilidade); "Sobre o treino" com objetivo, o que esperar e impacto no jiu e no físico; cada exercício num cartão próprio com dose, PSE-alvo, graus H/F/E/M e botão "Terminei o exercício" (com peso: cargas por série; sem peso: marca como feito); deslizando o cartão para o lado aparece o vídeo de execução, que toca sem som; agenda da semana com dias feitos e treinos extras |
-| **Dashboard** | Números (check-ins no total, no mês, horas treinadas no mês, recuperação média em 30 dias); esta semana × plano; calendário mensal com selos por tipo; lista dos check-ins do dia com detalhe dos exercícios e cargas; edição do check-in e dos pesos do dia; exclusão de check-in; barras por tipo no mês |
+| **Treino** | Data, hora e atividade de hoje no topo; abas Treino 1, 2 e 3 (abre no treino do dia); filtro por foco (Hipertrofia, Força, Explosão, Mobilidade); "Sobre o treino" com objetivo, o que esperar e impacto no jiu e no físico; cada exercício num cartão próprio com dose, PSE-alvo, graus H/F/E/M e botão "Terminei o exercício" (com peso: cargas por série; sem peso: marca como feito) e troféu quando a carga do dia é recorde; deslizando o cartão para o lado aparece o vídeo de execução, que toca sem som; agenda da semana com dias feitos e treinos extras |
+| **Dashboard** | Números (check-ins no total, no mês, horas treinadas no mês, recuperação média em 30 dias); esta semana × plano; calendário mensal com selos por tipo; lista dos check-ins do dia com detalhe dos exercícios e cargas; edição do check-in e correção dos pesos de cada exercício naquele dia; exclusão de check-in; barras por tipo no mês |
 | **Você** | Dados pessoais (nome, e-mail da conta Google, foto recortada no aparelho e exibida na barra inferior); tema (automático, claro, escuro); **Minha semana**, para montar a semana arrastando as atividades para os dias, com avisos; conta e saída |
 
-Ainda não existem: convites, modo offline, onboarding com peso e alvo, semana/fase do bloco de 6 semanas, registro de peso e proteína, tela de progresso, timer de descanso, exportação, edição de check-in e instalação como PWA. A seção de requisitos mostra o status de cada item.
+Ainda não existem: convites, modo offline, onboarding com peso e alvo, semana/fase do bloco de 6 semanas, registro de peso e proteína, tela de progresso, timer de descanso, exportação e instalação como PWA. A seção de requisitos mostra o status de cada item.
 
 ### Público-alvo e persona
 
@@ -154,7 +154,7 @@ São 40 requisitos em 9 grupos; os marcados P0 bloqueiam o lançamento do MVP. A
 | **Dashboard e calendário** |  |  |  |
 | RF-27 | Calendário mensal no Dashboard: cada dia mostra selos por tipo (1, 2, 3 para musculação, J para jiu-jitsu, C para cardio); com mais de dois check-ins mostra o primeiro e "+N"; navegação entre meses até o mês atual | P0 | Feito |
 | RF-28 | Ao tocar num dia, listar os check-ins daquele dia em ordem de horário, com tipo, horário, duração e recuperação; dia sem check-in orienta tocar em "Fazer check-in", que já usa o dia selecionado | P0 | Feito |
-| RF-29 | Ao abrir um check-in de musculação, mostrar a observação e cada exercício do treino com as cargas do dia por série; exercícios sem carga aparecem como "sem registro"; em check-ins encerrados, tocar num exercício abre o painel para corrigir os pesos (ou o "feito" sem peso) daquele dia | P0 | Feito |
+| RF-29 | Ao abrir um check-in de musculação, mostrar a observação e cada exercício do treino com as cargas do dia por série; exercícios sem carga aparecem como "sem registro", e os marcados como Sem peso como "feito (sem peso)" ou "sem peso"; em check-ins encerrados, tocar num exercício abre o painel para corrigir os pesos (ou o "feito" sem peso) daquele dia | P0 | Feito |
 | RF-34 | Números do Dashboard: check-ins no total, check-ins e horas treinadas no mês, recuperação média dos últimos 30 dias | P1 | Feito |
 | RF-35 | "Esta semana" × plano (quantas vezes musculação, jiu-jitsu e cardio aparecem na semana montada) e barras com a contagem de check-ins por tipo no mês exibido | P1 | Feito |
 
@@ -175,7 +175,7 @@ O plano é um modelo único, compartilhado por todos os usuários e guardado com
 | Ajuste por fase | exercício, fase, nova dose (ex.: Passada 3×16 na fase 3) |
 | Sessão | inscrição, data, tipo (Treino 1, 2, 3, jiu-jitsu, cardio, descanso), semana, status (planejada, feita, pulada, movida) |
 | Check-in | usuário, tipo (Treino 1, 2, 3, jiu-jitsu, cardio), início, fim (vazio enquanto aberto), sem horário (sim/não), recuperação (1–5, opcional), observação, retroativo (sim/não) |
-| Cargas do dia | usuário, data, treino (1, 2 ou 3), cargas por exercício e série (kg) |
+| Cargas do dia | usuário, data, treino (1, 2 ou 3), cargas por exercício e série (kg) ou marcação de feito para exercícios sem peso |
 | Medida corporal | usuário, data, peso (kg), % de gordura (opcional) |
 | Proteína | usuário, data, gramas |
 
@@ -185,6 +185,11 @@ No Supabase, os dados ficam em três tabelas, todas com regras de acesso por usu
 - **`perfis`:** nome, e-mail, foto, tema, `semana`, `sem_peso`, `dias_jiu` (legado), `ultimo_acesso` e `acessos`. Os dois últimos só mudam pela função `registrar_acesso()`.
 - **`checkins`:** check-ins de versões anteriores também guardavam as cargas.
 - **`cargas`:** pesos por usuário, dia e treino.
+
+Ajustes únicos de dados ficam em `supabase/ajustes/` e rodam uma vez no SQL Editor, depois do `schema.sql`:
+- **`2026-10-20-peso-zero-para-sem-peso.sql`:** marca como Sem peso os exercícios em que todas as cargas do usuário são zero (número ou texto, como `"0"`), com prévia antes de alterar; não apaga registros.
+- **`2026-10-20-zero-vira-feito-marcelo.sql`:** para um usuário (Marcelo Bauer no arquivo), marca como Sem peso os exercícios registrados só com zero e troca esses zeros pelo registro de feito do dia.
+- **`2026-10-20-diagnostico-sem-peso.sql`:** só consulta; lista por usuário os exercícios com carga zero, quantas séries são zero, quantas têm peso, quantas estão como texto e se já estão como Sem peso.
 
 No primeiro login em cada aparelho, os check-ins e configurações que estavam só no navegador (versões anteriores) são enviados para a conta. Contas sem semana salva usam a padrão, montada com os antigos dias de jiu-jitsu.
 
@@ -213,10 +218,10 @@ Terminar exercícios (registrar pesos) e fazer check-in são ações separadas. 
 | Entrada | Painel azul com a faixa branca de 4 graus, título "OSS", "Exercícios de Jiu Jitsu e hipertrofia", "Continuar com o Google", crédito com link para o LinkedIn |
 | Onboarding | Peso, % de gordura, alvo, data de início (pendente) |
 | Treino | Data, hora e atividade de hoje; abas Treino 1, 2 e 3; filtro por foco; "Sobre o treino"; um cartão por exercício com dose, PSE-alvo, graus H/F/E/M, "Terminei o exercício" e vídeo ao deslizar; agenda da semana com dias feitos e extras; botão fixo "Fazer check-in" |
-| Terminei o exercício | Painel (folha inferior no celular) com o interruptor "Sem peso", uma linha por série, carga pré-preenchida, "Última vez", Concluir; sem peso, só Concluir (marca como feito) |
+| Terminei o exercício | Painel (folha inferior no celular) com o interruptor "Sem peso", uma linha por série, carga pré-preenchida, "Última vez", "Recorde: X kg em dd/mm" e selo "Novo recorde" no campo que passa dele, Concluir; sem peso, só Concluir (marca como feito, com "Desfazer") |
 | Novo check-in | Aberto pelo botão fixo: tipo, data, início, duração, recuperação 1–5, observação |
 | Encerrar check-in | Só para check-ins que ficaram abertos: início e duração, exercícios com carga no dia, recuperação 1–5, observação |
-| Dashboard | Números, esta semana × plano, calendário mensal, check-ins do dia com detalhe e exclusão, barras por tipo no mês; botão fixo "Fazer check-in" |
+| Dashboard | Números, esta semana × plano, calendário mensal, check-ins do dia com detalhe, "Editar check-in", exclusão e exercícios que abrem o painel para corrigir os pesos daquele dia; barras por tipo no mês; botão fixo "Fazer check-in" |
 | Você | Dados pessoais e foto, tema, Minha semana (arrastar e soltar, botão +, avisos, voltar ao padrão), conta |
 | Progresso | Peso médio por semana, cargas principais, aderência, % de gordura (pendente) |
 | Ajustes | Unidades, exportação, privacidade, convidar amigos (administrador), excluir conta, aviso legal (pendente; parte já está em Você) |
@@ -260,7 +265,7 @@ Todas as regras vêm do plano original; o app as aplica sem que o usuário preci
 | Offline | Service worker e cache local: registro de treino, peso e check-ins funciona sem internet e sincroniza ao reconectar; vídeos abrem com conexão. Hoje o app é só online: se uma gravação falhar, avisa e recarrega os dados do servidor |
 | Desempenho | Primeira carga ≤ 3 s em 4G; tela inicial em ≤ 1 s após instalada; registrar uma série em ≤ 2 toques; pesos digitados são enviados depois de uma pausa de 0,8 s, não a cada tecla |
 | Usabilidade | Layout para telas a partir de 360 px, botões ≥ 48 px, uso com uma mão; botão de check-in fixo ao alcance do polegar; tema claro por padrão para academia iluminada e escuro opcional; painéis abrem como folha inferior no celular; foco visível no teclado e respeito a "reduzir movimento" |
-| Visual | Tipografia Archivo; paleta do kimono (fundo claro), azul vivo do tatame (#2563eb) para ações e seleções, contorno azul nos botões secundários, verde (#16a34a, ícone e texto brancos) para o check-in e verde suave para pesos registrados; graus de contribuição mostrados como fitas na ponteira da faixa; contraste AA em todos os pares de texto e fundo, nos dois temas |
+| Visual | Tipografia Archivo; paleta do kimono (fundo claro), azul vivo do tatame (#2563eb) para ações e seleções, contorno azul nos botões secundários, verde (#16a34a, ícone e texto brancos) para o check-in e verde suave para pesos registrados, âmbar com troféu para recordes (a cor nunca é o único sinal); graus de contribuição mostrados como fitas na ponteira da faixa; contraste AA em todos os pares de texto e fundo, nos dois temas |
 | Dados | Supabase (Postgres) com login Google (PKCE) e regras de acesso por usuário (RLS) em `perfis`, `checkins` e `cargas`; schema idempotente em `supabase/schema.sql`. A chave secreta nunca vai no app nem no repositório; só a chave publicável |
 | Privacidade e segurança | Regras de acesso por usuário no backend; colunas de controle (`acessos`, `ultimo_acesso`) protegidas contra edição pelo usuário; dados de saúde não são vendidos nem enviados a terceiros; consentimento no cadastro e exclusão de conta (LGPD) |
 | Idioma | Português do Brasil; unidades em kg e minutos; cargas aceitam vírgula decimal |
@@ -276,11 +281,13 @@ Todas as regras vêm do plano original; o app as aplica sem que o usuário preci
    - registro de cargas e check-ins com calendário;
    - semana montada pelo usuário;
    - vídeos nos cartões e botão fixo de check-in;
+   - edição de check-in e correção de pesos pelo Dashboard;
+   - exercícios sem peso e recordes pessoais;
    - registro de acessos.
 2. **MVP (web, grupo de amigos):**
    - PWA responsiva com modo offline, convites e exclusão de conta;
    - onboarding com peso e alvo, semana e fase, peso e proteína;
-   - tela de progresso, timer de descanso e edição de check-in;
+   - tela de progresso e timer de descanso;
    - os demais requisitos P0 e P1 pendentes.
 3. **v1.1:** exportação CSV/PDF (incluindo o histórico de check-ins), gráficos de carga por exercício, lembretes por notificação web, aderência compartilhada opcional (RF-24).
 4. **v2 (nativo e público):** apps iOS e Android, publicação nas lojas, editor de planos, novos blocos após as 6 semanas, integração com Apple Saúde / Health Connect.
@@ -292,6 +299,7 @@ Todas as regras vêm do plano original; o app as aplica sem que o usuário preci
 | Registrar séries atrapalha o treino e o usuário abandona | Carga pré-preenchida, Enter passa para a próxima série, Concluir salva o que está na tela; salvar peso não abre check-in nem temporizador |
 | Sem internet na academia o app não salva | Hoje o app avisa e recarrega do servidor; o modo offline com sincronização está no MVP |
 | Qualquer conta Google com o link consegue entrar | Os dados de cada um ficam isolados pelas regras de acesso; convites (RF-02) estão no MVP; os acessos podem ser acompanhados no Supabase |
+| Cargas zero registradas antes da opção Sem peso distorcem recordes e o resumo do treino | Scripts de `supabase/ajustes/` convertem esses zeros em Sem peso ou em feito, com diagnóstico e prévia antes de alterar |
 | Esquecer de rodar o `schema.sql` após uma atualização | O app abre normalmente e avisa ao salvar ("rode de novo o supabase/schema.sql"); o README explica o passo |
 | No iPhone, o navegador limita notificações e armazenamento offline | Orientar a instalar na tela inicial; sincronizar sempre que houver conexão |
 | O plano foi montado para o perfil do Bauer e pode não servir a todos os amigos | Cada um monta a semana, define alvo e cargas; aviso para buscar profissional antes de começar |
