@@ -67,13 +67,22 @@ Quando uma versão nova do app precisar de mudanças no banco, rode de novo o `s
 
 O app registra eventos de uso na tabela `eventos` (telas abertas, exercícios concluídos, check-ins criados, editados e excluídos, recordes, vídeos vistos, "Sem peso", semana, tema, foto, erros e sessões que caíram sem a pessoa sair). Os eventos vão em lote, a cada 10 s ou quando o app vai para segundo plano, e não levam pesos corporais, cargas nem observações. Cada usuário só grava os próprios eventos e não consegue lê-los.
 
-Quem lê esses dados é o dashboard de monitoramento (`admin.html`, em construção), só para administradores. Para se tornar administrador, rode uma vez no **SQL Editor**, com o seu e-mail:
+Quem lê esses dados é o dashboard de monitoramento, só para administradores: https://marcelobauer89.github.io/App-Treino/admin.html. Ele lê tudo por funções do banco (`admin_usuarios`, `admin_checkins`, `admin_eventos`) que recusam quem não está na tabela `admins`, e nunca mostra pesos, cargas nem observações. Para se tornar administrador, rode uma vez no **SQL Editor**, com o seu e-mail:
 
 ```sql
 insert into public.admins (usuario_id)
 select id from auth.users where email = 'seu-email@gmail.com'
 on conflict do nothing;
 ```
+
+Para o login do Google voltar ao dashboard, o endereço dele precisa estar liberado em **Authentication → URL Configuration → Redirect URLs** do Supabase. Adicione `https://marcelobauer89.github.io/App-Treino/admin.html` (ou `https://marcelobauer89.github.io/App-Treino/**`, que libera o app e o dashboard).
+
+O dashboard mostra:
+
+- **Números principais** do período (7, 30, 90 dias ou tudo), com a variação em relação ao período anterior: usuários ativos, check-ins, treinos por semana por usuário ativo, aderência ao plano (feito ÷ planejado na semana montada) e quantos voltaram nesta semana.
+- **Gráficos** de check-ins por dia (por tipo de treino) e de usuários ativos por dia, agrupados por semana em períodos longos, cada um com a opção de ver como tabela.
+- **Usuários**, com situação (Ativo até 7 dias sem usar, Em risco de 8 a 14, Inativo depois disso, Nunca usou), busca, ordenação e exportação em CSV.
+- **Detalhe de cada usuário**: check-ins das últimas 8 semanas, semana montada, exercícios sem peso e atividade recente (inclusive erros e sessões que caíram).
 
 ## Ajustes únicos de dados
 

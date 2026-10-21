@@ -170,3 +170,68 @@ drop policy if exists "grava os próprios eventos" on public.eventos;
 create policy "grava os próprios eventos" on public.eventos
   for insert to authenticated
   with check (usuario_id = (select auth.uid()));
+
+-- Leitura para o dashboard de monitoramento: só respondem para administradores.
+-- Não devolvem observações dos check-ins nem pesos.
+create or replace function public.admin_usuarios()
+returns table (
+  id uuid, nome text, email text, cadastro timestamptz, ultimo_acesso timestamptz, acessos integer,
+  semana jsonb, dias_jiu smallint[], sem_peso text[]
+)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  if not public.eh_admin() then raise exception 'acesso restrito' using errcode = '42501'; end if;
+  return query
+    select p.id, p.nome, p.email, u.created_at, p.ultimo_acesso, p.acessos, p.semana, p.dias_jiu, p.sem_peso
+    from public.perfis p join auth.users u on u.id = p.id
+    order by p.nome;
+end;
+$$;
+
+create or replace function public.admin_checkins(desde timestamp default null)
+returns table (
+  id uuid, usuario_id uuid, tipo text, inicio timestamp, fim timestamp,
+  sem_horario boolean, recuperacao smallint, retroativo boolean
+)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  if not public.eh_admin() then raise exception 'acesso restrito' using errcode = '42501'; end if;
+  return query
+    select c.id, c.usuario_id, c.tipo, c.inicio, c.fim, c.sem_horario, c.recuperacao, c.retroativo
+    from public.checkins c
+    where desde is null or c.inicio >= desde
+    order by c.inicio;
+end;
+$$;
+
+create or replace function public.admin_eventos(desde timestamptz default null)
+returns table (usuario_id uuid, tipo text, dados jsonb, criado_em timestamptz)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  if not public.eh_admin() then raise exception 'acesso restrito' using errcode = '42501'; end if;
+  return query
+    select e.usuario_id, e.tipo, e.dados, e.criado_em
+    from public.eventos e
+    where desde is null or e.criado_em >= desde
+    order by e.criado_em;
+end;
+$$;
+
+revoke execute on function public.admin_usuarios() from public, anon;
+revoke execute on function public.admin_checkins(timestamp) from public, anon;
+revoke execute on function public.admin_eventos(timestamptz) from public, anon;
+grant execute on function public.admin_usuarios() to authenticated;
+grant execute on function public.admin_checkins(timestamp) to authenticated;
+grant execute on function public.admin_eventos(timestamptz) to authenticated;
