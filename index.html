@@ -338,6 +338,9 @@
   .botao-arquivo input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
   .botao-arquivo:focus-within { outline: 2px solid var(--tatame-tinta); outline-offset: 2px; }
   .nota-campo { margin: 0; font-size: 13px; color: var(--tinta-2); }
+  .nome-status { display: flex; align-items: center; gap: 4px; color: var(--feito-tinta); font-weight: 600; }
+  .nome-status svg { width: 14px; height: 14px; }
+  .nome-status:empty { display: none; }
   .campo input[aria-invalid="true"] { border-color: var(--erro); }
   .opcao input:disabled { cursor: not-allowed; }
   .opcao input:disabled + span { opacity: .45; }
@@ -861,15 +864,15 @@
       <p class="form-erro" id="foto-erro" role="alert" hidden></p>
       <div class="campo">
         <label for="p-nome">Nome</label>
-        <input type="text" id="p-nome" autocomplete="name" placeholder="Como você quer ser chamado">
+        <input type="text" id="p-nome" autocomplete="name" maxlength="120" enterkeyhint="done" placeholder="Como você quer ser chamado" aria-describedby="nome-status">
+        <p class="nota-campo nome-status" id="nome-status" aria-live="polite"></p>
       </div>
       <div class="campo">
         <label for="p-email">E-mail</label>
         <input type="email" id="p-email" readonly aria-describedby="email-nota">
         <p class="nota-campo" id="email-nota">E-mail da sua conta Google.</p>
       </div>
-      <button class="btn" type="submit">Salvar dados</button>
-      <p class="nota-campo">A foto é salva assim que você escolhe.</p>
+      <p class="nota-campo">Nome e foto são salvos automaticamente.</p>
     </form>
   </section>
 
@@ -2704,13 +2707,30 @@
     toast('Foto removida.');
   });
 
-  $('form-perfil').addEventListener('submit', (e) => {
-    e.preventDefault();
-    perfil.nome = $('p-nome').value.trim();
-    salvarPerfil({ nome: perfil.nome });
+  // Nome salvo sozinho: depois de uma pausa na digitação e ao sair do campo (ou Enter).
+  // A confirmação fica embaixo do campo (um toast cobriria o botão tocado logo em seguida, como "Sair da conta").
+  let timerNome, timerStatus;
+  function salvarNome() {
+    clearTimeout(timerNome);
+    const nome = $('p-nome').value.trim().slice(0, 120);
+    if (nome === perfil.nome) return;
+    perfil.nome = nome;
+    salvarPerfil({ nome });
     renderFoto();
-    toast('Dados salvos.');
+    $('nome-status').innerHTML = `${ICON_CHECK}Salvo`;
+    clearTimeout(timerStatus);
+    timerStatus = setTimeout(() => { $('nome-status').textContent = ''; }, 2500);
+  }
+  $('p-nome').addEventListener('input', () => {
+    clearTimeout(timerNome);
+    timerNome = setTimeout(salvarNome, 1000);
+    $('nome-status').textContent = '';
   });
+  $('p-nome').addEventListener('blur', salvarNome);
+  // Sem botão de enviar, o Enter não submete o formulário: ele mesmo encerra a edição do nome.
+  $('p-nome').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); $('p-nome').blur(); } });
+  $('form-perfil').addEventListener('submit', (e) => e.preventDefault());
+  window.addEventListener('pagehide', () => { if (usuario) salvarNome(); });
 
   $('tela-voce').addEventListener('change', (e) => {
     if (e.target.name === 'tema') {
@@ -2722,6 +2742,7 @@
   });
 
   $('sair').addEventListener('click', async () => {
+    salvarNome();
     salvarSeriesPendentes();
     await fila;
     await sb.auth.signOut();
