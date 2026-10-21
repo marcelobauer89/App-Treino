@@ -1,0 +1,873 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Monitoramento • App Treino</title>
+<script>
+  // Mesmo tema escolhido no app (Você → Aparência), aplicado antes da primeira pintura.
+  try {
+    var temaSalvo = localStorage.getItem('bauer-tema');
+    if (temaSalvo === 'claro') document.documentElement.dataset.theme = 'light';
+    if (temaSalvo === 'escuro') document.documentElement.dataset.theme = 'dark';
+  } catch (_) {}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap">
+<style>
+  /* Mesmos tokens do app (index.html). */
+  :root {
+    --gi: #f3f4f6; --papel: #ffffff; --tinta: #101318; --tinta-2: #4b5361; --fio: #dde1e7;
+    --tatame: #2563eb; --tatame-forte: #1d4ed8; --tatame-tinta: #1d4ed8; --tatame-suave: #e8effd; --sobre-tatame: #ffffff;
+    --feito-suave: #e7f8ee; --feito-tinta: #166534;
+    --recorde-suave: #fef3c7; --recorde-tinta: #92400e;
+    --erro: #c62828;
+    /* Tipos de treino (paleta categórica do app, validada para daltonismo) */
+    --musc: #2a78d6; --jiu: #eb6834; --bike: #1baf7a; --selo-tinta: #0b0d10;
+    /* Intensidade do mapa de atividade: um tom só, do claro ao escuro */
+    --int-0: #eef1f5; --int-1: #bfd3f5; --int-2: #7aa5ea; --int-3: #2563eb; --int-4: #173f9e;
+    --display: "Archivo", "Arial Narrow", system-ui, sans-serif;
+    --texto: "Archivo", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --gi: #0f1115; --papel: #171a20; --tinta: #f2f4f7; --tinta-2: #a3abb8; --fio: #2a2f38;
+      --tatame: #3566d6; --tatame-forte: #2b57bf; --tatame-tinta: #8db0ff; --tatame-suave: #1b2740;
+      --feito-suave: #12301f; --feito-tinta: #6ee7a0; --recorde-suave: #33270a; --recorde-tinta: #fcd34d; --erro: #ff6b6b;
+      --musc: #3987e5; --jiu: #d95926; --bike: #199e70;
+      --int-0: #1f242c; --int-1: #1e3561; --int-2: #2b57bf; --int-3: #5b8ef0; --int-4: #a9c4ff;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --gi: #0f1115; --papel: #171a20; --tinta: #f2f4f7; --tinta-2: #a3abb8; --fio: #2a2f38;
+    --tatame: #3566d6; --tatame-forte: #2b57bf; --tatame-tinta: #8db0ff; --tatame-suave: #1b2740;
+    --feito-suave: #12301f; --feito-tinta: #6ee7a0; --recorde-suave: #33270a; --recorde-tinta: #fcd34d; --erro: #ff6b6b;
+    --musc: #3987e5; --jiu: #d95926; --bike: #199e70;
+    --int-0: #1f242c; --int-1: #1e3561; --int-2: #2b57bf; --int-3: #5b8ef0; --int-4: #a9c4ff;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body {
+    margin: 0; background: var(--gi); color: var(--tinta);
+    font-family: var(--texto); font-size: 16px; line-height: 1.5; -webkit-font-smoothing: antialiased;
+  }
+  button, input { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--tatame-tinta); outline-offset: 2px; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 max(16px, env(safe-area-inset-left, 0px)); }
+  h1, h2 { font-family: var(--display); font-stretch: 80%; font-weight: 800; line-height: 1.1; margin: 0; }
+  h1 { font-size: clamp(34px, 8vw, 48px); font-stretch: 70%; }
+  h2 { font-size: 22px; }
+  .sub { margin: 4px 0 0; color: var(--tinta-2); font-size: 15px; }
+  .btn, .btn-sec {
+    min-height: 44px; padding: 0 16px; border-radius: 10px; font-size: 14px; font-weight: 700;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn { border: 0; background: var(--tatame); color: var(--sobre-tatame); }
+  .btn:hover { background: var(--tatame-forte); }
+  .btn-sec { border: 1.5px solid var(--tatame); background: var(--papel); color: var(--tatame-tinta); }
+  .btn-sec:hover { background: var(--tatame-suave); }
+  .btn-sec svg { width: 16px; height: 16px; }
+
+  /* Topo: título, período e atualização */
+  .topo { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; padding-top: 28px; padding-bottom: 20px; }
+  .controles { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+  .periodo { display: inline-flex; padding: 4px; gap: 4px; border: 1px solid var(--fio); border-radius: 12px; background: var(--papel); }
+  .periodo button {
+    min-height: 36px; padding: 0 12px; border: 0; border-radius: 8px; background: transparent;
+    color: var(--tinta-2); font-size: 14px; font-weight: 600;
+  }
+  .periodo button[aria-pressed="true"] { background: var(--tatame); color: var(--sobre-tatame); }
+  .atualizado { color: var(--tinta-2); font-size: 13px; font-variant-numeric: tabular-nums; }
+
+  /* Estados (login, acesso restrito, erro, carregando) */
+  .estado { display: grid; justify-items: start; gap: 14px; max-width: 520px; padding: 40px 0; }
+  .estado p { margin: 0; color: var(--tinta-2); }
+
+  /* Números principais */
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 0 0 28px; }
+  .kpi { margin: 0; padding: 16px; background: var(--papel); border: 1px solid var(--fio); border-radius: 14px; display: grid; gap: 4px; align-content: start; }
+  .kpi dt { font-size: 14px; color: var(--tinta-2); }
+  .kpi dd { margin: 0; }
+  .kpi .valor { font-family: var(--display); font-stretch: 75%; font-weight: 800; font-size: 40px; line-height: 1; font-variant-numeric: tabular-nums; }
+  .kpi .valor small { font-family: var(--texto); font-stretch: 100%; font-size: 15px; font-weight: 500; color: var(--tinta-2); }
+  .kpi .ctx { font-size: 13px; color: var(--tinta-2); }
+  .delta { display: inline-flex; align-items: center; gap: 3px; font-size: 13px; font-weight: 700; }
+  .delta svg { width: 14px; height: 14px; }
+  .delta.sobe { color: var(--feito-tinta); }
+  .delta.desce { color: var(--erro); }
+  .delta.igual { color: var(--tinta-2); }
+
+  /* Blocos com gráfico */
+  .bloco { margin: 0 0 28px; }
+  .bloco-topo { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 16px; margin-bottom: 10px; }
+  .cartao { background: var(--papel); border: 1px solid var(--fio); border-radius: 14px; padding: 16px; }
+  .graficos { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr)); gap: 12px 16px; }
+  .legenda { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 0 0 10px; padding: 0; list-style: none; font-size: 13px; color: var(--tinta-2); }
+  .legenda li { display: inline-flex; align-items: center; gap: 6px; }
+  .legenda i { width: 12px; height: 12px; border-radius: 3px; }
+  .link-btn { border: 0; background: transparent; padding: 4px 0; color: var(--tatame-tinta); font-size: 14px; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+  .grafico { position: relative; }
+  .grafico svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .grafico .eixo { fill: var(--tinta-2); font-size: 11px; font-family: var(--texto); }
+  .grafico .grade { stroke: var(--fio); stroke-width: 1; }
+  .grafico .hover { fill: var(--tinta); opacity: .06; }
+  .vazio-graf { margin: 0; padding: 32px 0; text-align: center; color: var(--tinta-2); }
+  .dica {
+    position: absolute; z-index: 5; pointer-events: none; min-width: 140px; padding: 8px 10px; border-radius: 10px;
+    background: var(--tinta); color: var(--gi); font-size: 13px; line-height: 1.4; box-shadow: 0 6px 20px rgba(0, 0, 0, .18);
+  }
+  .dica b { display: block; margin-bottom: 2px; }
+  .dica span { display: flex; align-items: center; gap: 6px; }
+  .dica i { width: 10px; height: 10px; border-radius: 2px; flex: 0 0 auto; }
+  table.dados { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+  table.dados th, table.dados td { padding: 8px; border-bottom: 1px solid var(--fio); text-align: left; }
+  table.dados th { color: var(--tinta-2); font-weight: 600; }
+  .tabela-rolagem { max-height: 320px; overflow: auto; }
+
+  /* Usuários */
+  .filtros { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: flex-end; flex: 1 1 320px; }
+  .busca {
+    min-height: 44px; width: min(320px, 100%); padding: 0 12px; border: 1px solid var(--fio); border-radius: 10px;
+    background: var(--papel);
+  }
+  .usuarios { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+  .usuarios th { text-align: left; color: var(--tinta-2); font-weight: 600; font-size: 13px; padding: 0; border-bottom: 1px solid var(--fio); white-space: nowrap; }
+  .usuarios th button {
+    display: inline-flex; align-items: center; gap: 4px; width: 100%; min-height: 40px; padding: 0 8px;
+    border: 0; background: transparent; color: inherit; font-weight: inherit; text-align: left;
+  }
+  .usuarios th[aria-sort] button { color: var(--tinta); }
+  .usuarios th svg { width: 12px; height: 12px; }
+  .usuarios td { padding: 10px 8px; border-bottom: 1px solid var(--fio); vertical-align: middle; }
+  .usuarios tbody tr { cursor: pointer; }
+  .usuarios tbody tr:hover { background: var(--gi); }
+  .quem { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .quem button { border: 0; background: transparent; padding: 0; text-align: left; display: grid; min-width: 0; }
+  .quem b { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .quem small { color: var(--tinta-2); font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .avatar {
+    flex: 0 0 auto; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center;
+    background: var(--tatame-suave); color: var(--tatame-tinta); font-family: var(--display); font-stretch: 80%; font-weight: 800; font-size: 15px;
+  }
+  .situacao { display: inline-flex; align-items: center; gap: 5px; padding: 2px 10px 2px 8px; border-radius: 999px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+  .situacao svg { width: 14px; height: 14px; }
+  .situacao.ativo { background: var(--feito-suave); color: var(--feito-tinta); }
+  .situacao.risco { background: var(--recorde-suave); color: var(--recorde-tinta); }
+  .situacao.inativo, .situacao.nunca { background: var(--gi); color: var(--tinta-2); }
+  .barra-ader { display: inline-flex; align-items: center; gap: 8px; }
+  .barra-ader span { display: block; width: 56px; height: 6px; border-radius: 3px; background: var(--int-0); overflow: hidden; }
+  .barra-ader span i { display: block; height: 100%; background: var(--tatame); border-radius: 3px; }
+  .num { text-align: right; }
+  .usuarios th.num button { justify-content: flex-end; }
+  .nenhum { padding: 24px 8px; text-align: center; color: var(--tinta-2); }
+
+  .ordenar-cel { display: none; gap: 8px; align-items: center; font-size: 14px; color: var(--tinta-2); }
+  .ordenar-cel select { min-height: 40px; border: 1px solid var(--fio); border-radius: 10px; background: var(--papel); color: var(--tinta); padding: 0 8px; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  /* Celular: cada usuário vira um cartão */
+  @media (max-width: 720px) {
+    .usuarios thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    .usuarios, .usuarios tbody, .usuarios tr, .usuarios td { display: block; }
+    .usuarios tr { padding: 12px 0; border-bottom: 1px solid var(--fio); display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; }
+    .usuarios td { padding: 0; border: 0; }
+    .usuarios td:first-child { grid-column: 1 / -1; }
+    .usuarios td[data-rotulo]::before { content: attr(data-rotulo); display: block; font-size: 12px; color: var(--tinta-2); }
+    .num { text-align: left; }
+    .ordenar-cel { display: flex; }
+    .filtros { justify-content: stretch; flex-basis: 100%; }
+    .busca { width: 100%; }
+  }
+
+  /* Detalhe do usuário: folha inferior no celular, painel lateral no computador */
+  dialog.detalhe {
+    width: min(560px, 100vw); max-width: 100vw; max-height: 100dvh; margin: 0 0 0 auto; height: 100dvh; padding: 0;
+    border: 0; border-left: 1px solid var(--fio); background: var(--papel); color: var(--tinta);
+  }
+  dialog.detalhe::backdrop { background: rgba(10, 12, 16, .5); }
+  @media (max-width: 720px) {
+    dialog.detalhe { margin: auto 0 0; width: 100vw; height: auto; max-height: 92dvh; border: 0; border-top: 1px solid var(--fio); border-radius: 18px 18px 0 0; }
+  }
+  .det-corpo { display: grid; gap: 20px; padding: 20px 16px 28px; }
+  .det-topo { display: flex; align-items: center; gap: 12px; }
+  .det-topo .avatar { width: 52px; height: 52px; font-size: 20px; }
+  .det-topo h2 { font-size: 26px; }
+  .det-topo p { margin: 2px 0 0; color: var(--tinta-2); font-size: 14px; overflow-wrap: anywhere; }
+  .fechar {
+    margin-left: auto; align-self: flex-start; width: 44px; height: 44px; border: 0; border-radius: 10px;
+    background: transparent; color: var(--tinta-2); display: grid; place-items: center;
+  }
+  .fechar:hover { background: var(--gi); color: var(--tinta); }
+  .mini { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 0; }
+  .mini div { padding: 10px 12px; border: 1px solid var(--fio); border-radius: 12px; }
+  .mini dt { font-size: 12.5px; color: var(--tinta-2); }
+  .mini dd { margin: 0; font-family: var(--display); font-stretch: 80%; font-weight: 800; font-size: 24px; font-variant-numeric: tabular-nums; }
+  .det-sec h3 { margin: 0 0 8px; font-size: 15px; }
+  .mapa { display: grid; grid-template-columns: 28px repeat(8, 1fr); gap: 3px; font-size: 11px; color: var(--tinta-2); }
+  .mapa span { display: grid; align-items: center; }
+  .mapa i { aspect-ratio: 1; border-radius: 3px; background: var(--int-0); }
+  .mapa i[data-n="1"] { background: var(--int-2); }
+  .mapa i[data-n="2"] { background: var(--int-3); }
+  .mapa i[data-n="3"] { background: var(--int-4); }
+  .mapa i.futuro { background: transparent; border: 1px dashed var(--fio); }
+  .mapa-leg { display: flex; align-items: center; gap: 4px; margin-top: 6px; font-size: 12px; color: var(--tinta-2); }
+  .mapa-leg i { width: 12px; height: 12px; border-radius: 3px; }
+  .semana { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin: 0; padding: 0; list-style: none; text-align: center; font-size: 12px; }
+  .semana li { display: grid; gap: 4px; justify-items: center; padding: 6px 2px; border: 1px solid var(--fio); border-radius: 10px; min-height: 64px; align-content: start; }
+  .semana b { color: var(--tinta-2); font-weight: 700; }
+  .selo { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 5px; font-family: var(--display); font-weight: 800; font-size: 11px; color: var(--selo-tinta); }
+  .selo.musc { background: var(--musc); }
+  .selo.jiu { background: var(--jiu); }
+  .selo.bike { background: var(--bike); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+  .chips li { padding: 4px 10px; border-radius: 999px; background: var(--gi); font-size: 13px; }
+  .linha-tempo { margin: 0; padding: 0; list-style: none; display: grid; }
+  .linha-tempo li { display: grid; grid-template-columns: 22px 1fr auto; gap: 10px; align-items: start; padding: 8px 0; border-bottom: 1px solid var(--fio); font-size: 14px; }
+  .linha-tempo svg { width: 18px; height: 18px; color: var(--tinta-2); margin-top: 2px; }
+  .linha-tempo time { color: var(--tinta-2); font-size: 12.5px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .linha-tempo .alerta svg { color: var(--erro); }
+  .nota { margin: 0; color: var(--tinta-2); font-size: 13px; }
+  footer { padding: 8px 0 40px; color: var(--tinta-2); font-size: 13px; }
+  @media (prefers-reduced-motion: no-preference) {
+    dialog.detalhe[open] { animation: entra .2s ease-out both; }
+    @keyframes entra { from { transform: translateX(24px); opacity: 0; } }
+  }
+  @media (prefers-reduced-motion: no-preference) and (max-width: 720px) {
+    dialog.detalhe[open] { animation-name: sobe; }
+    @keyframes sobe { from { transform: translateY(32px); opacity: 0; } }
+  }
+</style>
+</head>
+<body>
+
+<header class="wrap topo">
+  <div>
+    <h1>Monitoramento</h1>
+    <p class="sub">Uso do App Treino: quem usa, quanto treina e como o app se comporta.</p>
+  </div>
+  <div class="controles" id="controles" hidden>
+    <div class="periodo" role="group" aria-label="Período">
+      <button type="button" data-periodo="7" aria-pressed="false">7 dias</button>
+      <button type="button" data-periodo="30" aria-pressed="true">30 dias</button>
+      <button type="button" data-periodo="90" aria-pressed="false">90 dias</button>
+      <button type="button" data-periodo="tudo" aria-pressed="false">Tudo</button>
+    </div>
+    <span class="atualizado" id="atualizado" aria-live="polite"></span>
+    <button class="btn-sec" type="button" id="atualizar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 4v5h-5"/></svg>
+      Atualizar
+    </button>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="estado" id="estado" aria-live="polite">
+    <p>Carregando…</p>
+  </section>
+
+  <div id="painel" hidden>
+    <dl class="kpis" id="kpis"></dl>
+
+    <div class="graficos">
+      <section class="bloco cartao" aria-labelledby="g1-titulo">
+        <div class="bloco-topo">
+          <h2 id="g1-titulo">Check-ins por <span data-unidade>dia</span></h2>
+          <button class="link-btn" type="button" data-alternar="g1" aria-expanded="false">Ver tabela</button>
+        </div>
+        <ul class="legenda" aria-label="Tipos de treino">
+          <li><i style="background:var(--musc)"></i>Musculação</li>
+          <li><i style="background:var(--jiu)"></i>Jiu-jitsu</li>
+          <li><i style="background:var(--bike)"></i>Cardio</li>
+        </ul>
+        <div class="grafico" id="g1"></div>
+        <div class="tabela-rolagem" id="g1-tabela" hidden></div>
+      </section>
+      <section class="bloco cartao" aria-labelledby="g2-titulo">
+        <div class="bloco-topo">
+          <h2 id="g2-titulo">Usuários ativos por <span data-unidade>dia</span></h2>
+          <button class="link-btn" type="button" data-alternar="g2" aria-expanded="false">Ver tabela</button>
+        </div>
+        <p class="nota">Ativo: abriu o app ou fez check-in no <span data-unidade>dia</span>.</p>
+        <div class="grafico" id="g2"></div>
+        <div class="tabela-rolagem" id="g2-tabela" hidden></div>
+      </section>
+    </div>
+
+    <section class="bloco" aria-labelledby="u-titulo">
+      <div class="bloco-topo">
+        <h2 id="u-titulo">Usuários</h2>
+        <div class="filtros">
+          <label class="ordenar-cel">Ordenar
+            <select id="ordenar-cel">
+              <option value="ultimo">Último uso</option>
+              <option value="nome">Nome</option>
+              <option value="checkins">Check-ins</option>
+              <option value="aderencia">Aderência</option>
+              <option value="acessos">Acessos</option>
+            </select>
+          </label>
+          <input class="busca" id="busca" type="search" placeholder="Buscar por nome ou e-mail" aria-label="Buscar usuário">
+          <button class="btn-sec" type="button" id="csv">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0-4-4m4 4 4-4M5 21h14"/></svg>
+            Exportar CSV
+          </button>
+        </div>
+      </div>
+      <div class="cartao">
+        <table class="usuarios" id="usuarios">
+          <thead>
+            <tr>
+              <th scope="col" data-col="nome"><button type="button">Usuário</button></th>
+              <th scope="col" data-col="situacao"><button type="button">Situação</button></th>
+              <th scope="col" data-col="ultimo"><button type="button">Último uso</button></th>
+              <th scope="col" data-col="acessos" class="num"><button type="button">Acessos</button></th>
+              <th scope="col" data-col="checkins" class="num"><button type="button">Check-ins</button></th>
+              <th scope="col" data-col="aderencia"><button type="button">Aderência</button></th>
+              <th scope="col" data-col="treino"><button type="button">Último treino</button></th>
+            </tr>
+          </thead>
+          <tbody id="usuarios-corpo"></tbody>
+        </table>
+      </div>
+      <p class="nota" style="margin-top:8px">Situação: <b>Ativo</b> usou nos últimos 7 dias; <b>Em risco</b> entre 8 e 14 dias; <b>Inativo</b> há mais de 14 dias. Check-ins e aderência consideram o período escolhido.</p>
+    </section>
+  </div>
+</main>
+
+<footer class="wrap">
+  <p>Página restrita a administradores. Os dados de uso não incluem pesos, cargas nem observações dos usuários.</p>
+</footer>
+
+<dialog class="detalhe" id="detalhe" aria-labelledby="det-nome">
+  <div class="det-corpo" id="det-corpo"></div>
+</dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
+<script>
+(() => {
+  // ---------- Conexão (mesmo projeto do app; manter igual ao index.html) ----------
+  const SUPABASE_URL = 'https://mlovfgbndtpeczgnvivi.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_8w6VXWwfAMpSCSUF9oEOLg_uCOgvZP2';
+  const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { flowType: 'pkce' } }) : null;
+
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const pad = (n) => String(n).padStart(2, '0');
+  const ymd = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const deYmd = (s) => { const [a, m, d] = s.split('-').map(Number); return new Date(a, m - 1, d); };
+  const somarDias = (s, n) => { const d = deYmd(s); d.setDate(d.getDate() + n); return ymd(d); };
+  const hoje = () => ymd(new Date());
+  const diasEntre = (a, b) => Math.round((deYmd(b) - deYmd(a)) / 864e5);
+  const fmtData = (s, op = { day: 'numeric', month: 'short' }) => deYmd(s).toLocaleDateString('pt-BR', op).replace('.', '');
+  const fmtNum = (n, casas = 0) => n.toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas });
+  // Datas: check-ins guardam hora local sem fuso ("AAAA-MM-DDTHH:MM:SS"); eventos e acessos têm fuso.
+  const diaDeCheckin = (c) => String(c.inicio).slice(0, 10);
+  const diaDeInstante = (iso) => (iso ? ymd(new Date(iso)) : null);
+
+  const TIPOS = {
+    t1: { nome: 'Treino 1', selo: '1', grupo: 'musc' }, t2: { nome: 'Treino 2', selo: '2', grupo: 'musc' },
+    t3: { nome: 'Treino 3', selo: '3', grupo: 'musc' }, jiu: { nome: 'Jiu-jitsu', selo: 'J', grupo: 'jiu' },
+    bike: { nome: 'Cardio', selo: 'C', grupo: 'bike' },
+  };
+  const GRUPOS = [['musc', 'Musculação'], ['jiu', 'Jiu-jitsu'], ['bike', 'Cardio']];
+  const CURTOS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+  const ORDEM_SEMANA = [1, 2, 3, 4, 5, 6, 0];
+
+  const ICON = {
+    sobe: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg>',
+    desce: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>',
+    check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>',
+    alerta: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>',
+    lua: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>',
+    x: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+    seta: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg>',
+    abrir: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="3"/><path d="M11 18h2"/></svg>',
+    peso: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"/></svg>',
+    cal: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>',
+    trofeu: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0Z"/></svg>',
+    ponto: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="4"/></svg>',
+  };
+
+  // ---------- Estado ----------
+  let dados = null; // { usuarios, checkins, eventos }
+  let periodo = '30';
+  let ordem = { col: 'ultimo', dir: -1 };
+  let busca = '';
+
+  function mostrarEstado(html) {
+    $('estado').innerHTML = html;
+    $('estado').hidden = false;
+    $('painel').hidden = true;
+    $('controles').hidden = true;
+  }
+
+  // ---------- Acesso ----------
+  async function iniciar() {
+    if (!sb) return mostrarEstado('<p>Não foi possível carregar a biblioteca do Supabase. Confira a internet e recarregue a página.</p>');
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) {
+      return mostrarEstado(`
+        <p>Entre com a sua conta Google de administrador para ver o monitoramento.</p>
+        <button class="btn" type="button" id="entrar">Entrar com Google</button>`);
+    }
+    const { data: admin, error } = await sb.rpc('eh_admin');
+    if (error) return mostrarEstado(`<p>Não foi possível verificar o acesso. Confira se o <code>supabase/schema.sql</code> foi aplicado.</p>${botaoTentar()}`);
+    if (!admin) {
+      return mostrarEstado(`
+        <p><b>Acesso restrito.</b> A conta ${esc(session.user.email)} não é administradora.</p>
+        <button class="btn-sec" type="button" id="sair">Entrar com outra conta</button>`);
+    }
+    await carregar();
+  }
+  const botaoTentar = () => '<button class="btn-sec" type="button" id="tentar">Tentar de novo</button>';
+
+  async function carregar() {
+    if (!dados) mostrarEstado('<p>Carregando os dados…</p>');
+    $('atualizar').disabled = true;
+    const [u, c, e] = await Promise.all([sb.rpc('admin_usuarios'), sb.rpc('admin_checkins'), sb.rpc('admin_eventos')]);
+    $('atualizar').disabled = false;
+    if (u.error || c.error || e.error) {
+      return mostrarEstado(`<p>Não foi possível carregar os dados. ${esc((u.error || c.error || e.error).message)}</p>${botaoTentar()}`);
+    }
+    dados = { usuarios: u.data || [], checkins: c.data || [], eventos: e.data || [] };
+    const agora = new Date();
+    $('atualizado').textContent = `Atualizado às ${pad(agora.getHours())}:${pad(agora.getMinutes())}`;
+    $('estado').hidden = true;
+    $('painel').hidden = false;
+    $('controles').hidden = false;
+    render();
+  }
+
+  // ---------- Cálculos ----------
+  // Atividades planejadas por semana: semana montada em Você ou, sem ela, a padrão com os dias de jiu.
+  function planejadasPorSemana(u) {
+    if (Array.isArray(u.semana) && u.semana.length === 7) return u.semana.flat().length;
+    const jiu = (u.dias_jiu || [2, 4]).map(Number).filter((d) => d >= 1 && d <= 6);
+    return 3 + jiu.length + (jiu.includes(6) ? 0 : 1);
+  }
+  function janela(dias) {
+    const fim = hoje();
+    if (dias === 'tudo') {
+      const datas = [...dados.checkins.map(diaDeCheckin), ...dados.eventos.map((e) => diaDeInstante(e.criado_em)),
+        ...dados.usuarios.map((u) => diaDeInstante(u.cadastro))].filter(Boolean).sort();
+      const ini = datas[0] && datas[0] < fim ? datas[0] : somarDias(fim, -6);
+      return { ini, fim, dias: diasEntre(ini, fim) + 1, anterior: null };
+    }
+    const n = Number(dias);
+    const ini = somarDias(fim, -(n - 1));
+    return { ini, fim, dias: n, anterior: { ini: somarDias(ini, -n), fim: somarDias(ini, -1), dias: n } };
+  }
+  const dentro = (d, j) => d && d >= j.ini && d <= j.fim;
+  // Dias com atividade de cada usuário: check-ins, eventos e o último acesso.
+  function diasAtivos() {
+    const m = new Map(dados.usuarios.map((u) => [u.id, new Set()]));
+    const marcar = (id, d) => { if (d && m.has(id)) m.get(id).add(d); };
+    dados.checkins.forEach((c) => marcar(c.usuario_id, diaDeCheckin(c)));
+    dados.eventos.forEach((e) => marcar(e.usuario_id, diaDeInstante(e.criado_em)));
+    dados.usuarios.forEach((u) => marcar(u.id, diaDeInstante(u.ultimo_acesso)));
+    return m;
+  }
+  function metricas(j, ativosMap) {
+    const ativos = dados.usuarios.filter((u) => [...ativosMap.get(u.id)].some((d) => dentro(d, j)));
+    const cks = dados.checkins.filter((c) => dentro(diaDeCheckin(c), j));
+    const semanas = j.dias / 7;
+    const treinosSemana = ativos.length ? cks.length / ativos.length / semanas : 0;
+    const ader = ativos.map((u) => {
+      const plan = planejadasPorSemana(u) * semanas;
+      const feitos = cks.filter((c) => c.usuario_id === u.id).length;
+      return plan ? Math.min(1, feitos / plan) : 0;
+    });
+    const aderencia = ader.length ? ader.reduce((a, b) => a + b, 0) / ader.length : 0;
+    return { ativos: ativos.length, checkins: cks.length, treinosSemana, aderencia };
+  }
+  // Retenção: de quem usou de 8 a 14 dias atrás, quantos voltaram nos últimos 7 dias.
+  function retencao(ativosMap) {
+    const fim = hoje();
+    const atual = { ini: somarDias(fim, -6), fim };
+    const ant = { ini: somarDias(fim, -13), fim: somarDias(fim, -7) };
+    const base = dados.usuarios.filter((u) => [...ativosMap.get(u.id)].some((d) => dentro(d, ant)));
+    const voltaram = base.filter((u) => [...ativosMap.get(u.id)].some((d) => dentro(d, atual)));
+    return { base: base.length, voltaram: voltaram.length };
+  }
+
+  // ---------- Render ----------
+  function render() {
+    const j = janela(periodo);
+    const ativosMap = diasAtivos();
+    renderKpis(j, ativosMap);
+    renderGraficos(j, ativosMap);
+    renderUsuarios(j, ativosMap);
+  }
+
+  function delta(atual, anterior, { pct = false } = {}) {
+    if (anterior == null) return '';
+    const dif = atual - anterior;
+    const cls = Math.abs(dif) < 1e-9 ? 'igual' : dif > 0 ? 'sobe' : 'desce';
+    const txt = pct ? `${fmtNum(Math.abs(dif) * 100)} p.p.` : fmtNum(Math.abs(dif), Number.isInteger(dif) ? 0 : 1);
+    const icone = cls === 'sobe' ? ICON.sobe : cls === 'desce' ? ICON.desce : '';
+    const palavra = cls === 'igual' ? 'igual ao período anterior' : `${cls === 'sobe' ? 'mais' : 'menos'} que o período anterior`;
+    return `<span class="delta ${cls}">${icone}${cls === 'igual' ? '=' : txt}<span class="sr">&nbsp;${palavra}</span></span>`;
+  }
+
+  function renderKpis(j, ativosMap) {
+    const m = metricas(j, ativosMap);
+    const a = j.anterior ? metricas(j.anterior, ativosMap) : null;
+    const r = retencao(ativosMap);
+    const total = dados.usuarios.length;
+    const rotuloPeriodo = periodo === 'tudo' ? 'desde o início' : `nos últimos ${periodo} dias`;
+    const tile = (titulo, valor, ctx, d) => `
+      <div class="kpi"><dt>${titulo}</dt><dd><span class="valor">${valor}</span></dd>
+      <dd class="ctx">${ctx}${d ? ` · ${d}` : ''}</dd></div>`;
+    $('kpis').innerHTML = [
+      tile('Usuários ativos', `${m.ativos}<small> de ${total}</small>`, rotuloPeriodo, a && delta(m.ativos, a.ativos)),
+      tile('Check-ins', fmtNum(m.checkins), rotuloPeriodo, a && delta(m.checkins, a.checkins)),
+      tile('Treinos por semana', fmtNum(m.treinosSemana, 1), 'por usuário ativo', a && delta(Math.round(m.treinosSemana * 10) / 10, Math.round(a.treinosSemana * 10) / 10)),
+      tile('Aderência ao plano', `${fmtNum(m.aderencia * 100)}<small>%</small>`, 'feito ÷ planejado na semana montada', a && delta(m.aderencia, a.aderencia, { pct: true })),
+      tile('Voltaram nesta semana', r.base ? `${fmtNum(r.voltaram / r.base * 100)}<small>%</small>` : '—',
+        r.base ? `${r.voltaram} de ${r.base} que usaram na semana anterior` : 'sem uso na semana anterior', ''),
+    ].join('');
+  }
+
+  // Agrupa por dia; períodos longos (mais de 60 dias) por semana, começando na segunda.
+  function baldes(j) {
+    const porSemana = j.dias > 60;
+    const lista = [];
+    let d = j.ini;
+    if (porSemana) {
+      const dow = deYmd(d).getDay();
+      d = somarDias(d, -((dow + 6) % 7));
+    }
+    while (d <= j.fim) {
+      const fim = porSemana ? somarDias(d, 6) : d;
+      lista.push({ ini: d, fim, eixo: `${deYmd(d).getDate()}/${deYmd(d).getMonth() + 1}`, rotulo: porSemana ? `sem. de ${fmtData(d)}` : fmtData(d, { day: 'numeric', month: 'short', weekday: 'short' }) });
+      d = somarDias(fim, 1);
+    }
+    return { lista, unidade: porSemana ? 'semana' : 'dia' };
+  }
+
+  function renderGraficos(j, ativosMap) {
+    const { lista, unidade } = baldes(j);
+    document.querySelectorAll('[data-unidade]').forEach((el) => { el.textContent = unidade; });
+    const serie1 = lista.map((b) => {
+      const cks = dados.checkins.filter((c) => { const d = diaDeCheckin(c); return d >= b.ini && d <= b.fim; });
+      const v = { musc: 0, jiu: 0, bike: 0 };
+      cks.forEach((c) => { v[TIPOS[c.tipo] ? TIPOS[c.tipo].grupo : 'musc'] += 1; });
+      return { ...b, v, total: cks.length };
+    });
+    const serie2 = lista.map((b) => ({
+      ...b, total: dados.usuarios.filter((u) => [...ativosMap.get(u.id)].some((d) => d >= b.ini && d <= b.fim)).length,
+    }));
+    barras($('g1'), serie1, { empilhado: true, rotulo: 'check-ins' });
+    barras($('g2'), serie2, { empilhado: false, rotulo: 'usuários ativos' });
+    $('g1-tabela').innerHTML = tabelaHTML(['Período', ...GRUPOS.map((g) => g[1]), 'Total'],
+      serie1.map((s) => [s.rotulo, s.v.musc, s.v.jiu, s.v.bike, s.total]));
+    $('g2-tabela').innerHTML = tabelaHTML(['Período', 'Usuários ativos'], serie2.map((s) => [s.rotulo, s.total]));
+  }
+  const tabelaHTML = (cab, linhas) => `<table class="dados"><thead><tr>${cab.map((c) => `<th scope="col">${c}</th>`).join('')}</tr></thead>
+    <tbody>${linhas.map((l) => `<tr>${l.map((x) => `<td>${esc(x)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+
+  // Gráfico de barras em SVG: barras finas com cantos de 4 px no topo, 2 px de folga entre segmentos,
+  // grade discreta e dica ao passar o mouse ou o dedo.
+  function barras(el, serie, { empilhado, rotulo }) {
+    const max = Math.max(1, ...serie.map((s) => s.total));
+    if (!serie.some((s) => s.total)) {
+      el.innerHTML = `<p class="vazio-graf">Sem ${rotulo} neste período.</p>`;
+      return;
+    }
+    const W = Math.max(280, Math.round(el.clientWidth || 600)), H = 220, esq = 28, dir = 4, topo = 8, base = 24;
+    const larg = (W - esq - dir) / serie.length;
+    const bw = Math.max(2, Math.min(28, larg * 0.62));
+    const passo = max <= 5 ? 1 : Math.ceil(max / 4);
+    const topoEsc = Math.ceil(max / passo) * passo;
+    const y = (v) => topo + (H - topo - base) * (1 - v / topoEsc);
+    const linhasGrade = [];
+    for (let v = 0; v <= topoEsc; v += passo) {
+      linhasGrade.push(`<line class="grade" x1="${esq}" x2="${W - dir}" y1="${y(v)}" y2="${y(v)}"/>
+        <text class="eixo" x="${esq - 6}" y="${y(v) + 4}" text-anchor="end">${v}</text>`);
+    }
+    const cada = Math.ceil(serie.length / 6);
+    const rotulos = serie.map((s, i) => (i % cada === 0
+      ? `<text class="eixo" x="${esq + larg * i + larg / 2}" y="${H - 6}" text-anchor="middle">${s.eixo}</text>` : '')).join('');
+    const barra = (x, y0, y1, cor, arred) => {
+      const h = Math.max(0, y0 - y1);
+      if (h <= 0) return '';
+      const r = arred ? Math.min(4, bw / 2, h) : 0;
+      return `<path d="M${x} ${y0} V${y1 + r} Q${x} ${y1} ${x + r} ${y1} H${x + bw - r} Q${x + bw} ${y1} ${x + bw} ${y1 + r} V${y0} Z" fill="${cor}"/>`;
+    };
+    const marcas = serie.map((s, i) => {
+      const x = esq + larg * i + (larg - bw) / 2;
+      if (!empilhado) return barra(x, y(0), y(s.total), 'var(--tatame)', true);
+      let acum = 0, out = '';
+      const segs = GRUPOS.filter(([g]) => s.v[g]);
+      segs.forEach(([g], k) => {
+        const y0 = y(acum) - (k ? 2 : 0); // folga de 2 px entre segmentos
+        acum += s.v[g];
+        out += barra(x, y0, y(acum), `var(--${g})`, k === segs.length - 1);
+      });
+      return out;
+    }).join('');
+    const resumo = `${rotulo} por ${serie.length > 1 ? 'período' : 'dia'}: máximo ${max}, total ${serie.reduce((a, s) => a + s.total, 0)}.`;
+    el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(resumo)} Use “Ver tabela” para os valores.">
+      ${linhasGrade.join('')}<rect class="hover" x="0" y="${topo}" width="0" height="${H - topo - base}" visibility="hidden"/>${marcas}${rotulos}</svg>
+      <div class="dica" hidden></div>`;
+    const svg = el.querySelector('svg');
+    const dica = el.querySelector('.dica');
+    const faixa = svg.querySelector('.hover');
+    const mostrar = (ev) => {
+      const r = svg.getBoundingClientRect();
+      const px = (ev.clientX - r.left) * (W / r.width);
+      const i = Math.max(0, Math.min(serie.length - 1, Math.floor((px - esq) / larg)));
+      const s = serie[i];
+      faixa.setAttribute('x', esq + larg * i);
+      faixa.setAttribute('width', larg);
+      faixa.setAttribute('visibility', 'visible');
+      dica.innerHTML = `<b>${esc(s.rotulo)}</b>${empilhado
+        ? GRUPOS.map(([g, n]) => `<span><i style="background:var(--${g})"></i>${n}: ${s.v[g]}</span>`).join('') + `<span>Total: ${s.total}</span>`
+        : `<span>${s.total} ${rotulo}</span>`}`;
+      dica.hidden = false;
+      const xr = (esq + larg * (i + 0.5)) * (r.width / W);
+      const lim = el.clientWidth - dica.offsetWidth;
+      dica.style.left = `${Math.max(0, Math.min(lim, xr + 12 > lim ? xr - dica.offsetWidth - 12 : xr + 12))}px`;
+      dica.style.top = '0px';
+    };
+    svg.addEventListener('pointermove', mostrar);
+    svg.addEventListener('pointerdown', mostrar);
+    svg.addEventListener('pointerleave', () => { dica.hidden = true; faixa.setAttribute('visibility', 'hidden'); });
+  }
+
+  // ---------- Usuários ----------
+  function situacao(ultimo) {
+    if (!ultimo) return { chave: 'nunca', rotulo: 'Nunca usou', icone: ICON.lua, ordem: 3 };
+    const d = diasEntre(ultimo, hoje());
+    if (d <= 7) return { chave: 'ativo', rotulo: 'Ativo', icone: ICON.check, ordem: 0 };
+    if (d <= 14) return { chave: 'risco', rotulo: 'Em risco', icone: ICON.alerta, ordem: 1 };
+    return { chave: 'inativo', rotulo: 'Inativo', icone: ICON.lua, ordem: 2 };
+  }
+  function relativo(d) {
+    if (!d) return '—';
+    const n = diasEntre(d, hoje());
+    return n <= 0 ? 'hoje' : n === 1 ? 'ontem' : `há ${n} dias`;
+  }
+  const iniciais = (nome, email) => {
+    const p = String(nome || email || '?').trim().split(/\s+/);
+    return ((p[0] || '')[0] + (p.length > 1 ? p[p.length - 1][0] : '')).toUpperCase();
+  };
+  function linhasUsuarios(j, ativosMap) {
+    return dados.usuarios.map((u) => {
+      const dias = [...ativosMap.get(u.id)].sort();
+      const ultimo = dias[dias.length - 1] || null;
+      const meus = dados.checkins.filter((c) => c.usuario_id === u.id);
+      const noPeriodo = meus.filter((c) => dentro(diaDeCheckin(c), j)).length;
+      const plan = planejadasPorSemana(u) * (j.dias / 7);
+      const ultimoTreino = meus.map(diaDeCheckin).sort().pop() || null;
+      return {
+        u, ultimo, sit: situacao(ultimo), checkins: noPeriodo, aderencia: plan ? Math.min(1, noPeriodo / plan) : 0,
+        acessos: u.acessos || 0, ultimoTreino, total: meus.length,
+      };
+    });
+  }
+  function renderUsuarios(j, ativosMap) {
+    const q = busca.trim().toLowerCase();
+    let linhas = linhasUsuarios(j, ativosMap).filter((l) => !q || `${l.u.nome} ${l.u.email}`.toLowerCase().includes(q));
+    const chave = {
+      nome: (l) => (l.u.nome || l.u.email || '').toLowerCase(), situacao: (l) => l.sit.ordem, ultimo: (l) => l.ultimo || '',
+      acessos: (l) => l.acessos, checkins: (l) => l.checkins, aderencia: (l) => l.aderencia, treino: (l) => l.ultimoTreino || '',
+    }[ordem.col];
+    linhas.sort((a, b) => { const x = chave(a), y = chave(b); return (x < y ? -1 : x > y ? 1 : 0) * ordem.dir; });
+    linhasAtuais = linhas;
+    document.querySelectorAll('#usuarios th').forEach((th) => {
+      const ativo = th.dataset.col === ordem.col;
+      if (ativo) th.setAttribute('aria-sort', ordem.dir > 0 ? 'ascending' : 'descending'); else th.removeAttribute('aria-sort');
+      const b = th.querySelector('button');
+      b.innerHTML = b.textContent + (ativo ? `<span style="display:inline-grid;transform:rotate(${ordem.dir > 0 ? 180 : 0}deg)">${ICON.seta}</span>` : '');
+    });
+    $('ordenar-cel').value = ordem.col;
+    $('usuarios-corpo').innerHTML = linhas.length ? linhas.map((l) => `
+      <tr data-usuario="${l.u.id}">
+        <td><div class="quem"><span class="avatar" aria-hidden="true">${esc(iniciais(l.u.nome, l.u.email))}</span>
+          <button type="button" data-abrir="${l.u.id}"><b>${esc(l.u.nome || 'Sem nome')}</b><small>${esc(l.u.email)}</small></button></div></td>
+        <td data-rotulo="Situação"><span class="situacao ${l.sit.chave}">${l.sit.icone}${l.sit.rotulo}</span></td>
+        <td data-rotulo="Último uso">${relativo(l.ultimo)}</td>
+        <td data-rotulo="Acessos" class="num">${fmtNum(l.acessos)}</td>
+        <td data-rotulo="Check-ins" class="num">${fmtNum(l.checkins)}</td>
+        <td data-rotulo="Aderência"><span class="barra-ader"><span aria-hidden="true"><i style="width:${Math.round(l.aderencia * 100)}%"></i></span>${fmtNum(l.aderencia * 100)}%</span></td>
+        <td data-rotulo="Último treino">${l.ultimoTreino ? fmtData(l.ultimoTreino) : '—'}</td>
+      </tr>`).join('') : `<tr><td colspan="7" class="nenhum">${q ? 'Nenhum usuário encontrado.' : 'Nenhum usuário cadastrado.'}</td></tr>`;
+  }
+  let linhasAtuais = [];
+
+  function exportarCSV() {
+    const cab = ['nome', 'email', 'situacao', 'ultimo_uso', 'acessos', 'checkins_periodo', 'aderencia_pct', 'ultimo_treino', 'checkins_total', 'cadastro'];
+    const campo = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const linhas = linhasAtuais.map((l) => [l.u.nome, l.u.email, l.sit.rotulo, l.ultimo || '', l.acessos, l.checkins,
+      Math.round(l.aderencia * 100), l.ultimoTreino || '', l.total, diaDeInstante(l.u.cadastro) || ''].map(campo).join(';'));
+    const blob = new Blob([`﻿${cab.join(';')}\n${linhas.join('\n')}\n`], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `usuarios-${hoje()}-${periodo === 'tudo' ? 'tudo' : `${periodo}d`}.csv`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+
+  // ---------- Detalhe do usuário ----------
+  const NOMES_EVENTO = {
+    sessao: (d) => `Abriu o app${d.navegador ? ` (${d.navegador}, ${d.sistema}${d.instalado ? ', instalado' : ''})` : ''}`,
+    tela: (d) => `Abriu a tela ${({ treino: 'Treino', dashboard: 'Dashboard', voce: 'Você' })[d.tela] || d.tela}`,
+    exercicio_concluido: (d) => `Concluiu ${d.exercicio}${d.sem_peso ? ' (sem peso)' : ''}${d.origem === 'dash' ? ' pelo Dashboard' : ''}`,
+    recorde: (d) => `Novo recorde em ${d.exercicio}`,
+    checkin_criado: (d) => `Fez check-in de ${(TIPOS[d.tipo] || {}).nome || d.tipo}${d.retroativo ? ' (retroativo)' : ''}`,
+    checkin_editado: (d) => `Editou check-in de ${(TIPOS[d.tipo] || {}).nome || d.tipo}`,
+    checkin_excluido: (d) => `Excluiu check-in de ${(TIPOS[d.tipo] || {}).nome || d.tipo}`,
+    checkin_encerrado: (d) => `Encerrou check-in de ${(TIPOS[d.tipo] || {}).nome || d.tipo}`,
+    video: (d) => `Viu o vídeo de ${d.exercicio}`,
+    sem_peso: (d) => `${d.ativo ? 'Marcou' : 'Desmarcou'} ${d.exercicio} como sem peso`,
+    semana_alterada: () => 'Alterou a semana',
+    tema: (d) => `Mudou o tema para ${d.tema}`,
+    foto: (d) => ({ nova: 'Adicionou foto', trocada: 'Trocou a foto', removida: 'Removeu a foto' })[d.acao] || 'Alterou a foto',
+    erro: (d) => `Erro (${d.origem}): ${d.mensagem}`,
+    sessao_perdida: (d) => `Precisou entrar de novo sem ter saído (${d.horas_desde} h sem usar, ${d.navegador}, ${d.sistema})`,
+    saiu: () => 'Saiu da conta',
+  };
+  const ICONE_EVENTO = { sessao: 'abrir', exercicio_concluido: 'peso', recorde: 'trofeu', checkin_criado: 'cal', checkin_editado: 'cal', checkin_excluido: 'cal', checkin_encerrado: 'cal', erro: 'alerta', sessao_perdida: 'alerta' };
+  const quando = (iso) => { const d = new Date(iso); return `${fmtData(ymd(d))}, ${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+
+  function abrirDetalhe(id) {
+    const j = janela(periodo);
+    const ativosMap = diasAtivos();
+    const l = linhasUsuarios(j, ativosMap).find((x) => x.u.id === id);
+    if (!l) return;
+    const { u } = l;
+    // Mapa: check-ins por dia nas últimas 8 semanas (colunas = semanas, linhas = Seg..Dom).
+    const fim = hoje();
+    const segAtual = somarDias(fim, -((deYmd(fim).getDay() + 6) % 7));
+    const ini = somarDias(segAtual, -49);
+    const porDia = {};
+    dados.checkins.filter((c) => c.usuario_id === id).forEach((c) => { const d = diaDeCheckin(c); porDia[d] = (porDia[d] || 0) + 1; });
+    let mapa = '';
+    ORDEM_SEMANA.forEach((dow, linha) => {
+      mapa += `<span>${CURTOS[dow]}</span>`;
+      for (let s = 0; s < 8; s += 1) {
+        const d = somarDias(ini, s * 7 + linha);
+        const n = Math.min(3, porDia[d] || 0);
+        mapa += d > fim ? '<i class="futuro"></i>' : `<i data-n="${n}" title="${fmtData(d)}: ${porDia[d] || 0} check-in(s)"></i>`;
+      }
+    });
+    const semana = Array.isArray(u.semana) && u.semana.length === 7 ? u.semana : null;
+    const semanaHTML = ORDEM_SEMANA.map((i) => `<li><b>${CURTOS[i]}</b>${semana
+      ? (semana[i].length ? semana[i].map((t) => `<span class="selo ${(TIPOS[t] || {}).grupo}" title="${(TIPOS[t] || {}).nome}">${(TIPOS[t] || {}).selo}</span>`).join('') : '<small>—</small>')
+      : '<small>padrão</small>'}</li>`).join('');
+    const itens = [
+      ...dados.checkins.filter((c) => c.usuario_id === id).map((c) => ({
+        em: new Date(`${String(c.inicio).slice(0, 19)}`).toISOString(), icone: 'cal', alerta: false,
+        texto: `Check-in de ${(TIPOS[c.tipo] || {}).nome || c.tipo}${c.recuperacao ? `, recuperação ${c.recuperacao}/5` : ''}${c.retroativo ? ' (retroativo)' : ''}`,
+      })),
+      ...dados.eventos.filter((e) => e.usuario_id === id && !['tela', 'checkin_criado'].includes(e.tipo)).map((e) => ({
+        em: e.criado_em, icone: ICONE_EVENTO[e.tipo] || 'ponto', alerta: ['erro', 'sessao_perdida'].includes(e.tipo),
+        texto: (NOMES_EVENTO[e.tipo] || (() => e.tipo))(e.dados || {}),
+      })),
+    ].sort((a, b) => (a.em < b.em ? 1 : -1)).slice(0, 25);
+    $('det-corpo').innerHTML = `
+      <div class="det-topo">
+        <span class="avatar" aria-hidden="true">${esc(iniciais(u.nome, u.email))}</span>
+        <div><h2 id="det-nome">${esc(u.nome || 'Sem nome')}</h2><p>${esc(u.email)}</p></div>
+        <button class="fechar" type="button" data-fechar aria-label="Fechar">${ICON.x}</button>
+      </div>
+      <p><span class="situacao ${l.sit.chave}">${l.sit.icone}${l.sit.rotulo}</span>
+        <span class="nota" style="display:inline">&nbsp;Cadastro em ${u.cadastro ? fmtData(diaDeInstante(u.cadastro), { day: 'numeric', month: 'short', year: 'numeric' }) : '—'} · último uso ${relativo(l.ultimo)}</span></p>
+      <dl class="mini">
+        <div><dt>Check-ins no período</dt><dd>${fmtNum(l.checkins)}</dd></div>
+        <div><dt>Aderência no período</dt><dd>${fmtNum(l.aderencia * 100)}%</dd></div>
+        <div><dt>Check-ins no total</dt><dd>${fmtNum(l.total)}</dd></div>
+        <div><dt>Acessos</dt><dd>${fmtNum(l.acessos)}</dd></div>
+      </dl>
+      <section class="det-sec" aria-labelledby="det-mapa">
+        <h3 id="det-mapa">Check-ins nas últimas 8 semanas</h3>
+        <div class="mapa" role="img" aria-label="Mapa de check-ins por dia nas últimas 8 semanas">${mapa}</div>
+        <div class="mapa-leg"><span>Nenhum</span><i style="background:var(--int-0)"></i><i style="background:var(--int-2)"></i><i style="background:var(--int-3)"></i><i style="background:var(--int-4)"></i><span>3 ou mais</span></div>
+      </section>
+      <section class="det-sec" aria-labelledby="det-semana">
+        <h3 id="det-semana">Semana montada</h3>
+        <ul class="semana">${semanaHTML}</ul>
+        ${semana ? '' : '<p class="nota" style="margin-top:6px">Ainda usa a semana padrão do app.</p>'}
+      </section>
+      <section class="det-sec" aria-labelledby="det-sp">
+        <h3 id="det-sp">Exercícios sem peso</h3>
+        ${(u.sem_peso || []).length ? `<ul class="chips">${u.sem_peso.map((n) => `<li>${esc(n)}</li>`).join('')}</ul>` : '<p class="nota">Nenhum.</p>'}
+      </section>
+      <section class="det-sec" aria-labelledby="det-tempo">
+        <h3 id="det-tempo">Atividade recente</h3>
+        ${itens.length ? `<ul class="linha-tempo">${itens.map((it) => `<li class="${it.alerta ? 'alerta' : ''}">${ICON[it.icone]}<span>${esc(it.texto)}</span><time>${quando(it.em)}</time></li>`).join('')}</ul>`
+          : '<p class="nota">Nenhuma atividade registrada.</p>'}
+      </section>`;
+    const dlg = $('detalhe');
+    if (!dlg.open) dlg.showModal();
+  }
+
+  // ---------- Eventos de interface ----------
+  document.addEventListener('click', async (e) => {
+    if (e.target.closest('#entrar')) {
+      await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.origin + location.pathname } });
+      return;
+    }
+    if (e.target.closest('#sair')) { await sb.auth.signOut(); return iniciar(); }
+    if (e.target.closest('#tentar')) return iniciar();
+    const p = e.target.closest('[data-periodo]');
+    if (p) {
+      periodo = p.dataset.periodo;
+      document.querySelectorAll('[data-periodo]').forEach((b) => b.setAttribute('aria-pressed', String(b === p)));
+      return render();
+    }
+    const alt = e.target.closest('[data-alternar]');
+    if (alt) {
+      const id = alt.dataset.alternar;
+      const mostrarTabela = $(`${id}-tabela`).hidden;
+      $(`${id}-tabela`).hidden = !mostrarTabela;
+      $(id).hidden = mostrarTabela;
+      alt.textContent = mostrarTabela ? 'Ver gráfico' : 'Ver tabela';
+      alt.setAttribute('aria-expanded', String(mostrarTabela));
+      if (!mostrarTabela) renderGraficos(janela(periodo), diasAtivos());
+      return;
+    }
+    const th = e.target.closest('#usuarios th[data-col] button');
+    if (th) {
+      const col = th.parentElement.dataset.col;
+      ordem = { col, dir: ordem.col === col ? -ordem.dir : (col === 'nome' || col === 'situacao' ? 1 : -1) };
+      return render();
+    }
+    const tr = e.target.closest('#usuarios-corpo tr[data-usuario]');
+    if (tr) return abrirDetalhe(tr.dataset.usuario);
+    if (e.target.closest('#csv')) return exportarCSV();
+    if (e.target.closest('#atualizar')) return carregar();
+    if (e.target === $('detalhe') || e.target.closest('[data-fechar]')) $('detalhe').close();
+  });
+  $('busca').addEventListener('input', (e) => { busca = e.target.value; if (dados) renderUsuarios(janela(periodo), diasAtivos()); });
+  $('ordenar-cel').addEventListener('change', (e) => {
+    const col = e.target.value;
+    ordem = { col, dir: col === 'nome' ? 1 : -1 };
+    render();
+  });
+
+  // Os gráficos são desenhados na largura real; redesenha quando a janela muda.
+  let timerTamanho = null, larguraAnterior = innerWidth;
+  addEventListener('resize', () => {
+    if (!dados || innerWidth === larguraAnterior) return;
+    larguraAnterior = innerWidth;
+    clearTimeout(timerTamanho);
+    timerTamanho = setTimeout(() => renderGraficos(janela(periodo), diasAtivos()), 150);
+  });
+
+  if (sb) {
+    sb.auth.onAuthStateChange((evento) => {
+      if (evento === 'SIGNED_IN' || evento === 'SIGNED_OUT') setTimeout(iniciar, 0);
+    });
+  }
+  iniciar();
+})();
+</script>
+</body>
+</html>
