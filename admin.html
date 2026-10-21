@@ -108,6 +108,7 @@
   .on-lista b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .on-lista small { color: var(--tinta-2); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .on-vazio { margin: 0; color: var(--tinta-2); font-size: 14px; }
+  .on-erro { margin: 0 0 10px; overflow-wrap: anywhere; }
   .avatar { position: relative; }
   .avatar.on::after {
     content: ""; position: absolute; right: -1px; bottom: -1px; width: 12px; height: 12px; border-radius: 50%;
@@ -515,7 +516,7 @@
   const NOMES_TELA = { treino: 'Treino', dashboard: 'Dashboard', voce: 'Você' };
   const canais = new Map(); // id do usuário → canal
   const online = new Map(); // id do usuário → { tela, desde, sistema }
-  let detalheId = null;
+  let detalheId = null, verErroOnline = false;
   async function ligarOnline() {
     if (!sb.channel) return;
     try { if (sb.realtime && sb.realtime.setAuth) await sb.realtime.setAuth(); } catch (_) {}
@@ -528,7 +529,12 @@
         if (metas.length) online.set(u.id, metas[0]); else online.delete(u.id);
         atualizarOnline();
       });
-      canal.subscribe((status) => { canal.situacaoOnline = status; atualizarOnline(); });
+      canal.subscribe((status, err) => {
+        canal.situacaoOnline = status;
+        canal.erroOnline = status === 'SUBSCRIBED' ? '' : `${status}${err ? `: ${err.message || err}` : ''}`;
+        if (status !== 'SUBSCRIBED') console.warn(`Realtime online:${u.id}`, canal.erroOnline);
+        atualizarOnline();
+      });
       canais.set(u.id, canal);
     });
     atualizarOnline();
@@ -549,20 +555,30 @@
     ? `<span class="situacao online"><span class="ponto on" aria-hidden="true"></span>On-line · ${esc(descricaoOnline(online.get(id)))}</span>` : '');
   function atualizarOnline() {
     if (!dados) return;
-    const status = [...canais.values()].map((c) => c.situacaoOnline);
-    const estado = status.includes('SUBSCRIBED') ? 'vivo'
-      : status.length && status.every((s) => ['CHANNEL_ERROR', 'TIMED_OUT', 'CLOSED'].includes(s)) ? 'erro' : 'conectando';
+    // Status por canal: "Ao vivo" só quando todos conectaram; se parte falhou, mostra quantos e o erro.
+    const FALHAS = ['CHANNEL_ERROR', 'TIMED_OUT', 'CLOSED'];
+    const todos = [...canais.entries()];
+    const conectados = todos.filter(([, c]) => c.situacaoOnline === 'SUBSCRIBED').length;
+    const falharam = todos.filter(([, c]) => FALHAS.includes(c.situacaoOnline));
+    const estado = todos.length && falharam.length === todos.length ? 'erro'
+      : falharam.length && conectados + falharam.length === todos.length ? 'parcial'
+        : conectados ? 'vivo' : 'conectando';
+    const nomeDe = (id) => { const u = dados.usuarios.find((x) => x.id === id); return u ? (u.nome || u.email) : id; };
+    const detalheErro = falharam.length
+      ? `<p class="on-vazio on-erro"${estado === 'parcial' && !verErroOnline ? ' hidden' : ''}>Não conectou: ${esc(falharam.map(([id]) => nomeDe(id)).join(', '))}. Erro: ${esc(falharam[0][1].erroOnline)}</p>` : '';
     const lista = dados.usuarios.filter((u) => online.has(u.id))
       .sort((a, b) => (a.nome || a.email).localeCompare(b.nome || b.email, 'pt-BR'));
     $('online').classList.toggle('tem', lista.length > 0);
     $('on-conta').textContent = estado === 'erro' ? '' : `· ${lista.length}`;
-    $('on-status').innerHTML = estado === 'vivo' ? 'Ao vivo' : estado === 'erro' ? '' : 'Conectando…';
-    $('on-corpo').innerHTML = estado === 'erro'
-      ? '<p class="on-vazio">Ao vivo indisponível. Confira o passo do Realtime no README. <button class="link-btn" type="button" id="tentar-online">Tentar de novo</button></p>'
-      : lista.length ? `<ul class="on-lista">${lista.map((u) => `<li><button type="button" data-abrir="${u.id}">
+    $('on-status').innerHTML = estado === 'vivo' ? 'Ao vivo' : estado === 'erro' ? ''
+      : estado === 'parcial' ? `Ao vivo em ${conectados} de ${todos.length} usuários · <button class="link-btn" type="button" id="ver-erro-online" aria-expanded="${verErroOnline}">${verErroOnline ? 'Ocultar detalhes' : 'Ver detalhes'}</button>`
+        : 'Conectando…';
+    $('on-corpo').innerHTML = (estado === 'erro'
+      ? `<p class="on-vazio">Ao vivo indisponível. <button class="link-btn" type="button" id="tentar-online">Tentar de novo</button></p>${detalheErro}`
+      : estado === 'parcial' ? detalheErro : '') + (estado === 'erro' ? '' : lista.length ? `<ul class="on-lista">${lista.map((u) => `<li><button type="button" data-abrir="${u.id}">
           <span class="avatar on" aria-hidden="true">${esc(iniciais(u.nome, u.email))}</span>
           <span><b>${esc(u.nome || u.email)}</b><small>${esc(descricaoOnline(online.get(u.id)))}</small></span></button></li>`).join('')}</ul>`
-        : `<p class="on-vazio">${estado === 'vivo' ? 'Ninguém on-line agora.' : 'Conectando ao vivo…'}</p>`;
+        : `<p class="on-vazio">${estado === 'conectando' ? 'Conectando ao vivo…' : 'Ninguém on-line agora.'}</p>`);
     document.querySelectorAll('#usuarios-corpo tr[data-usuario]').forEach((tr) => {
       const on = online.has(tr.dataset.usuario);
       tr.querySelector('.avatar').classList.toggle('on', on);
@@ -950,6 +966,7 @@
     }
     if (e.target.closest('#sair')) { desligarOnline(); await sb.auth.signOut(); return iniciar(); }
     if (e.target.closest('#tentar-online')) { desligarOnline(); return ligarOnline(); }
+    if (e.target.closest('#ver-erro-online')) { verErroOnline = !verErroOnline; return atualizarOnline(); }
     const abrir = e.target.closest('#on-corpo [data-abrir]');
     if (abrir) return abrirDetalhe(abrir.dataset.abrir);
     if (e.target.closest('#tentar')) return iniciar();
