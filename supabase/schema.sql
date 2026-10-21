@@ -130,3 +130,43 @@ grant update (id, nome, email, foto, tema, dias_jiu, semana, sem_peso) on public
 -- select nome, email, acessos,
 --        to_char(ultimo_acesso at time zone 'America/Sao_Paulo', 'DD/MM/YYYY HH24:MI') as ultimo_acesso
 -- from public.perfis order by ultimo_acesso desc nulls last;
+
+-- ---------- Monitoramento (dashboard /admin) ----------
+-- Administradores: só quem está aqui lê os dados de todos pelo dashboard (funções "admin_*").
+-- Para se tornar administrador, rode uma vez (trocando o e-mail):
+--   insert into public.admins (usuario_id) select id from auth.users where email = 'seu-email@gmail.com' on conflict do nothing;
+create table if not exists public.admins (
+  usuario_id uuid primary key references auth.users (id) on delete cascade,
+  criado_em timestamptz not null default now()
+);
+alter table public.admins enable row level security;
+-- Sem políticas: ninguém lê nem altera a lista pela API; só a função abaixo a consulta.
+
+create or replace function public.eh_admin()
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (select 1 from public.admins where usuario_id = (select auth.uid()));
+$$;
+revoke execute on function public.eh_admin() from public, anon;
+grant execute on function public.eh_admin() to authenticated;
+
+-- Eventos de uso do app (telas, recursos, erros), para entender o uso e evoluir o app.
+-- Cada usuário só grava os próprios eventos e não consegue lê-los; o dashboard lê pelas funções admin_*.
+create table if not exists public.eventos (
+  id bigint generated always as identity primary key,
+  usuario_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  tipo text not null check (tipo ~ '^[a-z_]{2,40}$'),
+  dados jsonb not null default '{}' check (jsonb_typeof(dados) = 'object' and pg_column_size(dados) <= 2000),
+  criado_em timestamptz not null default now()
+);
+create index if not exists eventos_criado_em on public.eventos (criado_em);
+create index if not exists eventos_usuario on public.eventos (usuario_id, criado_em);
+alter table public.eventos enable row level security;
+drop policy if exists "grava os próprios eventos" on public.eventos;
+create policy "grava os próprios eventos" on public.eventos
+  for insert to authenticated
+  with check (usuario_id = (select auth.uid()));

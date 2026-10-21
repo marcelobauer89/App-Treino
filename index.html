@@ -900,6 +900,7 @@
     <div class="bloco-topo"><h2 class="secao" id="conta-titulo">Conta</h2></div>
     <div class="cartao">
       <p class="conta-linha">Conectado com o Google como <b id="conta-email"></b></p>
+      <p class="nota-campo">Para melhorar o app, registramos como ele é usado (telas abertas e recursos usados). Pesos, cargas e observações não entram nesse registro.</p>
       <button class="btn-sec" type="button" id="sair">Sair da conta</button>
     </div>
   </section>
@@ -1242,6 +1243,7 @@
   async function falhaAoSalvar(erro) {
     // Banco com o schema.sql antigo: sem a coluna perfis.semana ou sem a tabela cargas.
     const msg = (erro && erro.message) || '';
+    registrarErro('salvar', msg);
     if (/semana/.test(msg)) toast('Para salvar a semana, rode de novo o supabase/schema.sql no Supabase (veja o README).');
     else if (/sem_peso/.test(msg)) toast('Para salvar essa opção, rode de novo o supabase/schema.sql no Supabase (veja o README).');
     else if (/cargas/.test(msg)) toast('Para salvar os pesos, rode de novo o supabase/schema.sql no Supabase (veja o README).');
@@ -1253,6 +1255,56 @@
   const salvarPerfil = (campos) => enviar(() => sb.from('perfis').update(campos).eq('id', usuario.id));
   const salvarCarga = (r) => enviar(() => sb.from('cargas')
     .upsert({ usuario_id: usuario.id, data: r.data, treino: r.treino, series: r.series }, { onConflict: 'usuario_id,data,treino' }));
+
+  // ---------- Eventos de uso (para o dashboard /admin) ----------
+  // Vão numa fila e são enviados em lote: a cada 10 s, com 20 eventos ou quando a página some.
+  // Silenciosos: sem aviso e sem nova tentativa; se a tabela não existir, o envio para nesta sessão.
+  // Não levam pesos corporais, cargas nem observações.
+  let eventosFila = [], eventosTimer = null, eventosLigados = true;
+  function registrarEvento(tipo, dados = {}) {
+    if (!usuario || !eventosLigados) return;
+    eventosFila.push({ usuario_id: usuario.id, tipo, dados });
+    if (eventosFila.length >= 20) enviarEventos();
+    else if (!eventosTimer) eventosTimer = setTimeout(enviarEventos, 10000);
+  }
+  function enviarEventos() {
+    clearTimeout(eventosTimer);
+    eventosTimer = null;
+    if (!eventosFila.length || !sb || !eventosLigados) return Promise.resolve();
+    const lote = eventosFila;
+    eventosFila = [];
+    return sb.from('eventos').insert(lote).then(({ error }) => { if (error) eventosLigados = false; }, () => {});
+  }
+  // Navegador e sistema, para cruzar erros e sessões perdidas com o aparelho.
+  function infoAparelho() {
+    const ua = navigator.userAgent;
+    const navegador = /Instagram/.test(ua) ? 'Instagram' : /FBAN|FBAV/.test(ua) ? 'Facebook'
+      : /WhatsApp/.test(ua) ? 'WhatsApp' : /SamsungBrowser/.test(ua) ? 'Samsung Internet'
+        : /Edg\//.test(ua) ? 'Edge' : /CriOS|Chrome\//.test(ua) ? 'Chrome' : /FxiOS|Firefox\//.test(ua) ? 'Firefox'
+          : /Safari\//.test(ua) ? 'Safari' : 'Outro';
+    const sistema = /iPhone|iPad|iPod/.test(ua) ? 'iOS' : /Android/.test(ua) ? 'Android'
+      : /Mac OS X/.test(ua) ? 'macOS' : /Windows/.test(ua) ? 'Windows' : /Linux/.test(ua) ? 'Linux' : 'Outro';
+    const instalado = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+    return { navegador, sistema, instalado, largura: innerWidth };
+  }
+  let errosNaSessao = 0;
+  function registrarErro(origem, mensagem) {
+    if (errosNaSessao >= 5) return;
+    errosNaSessao += 1;
+    registrarEvento('erro', { origem, mensagem: String(mensagem || '').slice(0, 200), ...infoAparelho() });
+  }
+  window.addEventListener('error', (e) => registrarErro('js', e.message));
+  window.addEventListener('unhandledrejection', (e) => registrarErro('promessa', e.reason && (e.reason.message || e.reason)));
+  // Sessão perdida: a pessoa precisou entrar de novo pelo Google sem ter tocado em "Sair da conta".
+  const CHAVE_SESSAO = 'bauer-sessao';
+  function marcarSessao() {
+    try { localStorage.setItem(CHAVE_SESSAO, JSON.stringify({ id: usuario.id, visto: Date.now() })); } catch (_) {}
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'hidden' || !usuario) return;
+    marcarSessao();
+    enviarEventos();
+  });
 
   // Pesos digitados são enviados depois de uma pausa, para não gravar a cada tecla.
   const timersSeries = new Map();
@@ -1639,13 +1691,22 @@
   // "Concluir" grava tudo o que está na tela, inclusive a carga pré-preenchida.
   function concluirLog() {
     const ex = exsDoCtx()[exAberto];
-    if (config.semPeso.has(ex.nome)) { marcarFeito(ex.nome, true); return logDialog.close(); }
+    const evento = { treino: logCtx.tipo, exercicio: ex.nome, origem: logCtx.origem, outro_dia: logCtx.data !== hoje() };
+    if (config.semPeso.has(ex.nome)) {
+      marcarFeito(ex.nome, true);
+      registrarEvento('exercicio_concluido', { ...evento, sem_peso: true });
+      return logDialog.close();
+    }
     const campos = camposDoModal();
     campos.forEach(salvarInput);
     const invalido = campos.find((el) => el.getAttribute('aria-invalid') === 'true');
     if (invalido) return invalido.focus();
+    registrarEvento('exercicio_concluido', { ...evento, sem_peso: false, com_carga: temCarga(pesosDoDia(logCtx.data, logCtx.tipo)[ex.nome]) });
     const rec = recordeNoDia(logCtx.tipo, ex.nome, logCtx.data);
-    if (rec && rec.kg > logCtx.maxAoAbrir) toast(`Novo recorde em ${ex.nome}: ${fmtKg(rec.kg)} kg (antes ${fmtKg(rec.antes)} kg).`);
+    if (rec && rec.kg > logCtx.maxAoAbrir) {
+      toast(`Novo recorde em ${ex.nome}: ${fmtKg(rec.kg)} kg (antes ${fmtKg(rec.antes)} kg).`);
+      registrarEvento('recorde', { treino: logCtx.tipo, exercicio: ex.nome });
+    }
     logDialog.close();
   }
 
@@ -1696,6 +1757,7 @@
     depoisEncerrar = null;
     encDialog.close();
     toast(`${TIPOS[a.tipo].nome} encerrado: ${fmtDur(duracaoMin(a))} de treino.`);
+    registrarEvento('checkin_encerrado', { tipo: a.tipo });
     atualizarCheckinUI();
     if (depois) depois();
   }
@@ -1781,6 +1843,7 @@
       salvarCheckin(editado);
       formDialog.close();
       toast(`Check-in de ${TIPOS[tipo].nome} atualizado.`);
+      registrarEvento('checkin_editado', { tipo });
       diaSel = data;
       mesExibido = { ano: deData(data).getFullYear(), mes: deData(data).getMonth() };
       ckExpandido = editado.id;
@@ -1796,6 +1859,7 @@
     salvarCheckin(novo);
     formDialog.close();
     toast(`Check-in de ${TIPOS[tipo].nome} salvo.`);
+    registrarEvento('checkin_criado', { tipo, retroativo: novo.retroativo, origem: telaAtual() });
     diaSel = data;
     mesExibido = { ano: deData(data).getFullYear(), mes: deData(data).getMonth() };
     atualizarCheckinUI();
@@ -1909,12 +1973,19 @@
 
   // O vídeo só carrega com o cartão na tela e no painel do vídeo; sai ao voltar, ao rolar para longe ou ao trocar de
   // tela (para de tocar e de gastar dados).
+  const videosVistos = new Set(); // um evento por vídeo e sessão
   function atualizarVideo(sl) {
     const painel = sl.querySelector('.ex-video');
     const quadro = painel.querySelector('.video-quadro');
     const iframe = quadro.querySelector('iframe');
     const mostrar = sl.dataset.visivel === '1' && painelAtivo(sl) === 1;
-    if (mostrar && !iframe) quadro.insertAdjacentHTML('beforeend', iframeVideo(painel.dataset.video, painel.dataset.nome));
+    if (mostrar && !iframe) {
+      quadro.insertAdjacentHTML('beforeend', iframeVideo(painel.dataset.video, painel.dataset.nome));
+      if (!videosVistos.has(painel.dataset.nome)) {
+        videosVistos.add(painel.dataset.nome);
+        registrarEvento('video', { exercicio: painel.dataset.nome });
+      }
+    }
     if (!mostrar && iframe) iframe.remove();
   }
   const observadorVideo = 'IntersectionObserver' in window
@@ -2262,12 +2333,16 @@
     $('semana-padrao').disabled = JSON.stringify(config.semana) === JSON.stringify(SEMANA_PADRAO);
   }
 
+  let timerEventoSemana;
   function mudarSemana(fn) {
     const s = copiaSemana(config.semana);
     fn(s);
     config.semana = s;
     semanaDaConta = true;
     salvarPerfil({ semana: s });
+    // Um evento por rodada de edição (arrastar várias vezes seguidas conta uma vez).
+    clearTimeout(timerEventoSemana);
+    timerEventoSemana = setTimeout(() => registrarEvento('semana_alterada'), 3000);
     renderSemanaConfig();
     renderHoje();
     atualizarCheckinUI();
@@ -2474,6 +2549,7 @@
     if (t === 'voce') { renderConfig(); erroFoto(''); }
     $('fab-checkin').hidden = t === 'voce';
     $('fab-checkin').classList.remove('encolhido');
+    registrarEvento('tela', { tela: t });
   }
 
   function atualizarCheckinUI() {
@@ -2584,6 +2660,7 @@
     const nome = chave.dataset.semPeso;
     if (chave.checked) config.semPeso.add(nome); else config.semPeso.delete(nome);
     salvarPerfil({ sem_peso: [...config.semPeso] });
+    registrarEvento('sem_peso', { exercicio: nome, ativo: chave.checked });
     abrirLog(exAberto);
     logDialog.querySelector('[data-sem-peso]').focus();
   });
@@ -2674,6 +2751,7 @@
       excluirCheckinRemoto(alvo.id);
       ckExpandido = null; ckExcluindo = null;
       toast(`Check-in de ${TIPOS[alvo.tipo].nome} excluído.`);
+      registrarEvento('checkin_excluido', { tipo: alvo.tipo });
       atualizarCheckinUI();
       return;
     }
@@ -2693,6 +2771,7 @@
     erroFoto('');
     renderFoto();
     toast(tinhaFoto ? 'Foto alterada com sucesso.' : 'Foto salva com sucesso.');
+    registrarEvento('foto', { acao: tinhaFoto ? 'trocada' : 'nova' });
   });
 
   $('remover-foto').addEventListener('click', () => {
@@ -2701,6 +2780,7 @@
     erroFoto('');
     renderFoto();
     toast('Foto removida.');
+    registrarEvento('foto', { acao: 'removida' });
   });
 
   // Nome salvo sozinho: depois de uma pausa na digitação e ao sair do campo (ou Enter).
@@ -2728,6 +2808,7 @@
     if (e.target.name === 'tema') {
       config.tema = e.target.value;
       salvarPerfil({ tema: config.tema });
+      registrarEvento('tema', { tema: config.tema });
       guardarTemaLocal();
       aplicarTema();
     }
@@ -2736,7 +2817,9 @@
   $('sair').addEventListener('click', async () => {
     salvarNome();
     salvarSeriesPendentes();
-    await fila;
+    registrarEvento('saiu');
+    try { localStorage.removeItem(CHAVE_SESSAO); } catch (_) {}
+    await Promise.all([fila, enviarEventos()]);
     await sb.auth.signOut();
   });
 
@@ -2772,6 +2855,7 @@
   let relogio = null;
   async function entrarNoApp(sessao) {
     usuario = sessao.user;
+    const voltouDoGoogle = /[?&]code=/.test(location.search);
     mostrarEntrada('carregando');
     // Limpa o código de retorno do login do Google da barra de endereço.
     if (/[?&]code=/.test(location.search)) history.replaceState(null, '', location.pathname + location.hash);
@@ -2784,6 +2868,13 @@
     }
     // Conta o acesso (último acesso e quantidade, vistos só no Supabase). Sem a função no banco, segue normal.
     sb.rpc('registrar_acesso').then(() => {}, () => {});
+    let anterior = null;
+    try { anterior = JSON.parse(localStorage.getItem(CHAVE_SESSAO) || 'null'); } catch (_) {}
+    registrarEvento('sessao', { ...infoAparelho(), login: voltouDoGoogle });
+    if (voltouDoGoogle && anterior && anterior.id === usuario.id) {
+      registrarEvento('sessao_perdida', { ...infoAparelho(), horas_desde: Math.round((Date.now() - anterior.visto) / 36e5) });
+    }
+    marcarSessao();
     guardarTemaLocal();
     aplicarTema();
     document.body.classList.remove('deslogado');
