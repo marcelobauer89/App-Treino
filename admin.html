@@ -667,9 +667,10 @@
     const total = dados.usuarios.length;
     const rotuloPeriodo = periodo === 'tudo' ? 'desde o início' : `nos últimos ${periodo} dias`;
     // No celular o contexto usa a versão curta (o período já aparece no seletor).
-    const tile = (titulo, valor, { longo, curto = longo, d = '', largo = false }) => `
+    // Sem período anterior ("Tudo"), d chega null e não mostra variação.
+    const tile = (titulo, valor, { longo, curto = longo, d, largo = false }) => `
       <div class="kpi${largo ? ' largo' : ''}"><dt>${titulo}</dt><dd><span class="valor">${valor}</span></dd>
-      <dd class="ctx"><span class="longo">${longo}${d ? ' · ' : ''}</span><span class="curto">${curto}</span>${d}</dd></div>`;
+      <dd class="ctx"><span class="longo">${longo}${d ? ' · ' : ''}</span><span class="curto">${curto}</span>${d || ''}</dd></div>`;
     $('kpis').innerHTML = [
       tile('Usuários ativos', `${m.ativos}<small> de ${total}</small>`, { longo: rotuloPeriodo, curto: '', d: a && delta(m.ativos, a.ativos) }),
       tile('Check-ins', fmtNum(m.checkins), { longo: rotuloPeriodo, curto: '', d: a && delta(m.checkins, a.checkins) }),
