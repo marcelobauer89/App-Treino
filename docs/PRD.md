@@ -116,6 +116,7 @@ São 41 requisitos em 9 grupos; os marcados P0 bloqueiam o lançamento do MVP. A
 | RF-05 | Usuário pode excluir a conta e todos os seus dados | P0 | Pendente |
 | RF-36 | Tela de entrada com título "OSS", descrição, botão "Continuar com o Google" em largura total, crédito do desenvolvedor e mensagens claras para login cancelado, erro de configuração e falha de rede | P1 | Feito |
 | RF-41 | Registro de eventos de uso (telas, exercícios concluídos, check-ins criados/editados/excluídos, recordes, vídeos, "Sem peso", semana, tema, foto, erros e sessões perdidas, com navegador e aparelho), enviados em lote e sem pesos, cargas ou observações; base do dashboard de monitoramento (`admin.html`, só administradores) | P1 | Parcial: eventos e dashboard (números principais, gráficos, usuários e detalhe) feitos; falta a análise de recursos, jornada e saúde do app |
+| RF-42 | Ver no monitoramento quem está on-line agora, ao vivo, com a tela atual e há quanto tempo está no app (Supabase Realtime Presence em canal privado por usuário; só administradores leem) | P2 | Feito |
 | RF-37 | Registrar o último acesso e a quantidade de acessos de cada usuário (1 acesso a cada 30 min no máximo, pela hora do servidor), visíveis só para o administrador no Supabase | P2 | Feito |
 | **Onboarding e configuração** |  |  |  |
 | RF-06 | Usuário informa peso atual, % de gordura, alvo próprio e data de início do bloco | P0 | Pendente |

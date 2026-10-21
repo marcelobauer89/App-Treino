@@ -900,7 +900,7 @@
     <div class="bloco-topo"><h2 class="secao" id="conta-titulo">Conta</h2></div>
     <div class="cartao">
       <p class="conta-linha">Conectado com o Google como <b id="conta-email"></b></p>
-      <p class="nota-campo">Para melhorar o app, registramos como ele é usado (telas abertas e recursos usados). Pesos, cargas e observações não entram nesse registro.</p>
+      <p class="nota-campo">Para melhorar o app, registramos como ele é usado (telas abertas, recursos usados e quando ele está aberto). Pesos, cargas e observações não entram nesse registro.</p>
       <button class="btn-sec" type="button" id="sair">Sair da conta</button>
     </div>
   </section>
@@ -1301,10 +1301,39 @@
     try { localStorage.setItem(CHAVE_SESSAO, JSON.stringify({ id: usuario.id, visto: Date.now() })); } catch (_) {}
   }
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState !== 'hidden' || !usuario) return;
+    if (!usuario) return;
+    if (document.visibilityState !== 'hidden') {
+      presencaDesde = new Date().toISOString();
+      return marcarPresenca();
+    }
     marcarSessao();
     enviarEventos();
+    if (canalOnline) canalOnline.untrack().catch(() => {});
   });
+
+  // Presença ao vivo (Supabase Realtime): cada pessoa publica só no próprio canal privado "online:<id>",
+  // que só ela e os administradores conseguem ler. Mostra no monitoramento quem está com o app aberto e em que tela.
+  let canalOnline = null, presencaDesde = null;
+  async function ligarPresenca() {
+    if (!sb.channel || (canalOnline && canalOnline.topic === `realtime:online:${usuario.id}`)) return;
+    desligarPresenca();
+    presencaDesde = new Date().toISOString();
+    try {
+      if (sb.realtime && sb.realtime.setAuth) await sb.realtime.setAuth();
+      canalOnline = sb.channel(`online:${usuario.id}`, { config: { private: true, presence: { key: usuario.id } } });
+      canalOnline.subscribe((status) => { if (status === 'SUBSCRIBED') marcarPresenca(); });
+    } catch (_) { canalOnline = null; }
+  }
+  function marcarPresenca() {
+    if (!canalOnline || !usuario || document.visibilityState === 'hidden') return;
+    canalOnline.track({ tela: telaAtual(), desde: presencaDesde, sistema: infoAparelho().sistema }).catch(() => {});
+  }
+  function desligarPresenca() {
+    if (!canalOnline) return;
+    const canal = canalOnline;
+    canalOnline = null;
+    canal.untrack().catch(() => {}).finally(() => sb.removeChannel(canal));
+  }
 
   // Pesos digitados são enviados depois de uma pausa, para não gravar a cada tecla.
   const timersSeries = new Map();
@@ -2550,6 +2579,7 @@
     $('fab-checkin').hidden = t === 'voce';
     $('fab-checkin').classList.remove('encolhido');
     registrarEvento('tela', { tela: t });
+    marcarPresenca();
   }
 
   function atualizarCheckinUI() {
@@ -2819,6 +2849,7 @@
     salvarSeriesPendentes();
     registrarEvento('saiu');
     try { localStorage.removeItem(CHAVE_SESSAO); } catch (_) {}
+    desligarPresenca();
     await Promise.all([fila, enviarEventos()]);
     await sb.auth.signOut();
   });
@@ -2868,6 +2899,7 @@
     }
     // Conta o acesso (último acesso e quantidade, vistos só no Supabase). Sem a função no banco, segue normal.
     sb.rpc('registrar_acesso').then(() => {}, () => {});
+    ligarPresenca();
     let anterior = null;
     try { anterior = JSON.parse(localStorage.getItem(CHAVE_SESSAO) || 'null'); } catch (_) {}
     registrarEvento('sessao', { ...infoAparelho(), login: voltouDoGoogle });
@@ -2924,6 +2956,7 @@
         return;
       }
       entrandoId = null;
+      desligarPresenca();
       usuario = null;
       checkins = [];
       $('entrar-google').disabled = false;
