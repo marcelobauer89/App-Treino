@@ -338,9 +338,6 @@
   .botao-arquivo input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
   .botao-arquivo:focus-within { outline: 2px solid var(--tatame-tinta); outline-offset: 2px; }
   .nota-campo { margin: 0; font-size: 13px; color: var(--tinta-2); }
-  .nome-status { display: flex; align-items: center; gap: 4px; color: var(--feito-tinta); font-weight: 600; }
-  .nome-status svg { width: 14px; height: 14px; }
-  .nome-status:empty { display: none; }
   .campo input[aria-invalid="true"] { border-color: var(--erro); }
   .opcao input:disabled { cursor: not-allowed; }
   .opcao input:disabled + span { opacity: .45; }
@@ -864,15 +861,13 @@
       <p class="form-erro" id="foto-erro" role="alert" hidden></p>
       <div class="campo">
         <label for="p-nome">Nome</label>
-        <input type="text" id="p-nome" autocomplete="name" maxlength="120" enterkeyhint="done" placeholder="Como você quer ser chamado" aria-describedby="nome-status">
-        <p class="nota-campo nome-status" id="nome-status" aria-live="polite"></p>
+        <input type="text" id="p-nome" autocomplete="name" maxlength="120" enterkeyhint="done" placeholder="Como você quer ser chamado">
       </div>
       <div class="campo">
         <label for="p-email">E-mail</label>
         <input type="email" id="p-email" readonly aria-describedby="email-nota">
         <p class="nota-campo" id="email-nota">E-mail da sua conta Google.</p>
       </div>
-      <p class="nota-campo">Nome e foto são salvos automaticamente.</p>
     </form>
   </section>
 
@@ -2692,11 +2687,12 @@
     try { foto = await processarFoto(arquivo); } catch (_) {
       return erroFoto('Não foi possível ler essa imagem. Escolha um arquivo JPG ou PNG.');
     }
+    const tinhaFoto = !!perfil.foto;
     perfil.foto = foto;
     salvarPerfil({ foto });
     erroFoto('');
     renderFoto();
-    toast('Foto atualizada.');
+    toast(tinhaFoto ? 'Foto alterada com sucesso.' : 'Foto salva com sucesso.');
   });
 
   $('remover-foto').addEventListener('click', () => {
@@ -2708,8 +2704,8 @@
   });
 
   // Nome salvo sozinho: depois de uma pausa na digitação e ao sair do campo (ou Enter).
-  // A confirmação fica embaixo do campo (um toast cobriria o botão tocado logo em seguida, como "Sair da conta").
-  let timerNome, timerStatus;
+  // Sem aviso para o nome: um toast cobriria o botão tocado logo em seguida (ex.: "Sair da conta").
+  let timerNome;
   function salvarNome() {
     clearTimeout(timerNome);
     const nome = $('p-nome').value.trim().slice(0, 120);
@@ -2717,14 +2713,10 @@
     perfil.nome = nome;
     salvarPerfil({ nome });
     renderFoto();
-    $('nome-status').innerHTML = `${ICON_CHECK}Salvo`;
-    clearTimeout(timerStatus);
-    timerStatus = setTimeout(() => { $('nome-status').textContent = ''; }, 2500);
   }
   $('p-nome').addEventListener('input', () => {
     clearTimeout(timerNome);
     timerNome = setTimeout(salvarNome, 1000);
-    $('nome-status').textContent = '';
   });
   $('p-nome').addEventListener('blur', salvarNome);
   // Sem botão de enviar, o Enter não submete o formulário: ele mesmo encerra a edição do nome.

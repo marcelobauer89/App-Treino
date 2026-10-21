@@ -119,7 +119,7 @@ São 40 requisitos em 9 grupos; os marcados P0 bloqueiam o lançamento do MVP. A
 | **Onboarding e configuração** |  |  |  |
 | RF-06 | Usuário informa peso atual, % de gordura, alvo próprio e data de início do bloco | P0 | Pendente |
 | RF-07 | Em Você → Minha semana, o usuário monta a semana arrastando Treino 1, 2, 3, Jiu-jitsu e Cardio para qualquer dia (domingo incluso), até 2 por dia, ou pelo botão + de cada dia; a terceira atividade toma o lugar da mais antiga; soltar fora tira do dia; "Voltar à semana padrão"; a agenda, o topo da tela Treino e as metas do Dashboard se ajustam na hora | P0 | Feito |
-| RF-31 | Tela Você com dados pessoais: nome, e-mail da conta Google e foto, recortada e reduzida no aparelho e exibida na barra inferior; nome e foto são salvos automaticamente (sem botão de salvar): o nome após uma pausa na digitação, ao sair do campo ou com Enter, com "Salvo" logo abaixo | P1 | Feito |
+| RF-31 | Tela Você com dados pessoais: nome, e-mail da conta Google e foto, recortada e reduzida no aparelho e exibida na barra inferior; nome e foto são salvos automaticamente, sem botão de salvar (o nome após uma pausa na digitação, ao sair do campo ou com Enter); ao escolher a foto aparece "Foto salva com sucesso." ou, ao trocar, "Foto alterada com sucesso." | P1 | Feito |
 | RF-32 | Tema do app: automático (segue o celular), claro ou escuro, aplicado antes da primeira pintura | P1 | Feito |
 | **Agenda e treino do dia** |  |  |  |
 | RF-08 | Tela Treino mostra data, hora e atividade do dia; mostra também semana atual (1–6) e fase | P0 | Parcial: falta semana e fase |
