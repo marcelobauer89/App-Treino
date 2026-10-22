@@ -106,6 +106,9 @@ alter table public.perfis add column if not exists sem_peso text[] not null defa
 alter table public.perfis add column if not exists ultimo_acesso timestamptz;
 alter table public.perfis add column if not exists acessos integer not null default 0;
 
+-- Resumo semanal por e-mail (função "resumo-semanal"): a pessoa pode desligar em Você ou pelo link do e-mail.
+alter table public.perfis add column if not exists emails_resumo boolean not null default true;
+
 -- O app chama ao abrir. Usa a hora do servidor e só soma 1 se o acesso anterior foi há mais de
 -- 30 min, para recarregar a página não inflar o número.
 create or replace function public.registrar_acesso()
@@ -124,7 +127,7 @@ grant execute on function public.registrar_acesso() to authenticated;
 
 -- O usuário edita só as colunas que o app usa; acessos e ultimo_acesso mudam só pela função acima.
 revoke update on public.perfis from authenticated;
-grant update (id, nome, email, foto, tema, dias_jiu, semana, sem_peso) on public.perfis to authenticated;
+grant update (id, nome, email, foto, tema, dias_jiu, semana, sem_peso, emails_resumo) on public.perfis to authenticated;
 
 -- Para ver os acessos (SQL Editor):
 -- select nome, email, acessos,
@@ -257,3 +260,15 @@ create policy "presenca: publica no proprio canal" on realtime.messages
     realtime.messages.extension = 'presence'
     and (select realtime.topic()) = 'online:' || (select auth.uid())::text
   );
+
+-- ---------- Resumo semanal por e-mail ----------
+-- Registro dos e-mails enviados pela função "resumo-semanal", para não mandar o mesmo resumo duas vezes.
+-- referencia = último dia do período resumido (AAAA-MM-DD). Sem políticas: só a função (service role) lê e grava.
+create table if not exists public.emails_enviados (
+  usuario_id uuid not null references auth.users (id) on delete cascade,
+  tipo text not null,
+  referencia text not null,
+  enviado_em timestamptz not null default now(),
+  primary key (usuario_id, tipo, referencia)
+);
+alter table public.emails_enviados enable row level security;
