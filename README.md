@@ -136,7 +136,7 @@ O envio sai do seu Gmail, pela Edge Function `supabase/functions/resumo-semanal/
 5. **Agendamento:**
    - em **Database → Extensions**, ligue `pg_cron` e `pg_net`;
    - abra `supabase/agendamentos/resumo-semanal.sql`, troque `COLE_AQUI_O_RESUMO_TOKEN` pelo mesmo `RESUMO_TOKEN` (só no SQL Editor, nunca no arquivo do repositório). Se o endereço da sua função não terminar em `rapid-worker`, troque também esse final nas URLs do arquivo. Depois rode.
-6. **Teste:** no mesmo arquivo há consultas prontas para:
+6. **Teste:** a função só envia para todos quando o pedido diz `enviar` (o agendamento já diz); sem pedido, ela responde 400 e não envia nada. No mesmo arquivo há consultas prontas para:
    - **simular**: mostra quem receberia, sem enviar;
    - mandar uma **prévia só para você**;
    - ver a resposta e o histórico de execuções.
