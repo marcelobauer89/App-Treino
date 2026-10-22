@@ -47,7 +47,8 @@ select cron.schedule(
 --   url := 'https://mlovfgbndtpeczgnvivi.supabase.co/functions/v1/rapid-worker',
 --   headers := jsonb_build_object('content-type', 'application/json',
 --     'x-resumo-token', (select decrypted_secret from vault.decrypted_secrets where name = 'resumo_token')),
---   body := '{"simular": true}'::jsonb);
+--   body := '{"simular": true}'::jsonb,
+--   timeout_milliseconds := 30000);
 
 -- Enviar uma prévia só para você (com os seus dados; não conta como enviado):
 -- select net.http_post(
@@ -57,8 +58,9 @@ select cron.schedule(
 --   body := '{"previa": "seu-email@gmail.com"}'::jsonb,
 --   timeout_milliseconds := 30000);
 
--- Ver a resposta das últimas chamadas (alguns segundos depois):
--- select id, status_code, content, created from net._http_response order by id desc limit 5;
+-- Ver a resposta das últimas chamadas (uns 10 segundos depois). status_code vazio = sem resposta;
+-- veja timed_out e error_msg. O pg_net espera só 5 s se a chamada não disser outro limite.
+-- select id, status_code, timed_out, error_msg, content, created from net._http_response order by id desc limit 5;
 
 -- Ver as últimas execuções do agendamento:
 -- select start_time, status, return_message from cron.job_run_details
