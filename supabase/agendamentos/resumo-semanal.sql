@@ -1,8 +1,11 @@
 -- Agendamento do resumo semanal por e-mail: toda sexta-feira às 9h (Brasília).
 -- Rode no SQL Editor do Supabase DEPOIS de:
---   1. ligar as extensões pg_cron e pg_net (Database → Extensions);
+--   1. ligar as extensões (ou rode as duas linhas abaixo);
 --   2. publicar a Edge Function "resumo-semanal" e cadastrar os segredos dela (veja o README).
 -- Pode rodar de novo quando quiser: atualiza o token e o horário sem duplicar nada.
+
+create extension if not exists pg_cron with schema pg_catalog;
+create extension if not exists pg_net with schema extensions;
 
 -- 1) Guarda o token no Vault (cofre do Supabase). Troque o texto abaixo pelo MESMO valor do segredo
 --    RESUMO_TOKEN da Edge Function. Nunca salve o token real em arquivo do repositório.
@@ -18,13 +21,15 @@ begin
 end $$;
 
 -- 2) Agenda: sexta, 12h UTC = 9h em Brasília (sem horário de verão).
+--    O endereço é o da página da função no painel (Edge Functions). Se criar a função de novo,
+--    troque "rapid-worker" aqui e no segredo FUNCAO_URL pelo novo final.
 --    Com o mesmo nome, o cron.schedule substitui o agendamento anterior.
 select cron.schedule(
   'resumo-semanal',
   '0 12 * * 5',
   $$
   select net.http_post(
-    url := 'https://mlovfgbndtpeczgnvivi.supabase.co/functions/v1/resumo-semanal',
+    url := 'https://mlovfgbndtpeczgnvivi.supabase.co/functions/v1/rapid-worker',
     headers := jsonb_build_object(
       'content-type', 'application/json',
       'x-resumo-token', (select decrypted_secret from vault.decrypted_secrets where name = 'resumo_token')
@@ -39,14 +44,14 @@ select cron.schedule(
 
 -- Ver quem receberia e o assunto de cada e-mail, sem enviar nada:
 -- select net.http_post(
---   url := 'https://mlovfgbndtpeczgnvivi.supabase.co/functions/v1/resumo-semanal',
+--   url := 'https://mlovfgbndtpeczgnvivi.supabase.co/functions/v1/rapid-worker',
 --   headers := jsonb_build_object('content-type', 'application/json',
 --     'x-resumo-token', (select decrypted_secret from vault.decrypted_secrets where name = 'resumo_token')),
 --   body := '{"simular": true}'::jsonb);
 
 -- Enviar uma prévia só para você (com os seus dados; não conta como enviado):
 -- select net.http_post(
---   url := 'https://mlovfgbndtpeczgnvivi.supabase.co/functions/v1/resumo-semanal',
+--   url := 'https://mlovfgbndtpeczgnvivi.supabase.co/functions/v1/rapid-worker',
 --   headers := jsonb_build_object('content-type', 'application/json',
 --     'x-resumo-token', (select decrypted_secret from vault.decrypted_secrets where name = 'resumo_token')),
 --   body := '{"previa": "seu-email@gmail.com"}'::jsonb,

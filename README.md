@@ -125,15 +125,17 @@ O envio sai do seu Gmail, pela Edge Function `supabase/functions/resumo-semanal/
 3. **Função:** no Supabase, abra **Edge Functions → Deploy a new function → Via Editor**:
    - dê o nome `resumo-semanal`;
    - cole o conteúdo de `supabase/functions/resumo-semanal/index.ts` e publique;
-   - nos detalhes da função, desligue **Verify JWT** (a proteção é o token próprio do passo 4).
+   - nos detalhes da função, desligue **Verify JWT** (a proteção é o token próprio do passo 4);
+   - anote o **endereço** que aparece embaixo do nome da função, como `https://…supabase.co/functions/v1/rapid-worker`. O painel gera o final sozinho e ele não muda depois.
 4. **Segredos:** em **Edge Functions → Secrets**, cadastre:
    - `GMAIL_USER`: o Gmail que envia (ex.: `seu-email@gmail.com`);
    - `GMAIL_APP_PASSWORD`: a senha de app do passo 1;
    - `RESUMO_TOKEN`: um texto longo e aleatório, que você inventa e não compartilha. Ele protege a função e assina os links de descadastro;
-   - `APP_URL`: `https://marcelobauer89.github.io/App-Treino/`.
+   - `APP_URL`: `https://marcelobauer89.github.io/App-Treino/`;
+   - `FUNCAO_URL`: o endereço da função anotado no passo 3, usado no link "Não quero mais receber".
 5. **Agendamento:**
    - em **Database → Extensions**, ligue `pg_cron` e `pg_net`;
-   - abra `supabase/agendamentos/resumo-semanal.sql`, troque `COLE_AQUI_O_RESUMO_TOKEN` pelo mesmo `RESUMO_TOKEN` (só no SQL Editor, nunca no arquivo do repositório) e rode.
+   - abra `supabase/agendamentos/resumo-semanal.sql`, troque `COLE_AQUI_O_RESUMO_TOKEN` pelo mesmo `RESUMO_TOKEN` (só no SQL Editor, nunca no arquivo do repositório). Se o endereço da sua função não terminar em `rapid-worker`, troque também esse final nas URLs do arquivo. Depois rode.
 6. **Teste:** no mesmo arquivo há consultas prontas para:
    - **simular**: mostra quem receberia, sem enviar;
    - mandar uma **prévia só para você**;
