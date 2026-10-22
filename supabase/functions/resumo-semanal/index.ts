@@ -3,7 +3,8 @@
 // Toda sexta às 9h (Brasília) o agendamento em supabase/agendamentos/resumo-semanal.sql chama esta função.
 // Ela monta, para cada pessoa, o resumo dos últimos 7 dias (de sexta a quinta) e envia pelo Gmail.
 //
-// Segredos (Supabase → Edge Functions → Secrets): GMAIL_USER, GMAIL_APP_PASSWORD, RESUMO_TOKEN e APP_URL.
+// Segredos (Supabase → Edge Functions → Secrets): GMAIL_USER, GMAIL_APP_PASSWORD, RESUMO_TOKEN, APP_URL
+// e FUNCAO_URL (o endereço desta função, mostrado na página dela no painel).
 // SUPABASE_URL e a chave de serviço já vêm prontos na função. Nada disso vai para o repositório.
 //
 // Chamadas:
@@ -275,7 +276,9 @@ function iniciar() {
     env: {
       RESUMO_TOKEN: env('RESUMO_TOKEN'),
       APP_URL: env('APP_URL') || 'https://marcelobauer89.github.io/App-Treino/',
-      FUNCAO_URL: `${env('SUPABASE_URL')}/functions/v1/resumo-semanal`,
+      // Endereço desta função, para o link de descadastro. O painel do Supabase pode gerar outro final
+      // (ex.: .../functions/v1/rapid-worker); nesse caso, cadastre o endereço no segredo FUNCAO_URL.
+      FUNCAO_URL: env('FUNCAO_URL') || `${env('SUPABASE_URL')}/functions/v1/resumo-semanal`,
     },
   }));
 }
