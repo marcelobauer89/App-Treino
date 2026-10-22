@@ -15,9 +15,10 @@ import nodemailer from 'npm:nodemailer@6.9.16';
 
 export const TIPO = 'resumo_semanal';
 const FUSO = 'America/Sao_Paulo';
-const TIPOS: Record<string, { nome: string; grupo: string }> = {
-  t1: { nome: 'Treino 1', grupo: 'musc' }, t2: { nome: 'Treino 2', grupo: 'musc' }, t3: { nome: 'Treino 3', grupo: 'musc' },
-  jiu: { nome: 'Jiu-jitsu', grupo: 'jiu' }, bike: { nome: 'Cardio', grupo: 'bike' },
+// Selos e cores iguais aos do app (1, 2, 3 = treinos de musculação; J = jiu-jitsu; C = cardio).
+const TIPOS: Record<string, { nome: string; grupo: string; selo: string }> = {
+  t1: { nome: 'Treino 1', grupo: 'musc', selo: '1' }, t2: { nome: 'Treino 2', grupo: 'musc', selo: '2' }, t3: { nome: 'Treino 3', grupo: 'musc', selo: '3' },
+  jiu: { nome: 'Jiu-jitsu', grupo: 'jiu', selo: 'J' }, bike: { nome: 'Cardio', grupo: 'bike', selo: 'C' },
 };
 const GRUPOS: [string, string, string][] = [['musc', 'Musculação', '#2a78d6'], ['jiu', 'Jiu-jitsu', '#eb6834'], ['bike', 'Cardio', '#1baf7a']];
 const DIAS = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
@@ -70,6 +71,14 @@ export function montarResumo(u: Perfil, checkins: Checkin[], recordes: Recorde[]
   const planejadas = planejadasPorSemana(u);
   const nomesRecorde = [...new Set(recordes.filter((r) => r.usuario_id === u.id && r.dados && r.dados.exercicio)
     .map((r) => String(r.dados!.exercicio)))];
+  // Os 7 dias do período, com os treinos de cada um na ordem em que foram feitos.
+  const semana7 = Array.from({ length: 7 }, (_, i) => {
+    const d = somarDias(p.ini, i);
+    return {
+      dia: d, sigla: DIAS[diaDaSemana(d)], num: Number(d.slice(8, 10)),
+      tipos: daSemana.filter((c) => dia(c) === d).sort((a, b) => (a.inicio < b.inicio ? -1 : 1)).map((c) => c.tipo),
+    };
+  });
   return {
     nome: (u.nome || '').trim().split(/\s+/)[0] || '',
     total: daSemana.length,
@@ -80,6 +89,7 @@ export function montarResumo(u: Perfil, checkins: Checkin[], recordes: Recorde[]
     planejadas,
     aderencia: planejadas ? Math.min(1, daSemana.length / planejadas) : 0,
     recordes: nomesRecorde,
+    semana7,
     periodo: `${fmtDia(p.ini)} a ${fmtDia(p.fim)}`,
   };
 }
@@ -100,58 +110,138 @@ export function assunto(r: Resumo): string {
   return r.total ? `Seu resumo da semana: ${plural(r.total, 'treino', 'treinos')}` : 'Semana nova, recomeço: bora treinar?';
 }
 
+// Frase curta conforme o quanto do plano foi feito.
+export function mensagem(r: Resumo): string {
+  const faltam = Math.max(0, r.planejadas - r.total);
+  if (r.aderencia >= 1) return 'Plano cumprido! 🔥';
+  if (r.aderencia >= 0.7) return `Quase lá! ${faltam === 1 ? 'Faltou 1 treino' : `Faltaram ${faltam} treinos`}.`;
+  if (r.aderencia >= 0.4) return 'Bom ritmo. Dá para subir na próxima!';
+  return 'Cada treino conta. Bora subir na próxima!';
+}
+
+const COR = {
+  azul: '#2563eb', azulTinta: '#1d4ed8', azulSuave: '#e8effd', tinta: '#101318', tinta2: '#4b5361', fio: '#dde1e7', fundo: '#f3f4f6',
+  verde: '#166534', verdeSuave: '#e7f8ee', ambar: '#92400e', ambarSuave: '#fef3c7', selo: '#0b0d10',
+};
+const corDoTipo = (t: string) => (GRUPOS.find(([g]) => g === (TIPOS[t] || TIPOS.t1).grupo) as [string, string, string])[2];
+
 export function montarEmail(r: Resumo, links: { app: string; sair: string }) {
-  const ola = r.nome ? `Olá, ${esc(r.nome)}!` : 'Olá!';
   const pct = Math.round(r.aderencia * 100);
   const comp = comparacao(r);
+  const dif = r.total - r.anterior;
   const fonte = "font-family:Archivo,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
-  const corpoComTreino = `
-    <p style="margin:0 0 4px;font-size:15px;color:#4b5361">Nos últimos 7 dias (${esc(r.periodo)}) você treinou</p>
-    <p style="margin:0;font-size:56px;line-height:1;font-weight:800;color:#101318">${r.total}<span style="font-size:18px;font-weight:600;color:#4b5361"> ${r.total === 1 ? 'vez' : 'vezes'}</span></p>
-    ${comp ? `<p style="margin:8px 0 0;font-size:15px;color:#4b5361">${esc(comp)}</p>` : ''}
-    <p style="margin:20px 0 0;font-size:14px;line-height:1.9;color:#101318">
-      ${GRUPOS.map(([g, n, cor]) => `<span style="display:inline-block;margin-right:16px;white-space:nowrap"><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${cor};margin-right:6px"></span>${n}: <b>${r.porGrupo[g]}</b></span>`).join('')}
-    </p>
-    ${r.dias.length ? `<p style="margin:12px 0 0;font-size:14px;color:#4b5361">Dias de treino: ${esc(r.diasTexto)}</p>` : ''}
-    <p style="margin:24px 0 6px;font-size:15px;color:#101318"><b>Plano da semana:</b> ${r.total} de ${r.planejadas} treinos (${pct}%)</p>
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;table-layout:fixed"><tr>
-      ${pct > 0 ? `<td width="${pct}%" style="background:#2563eb;height:8px;line-height:8px;font-size:0">&nbsp;</td>` : ''}
-      ${pct < 100 ? '<td style="background:#e8effd;height:8px;line-height:8px;font-size:0">&nbsp;</td>' : ''}
+  const titulo = (t: string) => `<p style="margin:28px 0 10px;font-size:12px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:${COR.tinta2}">${t}</p>`;
+
+  // Indicador ▲/▼ em relação à semana anterior.
+  const chip = dif === 0 && r.anterior === 0 ? '' : `
+    <span style="display:inline-block;padding:6px 12px;border-radius:999px;font-size:14px;font-weight:800;white-space:nowrap;${
+      dif > 0 ? `background:${COR.verdeSuave};color:${COR.verde}` : dif < 0 ? `background:${COR.ambarSuave};color:${COR.ambar}` : `background:${COR.fundo};color:${COR.tinta2}`
+    }">${dif > 0 ? `▲ ${dif} a mais` : dif < 0 ? `▼ ${-dif} a menos` : '= igual'}</span>
+    <span style="display:block;margin-top:4px;font-size:12px;color:${COR.tinta2}">que na semana anterior</span>`;
+
+  // Faixa com os 7 dias: um selo colorido por treino; dia sem treino fica tracejado.
+  const selo = (t: string) => `<div style="margin:6px auto 0;width:30px;height:30px;line-height:30px;border-radius:8px;background:${corDoTipo(t)};color:${COR.selo};font-size:14px;font-weight:800;text-align:center">${esc((TIPOS[t] || TIPOS.t1).selo)}</div>`;
+  const vazio = `<div style="margin:6px auto 0;width:28px;height:28px;line-height:28px;border-radius:8px;border:1px dashed ${COR.fio};color:#9aa1ad;font-size:14px;text-align:center">–</div>`;
+  const faixa = `
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate;border-spacing:3px 0;table-layout:fixed;margin:0 -3px"><tr>
+      ${r.semana7.map((d) => `<td align="center" valign="top" style="padding:8px 0;${d.tipos.length ? `background:${COR.azulSuave};` : ''}border-radius:10px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:${COR.tinta2}">${esc(d.sigla)}</div>
+        <div style="font-size:15px;font-weight:800;color:${COR.tinta}">${d.num}</div>
+        ${d.tipos.length ? d.tipos.slice(0, 2).map(selo).join('') + (d.tipos.length > 2 ? `<div style="margin-top:4px;font-size:11px;font-weight:700;color:${COR.tinta2}">+${d.tipos.length - 2}</div>` : '') : vazio}
+      </td>`).join('')}
     </tr></table>
-    ${r.recordes.length ? `<p style="margin:24px 0 6px;font-size:15px;color:#101318"><b>🏆 Recordes da semana</b></p>
-    <p style="margin:0;font-size:15px;color:#4b5361">${r.recordes.map(esc).join(', ')}</p>` : ''}`;
+    <p style="margin:10px 0 0;font-size:12px;line-height:1.6;color:${COR.tinta2}">
+      ${GRUPOS.map(([g, n, cor]) => `<span style="display:inline-block;white-space:nowrap;margin:0 12px 4px 0">${Object.values(TIPOS).filter((t) => t.grupo === g)
+        .map((t) => `<span style="display:inline-block;width:18px;height:18px;line-height:18px;border-radius:5px;background:${cor};color:${COR.selo};font-size:11px;font-weight:800;text-align:center;margin-right:3px">${t.selo}</span>`).join('')} ${n}</span>`).join('')}
+    </p>`;
+
+  // Barra do plano.
+  const barra = `
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse"><tr>
+      <td style="font-size:15px;font-weight:800;color:${COR.tinta}">${r.total} de ${r.planejadas} treinos</td>
+      <td align="right" style="font-size:22px;font-weight:800;color:${COR.azulTinta}">${pct}%</td>
+    </tr></table>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:8px;border-collapse:separate;table-layout:fixed;border-radius:6px;background:${COR.azulSuave}"><tr>
+      ${pct > 0 ? `<td width="${pct}%" style="background:${COR.azul};height:12px;line-height:12px;font-size:0;border-radius:6px">&nbsp;</td>` : ''}
+      ${pct < 100 ? '<td style="height:12px;line-height:12px;font-size:0">&nbsp;</td>' : ''}
+    </tr></table>
+    <p style="margin:8px 0 0;font-size:14px;color:${COR.tinta2}">${esc(mensagem(r))}</p>`;
+
+  // Um cartão por modalidade.
+  const cartoes = `
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;table-layout:fixed"><tr>
+      ${GRUPOS.map(([g, n, cor], i) => `<td style="padding:0 ${i < 2 ? 6 : 0}px 0 ${i > 0 ? 6 : 0}px">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate"><tr>
+          <td align="center" style="border:1px solid ${COR.fio};border-top:4px solid ${cor};border-radius:10px;padding:12px 4px">
+            <div style="font-size:26px;line-height:1.1;font-weight:800;color:${COR.tinta}">${r.porGrupo[g]}</div>
+            <div style="font-size:12px;color:${COR.tinta2}">${n}</div>
+          </td></tr></table>
+      </td>`).join('')}
+    </tr></table>`;
+
+  const recordes = r.recordes.length ? `
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:28px;border-collapse:separate"><tr>
+      <td style="background:${COR.ambarSuave};border-radius:12px;padding:16px 18px">
+        <p style="margin:0 0 6px;font-size:15px;font-weight:800;color:${COR.ambar}">🏆 ${r.recordes.length === 1 ? 'Novo recorde' : `${r.recordes.length} novos recordes`} na semana</p>
+        ${r.recordes.map((n) => `<p style="margin:4px 0 0;font-size:15px;color:${COR.tinta}">▸ ${esc(n)}</p>`).join('')}
+      </td></tr></table>` : '';
+
+  const corpoComTreino = `
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px;border-collapse:collapse"><tr>
+      <td valign="bottom">
+        <span style="font-size:60px;line-height:1;font-weight:800;color:${COR.tinta}">${r.total}</span>
+        <span style="font-size:18px;font-weight:700;color:${COR.tinta2}"> ${r.total === 1 ? 'treino' : 'treinos'}</span>
+      </td>
+      <td valign="bottom" align="right">${chip}</td>
+    </tr></table>
+    ${titulo('Sua semana')}${faixa}
+    ${titulo('Plano da semana')}${barra}
+    ${titulo('Por modalidade')}${cartoes}
+    ${recordes}`;
   const corpoSemTreino = `
-    <p style="margin:0 0 12px;font-size:17px;color:#101318">Nos últimos 7 dias (${esc(r.periodo)}) não apareceu nenhum treino no app.</p>
-    <p style="margin:0;font-size:15px;color:#4b5361">Toda semana é uma chance de recomeçar. Seu plano tem ${plural(r.planejadas, 'treino', 'treinos')} por semana; que tal marcar o primeiro hoje?</p>`;
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:16px;border-collapse:separate"><tr>
+      <td style="background:${COR.azulSuave};border-radius:14px;padding:22px 20px">
+        <div style="font-size:36px;line-height:1">💪</div>
+        <p style="margin:10px 0 6px;font-size:20px;font-weight:800;color:${COR.tinta}">Semana nova, recomeço</p>
+        <p style="margin:0;font-size:15px;line-height:1.5;color:${COR.tinta2}">Não apareceu nenhum treino no app de ${esc(r.periodo)}. Seu plano tem ${plural(r.planejadas, 'treino', 'treinos')} por semana; que tal marcar o primeiro hoje?</p>
+      </td></tr></table>`;
+
   const html = `<!doctype html>
-<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(assunto(r))}</title></head>
-<body style="margin:0;padding:0;background:#f3f4f6;${fonte}">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;border-collapse:collapse"><tr><td align="center" style="padding:24px 12px">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;border-collapse:collapse">
-    <tr><td style="padding:0 4px 12px;font-size:22px;font-weight:800;letter-spacing:.5px;color:#2563eb">OSS</td></tr>
-    <tr><td style="background:#ffffff;border:1px solid #dde1e7;border-radius:16px;padding:28px 24px">
-      <h1 style="margin:0 0 16px;font-size:24px;line-height:1.2;color:#101318">${ola}</h1>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light"><meta name="supported-color-schemes" content="light"><title>${esc(assunto(r))}</title></head>
+<body style="margin:0;padding:0;background:${COR.fundo};${fonte}">
+<div style="display:none;max-height:0;overflow:hidden">${esc(r.total ? `${plural(r.total, 'treino', 'treinos')} de ${r.periodo}. ${mensagem(r)}` : 'Toda semana é uma chance de recomeçar.')}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${COR.fundo};border-collapse:collapse"><tr><td align="center" style="padding:20px 10px">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;border-collapse:separate">
+    <tr><td style="background:${COR.azul};border-radius:16px 16px 0 0;padding:22px 22px 20px">
+      <p style="margin:0;font-size:12px;font-weight:800;letter-spacing:2px;color:#c7d7fb">OSS · APP TREINO</p>
+      <p style="margin:6px 0 0;font-size:26px;line-height:1.2;font-weight:800;color:#ffffff">Seu resumo da semana</p>
+      <p style="margin:4px 0 0;font-size:15px;color:#dbe6fd">${esc(r.periodo)}</p>
+    </td></tr>
+    <tr><td style="background:#ffffff;border:1px solid ${COR.fio};border-top:0;border-radius:0 0 16px 16px;padding:22px 22px 26px">
+      <p style="margin:0;font-size:18px;font-weight:700;color:${COR.tinta}">${r.nome ? `Olá, ${esc(r.nome)}! 👋` : 'Olá! 👋'}</p>
       ${r.total ? corpoComTreino : corpoSemTreino}
-      <table role="presentation" cellpadding="0" cellspacing="0" style="margin:28px 0 0;border-collapse:collapse"><tr>
-        <td style="background:#2563eb;border-radius:10px"><a href="${esc(links.app)}" style="display:inline-block;padding:14px 22px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none">Abrir o App Treino</a></td>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:28px;border-collapse:separate"><tr>
+        <td align="center" style="background:${COR.azul};border-radius:12px"><a href="${esc(links.app)}" style="display:block;padding:16px 20px;font-size:16px;font-weight:800;color:#ffffff;text-decoration:none">${r.total ? 'Abrir o App Treino →' : 'Marcar meu próximo treino →'}</a></td>
       </tr></table>
     </td></tr>
-    <tr><td style="padding:16px 4px 0;font-size:12px;line-height:1.5;color:#4b5361">
-      Você recebe este e-mail porque o resumo semanal está ligado no App Treino (Você → Conta).
-      <a href="${esc(links.sair)}" style="color:#1d4ed8">Não quero mais receber</a>.
+    <tr><td style="padding:16px 6px 0;font-size:12px;line-height:1.5;color:${COR.tinta2};text-align:center">
+      Você recebe este e-mail porque o resumo semanal está ligado no App Treino (Você → Conta).<br>
+      <a href="${esc(links.sair)}" style="color:${COR.azulTinta}">Não quero mais receber</a>
     </td></tr>
   </table>
 </td></tr></table>
 </body></html>`;
   const texto = [
     r.nome ? `Olá, ${r.nome}!` : 'Olá!', '',
+    `Seu resumo da semana (${r.periodo})`, '',
     r.total
-      ? [`Nos últimos 7 dias (${r.periodo}) você treinou ${r.total} ${r.total === 1 ? 'vez' : 'vezes'}.`, comp,
-        GRUPOS.map(([g, n]) => `${n}: ${r.porGrupo[g]}`).join(' · '),
+      ? [`Você treinou ${r.total} ${r.total === 1 ? 'vez' : 'vezes'}.`, comp,
         r.dias.length ? `Dias de treino: ${r.diasTexto}` : '',
-        `Plano da semana: ${r.total} de ${r.planejadas} treinos (${pct}%)`,
+        `Plano da semana: ${r.total} de ${r.planejadas} treinos (${pct}%). ${mensagem(r)}`,
+        GRUPOS.map(([g, n]) => `${n}: ${r.porGrupo[g]}`).join(' · '),
         r.recordes.length ? `Recordes da semana: ${r.recordes.join(', ')}` : ''].filter(Boolean).join('\n')
-      : `Nos últimos 7 dias (${r.periodo}) não apareceu nenhum treino no app.\nToda semana é uma chance de recomeçar. Seu plano tem ${plural(r.planejadas, 'treino', 'treinos')} por semana; que tal marcar o primeiro hoje?`,
+      : `Semana nova, recomeço.\nNão apareceu nenhum treino no app de ${r.periodo}. Seu plano tem ${plural(r.planejadas, 'treino', 'treinos')} por semana; que tal marcar o primeiro hoje?`,
     '', `Abrir o App Treino: ${links.app}`, '',
     `Não quer mais receber o resumo semanal? ${links.sair}`,
   ].join('\n');
