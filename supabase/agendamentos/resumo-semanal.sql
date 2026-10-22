@@ -24,6 +24,9 @@ end $$;
 --    O endereço é o da página da função no painel (Edge Functions). Se criar a função de novo,
 --    troque "rapid-worker" aqui e no segredo FUNCAO_URL pelo novo final.
 --    Com o mesmo nome, o cron.schedule substitui o agendamento anterior.
+--    "enviar" vai no corpo e na URL: sem ele a função não envia nada (proteção contra envio acidental).
+--    Ao atualizar a função para a versão com "enviar", rode este trecho de novo: o agendamento antigo
+--    (corpo vazio) passaria a receber 400 e não enviaria na sexta.
 select cron.schedule(
   'resumo-semanal',
   '0 12 * * 5',
@@ -34,7 +37,8 @@ select cron.schedule(
       'content-type', 'application/json',
       'x-resumo-token', (select decrypted_secret from vault.decrypted_secrets where name = 'resumo_token')
     ),
-    body := '{}'::jsonb,
+    body := '{"enviar": true}'::jsonb,
+    params := '{"enviar": "1"}'::jsonb,
     timeout_milliseconds := 120000
   );
   $$
@@ -48,6 +52,7 @@ select cron.schedule(
 --   headers := jsonb_build_object('content-type', 'application/json',
 --     'x-resumo-token', (select decrypted_secret from vault.decrypted_secrets where name = 'resumo_token')),
 --   body := '{"simular": true}'::jsonb,
+--   params := '{"simular": "1"}'::jsonb,
 --   timeout_milliseconds := 30000);
 
 -- Enviar uma prévia só para você (com os seus dados; não conta como enviado):
@@ -56,9 +61,11 @@ select cron.schedule(
 --   headers := jsonb_build_object('content-type', 'application/json',
 --     'x-resumo-token', (select decrypted_secret from vault.decrypted_secrets where name = 'resumo_token')),
 --   body := '{"previa": "seu-email@gmail.com"}'::jsonb,
+--   params := '{"previa": "seu-email@gmail.com"}'::jsonb,
 --   timeout_milliseconds := 30000);
 
--- Ver a resposta das últimas chamadas (uns 10 segundos depois). status_code vazio = sem resposta;
+-- Ver a resposta das últimas chamadas (uns 10 segundos depois). O campo "modo" diz o que a função
+-- entendeu: previa, simular ou envio. status_code vazio = sem resposta;
 -- veja timed_out e error_msg. O pg_net espera só 5 s se a chamada não disser outro limite.
 -- select id, status_code, timed_out, error_msg, content, created from net._http_response order by id desc limit 5;
 

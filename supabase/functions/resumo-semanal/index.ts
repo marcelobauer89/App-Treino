@@ -8,7 +8,11 @@
 // SUPABASE_URL e a chave de serviço já vêm prontos na função. Nada disso vai para o repositório.
 //
 // Chamadas:
-//   POST com o header x-resumo-token        → envia os resumos (corpo {} ou {"previa": "email"} ou {"simular": true})
+//   POST com o header x-resumo-token e o que fazer, no corpo JSON ou na URL:
+//     {"enviar": true} / ?enviar=1          → envia os resumos para todos (é o que o agendamento usa)
+//     {"previa": "email"} / ?previa=email   → envia só para esse e-mail, sem registrar
+//     {"simular": true} / ?simular=1        → só mostra quem receberia
+//   Sem nenhum desses, responde 400 e não envia nada.
 //   GET/POST ?sair=<id>&t=<assinatura>      → descadastro em um clique (link do rodapé do e-mail)
 import { createClient } from 'npm:@supabase/supabase-js@2.117.2';
 import nodemailer from 'npm:nodemailer@6.9.16';
@@ -289,13 +293,25 @@ export function criarHandler({ db, enviar, env, agora = () => new Date() }: Deps
     if (req.method !== 'POST' || !env.RESUMO_TOKEN || !iguais(req.headers.get('x-resumo-token') || '', env.RESUMO_TOKEN)) {
       return json({ erro: 'não autorizado' }, 401);
     }
-    let corpo: { previa?: string; simular?: boolean } = {};
-    try { corpo = await req.json(); } catch (_) { corpo = {}; }
+    // O que fazer vem no corpo JSON ou nos parâmetros da URL (?previa=email, ?simular=1, ?enviar=1).
+    // Sem um pedido explícito, nada é enviado: um corpo vazio nunca dispara o envio para todos.
+    const texto = await req.text().catch(() => '');
+    let lido: Record<string, unknown> = {};
+    try { const j = JSON.parse(texto); if (j && typeof j === 'object') lido = j; } catch (_) { /* corpo vazio ou inválido */ }
+    const q = url.searchParams;
+    const sim = (v: unknown) => v === true || v === 1 || v === '1' || v === 'true';
+    const corpo = {
+      previa: String(q.get('previa') || lido.previa || '').trim().toLowerCase(),
+      simular: sim(q.get('simular')) || sim(lido.simular),
+      enviar: sim(q.get('enviar')) || sim(lido.enviar),
+    };
+    const modo = corpo.previa ? 'previa' : corpo.simular ? 'simular' : corpo.enviar ? 'envio' : '';
+    if (!modo) return json({ erro: 'diga o que fazer: enviar, previa ou simular', recebido: texto.slice(0, 200) }, 400);
 
     const p = periodo(agora());
     const perfisQ = db.from('perfis').select('id, nome, email, semana, dias_jiu, emails_resumo, acessos');
     const { data: perfis, error: e1 } = corpo.previa
-      ? await perfisQ.eq('email', corpo.previa)
+      ? await perfisQ.ilike('email', corpo.previa.replace(/[\\%_]/g, '\\$&')) // sem diferenciar maiúsculas
       : await perfisQ.eq('emails_resumo', true).gt('acessos', 0);
     if (e1) return json({ erro: e1.message }, 500);
     if (corpo.previa && !perfis.length) return json({ erro: 'e-mail não encontrado entre os usuários' }, 404);
@@ -309,7 +325,7 @@ export function criarHandler({ db, enviar, env, agora = () => new Date() }: Deps
     if (erro) return json({ erro: erro.message }, 500);
     const enviados = new Set((jaEnviados || []).map((x: { usuario_id: string }) => x.usuario_id));
 
-    const resultado = { periodo: { ini: p.ini, fim: p.fim }, enviados: 0, pulados: 0, falhas: [] as { email: string; erro: string }[], simulacao: [] as unknown[] };
+    const resultado = { modo, periodo: { ini: p.ini, fim: p.fim }, enviados: 0, pulados: 0, falhas: [] as { email: string; erro: string }[], simulacao: [] as unknown[] };
     for (const u of perfis as Perfil[]) {
       if (!u.email || (!corpo.previa && enviados.has(u.id))) { resultado.pulados += 1; continue; }
       const r = montarResumo(u, checkins || [], recordes || [], p);
