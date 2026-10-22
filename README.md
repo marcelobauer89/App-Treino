@@ -93,6 +93,58 @@ As regras do `schema.sql` (políticas em `realtime.messages`) deixam cada pessoa
 
 Se o painel mostrar "Ao vivo indisponível", confira se o `schema.sql` foi aplicado e se o Realtime está ligado no projeto.
 
+## Resumo semanal por e-mail
+
+Toda **sexta-feira às 9h** (Brasília), cada pessoa recebe no e-mail um resumo dos últimos 7 dias (de sexta a quinta):
+
+- quantos treinos fez e de que tipo;
+- em que dias treinou;
+- quanto do plano cumpriu (pela semana montada em Você);
+- a comparação com a semana anterior;
+- os recordes da semana.
+
+Quem não treinou recebe uma versão de incentivo. Quem nunca usou o app não recebe nada.
+
+O envio sai do seu Gmail, pela Edge Function `supabase/functions/resumo-semanal/index.ts`, e um agendamento do próprio Supabase a dispara.
+
+**Não querer receber**
+- Cada pessoa pode desligar em **Você → Conta → Resumo semanal por e-mail**, ou pelo link "Não quero mais receber" no rodapé de cada e-mail.
+- O Gmail também mostra o botão "Cancelar inscrição", que funciona com um clique.
+
+**Duplicados e privacidade**
+- A tabela `emails_enviados` registra cada envio, então o mesmo resumo nunca vai duas vezes.
+- O e-mail não leva pesos, cargas nem observações.
+
+### Como ligar (uma vez)
+
+1. **Senha de app do Google:**
+   - na conta Google que vai enviar, ative a verificação em duas etapas;
+   - em https://myaccount.google.com/apppasswords, crie uma senha de app chamada "App Treino";
+   - guarde os 16 caracteres.
+2. **Banco:** rode de novo o `supabase/schema.sql` no SQL Editor. Ele cria a opção `emails_resumo` no perfil e a tabela `emails_enviados`.
+3. **Função:** no Supabase, abra **Edge Functions → Deploy a new function → Via Editor**:
+   - dê o nome `resumo-semanal`;
+   - cole o conteúdo de `supabase/functions/resumo-semanal/index.ts` e publique;
+   - nos detalhes da função, desligue **Verify JWT** (a proteção é o token próprio do passo 4).
+4. **Segredos:** em **Edge Functions → Secrets**, cadastre:
+   - `GMAIL_USER`: o Gmail que envia (ex.: `seu-email@gmail.com`);
+   - `GMAIL_APP_PASSWORD`: a senha de app do passo 1;
+   - `RESUMO_TOKEN`: um texto longo e aleatório, que você inventa e não compartilha. Ele protege a função e assina os links de descadastro;
+   - `APP_URL`: `https://marcelobauer89.github.io/App-Treino/`.
+5. **Agendamento:**
+   - em **Database → Extensions**, ligue `pg_cron` e `pg_net`;
+   - abra `supabase/agendamentos/resumo-semanal.sql`, troque `COLE_AQUI_O_RESUMO_TOKEN` pelo mesmo `RESUMO_TOKEN` (só no SQL Editor, nunca no arquivo do repositório) e rode.
+6. **Teste:** no mesmo arquivo há consultas prontas para:
+   - **simular**: mostra quem receberia, sem enviar;
+   - mandar uma **prévia só para você**;
+   - ver a resposta e o histórico de execuções.
+
+**Limites**
+- O Gmail envia até cerca de 500 e-mails por dia, folgado para o grupo.
+- A função manda um e-mail por vez e tem até 150 s por execução, o suficiente para algumas dezenas de pessoas.
+
+Se a resposta da função disser "Configuração incompleta", falta algum dos segredos do passo 4.
+
 ## Ajustes únicos de dados
 
 Scripts em `supabase/ajustes/` corrigem dados já gravados e rodam uma vez só, no **SQL Editor**, depois do `schema.sql`:
@@ -123,10 +175,11 @@ Abra `http://localhost:8000/` (esse endereço precisa estar em **Redirect URLs**
 
 ## Como os dados ficam guardados
 
-- **perfis:** nome, e-mail e foto (vindos do Google no primeiro login), tema, os exercícios marcados como **Sem peso** (coluna `sem_peso`) e a semana montada em **Você → Minha semana** (coluna `semana`: o que fazer em cada dia, até 2 atividades). Contas sem semana salva usam a padrão, montada com os antigos dias de jiu-jitsu (`dias_jiu`).
+- **perfis:** nome, e-mail e foto (vindos do Google no primeiro login), tema, se quer receber o resumo semanal (`emails_resumo`), os exercícios marcados como **Sem peso** (coluna `sem_peso`) e a semana montada em **Você → Minha semana** (coluna `semana`: o que fazer em cada dia, até 2 atividades). Contas sem semana salva usam a padrão, montada com os antigos dias de jiu-jitsu (`dias_jiu`).
 - **checkins:** cada check-in de treino, com horário, recuperação e observação (check-ins de versões anteriores também guardavam as cargas).
 - **cargas:** os pesos registrados na ficha, por dia e treino. Salvar um peso não abre check-in.
 - **eventos:** uso do app (telas, recursos, erros), para o dashboard de monitoramento.
 - **admins:** contas que podem ver o dashboard de monitoramento.
+- **emails_enviados:** registro dos resumos semanais enviados (quem e de qual semana), para não mandar o mesmo duas vezes. A opção de receber fica em `perfis.emails_resumo`.
 - O app funciona online: cada alteração vai para o Supabase na hora. Se a gravação falhar, o app avisa e recarrega os dados do servidor.
 - No primeiro login em cada aparelho, os check-ins e configurações que estavam salvos só no navegador (versões anteriores do app) são enviados para a conta.

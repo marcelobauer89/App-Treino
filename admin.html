@@ -903,6 +903,7 @@
     video: (d) => `Viu o vídeo de ${d.exercicio}`,
     sem_peso: (d) => `${d.ativo ? 'Marcou' : 'Desmarcou'} ${d.exercicio} como sem peso`,
     semana_alterada: () => 'Alterou a semana',
+    resumo_email: (d) => (d.ativo ? 'Ligou o resumo semanal por e-mail' : 'Desligou o resumo semanal por e-mail'),
     tema: (d) => `Mudou o tema para ${d.tema}`,
     foto: (d) => ({ nova: 'Adicionou foto', trocada: 'Trocou a foto', removida: 'Removeu a foto' })[d.acao] || 'Alterou a foto',
     erro: (d) => `Erro (${d.origem}): ${d.mensagem}`,

@@ -666,6 +666,7 @@
     content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%;
     background: #ffffff; box-shadow: 0 1px 3px rgba(0, 0, 0, .3); transition: transform .15s ease;
   }
+  .resumo-email-linha { margin: 4px 0 12px; }
   .sem-peso-linha input:checked { background: var(--tatame); }
   .sem-peso-linha input:checked::after { transform: translateX(20px); }
   .sem-peso-linha input:focus-visible { outline: 2px solid var(--tatame-tinta); outline-offset: 2px; }
@@ -900,7 +901,11 @@
     <div class="bloco-topo"><h2 class="secao" id="conta-titulo">Conta</h2></div>
     <div class="cartao">
       <p class="conta-linha">Conectado com o Google como <b id="conta-email"></b></p>
-      <p class="nota-campo">Para melhorar o app, registramos como ele é usado (telas abertas, recursos usados e quando ele está aberto). Pesos, cargas e observações não entram nesse registro.</p>
+      <label class="sem-peso-linha resumo-email-linha">
+        <span><b>Resumo semanal por e-mail</b><small>Toda sexta, às 9h, com seus treinos dos últimos 7 dias</small></span>
+        <input type="checkbox" role="switch" id="resumo-email">
+      </label>
+      <p class="nota-campo">Para melhorar o app, registramos como ele é usado (telas abertas, recursos usados e quando ele está aberto). Pesos, cargas e observações não entram nesse registro. O resumo semanal usa seus check-ins e recordes e vai só para o seu e-mail.</p>
       <button class="btn-sec" type="button" id="sair">Sair da conta</button>
     </div>
   </section>
@@ -1045,7 +1050,7 @@
     try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return v && typeof v === 'object' ? v : {}; } catch (_) { return {}; }
   };
   // semPeso: exercícios que o usuário faz só com o corpo (o painel não pede carga).
-  let config = { tema: 'auto', semana: [[], ['t2'], ['jiu'], ['t1'], ['jiu'], ['t3'], ['bike']], semPeso: new Set() };
+  let config = { tema: 'auto', semana: [[], ['t2'], ['jiu'], ['t1'], ['jiu'], ['t3'], ['bike']], semPeso: new Set(), resumoEmail: true };
   // A conta já tem a semana salva (coluna perfis.semana)? Senão, ela vem dos antigos dias de jiu.
   let semanaDaConta = false;
   let perfil = { nome: '', email: '', foto: '' };
@@ -1245,6 +1250,7 @@
     const msg = (erro && erro.message) || '';
     registrarErro('salvar', msg);
     if (/semana/.test(msg)) toast('Para salvar a semana, rode de novo o supabase/schema.sql no Supabase (veja o README).');
+    else if (/emails_resumo/.test(msg)) toast('Para salvar essa opção, rode de novo o supabase/schema.sql no Supabase (veja o README).');
     else if (/sem_peso/.test(msg)) toast('Para salvar essa opção, rode de novo o supabase/schema.sql no Supabase (veja o README).');
     else if (/cargas/.test(msg)) toast('Para salvar os pesos, rode de novo o supabase/schema.sql no Supabase (veja o README).');
     else toast('Não foi possível salvar. Confira a internet; os dados foram recarregados do servidor.');
@@ -1391,6 +1397,7 @@
       tema: linha.tema || 'auto',
       semana: semana || semanaDeDiasJiu((linha.dias_jiu || [2, 4]).map(Number)),
       semPeso: new Set(Array.isArray(linha.sem_peso) ? linha.sem_peso : []),
+      resumoEmail: linha.emails_resumo !== false,
     };
     checkins = (c.data || []).map(deLinha);
   }
@@ -2537,6 +2544,7 @@
 
   function renderConfig() {
     document.querySelectorAll('input[name="tema"]').forEach((r) => { r.checked = r.value === config.tema; });
+    $('resumo-email').checked = config.resumoEmail;
     renderSemanaConfig();
   }
 
@@ -2858,6 +2866,13 @@
     }
   });
 
+  $('resumo-email').addEventListener('change', (e) => {
+    config.resumoEmail = e.target.checked;
+    salvarPerfil({ emails_resumo: config.resumoEmail });
+    registrarEvento('resumo_email', { ativo: config.resumoEmail });
+    toast(config.resumoEmail ? 'Você vai receber o resumo toda sexta.' : 'Você não vai mais receber o resumo semanal.');
+  });
+
   $('sair').addEventListener('click', async () => {
     salvarNome();
     salvarSeriesPendentes();
@@ -2953,6 +2968,11 @@
 
   // ---------- Início ----------
   aplicarTema();
+  // Volta do link "Não quero mais receber" do resumo semanal (a função já desligou a opção no banco).
+  if (new URLSearchParams(location.search).get('resumo') === 'desligado') {
+    history.replaceState(null, '', location.pathname + location.hash);
+    toast('Pronto: você não vai mais receber o resumo semanal.');
+  }
   if (!sb) {
     mostrarEntrada('config');
   } else {
