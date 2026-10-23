@@ -135,6 +135,7 @@
   }
   .abas [role="tab"]:hover { color: var(--tinta); }
   .aba-curto { display: none; }
+  .aba-online { width: 9px; height: 9px; }
   /* No celular as 4 abas dividem a largura, com rótulos curtos (o leitor de tela continua lendo o nome completo). */
   @media (max-width: 720px) {
     .abas { gap: 0; }
@@ -172,6 +173,16 @@
   .estado-email.clicou { background: var(--feito-suave); color: var(--feito-tinta); }
   .estado-email.abriu { background: var(--tatame-suave); color: var(--tatame-tinta); }
   .estado-email.enviado { background: var(--gi); color: var(--tinta-2); }
+  .proximo-envio {
+    display: flex; gap: 14px; align-items: flex-start; margin: 0 0 20px; padding: 16px 18px; border-radius: 14px;
+    background: var(--tatame-suave); border: 1px solid var(--tatame);
+  }
+  .prox-icone { flex: 0 0 auto; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: var(--tatame); color: var(--sobre-tatame); }
+  .prox-icone svg { width: 22px; height: 22px; }
+  .prox-texto h2 { font-size: 15px; font-family: var(--texto); font-stretch: 100%; font-weight: 700; color: var(--tatame-tinta); letter-spacing: 0; }
+  .prox-quando { margin: 4px 0 0; font-size: 18px; color: var(--tinta); }
+  .prox-quando span { font-size: 14px; color: var(--tinta-2); }
+  .prox-detalhe { margin: 4px 0 0; font-size: 14px; color: var(--tinta-2); }
   .aviso-bloco { margin: 0 0 16px; padding: 12px 14px; border-radius: 12px; background: var(--recorde-suave); color: var(--recorde-tinta); font-size: 14px; }
 
   /* Números principais */
@@ -402,7 +413,7 @@
 
   <div id="painel" hidden>
     <div class="abas" role="tablist" aria-label="Seções do monitoramento">
-      <button type="button" role="tab" id="tab-geral" data-aba="geral" aria-controls="aba-geral" aria-selected="true"><span class="aba-longo">Visão geral</span><span class="aba-curto" aria-hidden="true">Geral</span></button>
+      <button type="button" role="tab" id="tab-geral" data-aba="geral" aria-controls="aba-geral" aria-selected="true"><span class="aba-longo">Visão geral</span><span class="aba-curto" aria-hidden="true">Geral</span><span class="ponto on aba-online" id="aba-online" hidden></span></button>
       <button type="button" role="tab" id="tab-usuarios" data-aba="usuarios" aria-controls="aba-usuarios" aria-selected="false" tabindex="-1">Usuários</button>
       <button type="button" role="tab" id="tab-saude" data-aba="saude" aria-controls="aba-saude" aria-selected="false" tabindex="-1"><span class="aba-longo">Saúde do app</span><span class="aba-curto" aria-hidden="true">Saúde</span><span class="aba-alerta" id="alerta-saude" hidden></span></button>
       <button type="button" role="tab" id="tab-emails" data-aba="emails" aria-controls="aba-emails" aria-selected="false" tabindex="-1">E-mails</button>
@@ -520,6 +531,7 @@
     </div>
 
     <div role="tabpanel" id="aba-emails" aria-labelledby="tab-emails" hidden>
+      <section class="proximo-envio" id="proximo-envio" aria-labelledby="prox-titulo"></section>
       <div id="emails-aviso"></div>
       <dl class="kpis" id="kpis-emails"></dl>
       <section class="bloco" aria-labelledby="envios-titulo">
@@ -688,8 +700,17 @@
   const descricaoOnline = (m) => [NOMES_TELA[m.tela] || m.tela, noApp(m.desde)].filter(Boolean).join(' · ');
   const seloOnline = (id) => (online.has(id)
     ? `<span class="situacao online"><span class="ponto on" aria-hidden="true"></span>On-line · ${esc(descricaoOnline(online.get(id)))}</span>` : '');
+  // Ponto verde pulsando na aba Visão geral quando há alguém on-line e outra aba está aberta.
+  function atualizarAbaOnline() {
+    const n = dados ? dados.usuarios.filter((u) => online.has(u.id)).length : 0;
+    const el = $('aba-online');
+    el.hidden = !n || aba === 'geral';
+    el.setAttribute('role', 'img');
+    el.setAttribute('aria-label', `${n} ${n === 1 ? 'pessoa' : 'pessoas'} on-line agora`);
+  }
   function atualizarOnline() {
     if (!dados) return;
+    atualizarAbaOnline();
     // Status por canal: "Ao vivo" só quando todos conectaram; se parte falhou, mostra quantos e o erro.
     const FALHAS = ['CHANNEL_ERROR', 'TIMED_OUT', 'CLOSED'];
     const todos = [...canais.entries()];
@@ -1179,7 +1200,41 @@
   const situacaoEmail = (x) => (x.clicado_em ? { c: 'clicou', t: 'Clicou', i: ICON.check, em: x.clicado_em }
     : x.aberto_em ? { c: 'abriu', t: 'Abriu', i: ICON.olho, em: x.aberto_em } : { c: 'enviado', t: 'Enviado', i: ICON.email, em: x.enviado_em });
 
+  // Próximo envio do resumo: toda sexta às 9h de Brasília (12h UTC; Brasília não tem horário de verão).
+  // Resume os 7 dias até a véspera (sexta a quinta).
+  function proximoEnvio(agora = new Date()) {
+    const alvo = new Date(Date.UTC(agora.getUTCFullYear(), agora.getUTCMonth(), agora.getUTCDate(), 12, 0, 0));
+    alvo.setUTCDate(alvo.getUTCDate() + ((5 - alvo.getUTCDay() + 7) % 7));
+    if (alvo <= agora) alvo.setUTCDate(alvo.getUTCDate() + 7);
+    const diaBr = alvo.toISOString().slice(0, 10); // 12h UTC = 9h em Brasília, mesmo dia
+    return { quando: alvo, dia: diaBr, ini: somarDias(diaBr, -7), fim: somarDias(diaBr, -1) };
+  }
+  function faltaPara(alvo) {
+    const min = Math.max(0, Math.round((alvo - Date.now()) / 6e4));
+    const d = Math.floor(min / 1440), h = Math.floor((min % 1440) / 60), m = min % 60;
+    if (d) return `daqui a ${d} ${d === 1 ? 'dia' : 'dias'}${h ? ` e ${h} h` : ''}`;
+    if (h) return `daqui a ${h} h${m ? ` e ${m} min` : ''}`;
+    return `daqui a ${m} min`;
+  }
+  function renderProximoEnvio() {
+    const px = proximoEnvio();
+    const hojeBr = new Date(Date.now() - 3 * 36e5).toISOString().slice(0, 10);
+    const quando = px.dia === hojeBr ? 'Hoje, sexta' : px.dia === somarDias(hojeBr, 1) ? 'Amanhã, sexta' : 'Sexta';
+    const recebem = dados.usuarios.filter((u) => u.emails_resumo !== false && (u.acessos || 0) > 0);
+    const nomes = recebem.map((u) => esc((u.nome || u.email).trim().split(/\s+/)[0]));
+    $('proximo-envio').innerHTML = `
+      <span class="prox-icone" aria-hidden="true">${ICON.email}</span>
+      <div class="prox-texto">
+        <h2 id="prox-titulo">Próximo resumo semanal</h2>
+        <p class="prox-quando"><b>${quando}, ${fmtData(px.dia)}, às 9h</b> <span>(horário de Brasília) · ${faltaPara(px.quando)}</span></p>
+        <p class="prox-detalhe">Resume de ${fmtData(px.ini)} a ${fmtData(px.fim)} e vai para <b>${recebem.length} ${recebem.length === 1 ? 'pessoa' : 'pessoas'}</b>${nomes.length ? `: ${nomes.join(', ')}` : ''}.</p>
+      </div>`;
+  }
+
+  setInterval(() => { if (dados) renderProximoEnvio(); }, 60000);
+
   function renderEmails(j) {
+    renderProximoEnvio();
     const aviso = $('emails-aviso');
     if (dados.emails === null) {
       aviso.innerHTML = `<p class="aviso-bloco">Para ver os e-mails, rode de novo o <code>supabase/schema.sql</code> no Supabase (ele cria a função admin_emails). ${esc(dados.erroEmails)}</p>`;
@@ -1259,6 +1314,7 @@
       if (sel && focar) b.focus();
     });
     ABAS.forEach((a) => { $(`aba-${a}`).hidden = a !== aba; });
+    atualizarAbaOnline();
     if (url) history.replaceState(null, '', location.pathname + location.search + (aba === 'geral' ? '' : `#${aba}`));
     fecharInfo();
     renderVisivel();
