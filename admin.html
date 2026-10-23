@@ -1094,9 +1094,12 @@
   }
   const aparelho = (d) => [d.navegador, d.sistema].filter(Boolean).join(' · ') || 'aparelho desconhecido';
   const noPeriodoEv = (e, j) => dentro(diaDeInstante(e.criado_em), j);
-  const errosDe = (j) => dados.eventos.filter((e) => e.tipo === 'erro' && noPeriodoEv(e, j));
+  // Queda de rede da conexão ao vivo ("transport failure"): o app reconecta sozinho, então não conta como
+  // erro. Versões antigas do app ainda registram; aqui são ignoradas.
+  const ehRuido = (e) => e.tipo === 'erro' && (e.dados || {}).origem === 'presenca' && /transport failure/i.test((e.dados || {}).mensagem || '');
+  const errosDe = (j) => dados.eventos.filter((e) => e.tipo === 'erro' && !ehRuido(e) && noPeriodoEv(e, j));
   const perdidasDe = (j) => dados.eventos.filter((e) => e.tipo === 'sessao_perdida' && noPeriodoEv(e, j));
-  const erros24h = () => dados.eventos.filter((e) => e.tipo === 'erro' && Date.now() - new Date(e.criado_em) < 864e5).length;
+  const erros24h = () => dados.eventos.filter((e) => e.tipo === 'erro' && !ehRuido(e) && Date.now() - new Date(e.criado_em) < 864e5).length;
 
   function renderSaude(j) {
     // Bolinha na aba: erros das últimas 24 h, em qualquer aba.
@@ -1407,7 +1410,7 @@
         em: new Date(`${String(c.inicio).slice(0, 19)}`).toISOString(), icone: 'cal', alerta: false,
         texto: `Check-in de ${(TIPOS[c.tipo] || {}).nome || c.tipo}${c.recuperacao ? `, recuperação ${c.recuperacao}/5` : ''}${c.retroativo ? ' (retroativo)' : ''}`,
       })),
-      ...dados.eventos.filter((e) => e.usuario_id === id && !['tela', 'checkin_criado'].includes(e.tipo)).map((e) => ({
+      ...dados.eventos.filter((e) => e.usuario_id === id && !['tela', 'checkin_criado'].includes(e.tipo) && !ehRuido(e)).map((e) => ({
         em: e.criado_em, icone: ICONE_EVENTO[e.tipo] || 'ponto', alerta: ['erro', 'sessao_perdida'].includes(e.tipo),
         texto: (NOMES_EVENTO[e.tipo] || (() => e.tipo))(e.dados || {}),
       })),
