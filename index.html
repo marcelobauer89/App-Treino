@@ -1314,13 +1314,25 @@
     }
     marcarSessao();
     enviarEventos();
+    clearTimeout(timerPresenca); timerPresenca = null;
     if (canalOnline) canalOnline.untrack().catch(() => {});
   });
 
   // Presença ao vivo (Supabase Realtime): cada pessoa publica só no próprio canal privado "online:<id>",
   // que só ela e os administradores conseguem ler. Mostra no monitoramento quem está com o app aberto e em que tela.
   let canalOnline = null, presencaDesde = null;
-  let erroPresencaAvisado = false;
+  let erroPresencaAvisado = false, statusPresenca = '', timerPresenca = null;
+  // Quedas da conexão ao vivo são comuns (troca de rede, iPhone suspendendo o app) e a biblioteca
+  // reconecta sozinha. Só vira erro se, 30 s depois, com a página visível, ainda não reconectou.
+  function verificarPresencaDepois(canal, msg) {
+    if (document.visibilityState === 'hidden' || timerPresenca) return;
+    timerPresenca = setTimeout(() => {
+      timerPresenca = null;
+      if (canalOnline === canal && document.visibilityState !== 'hidden' && statusPresenca !== 'SUBSCRIBED') {
+        avisarErroPresenca(`${msg} (não reconectou em 30 s)`);
+      }
+    }, 30000);
+  }
   function avisarErroPresenca(msg) {
     if (erroPresencaAvisado) return;
     erroPresencaAvisado = true;
@@ -1337,18 +1349,24 @@
       canal.on('presence', { event: 'sync' }, () => {});
       canalOnline = canal;
       canal.subscribe((status, err) => {
-        if (status === 'SUBSCRIBED') return marcarPresenca();
-        // CLOSED depois de sair da conta é esperado; com o canal ainda em uso, é falha.
-        if (canalOnline === canal) avisarErroPresenca(`${status}${err ? `: ${err.message || err}` : ''}`);
+        statusPresenca = status;
+        if (status === 'SUBSCRIBED') { clearTimeout(timerPresenca); timerPresenca = null; return marcarPresenca(); }
+        // CLOSED depois de sair da conta é esperado; com o canal ainda em uso, é falha (talvez passageira).
+        if (canalOnline === canal) verificarPresencaDepois(canal, `${status}${err ? `: ${err.message || err}` : ''}`);
       });
     } catch (e) { canalOnline = null; avisarErroPresenca(e && e.message); }
   }
   function marcarPresenca() {
     if (!canalOnline || !usuario || document.visibilityState === 'hidden') return;
     canalOnline.track({ tela: telaAtual(), desde: presencaDesde, sistema: infoAparelho().sistema })
-      .then((r) => { if (r !== 'ok') avisarErroPresenca(`track: ${r}`); }, (e) => avisarErroPresenca(`track: ${e && e.message}`));
+      .then((r) => {
+        // "error" com o canal conectado é falha real (ex.: permissão); "timed out" costuma ser a rede.
+        if (r === 'error' && statusPresenca === 'SUBSCRIBED') avisarErroPresenca(`track: ${r}`);
+        else if (r !== 'ok') verificarPresencaDepois(canalOnline, `track: ${r}`);
+      }, (e) => verificarPresencaDepois(canalOnline, `track: ${e && e.message}`));
   }
   function desligarPresenca() {
+    clearTimeout(timerPresenca); timerPresenca = null;
     if (!canalOnline) return;
     const canal = canalOnline;
     canalOnline = null;
