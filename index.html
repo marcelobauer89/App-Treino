@@ -1325,7 +1325,8 @@
   // Quedas da conexão ao vivo são comuns (troca de rede, iPhone suspendendo o app) e a biblioteca
   // reconecta sozinha. Só vira erro se, 30 s depois, com a página visível, ainda não reconectou.
   function verificarPresencaDepois(canal, msg) {
-    if (document.visibilityState === 'hidden' || timerPresenca) return;
+    // "transport failure" é a rede do aparelho oscilando; a biblioteca reconecta sozinha. Não registra.
+    if (/transport failure/i.test(msg) || document.visibilityState === 'hidden' || timerPresenca) return;
     timerPresenca = setTimeout(() => {
       timerPresenca = null;
       if (canalOnline === canal && document.visibilityState !== 'hidden' && statusPresenca !== 'SUBSCRIBED') {
