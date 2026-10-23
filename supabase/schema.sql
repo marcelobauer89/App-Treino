@@ -176,10 +176,12 @@ create policy "grava os próprios eventos" on public.eventos
 
 -- Leitura para o dashboard de monitoramento: só respondem para administradores.
 -- Não devolvem observações dos check-ins nem pesos.
-create or replace function public.admin_usuarios()
+-- O retorno mudou (emails_resumo): uma função com outro retorno precisa ser apagada antes de recriada.
+drop function if exists public.admin_usuarios();
+create function public.admin_usuarios()
 returns table (
   id uuid, nome text, email text, cadastro timestamptz, ultimo_acesso timestamptz, acessos integer,
-  semana jsonb, dias_jiu smallint[], sem_peso text[]
+  semana jsonb, dias_jiu smallint[], sem_peso text[], emails_resumo boolean
 )
 language plpgsql
 stable
@@ -189,7 +191,7 @@ as $$
 begin
   if not public.eh_admin() then raise exception 'acesso restrito' using errcode = '42501'; end if;
   return query
-    select p.id, p.nome, p.email, u.created_at, p.ultimo_acesso, p.acessos, p.semana, p.dias_jiu, p.sem_peso
+    select p.id, p.nome, p.email, u.created_at, p.ultimo_acesso, p.acessos, p.semana, p.dias_jiu, p.sem_peso, p.emails_resumo
     from public.perfis p join auth.users u on u.id = p.id
     order by p.nome;
 end;
@@ -272,3 +274,33 @@ create table if not exists public.emails_enviados (
   primary key (usuario_id, tipo, referencia)
 );
 alter table public.emails_enviados enable row level security;
+
+-- Abertura e clique de cada e-mail: a função registra quando a imagem invisível do e-mail carrega
+-- (abertura aproximada: alguns apps de e-mail carregam sozinhos ou bloqueiam imagens) e quando o
+-- botão "Abrir o App Treino" é tocado (clique, exato).
+alter table public.emails_enviados add column if not exists aberto_em timestamptz;
+alter table public.emails_enviados add column if not exists aberturas integer not null default 0;
+alter table public.emails_enviados add column if not exists clicado_em timestamptz;
+alter table public.emails_enviados add column if not exists cliques integer not null default 0;
+
+-- Leitura dos envios para o dashboard (só administradores).
+create or replace function public.admin_emails()
+returns table (
+  usuario_id uuid, tipo text, referencia text, enviado_em timestamptz,
+  aberto_em timestamptz, aberturas integer, clicado_em timestamptz, cliques integer
+)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  if not public.eh_admin() then raise exception 'acesso restrito' using errcode = '42501'; end if;
+  return query
+    select e.usuario_id, e.tipo, e.referencia, e.enviado_em, e.aberto_em, e.aberturas, e.clicado_em, e.cliques
+    from public.emails_enviados e
+    order by e.enviado_em;
+end;
+$$;
+revoke execute on function public.admin_emails() from public, anon;
+grant execute on function public.admin_emails() to authenticated;

@@ -77,13 +77,23 @@ on conflict do nothing;
 
 Para o login do Google voltar ao dashboard, o endereço dele precisa estar liberado em **Authentication → URL Configuration → Redirect URLs** do Supabase. Adicione `https://marcelobauer89.github.io/App-Treino/admin.html` (ou `https://marcelobauer89.github.io/App-Treino/**`, que libera o app e o dashboard).
 
+O dashboard é dividido em quatro abas: **Visão geral**, **Usuários**, **Saúde do app** e **E-mails**. O período escolhido (Hoje, 7, 30, 90 dias ou Tudo) vale para todas, e a aba aberta fica no endereço (por exemplo `admin.html#saude`).
+
 O dashboard mostra:
 
 - **On-line agora**, ao vivo: quem está com o app aberto, em que tela (Treino, Dashboard ou Você) e há quanto tempo, com um ponto verde pulsando. O mesmo ponto aparece no avatar da lista e no detalhe.
 - **Números principais** do período (7, 30, 90 dias ou tudo), com a variação em relação ao período anterior: usuários ativos, check-ins, treinos por semana por usuário ativo, aderência ao plano (feito ÷ planejado na semana montada) e quantos voltaram nesta semana.
 - **Gráficos** de check-ins por dia (por tipo de treino) e de usuários ativos por dia, agrupados por semana em períodos longos, cada um com a opção de ver como tabela.
 - **Usuários**, com situação (Ativo até 7 dias sem usar, Em risco de 8 a 14, Inativo depois disso, Nunca usou), busca, ordenação e exportação em CSV.
-- **Detalhe de cada usuário**: check-ins das últimas 8 semanas, semana montada, exercícios sem peso e atividade recente (inclusive erros e sessões que caíram).
+- **Detalhe de cada usuário**: check-ins das últimas 8 semanas, semana montada, exercícios sem peso, se recebe o resumo por e-mail e atividade recente (7 por vez, agrupada por dia, inclusive erros e sessões que caíram).
+- **Saúde do app**: erros no período e usuários afetados, sessões perdidas (quem precisou entrar de novo sem ter saído) e falhas do "On-line agora".
+  - Erros iguais aparecem agrupados, com o selo "Acontecendo agora" quando ocorreram nas últimas 24 h; tocando no grupo, aparece quando e com qual usuário.
+  - As sessões perdidas aparecem agrupadas por navegador.
+  - A aba mostra uma bolinha vermelha com os erros das últimas 24 h.
+- **E-mails**: os resumos semanais enviados no período, com quantos foram abertos e clicados.
+  - Tocando numa semana, aparece quem recebeu (Enviado, Abriu ou Clicou, com o horário) e quem não recebeu e por quê.
+  - A abertura é medida por uma imagem invisível e é aproximada: o Mail do iPhone/Mac pode carregar a imagem sozinho, e quem bloqueia imagens não conta. O clique no botão "Abrir o App Treino" é exato.
+  - Precisa da função `admin_emails` do `schema.sql`.
 
 ### On-line agora (Realtime)
 
@@ -146,6 +156,8 @@ O envio sai do seu Gmail, pela Edge Function `supabase/functions/resumo-semanal/
 - A função manda um e-mail por vez e tem até 150 s por execução, o suficiente para algumas dezenas de pessoas.
 
 Se a resposta da função disser "Configuração incompleta", falta algum dos segredos do passo 4.
+
+**Abertura e clique:** cada e-mail leva uma imagem invisível e o botão passa pela própria função, que registra em `emails_enviados` (`aberto_em`, `aberturas`, `clicado_em`, `cliques`) e leva a pessoa ao app. Os links são assinados com o `RESUMO_TOKEN`, então ninguém consegue registrar abertura por outra pessoa. O rodapé do e-mail avisa que a abertura é registrada. A prévia não conta. Ao atualizar o código da função, rode também o `schema.sql`, que cria essas colunas.
 
 ## Ajustes únicos de dados
 
