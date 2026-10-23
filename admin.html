@@ -137,6 +137,9 @@
   .info::after { content: ""; position: absolute; inset: -10px; }
   .info svg { width: 18px; height: 18px; }
   .info:hover, .info[aria-expanded="true"] { color: var(--tatame-tinta); background: var(--tatame-suave); }
+  .titulo-info { display: flex; align-items: center; gap: 10px; }
+  .graficos .cartao { position: relative; }
+  .cartao > .info-txt { top: 56px; left: 8px; }
   .info-txt {
     position: absolute; z-index: 6; top: 40px; left: 8px; width: min(300px, calc(100vw - 32px)); margin: 0; padding: 10px 12px;
     border-radius: 10px; background: var(--tinta); color: var(--gi); font-size: 13px; line-height: 1.45; box-shadow: 0 8px 24px rgba(0, 0, 0, .2);
@@ -324,6 +327,7 @@
   </div>
   <div class="controles" id="controles" hidden>
     <div class="periodo" role="group" aria-label="Período">
+      <button type="button" data-periodo="hoje" aria-pressed="false">Hoje</button>
       <button type="button" data-periodo="7" aria-pressed="false">7 dias</button>
       <button type="button" data-periodo="30" aria-pressed="true">30 dias</button>
       <button type="button" data-periodo="90" aria-pressed="false">90 dias</button>
@@ -355,9 +359,13 @@
     <div class="graficos">
       <section class="bloco cartao" aria-labelledby="g1-titulo">
         <div class="bloco-topo">
-          <h2 id="g1-titulo">Check-ins por <span data-unidade>dia</span></h2>
+          <div class="titulo-info">
+            <h2 id="g1-titulo">Check-ins por <span data-unidade>dia</span></h2>
+            <button class="info" type="button" data-info="info-g1" aria-expanded="false" aria-controls="info-g1" aria-label="Como funciona: gráfico de check-ins"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button>
+          </div>
           <button class="link-btn" type="button" data-alternar="g1" aria-expanded="false">Ver tabela</button>
         </div>
+        <p class="info-txt" id="info-g1" role="note" hidden></p>
         <ul class="legenda" aria-label="Tipos de treino">
           <li><i style="background:var(--musc)"></i>Musculação</li>
           <li><i style="background:var(--jiu)"></i>Jiu-jitsu</li>
@@ -368,10 +376,14 @@
       </section>
       <section class="bloco cartao" aria-labelledby="g2-titulo">
         <div class="bloco-topo">
-          <h2 id="g2-titulo">Usuários ativos por <span data-unidade>dia</span></h2>
+          <div class="titulo-info">
+            <h2 id="g2-titulo">Usuários ativos por <span data-unidade>dia</span></h2>
+            <button class="info" type="button" data-info="info-g2" aria-expanded="false" aria-controls="info-g2" aria-label="Como funciona: gráfico de usuários ativos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button>
+          </div>
           <button class="link-btn" type="button" data-alternar="g2" aria-expanded="false">Ver tabela</button>
         </div>
-        <p class="nota">Ativo: abriu o app ou fez check-in no <span data-unidade>dia</span>.</p>
+        <p class="info-txt" id="info-g2" role="note" hidden></p>
+        <p class="nota" id="g2-nota">Ativo: abriu o app ou fez check-in no dia.</p>
         <div class="grafico" id="g2"></div>
         <div class="tabela-rolagem" id="g2-tabela" hidden></div>
       </section>
@@ -617,7 +629,7 @@
       const ini = datas[0] && datas[0] < fim ? datas[0] : somarDias(fim, -6);
       return { ini, fim, dias: diasEntre(ini, fim) + 1, anterior: null };
     }
-    const n = Number(dias);
+    const n = dias === 'hoje' ? 1 : Number(dias);
     const ini = somarDias(fim, -(n - 1));
     return { ini, fim, dias: n, anterior: { ini: somarDias(ini, -n), fim: somarDias(ini, -1), dias: n } };
   }
@@ -631,18 +643,24 @@
     dados.usuarios.forEach((u) => marcar(u.id, diaDeInstante(u.ultimo_acesso)));
     return m;
   }
+  // Treinos planejados no período. Num dia só (Hoje), vale o que a semana montada prevê para aquele dia
+  // da semana; sem semana montada, a média da semana padrão.
+  function planejadasNoPeriodo(u, j) {
+    if (j.dias === 1 && Array.isArray(u.semana) && u.semana.length === 7) return (u.semana[deYmd(j.ini).getDay()] || []).length;
+    return planejadasPorSemana(u) * (j.dias / 7);
+  }
+  // Aderência de uma pessoa: feito ÷ planejado, até 100%. Sem nada planejado (dia de descanso), não conta: null.
+  const aderenciaDe = (feitos, plan) => (plan ? Math.min(1, feitos / plan) : null);
   function metricas(j, ativosMap) {
     const ativos = dados.usuarios.filter((u) => [...ativosMap.get(u.id)].some((d) => dentro(d, j)));
     const cks = dados.checkins.filter((c) => dentro(diaDeCheckin(c), j));
     const semanas = j.dias / 7;
     const treinosSemana = ativos.length ? cks.length / ativos.length / semanas : 0;
-    const ader = ativos.map((u) => {
-      const plan = planejadasPorSemana(u) * semanas;
-      const feitos = cks.filter((c) => c.usuario_id === u.id).length;
-      return plan ? Math.min(1, feitos / plan) : 0;
-    });
-    const aderencia = ader.length ? ader.reduce((a, b) => a + b, 0) / ader.length : 0;
-    return { ativos: ativos.length, checkins: cks.length, treinosSemana, aderencia };
+    const treinosPorUsuario = ativos.length ? cks.length / ativos.length : 0;
+    const ader = ativos.map((u) => aderenciaDe(cks.filter((c) => c.usuario_id === u.id).length, planejadasNoPeriodo(u, j)))
+      .filter((x) => x !== null);
+    const aderencia = ader.length ? ader.reduce((a, b) => a + b, 0) / ader.length : null;
+    return { ativos: ativos.length, checkins: cks.length, treinosSemana, treinosPorUsuario, aderencia };
   }
   // Retenção: de quem usou de 8 a 14 dias atrás, quantos voltaram nos últimos 7 dias.
   function retencao(ativosMap) {
@@ -656,6 +674,7 @@
 
   // ---------- Render ----------
   function render() {
+    fecharInfo();
     const j = janela(periodo);
     const ativosMap = diasAtivos();
     renderKpis(j, ativosMap);
@@ -679,7 +698,8 @@
     const a = j.anterior ? metricas(j.anterior, ativosMap) : null;
     const r = retencao(ativosMap);
     const total = dados.usuarios.length;
-    const rotuloPeriodo = periodo === 'tudo' ? 'desde o início' : `nos últimos ${periodo} dias`;
+    const ehHoje = periodo === 'hoje';
+    const rotuloPeriodo = periodo === 'tudo' ? 'desde o início' : ehHoje ? 'hoje' : `nos últimos ${periodo} dias`;
     // No celular o contexto usa a versão curta (o período já aparece no seletor).
     // Sem período anterior ("Tudo"), d chega null e não mostra variação.
     let n = 0;
@@ -691,16 +711,22 @@
       <dd><span class="valor">${valor}</span></dd>
       <dd class="ctx"><span class="longo">${longo}${d ? ' · ' : ''}</span><span class="curto">${curto}</span>${d || ''}</dd></div>`;
     };
-    const compara = periodo === 'tudo' ? 'No período Tudo não há comparação.' : `A seta compara com os ${periodo} dias anteriores.`;
+    const compara = periodo === 'tudo' ? 'No período Tudo não há comparação.' : ehHoje ? 'A seta compara com ontem.' : `A seta compara com os ${periodo} dias anteriores.`;
+    const um = (v) => Math.round(v * 10) / 10;
     $('kpis').innerHTML = [
       tile('Usuários ativos', `${m.ativos}<small> de ${total}</small>`, { longo: rotuloPeriodo, curto: '', d: a && delta(m.ativos, a.ativos),
         info: `Quantas pessoas abriram o app ou fizeram check-in pelo menos uma vez no período. O número menor é o total de cadastrados. ${compara}` }),
       tile('Check-ins', fmtNum(m.checkins), { longo: rotuloPeriodo, curto: '', d: a && delta(m.checkins, a.checkins),
         info: `Total de check-ins feitos no período, somando todos os usuários e tipos de treino (musculação, jiu-jitsu e cardio), inclusive os registrados depois. ${compara}` }),
-      tile('Treinos por semana', fmtNum(m.treinosSemana, 1), { longo: 'por usuário ativo', curto: 'por ativo', d: a && delta(Math.round(m.treinosSemana * 10) / 10, Math.round(a.treinosSemana * 10) / 10),
-        info: `Média de treinos por semana de quem usou o app: check-ins do período ÷ usuários ativos ÷ semanas do período. ${compara}` }),
-      tile('Aderência ao plano', `${fmtNum(m.aderencia * 100)}<small>%</small>`, { longo: 'feito ÷ planejado na semana montada', curto: 'do planejado', d: a && delta(m.aderencia, a.aderencia, { pct: true }),
-        info: `Quanto do plano foi cumprido, em média, por quem usou o app. Para cada pessoa: check-ins ÷ treinos planejados no período (pela semana montada em Você ou, sem ela, pela semana padrão), com limite de 100%. ${periodo === 'tudo' ? 'No período Tudo não há comparação.' : 'A seta mostra a diferença em pontos percentuais (p.p.) para o período anterior.'}` }),
+      // Num dia só, "por semana" multiplicaria o dia por 7; com Hoje o card mostra os treinos por usuário.
+      ehHoje
+        ? tile('Treinos por usuário', fmtNum(m.treinosPorUsuario, 1), { longo: 'por usuário ativo, hoje', curto: 'por ativo', d: a && delta(um(m.treinosPorUsuario), um(a.treinosPorUsuario)),
+          info: `Média de treinos de hoje de quem usou o app hoje: check-ins de hoje ÷ usuários ativos hoje. ${compara}` })
+        : tile('Treinos por semana', fmtNum(m.treinosSemana, 1), { longo: 'por usuário ativo', curto: 'por ativo', d: a && delta(um(m.treinosSemana), um(a.treinosSemana)),
+          info: `Média de treinos por semana de quem usou o app: check-ins do período ÷ usuários ativos ÷ semanas do período. ${compara}` }),
+      tile('Aderência ao plano', m.aderencia === null ? '—' : `${fmtNum(m.aderencia * 100)}<small>%</small>`, { longo: ehHoje ? 'feito ÷ planejado para hoje' : 'feito ÷ planejado na semana montada', curto: 'do planejado',
+        d: a && m.aderencia !== null && a.aderencia !== null && delta(m.aderencia, a.aderencia, { pct: true }),
+        info: `Quanto do plano foi cumprido, em média, por quem usou o app. Para cada pessoa: check-ins ÷ treinos planejados ${ehHoje ? 'para hoje (o dia da semana na semana montada em Você ou, sem ela, a média da semana padrão)' : 'no período (pela semana montada em Você ou, sem ela, pela semana padrão)'}, com limite de 100%. Quem não tinha nada planejado${ehHoje ? ' hoje (dia de descanso)' : ''} não entra na média. ${periodo === 'tudo' ? 'No período Tudo não há comparação.' : `A seta mostra a diferença em pontos percentuais (p.p.) para ${ehHoje ? 'ontem' : 'o período anterior'}.`}` }),
       tile('Voltaram nesta semana', r.base ? `${fmtNum(r.voltaram / r.base * 100)}<small>%</small>` : '—',
         { longo: r.base ? `${r.voltaram} de ${r.base} que usaram na semana anterior` : 'sem uso na semana anterior', largo: true,
           info: 'Das pessoas que usaram o app entre 8 e 14 dias atrás, quantas voltaram a usar nos últimos 7 dias. Mostra se o app está segurando os usuários. Não muda com o período escolhido.' }),
@@ -709,6 +735,11 @@
 
   // Agrupa por dia; períodos longos (mais de 60 dias) por semana, começando na segunda.
   function baldes(j) {
+    // Hoje: 24 colunas, uma por hora.
+    if (j.dias === 1) {
+      const lista = Array.from({ length: 24 }, (_, h) => ({ ini: j.ini, fim: j.fim, hora: h, eixo: `${h}h`, rotulo: `${pad(h)}h–${pad((h + 1) % 24)}h` }));
+      return { lista, unidade: 'hora' };
+    }
     const porSemana = j.dias > 60;
     const lista = [];
     let d = j.ini;
@@ -727,15 +758,34 @@
   function renderGraficos(j, ativosMap) {
     const { lista, unidade } = baldes(j);
     document.querySelectorAll('[data-unidade]').forEach((el) => { el.textContent = unidade; });
+    const porHora = unidade === 'hora';
+    // Hora local: check-ins guardam a hora do aparelho; eventos e acessos vêm com fuso.
+    const horaDeCheckin = (c) => Number(String(c.inicio).slice(11, 13));
+    const noBalde = (d, h, b) => d >= b.ini && d <= b.fim && (!porHora || h === b.hora);
     const serie1 = lista.map((b) => {
-      const cks = dados.checkins.filter((c) => { const d = diaDeCheckin(c); return d >= b.ini && d <= b.fim; });
+      const cks = dados.checkins.filter((c) => noBalde(diaDeCheckin(c), horaDeCheckin(c), b));
       const v = { musc: 0, jiu: 0, bike: 0 };
       cks.forEach((c) => { v[TIPOS[c.tipo] ? TIPOS[c.tipo].grupo : 'musc'] += 1; });
       return { ...b, v, total: cks.length };
     });
-    const serie2 = lista.map((b) => ({
-      ...b, total: dados.usuarios.filter((u) => [...ativosMap.get(u.id)].some((d) => d >= b.ini && d <= b.fim)).length,
-    }));
+    let serie2;
+    if (porHora) {
+      // Pessoas diferentes com check-in, evento ou acesso em cada hora de hoje.
+      const porH = Array.from({ length: 24 }, () => new Set());
+      const marcar = (id, iso) => { if (iso && diaDeInstante(iso) === j.ini) porH[new Date(iso).getHours()].add(id); };
+      dados.checkins.forEach((c) => { if (diaDeCheckin(c) === j.ini) porH[horaDeCheckin(c)].add(c.usuario_id); });
+      dados.eventos.forEach((e) => marcar(e.usuario_id, e.criado_em));
+      dados.usuarios.forEach((u) => marcar(u.id, u.ultimo_acesso));
+      serie2 = lista.map((b) => ({ ...b, total: porH[b.hora].size }));
+    } else {
+      serie2 = lista.map((b) => ({
+        ...b, total: dados.usuarios.filter((u) => [...ativosMap.get(u.id)].some((d) => d >= b.ini && d <= b.fim)).length,
+      }));
+    }
+    $('g2-nota').textContent = `Ativo: abriu o app ou fez check-in ${unidade === 'hora' ? 'na hora' : unidade === 'semana' ? 'na semana' : 'no dia'}.`;
+    const cadaUn = porHora ? 'cada hora de hoje' : `cada ${unidade} do período`;
+    $('info-g1').textContent = `Quantos check-ins foram feitos em ${cadaUn}, somando todos os usuários. Cada cor é um tipo de treino: musculação, jiu-jitsu e cardio. Passe o dedo ou o mouse numa barra para ver os números, ou toque em Ver tabela.${unidade === 'semana' ? ' Em períodos longos, cada barra soma uma semana, de segunda a domingo.' : ''}`;
+    $('info-g2').textContent = `Quantas pessoas diferentes usaram o app em ${cadaUn}: abriram o app ou fizeram check-in. Cada pessoa conta uma vez por barra, mesmo que use o app várias vezes.${porHora ? ' Os horários seguem o relógio do seu aparelho.' : ''}`;
     barras($('g1'), serie1, { empilhado: true, rotulo: 'check-ins' });
     barras($('g2'), serie2, { empilhado: false, rotulo: 'usuários ativos' });
     $('g1-tabela').innerHTML = tabelaHTML(['Período', ...GRUPOS.map((g) => g[1]), 'Total'],
@@ -831,16 +881,16 @@
     const p = String(nome || email || '?').trim().split(/\s+/);
     return ((p[0] || '')[0] + (p.length > 1 ? p[p.length - 1][0] : '')).toUpperCase();
   };
+  const pctAder = (v) => (v === null ? '—' : `${fmtNum(v * 100)}%`);
   function linhasUsuarios(j, ativosMap) {
     return dados.usuarios.map((u) => {
       const dias = [...ativosMap.get(u.id)].sort();
       const ultimo = dias[dias.length - 1] || null;
       const meus = dados.checkins.filter((c) => c.usuario_id === u.id);
       const noPeriodo = meus.filter((c) => dentro(diaDeCheckin(c), j)).length;
-      const plan = planejadasPorSemana(u) * (j.dias / 7);
       const ultimoTreino = meus.map(diaDeCheckin).sort().pop() || null;
       return {
-        u, ultimo, sit: situacao(ultimo), checkins: noPeriodo, aderencia: plan ? Math.min(1, noPeriodo / plan) : 0,
+        u, ultimo, sit: situacao(ultimo), checkins: noPeriodo, aderencia: aderenciaDe(noPeriodo, planejadasNoPeriodo(u, j)),
         acessos: u.acessos || 0, ultimoTreino, total: meus.length,
       };
     });
@@ -850,7 +900,7 @@
     let linhas = linhasUsuarios(j, ativosMap).filter((l) => !q || `${l.u.nome} ${l.u.email}`.toLowerCase().includes(q));
     const chave = {
       nome: (l) => (l.u.nome || l.u.email || '').toLowerCase(), situacao: (l) => l.sit.ordem, ultimo: (l) => l.ultimo || '',
-      acessos: (l) => l.acessos, checkins: (l) => l.checkins, aderencia: (l) => l.aderencia, treino: (l) => l.ultimoTreino || '',
+      acessos: (l) => l.acessos, checkins: (l) => l.checkins, aderencia: (l) => (l.aderencia === null ? -1 : l.aderencia), treino: (l) => l.ultimoTreino || '',
     }[ordem.col];
     linhas.sort((a, b) => { const x = chave(a), y = chave(b); return (x < y ? -1 : x > y ? 1 : 0) * ordem.dir; });
     linhasAtuais = linhas;
@@ -865,13 +915,13 @@
       <tr data-usuario="${l.u.id}">
         <td><div class="quem"><span class="avatar${online.has(l.u.id) ? ' on' : ''}" aria-hidden="true">${esc(iniciais(l.u.nome, l.u.email))}</span>
           <button type="button" data-abrir="${l.u.id}"><b>${esc(l.u.nome || 'Sem nome')}</b><span class="sr on-sr"${online.has(l.u.id) ? '' : ' hidden'}>, on-line agora</span><small>${esc(l.u.email)}</small>
-            <span class="resumo-cel">${l.ultimo ? relativo(l.ultimo) : 'sem uso'} · ${fmtNum(l.checkins)} check-in${l.checkins === 1 ? '' : 's'} · ${fmtNum(l.aderencia * 100)}% do plano</span></button>
+            <span class="resumo-cel">${l.ultimo ? relativo(l.ultimo) : 'sem uso'} · ${fmtNum(l.checkins)} check-in${l.checkins === 1 ? '' : 's'} · ${pctAder(l.aderencia)} do plano</span></button>
           <span class="chev" aria-hidden="true">${ICON.chev}</span></div></td>
         <td data-rotulo="Situação" class="cel-situacao"><span class="situacao ${l.sit.chave}">${l.sit.icone}${l.sit.rotulo}</span></td>
         <td data-rotulo="Último uso">${relativo(l.ultimo)}</td>
         <td data-rotulo="Acessos" class="num">${fmtNum(l.acessos)}</td>
         <td data-rotulo="Check-ins" class="num">${fmtNum(l.checkins)}</td>
-        <td data-rotulo="Aderência"><span class="barra-ader"><span aria-hidden="true"><i style="width:${Math.round(l.aderencia * 100)}%"></i></span>${fmtNum(l.aderencia * 100)}%</span></td>
+        <td data-rotulo="Aderência"><span class="barra-ader"><span aria-hidden="true"><i style="width:${Math.round((l.aderencia || 0) * 100)}%"></i></span>${pctAder(l.aderencia)}</span></td>
         <td data-rotulo="Último treino">${l.ultimoTreino ? fmtData(l.ultimoTreino) : '—'}</td>
       </tr>`).join('') : `<tr><td colspan="7" class="nenhum">${q ? 'Nenhum usuário encontrado.' : 'Nenhum usuário cadastrado.'}</td></tr>`;
   }
@@ -881,11 +931,11 @@
     const cab = ['nome', 'email', 'situacao', 'ultimo_uso', 'acessos', 'checkins_periodo', 'aderencia_pct', 'ultimo_treino', 'checkins_total', 'cadastro'];
     const campo = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
     const linhas = linhasAtuais.map((l) => [l.u.nome, l.u.email, l.sit.rotulo, l.ultimo || '', l.acessos, l.checkins,
-      Math.round(l.aderencia * 100), l.ultimoTreino || '', l.total, diaDeInstante(l.u.cadastro) || ''].map(campo).join(';'));
+      l.aderencia === null ? '' : Math.round(l.aderencia * 100), l.ultimoTreino || '', l.total, diaDeInstante(l.u.cadastro) || ''].map(campo).join(';'));
     const blob = new Blob([`﻿${cab.join(';')}\n${linhas.join('\n')}\n`], { type: 'text/csv;charset=utf-8' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `usuarios-${hoje()}-${periodo === 'tudo' ? 'tudo' : `${periodo}d`}.csv`;
+    a.download = `usuarios-${hoje()}-${periodo === 'tudo' || periodo === 'hoje' ? periodo : `${periodo}d`}.csv`;
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   }
@@ -959,7 +1009,7 @@
         <span class="nota" style="display:inline">&nbsp;Cadastro em ${u.cadastro ? fmtData(diaDeInstante(u.cadastro), { day: 'numeric', month: 'short', year: 'numeric' }) : '—'} · último uso ${relativo(l.ultimo)} · último treino ${l.ultimoTreino ? fmtData(l.ultimoTreino) : '—'}</span></p>
       <dl class="mini">
         <div><dt>Check-ins no período</dt><dd>${fmtNum(l.checkins)}</dd></div>
-        <div><dt>Aderência no período</dt><dd>${fmtNum(l.aderencia * 100)}%</dd></div>
+        <div><dt>Aderência no período</dt><dd>${pctAder(l.aderencia)}</dd></div>
         <div><dt>Check-ins no total</dt><dd>${fmtNum(l.total)}</dd></div>
         <div><dt>Acessos</dt><dd>${fmtNum(l.acessos)}</dd></div>
       </dl>
@@ -1004,7 +1054,7 @@
     balao.style.left = '8px';
     // Não deixa o balão passar da borda dos cards nem da tela.
     const r = balao.getBoundingClientRect();
-    const limite = Math.min($('kpis').getBoundingClientRect().right, document.documentElement.clientWidth - 16);
+    const limite = Math.min(botao.closest('.kpis, .cartao').getBoundingClientRect().right, document.documentElement.clientWidth - 16);
     const sobra = r.right - limite;
     if (sobra > 0) balao.style.left = `${8 - sobra}px`;
   }
