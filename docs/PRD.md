@@ -1,6 +1,6 @@
 ## PRD — App Bauer: Jiu-Jitsu + Hipertrofia
 
-2026-10-22 · @Bauer
+2026-10-23 · @Bauer
 
 ### Visão geral
 
@@ -28,7 +28,7 @@ O app está no ar em https://marcelobauer89.github.io/App-Treino/ (GitHub Pages)
 | **Treino** | Data, hora e atividade de hoje no topo; abas Treino 1, 2 e 3 (abre no treino do dia); filtro por foco (Hipertrofia, Força, Explosão, Mobilidade); "Sobre o treino" com objetivo, o que esperar e impacto no jiu e no físico; cada exercício num cartão próprio com dose, PSE-alvo, graus H/F/E/M e botão "Terminei o exercício" (com peso: cargas por série; sem peso: marca como feito) e troféu quando a carga do dia é recorde; deslizando o cartão para o lado aparece o vídeo de execução, que toca sem som; agenda da semana com dias feitos e treinos extras |
 | **Dashboard** | Números (check-ins no total, no mês, horas treinadas no mês, recuperação média em 30 dias); esta semana × plano; calendário mensal com selos por tipo; lista dos check-ins do dia com detalhe dos exercícios e cargas; edição do check-in e correção dos pesos de cada exercício naquele dia; exclusão de check-in; barras por tipo no mês |
 | **Você** | Dados pessoais salvos automaticamente (nome, e-mail da conta Google, foto recortada no aparelho e exibida na barra inferior); tema (automático, claro, escuro); **Minha semana**, para montar a semana arrastando as atividades para os dias, com avisos; conta, interruptor "Resumo semanal por e-mail" (ligado por padrão), aviso de que o uso do app é registrado (sem pesos, cargas ou observações) e saída |
-| **Monitoramento** (`admin.html`, só administradores) | On-line agora (ao vivo, com a tela atual e há quanto tempo está no app); números do período (7, 30, 90 dias ou tudo): usuários ativos, check-ins, treinos por semana, aderência e retorno, cada um com seta de comparação com o período anterior (sem comparação em Tudo) e um ícone de informação que explica o que o número mede e como é calculado; status da conexão ao vivo ("Ao vivo", "Ao vivo em X de Y usuários" ou o erro exato); gráficos de check-ins por tipo e de usuários ativos por dia, com "Ver tabela"; lista de usuários com situação, busca, ordenação e exportação em CSV; detalhe de cada usuário (check-ins das últimas 8 semanas, semana montada, exercícios sem peso, último treino e atividade recente; a atividade inclui ligar ou desligar o resumo semanal). Nunca mostra pesos, cargas nem observações |
+| **Monitoramento** (`admin.html`, só administradores) | Quatro abas (Visão geral, Usuários, Saúde do app, E-mails), com o período comum (Hoje, 7, 30, 90 dias ou Tudo) e a aba guardada no endereço (ex.: `admin.html#saude`). **Visão geral:** On-line agora (ao vivo, com a tela atual, há quanto tempo está no app e status da conexão: "Ao vivo", "Ao vivo em X de Y usuários" ou o erro exato), com ponto verde pulsando na aba quando há alguém on-line; números do período (usuários ativos, check-ins, treinos por semana, ou por usuário em Hoje, aderência e retorno), cada um com seta de comparação com o período anterior e ícone de informação; gráficos de check-ins por tipo e de usuários ativos (por hora em Hoje, por dia ou por semana), também com ícone de informação e "Ver tabela". **Usuários:** lista com situação, busca, ordenação e CSV; detalhe com check-ins das últimas 8 semanas, semana montada, exercícios sem peso, se recebe o resumo e atividade recente (7 por vez, com "Mostrar mais", agrupada por dia). **Saúde do app:** erros e usuários afetados, sessões perdidas por navegador, falhas do ao vivo, gráfico de erros, erros agrupados com "Acontecendo agora" e ocorrências por usuário, bolinha com os erros das últimas 24 h. **E-mails:** cartão do próximo resumo (dia, quanto falta, período e quem vai receber), envios por semana com abertos e clicados, quem recebeu (Enviado, Abriu, Clicou) e quem não recebeu e por quê. Nunca mostra pesos, cargas nem observações |
 
 Ainda não existem: convites, modo offline, onboarding com peso e alvo, semana/fase do bloco de 6 semanas, registro de peso e proteína, tela de progresso, timer de descanso, exportação e instalação como PWA. A seção de requisitos mostra o status de cada item.
 
@@ -105,7 +105,7 @@ O MVP cobre um grupo de amigos convidados, cada um com conta e dados próprios, 
 
 ### Requisitos funcionais
 
-São 44 requisitos em 9 grupos; os marcados P0 bloqueiam o lançamento do MVP. A coluna Status mostra o que o app atual já entrega: **Feito**, **Parcial** ou **Pendente**.
+São 47 requisitos em 9 grupos; os marcados P0 bloqueiam o lançamento do MVP. A coluna Status mostra o que o app atual já entrega: **Feito**, **Parcial** ou **Pendente**.
 
 | ID | Requisito | Prioridade | Status |
 | --- | --- | --- | --- |
@@ -116,12 +116,13 @@ São 44 requisitos em 9 grupos; os marcados P0 bloqueiam o lançamento do MVP. A
 | RF-04 | Sincronização dos dados entre aparelho e nuvem, mantendo o uso offline | P0 | Parcial: dados na nuvem e em qualquer aparelho; sem modo offline (falha ao salvar avisa e recarrega do servidor) |
 | RF-05 | Usuário pode excluir a conta e todos os seus dados | P0 | Pendente |
 | RF-36 | Tela de entrada com título "OSS", descrição, botão "Continuar com o Google" em largura total, crédito do desenvolvedor e mensagens claras para login cancelado, erro de configuração e falha de rede | P1 | Feito |
-| RF-41 | Registro de eventos de uso (telas, exercícios concluídos, check-ins criados/editados/excluídos, recordes, vídeos, "Sem peso", semana, tema, foto, erros e sessões perdidas, com navegador e aparelho), enviados em lote e sem pesos, cargas ou observações; base do dashboard de monitoramento (`admin.html`, só administradores) | P1 | Parcial: eventos e dashboard (números principais, gráficos, usuários e detalhe) feitos; falta a análise de recursos, jornada e saúde do app |
+| RF-41 | Registro de eventos de uso (telas, exercícios concluídos, check-ins criados/editados/excluídos, recordes, vídeos, "Sem peso", semana, tema, foto, erros e sessões perdidas, com navegador e aparelho), enviados em lote e sem pesos, cargas ou observações; base do dashboard de monitoramento (`admin.html`, só administradores) | P1 | Parcial: eventos e dashboard (visão geral, usuários, saúde do app e e-mails) feitos; falta a análise de recursos usados e da jornada dos usuários |
 | RF-42 | Ver no monitoramento quem está on-line agora, ao vivo, com a tela atual e há quanto tempo está no app (Supabase Realtime Presence em canal privado por usuário; só administradores leem). O painel mostra o status por canal: "Ao vivo" quando todos conectaram, "Ao vivo em X de Y usuários" com o detalhe do erro quando parte falha, e o erro exato quando nenhum conecta; o app registra falhas da presença como evento de erro | P2 | Feito |
 | RF-43 | Cada número principal do monitoramento tem um ícone de informação que abre um balão explicando o que mede e como é calculado (um balão aberto por vez; fecha ao tocar fora, no balão ou com Esc) | P2 | Feito |
 | RF-44 | Resumo semanal por e-mail toda sexta às 9h (Brasília) com os últimos 7 dias (sexta a quinta): treinos por tipo, dias treinados, aderência ao plano, comparação com a semana anterior e recordes; versão de incentivo para quem não treinou; quem nunca usou o app não recebe. Enviado pelo Gmail por uma Edge Function agendada (pg_cron e pg_net), sem reenviar o mesmo resumo; opção de não receber em Você → Conta, pelo link "Não quero mais receber" do rodapé e pelo botão "Cancelar inscrição" do Gmail | P2 | Feito |
 | RF-45 | Monitoramento em abas (Visão geral, Usuários, Saúde do app, E-mails), com período comum e aba guardada no endereço. Saúde do app: erros e usuários afetados, sessões perdidas por navegador, falhas do ao vivo, erros agrupados com ocorrências por usuário e alerta das últimas 24 h | P2 | Feito |
 | RF-46 | Acompanhamento do resumo semanal no monitoramento: envios por semana, quem recebeu, quem abriu (imagem invisível, aproximado) e quem clicou (exato), quem desligou o resumo e por que alguém não recebeu | P2 | Feito |
+| RF-47 | Período Hoje no monitoramento, comparado com ontem: gráficos por hora (24 colunas), "Treinos por usuário" no lugar de "por semana" e aderência pelo que a semana montada prevê para o dia (sem nada planejado, fica fora da média e aparece como —); os cards dos gráficos ganham o ícone de informação | P2 | Feito |
 | RF-37 | Registrar o último acesso e a quantidade de acessos de cada usuário (1 acesso a cada 30 min no máximo, pela hora do servidor), visíveis só para o administrador no Supabase | P2 | Feito |
 | **Onboarding e configuração** |  |  |  |
 | RF-06 | Usuário informa peso atual, % de gordura, alvo próprio e data de início do bloco | P0 | Pendente |
@@ -175,7 +176,7 @@ O plano é um modelo único, compartilhado por todos os usuários e guardado com
 | Administrador | usuário (lista preenchida por SQL; dá acesso ao monitoramento) |
 | Evento de uso | usuário, data e hora, tipo (sessão, tela, exercício concluído, recorde, check-in criado/editado/excluído/encerrado, vídeo, sem peso, semana alterada, tema, foto, erro, sessão perdida, saiu), dados (até 2 KB; sem pesos, cargas ou observações) |
 | Configuração | usuário, tema (automático, claro, escuro), semana (7 dias, até 2 atividades cada), exercícios sem peso, recebe resumo semanal (sim/não) |
-| E-mail enviado | usuário, tipo (resumo semanal), referência (último dia do período), enviado em |
+| E-mail enviado | usuário, tipo (resumo semanal), referência (último dia do período), enviado em, primeira abertura, aberturas, primeiro clique, cliques |
 | Convite | código, criado por, validade, usado por |
 | Plano (modelo) | nome, duração (6 semanas) |
 | Inscrição no plano | usuário, plano, data de início, peso inicial, alvo, compartilha aderência (sim/não) |
@@ -197,14 +198,14 @@ No Supabase, os dados do usuário ficam em três tabelas, todas com regras de ac
 - **`cargas`:** pesos por usuário, dia e treino.
 
 O resumo semanal por e-mail usa:
-- **`emails_enviados`:** um registro por usuário, tipo e período (chave única), para nunca mandar o mesmo resumo duas vezes. Não tem políticas de acesso: só a função, com a chave de serviço, lê e grava.
+- **`emails_enviados`:** um registro por usuário, tipo e período (chave única), para nunca mandar o mesmo resumo duas vezes, com a primeira abertura e o primeiro clique (`aberto_em`, `clicado_em`) e as contagens (`aberturas`, `cliques`). Não tem políticas de acesso: só a função, com a chave de serviço, lê e grava.
 - **Edge Function `supabase/functions/resumo-semanal/index.ts`:** monta e envia os e-mails pelo Gmail (SMTP com senha de app). Os segredos (`GMAIL_USER`, `GMAIL_APP_PASSWORD`, `RESUMO_TOKEN`, `APP_URL`, `FUNCAO_URL`) ficam só em Edge Functions → Secrets.
 - **Agendamento `supabase/agendamentos/resumo-semanal.sql`:** liga pg_cron e pg_net, agenda a chamada de sexta às 9h e traz consultas prontas para simular, mandar uma prévia só para um e-mail e ver as respostas da função (com tempo limite de 30 s). O `RESUMO_TOKEN` é colado só no SQL Editor, nunca no repositório.
 
 O monitoramento usa mais duas tabelas e um canal ao vivo:
 - **`admins`:** quem é administrador; não pode ser lida nem alterada pela API, e a função `eh_admin()` diz se o usuário logado está nela.
 - **`eventos`:** cada usuário só grava os próprios eventos e não lê nenhum. O app envia os eventos em lote (a cada 10 s, a cada 20 eventos, ao ir para segundo plano e ao sair), sem avisar o usuário e sem falhar se a tabela não existir.
-- **Funções `admin_usuarios()`, `admin_checkins()` e `admin_eventos()`:** alimentam o `admin.html`, recusam quem não está em `admins` e não devolvem pesos, cargas nem observações.
+- **Funções `admin_usuarios()` (inclui se recebe o resumo), `admin_checkins()`, `admin_eventos()` e `admin_emails()`:** alimentam o `admin.html`, recusam quem não está em `admins` e não devolvem pesos, cargas nem observações.
 - **Presença (Supabase Realtime):** enquanto o app está visível, publica a tela atual, desde quando está aberto e o sistema no canal privado `online:<id>` do usuário, e retira ao ir para segundo plano ou sair. Cada pessoa só publica e lê o próprio canal; administradores leem todos.
 
 Ajustes únicos de dados ficam em `supabase/ajustes/` e rodam uma vez no SQL Editor, depois do `schema.sql`:
@@ -244,7 +245,7 @@ Terminar exercícios (registrar pesos) e fazer check-in são ações separadas. 
 | Encerrar check-in | Só para check-ins que ficaram abertos: início e duração, exercícios com carga no dia, recuperação 1–5, observação |
 | Dashboard | Números, esta semana × plano, calendário mensal, check-ins do dia com detalhe, "Editar check-in", exclusão e exercícios que abrem o painel para corrigir os pesos daquele dia; barras por tipo no mês; botão fixo "Fazer check-in" |
 | Você | Dados pessoais e foto (salvos sozinhos, sem botão), tema, Minha semana (arrastar e soltar, botão +, avisos, voltar ao padrão), conta com aviso sobre o registro de uso |
-| Monitoramento (`admin.html`) | Só administradores, com login Google: On-line agora com status da conexão, números do período com explicação de cada um, gráficos com visão em tabela, usuários (busca, ordenação, CSV) e detalhe de cada usuário; no celular, números em 2 colunas e usuários em cartões compactos |
+| Monitoramento (`admin.html`) | Só administradores, com login Google, em quatro abas: Visão geral (On-line agora, números e gráficos com explicação), Usuários (busca, ordenação, CSV, detalhe), Saúde do app (erros, sessões perdidas, falhas do ao vivo) e E-mails (próximo resumo, envios, aberturas e cliques); no celular, números em 2 colunas e usuários em cartões compactos |
 | Progresso | Peso médio por semana, cargas principais, aderência, % de gordura (pendente) |
 | Ajustes | Unidades, exportação, privacidade, convidar amigos (administrador), excluir conta, aviso legal (pendente; parte já está em Você) |
 
@@ -278,19 +279,20 @@ Todas as regras vêm do plano original; o app as aplica sem que o usuário preci
 20. **Exercício sem peso:** marcado pelo usuário, vale para aquele exercício em todos os treinos; o painel não pede carga e "Concluir" registra o exercício como feito no dia. O resumo ao encerrar conta os exercícios feitos (com carga ou sem peso concluído), e o detalhe do check-in mostra "feito (sem peso)", "sem peso" ou "sem registro".
 21. **Recorde pessoal:** é a maior carga de uma série num exercício. Um dia é recorde quando a maior carga dele supera a maior carga de todos os dias anteriores (empate não conta, e o primeiro registro do exercício também não). Corrigir pesos de dias antigos recalcula os recordes.
 22. **Salvamento dos dados pessoais:** o nome é salvo após 1 s de pausa na digitação, ao sair do campo, com Enter, ao sair da conta e ao fechar a página, sem mensagem; a foto é salva ao escolher ou remover, com "Foto salva com sucesso." ou "Foto alterada com sucesso."
-23. **Registro de uso:** só administradores veem eventos e presença; usuários comuns não leem nem os próprios eventos. Um usuário é "ativo" no dia em que abriu o app ou fez check-in. Falhas ao conectar ou publicar a presença são registradas uma vez por sessão como evento de erro (origem "presença").
+23. **Registro de uso:** só administradores veem eventos e presença; usuários comuns não leem nem os próprios eventos. Um usuário é "ativo" no dia em que abriu o app ou fez check-in. Falhas da presença viram evento de erro (origem "presença") só se, 30 s depois e com a página visível, o canal ainda não reconectou; quedas em segundo plano e "transport failure" (rede do aparelho oscilando) não contam, e o painel ignora também os registros antigos desse tipo. "track" recusado com o canal conectado é erro na hora.
 24. **Números do monitoramento:**
    - **Usuários ativos:** quem abriu o app ou fez check-in ao menos uma vez no período, sobre o total de cadastrados.
    - **Check-ins:** total do período, de todos os usuários e tipos, incluindo os retroativos.
-   - **Treinos por semana:** check-ins do período ÷ usuários ativos ÷ semanas do período.
-   - **Aderência ao plano:** média, entre os ativos, de check-ins ÷ treinos planejados no período (pela semana montada ou pela padrão), com limite de 100%; a variação aparece em pontos percentuais.
+   - **Treinos por semana:** check-ins do período ÷ usuários ativos ÷ semanas do período; no período Hoje vira "Treinos por usuário" (check-ins ÷ usuários ativos).
+   - **Aderência ao plano:** média, entre os ativos, de check-ins ÷ treinos planejados no período (pela semana montada ou pela padrão), com limite de 100%; quem não tinha nada planejado fica fora da média; no período Hoje vale o que a semana montada prevê para o dia; a variação aparece em pontos percentuais.
    - **Voltaram nesta semana:** dos que usaram o app entre 8 e 14 dias atrás, quantos voltaram nos últimos 7 dias; não depende do período escolhido.
-   - **Comparação:** a seta compara com os mesmos dias imediatamente anteriores; no período Tudo não há comparação.
+   - **Comparação:** a seta compara com os mesmos dias imediatamente anteriores (Hoje compara com ontem); no período Tudo não há comparação.
    - **Situação do usuário:** Ativo (último uso há até 7 dias), Em risco (8 a 14 dias), Inativo (mais de 14 dias) ou Nunca usou.
 25. **Resumo semanal por e-mail:**
    - **Quando e o quê:** toda sexta às 9h (Brasília), com os 7 dias de sexta a quinta. Vai para quem tem o resumo ligado e já usou o app; quem não treinou na semana recebe a versão de incentivo.
    - **Conteúdo:** cabeçalho com o período; número de treinos com ▲/▼ em relação à semana anterior; faixa dos 7 dias com os selos coloridos do app (dia sem treino tracejado) e legenda; barra do plano com mensagem conforme a aderência; cartões por modalidade; cartão de recordes; botão para abrir o app. Nunca leva pesos, cargas nem observações.
    - **Sem duplicados:** cada resumo é registrado em `emails_enviados` e não é reenviado.
+   - **Abertura e clique:** o e-mail leva uma imagem invisível (abertura, aproximada: alguns apps carregam imagens sozinhos e quem bloqueia imagens não conta) e o botão passa pela função antes de abrir o app (clique, exato). Os links são assinados com o `RESUMO_TOKEN`, o rodapé avisa que a abertura é registrada e a prévia não conta.
    - **Envio só com pedido explícito:** a função só envia para todos quando o pedido diz `enviar` (no corpo ou na URL), como faz o agendamento. Sem pedido, responde 400 com o que recebeu e não envia nada. Simulação (quem receberia) e prévia (só para um e-mail, sem diferenciar maiúsculas) também funcionam pela URL, e a resposta diz o modo entendido.
    - **Descadastro:** o link do rodapé é assinado (HMAC com o `RESUMO_TOKEN`) e desliga a opção com um clique, sem login; ao voltar para o app, aparece "Pronto: você não vai mais receber o resumo semanal.". Ligar ou desligar em Você mostra um aviso e gera o evento de uso `resumo_email`.
 
@@ -305,7 +307,7 @@ Todas as regras vêm do plano original; o app as aplica sem que o usuário preci
 | Usabilidade | Layout para telas a partir de 360 px, botões ≥ 48 px, uso com uma mão; botão de check-in fixo ao alcance do polegar; tema claro por padrão para academia iluminada e escuro opcional; painéis abrem como folha inferior no celular; foco visível no teclado e respeito a "reduzir movimento" |
 | Visual | Tipografia Archivo; paleta do kimono (fundo claro), azul vivo do tatame (#2563eb) para ações e seleções, contorno azul nos botões secundários, verde (#16a34a, ícone e texto brancos) para o check-in e verde suave para pesos registrados, âmbar com troféu para recordes (a cor nunca é o único sinal); graus de contribuição mostrados como fitas na ponteira da faixa; contraste AA em todos os pares de texto e fundo, nos dois temas |
 | Dados | Supabase (Postgres) com login Google (PKCE) e regras de acesso por usuário (RLS) em `perfis`, `checkins`, `cargas` e `eventos` (`admins` fechada à API); presença ao vivo por canais privados do Supabase Realtime, com acesso público ao Realtime desligado; schema idempotente em `supabase/schema.sql`. A chave secreta nunca vai no app nem no repositório; só a chave publicável |
-| Privacidade e segurança | Regras de acesso por usuário no backend; eventos de uso gravados só pelo próprio usuário e lidos só por administradores, com aviso na tela Você; resumo semanal enviado só para o e-mail da própria pessoa, com descadastro de um clique por link assinado; segredos do e-mail só no Supabase; colunas de controle (`acessos`, `ultimo_acesso`) protegidas contra edição pelo usuário; dados de saúde não são vendidos nem enviados a terceiros; consentimento no cadastro e exclusão de conta (LGPD) |
+| Privacidade e segurança | Regras de acesso por usuário no backend; eventos de uso gravados só pelo próprio usuário e lidos só por administradores, com aviso na tela Você; resumo semanal enviado só para o e-mail da própria pessoa, com descadastro de um clique por link assinado e aviso no rodapé de que a abertura é registrada; segredos do e-mail só no Supabase; colunas de controle (`acessos`, `ultimo_acesso`) protegidas contra edição pelo usuário; dados de saúde não são vendidos nem enviados a terceiros; consentimento no cadastro e exclusão de conta (LGPD) |
 | Idioma | Português do Brasil; unidades em kg e minutos; cargas aceitam vírgula decimal |
 | Aviso legal | Onboarding, tela de progresso e rodapé da tela Treino exibem que o app não substitui profissional de educação física ou nutrição |
 
@@ -322,14 +324,14 @@ Todas as regras vêm do plano original; o app as aplica sem que o usuário preci
    - edição de check-in e correção de pesos pelo Dashboard;
    - exercícios sem peso e recordes pessoais;
    - registro de acessos e eventos de uso;
-   - painel de monitoramento para administradores, com quem está on-line agora;
+   - painel de monitoramento para administradores em abas, com quem está on-line agora, saúde do app e acompanhamento dos e-mails;
    - resumo semanal por e-mail.
 2. **MVP (web, grupo de amigos):**
    - PWA responsiva com modo offline, convites e exclusão de conta;
    - onboarding com peso e alvo, semana e fase, peso e proteína;
    - tela de progresso e timer de descanso;
    - os demais requisitos P0 e P1 pendentes.
-3. **v1.1:** análise de recursos usados, jornada dos usuários e saúde do app no monitoramento (RF-41), exportação CSV/PDF (incluindo o histórico de check-ins), gráficos de carga por exercício, lembretes por notificação web, aderência compartilhada opcional (RF-24).
+3. **v1.1:** análise de recursos usados e da jornada dos usuários no monitoramento (RF-41), exportação CSV/PDF (incluindo o histórico de check-ins), gráficos de carga por exercício, lembretes por notificação web, aderência compartilhada opcional (RF-24).
 4. **v2 (nativo e público):** apps iOS e Android, publicação nas lojas, editor de planos, novos blocos após as 6 semanas, integração com Apple Saúde / Health Connect.
 
 **Riscos**
