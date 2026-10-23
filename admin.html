@@ -135,6 +135,7 @@
   }
   .abas [role="tab"]:hover { color: var(--tinta); }
   .aba-curto { display: none; }
+  .aba-online { width: 9px; height: 9px; }
   /* No celular as 4 abas dividem a largura, com rótulos curtos (o leitor de tela continua lendo o nome completo). */
   @media (max-width: 720px) {
     .abas { gap: 0; }
@@ -412,7 +413,7 @@
 
   <div id="painel" hidden>
     <div class="abas" role="tablist" aria-label="Seções do monitoramento">
-      <button type="button" role="tab" id="tab-geral" data-aba="geral" aria-controls="aba-geral" aria-selected="true"><span class="aba-longo">Visão geral</span><span class="aba-curto" aria-hidden="true">Geral</span></button>
+      <button type="button" role="tab" id="tab-geral" data-aba="geral" aria-controls="aba-geral" aria-selected="true"><span class="aba-longo">Visão geral</span><span class="aba-curto" aria-hidden="true">Geral</span><span class="ponto on aba-online" id="aba-online" hidden></span></button>
       <button type="button" role="tab" id="tab-usuarios" data-aba="usuarios" aria-controls="aba-usuarios" aria-selected="false" tabindex="-1">Usuários</button>
       <button type="button" role="tab" id="tab-saude" data-aba="saude" aria-controls="aba-saude" aria-selected="false" tabindex="-1"><span class="aba-longo">Saúde do app</span><span class="aba-curto" aria-hidden="true">Saúde</span><span class="aba-alerta" id="alerta-saude" hidden></span></button>
       <button type="button" role="tab" id="tab-emails" data-aba="emails" aria-controls="aba-emails" aria-selected="false" tabindex="-1">E-mails</button>
@@ -699,8 +700,17 @@
   const descricaoOnline = (m) => [NOMES_TELA[m.tela] || m.tela, noApp(m.desde)].filter(Boolean).join(' · ');
   const seloOnline = (id) => (online.has(id)
     ? `<span class="situacao online"><span class="ponto on" aria-hidden="true"></span>On-line · ${esc(descricaoOnline(online.get(id)))}</span>` : '');
+  // Ponto verde pulsando na aba Visão geral quando há alguém on-line e outra aba está aberta.
+  function atualizarAbaOnline() {
+    const n = dados ? dados.usuarios.filter((u) => online.has(u.id)).length : 0;
+    const el = $('aba-online');
+    el.hidden = !n || aba === 'geral';
+    el.setAttribute('role', 'img');
+    el.setAttribute('aria-label', `${n} ${n === 1 ? 'pessoa' : 'pessoas'} on-line agora`);
+  }
   function atualizarOnline() {
     if (!dados) return;
+    atualizarAbaOnline();
     // Status por canal: "Ao vivo" só quando todos conectaram; se parte falhou, mostra quantos e o erro.
     const FALHAS = ['CHANNEL_ERROR', 'TIMED_OUT', 'CLOSED'];
     const todos = [...canais.entries()];
@@ -1304,6 +1314,7 @@
       if (sel && focar) b.focus();
     });
     ABAS.forEach((a) => { $(`aba-${a}`).hidden = a !== aba; });
+    atualizarAbaOnline();
     if (url) history.replaceState(null, '', location.pathname + location.search + (aba === 'geral' ? '' : `#${aba}`));
     fecharInfo();
     renderVisivel();
