@@ -3,6 +3,8 @@
 App web (celular primeiro) do plano de 6 semanas **Jiu-Jitsu + Hipertrofia**: treino do dia, registro de cargas, check-ins, calendário e dashboard. O app inteiro está em `index.html` e os dados ficam no **Supabase**, com login pela conta **Google**.
 
 - `index.html`: o app (HTML, CSS e JavaScript, sem build).
+- `admin.html`: o monitoramento, só para administradores.
+- `mundo.html`: o Mundo ao vivo, só para administradores.
 - `supabase/schema.sql`: tabelas, regras de acesso por usuário e criação automática do perfil.
 - `docs/PRD.md`: requisitos do produto.
 
@@ -97,11 +99,27 @@ O dashboard mostra:
 
 ### On-line agora (Realtime)
 
-A presença usa o **Supabase Realtime Presence**. Enquanto o app está aberto na tela, ele publica só a tela atual, desde quando está aberto e o sistema do aparelho, no canal privado `online:<id do usuário>`. Ao ir para segundo plano ou sair da conta, a presença some.
+A presença usa o **Supabase Realtime Presence**. Enquanto o app está aberto na tela, ele publica só a tela atual, desde quando está aberto, o sistema do aparelho e a última ação (exercício concluído, recorde, check-in, vídeo ou semana alterada, com o nome do exercício ou o tipo do treino, nunca a carga), no canal privado `online:<id do usuário>`. Ao ir para segundo plano ou sair da conta, a presença some.
 
 As regras do `schema.sql` (políticas em `realtime.messages`) deixam cada pessoa ler e publicar só no próprio canal; administradores leem o canal de todos. Para garantir que só canais privados funcionem, no Supabase vá em **Realtime → Settings** e desligue **Allow public access** (o app não usa canais públicos).
 
 Se o painel mostrar "Ao vivo indisponível", confira se o `schema.sql` foi aplicado e se o Realtime está ligado no projeto.
+
+### Mundo ao vivo
+
+Em https://marcelobauer89.github.io/App-Treino/mundo.html (ou pelo botão **Mundo ao vivo** do monitoramento), quem está com o app aberto aparece como um personagem num mapa em pixel art e anda até o lugar do que está fazendo:
+
+| No app | No mapa |
+| --- | --- |
+| Entrou | Surge no Portão OSS |
+| Tela Treino, exercício concluído, recorde ou vídeo | Academia (levanta a barra; recorde mostra "RECORDE!") |
+| Check-in de jiu-jitsu | Tatame |
+| Check-in de cardio | Pista |
+| Tela Dashboard | Torre |
+| Tela Você ou semana alterada | Casa |
+| Fechou o app | Volta ao portão e some |
+
+Cada personagem fica 5 minutos no lugar da última ação e depois volta para o lugar da tela aberta. Embaixo do mapa ficam o que aconteceu hoje (eventos do dia mais as ações ao vivo) e quem está fora do app. **Tela cheia** deixa o mapa ocupando a tela inteira, para um telão. Só administradores abrem a página; ela usa os mesmos canais e funções do monitoramento e não precisa de nada novo no Supabase.
 
 ## Resumo semanal por e-mail
 
