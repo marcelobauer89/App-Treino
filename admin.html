@@ -306,6 +306,10 @@
   .linha-tempo svg { width: 18px; height: 18px; color: var(--tinta-2); margin-top: 2px; }
   .linha-tempo time { color: var(--tinta-2); font-size: 12.5px; white-space: nowrap; font-variant-numeric: tabular-nums; }
   .linha-tempo .alerta svg { color: var(--erro); }
+  .linha-tempo li:focus-visible { outline: 2px solid var(--tatame-tinta); outline-offset: 2px; }
+  .atv-dia { margin: 16px 0 2px; font-size: 12px; font-weight: 800; letter-spacing: .8px; text-transform: uppercase; color: var(--tinta-2); }
+  .atv-dia:first-child { margin-top: 0; }
+  .mais-atividade { margin-top: 12px; width: 100%; }
   .nota { margin: 0; color: var(--tinta-2); font-size: 13px; }
   footer { padding: 8px 0 40px; color: var(--tinta-2); font-size: 13px; }
   @media (prefers-reduced-motion: no-preference) {
@@ -454,7 +458,7 @@
   const somarDias = (s, n) => { const d = deYmd(s); d.setDate(d.getDate() + n); return ymd(d); };
   const hoje = () => ymd(new Date());
   const diasEntre = (a, b) => Math.round((deYmd(b) - deYmd(a)) / 864e5);
-  const fmtData = (s, op = { day: 'numeric', month: 'short' }) => deYmd(s).toLocaleDateString('pt-BR', op).replace('.', '');
+  const fmtData = (s, op = { day: 'numeric', month: 'short' }) => deYmd(s).toLocaleDateString('pt-BR', op).replace(/\./g, '');
   const fmtNum = (n, casas = 0) => n.toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas });
   // Datas: check-ins guardam hora local sem fuso ("AAAA-MM-DDTHH:MM:SS"); eventos e acessos têm fuso.
   const diaDeCheckin = (c) => String(c.inicio).slice(0, 10);
@@ -961,7 +965,31 @@
     saiu: () => 'Saiu da conta',
   };
   const ICONE_EVENTO = { sessao: 'abrir', exercicio_concluido: 'peso', recorde: 'trofeu', checkin_criado: 'cal', checkin_editado: 'cal', checkin_excluido: 'cal', checkin_encerrado: 'cal', erro: 'alerta', sessao_perdida: 'alerta' };
-  const quando = (iso) => { const d = new Date(iso); return `${fmtData(ymd(d))}, ${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+  // Atividade recente: 7 por vez, agrupada por dia (Hoje, Ontem, "ter, 21 de out"); ao lado, só a hora.
+  const POR_VEZ = 7;
+  let atividade = { itens: [], mostrados: POR_VEZ };
+  const hora = (iso) => { const d = new Date(iso); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+  function nomeDoDia(dia) {
+    if (dia === hoje()) return 'Hoje';
+    if (dia === somarDias(hoje(), -1)) return 'Ontem';
+    return fmtData(dia, { weekday: 'short', day: 'numeric', month: 'short' });
+  }
+  function renderAtividade(focarEm) {
+    const el = $('det-atividade');
+    if (!el) return;
+    const { itens, mostrados } = atividade;
+    if (!itens.length) { el.innerHTML = '<p class="nota">Nenhuma atividade registrada.</p>'; return; }
+    const grupos = [];
+    itens.slice(0, mostrados).forEach((it, i) => {
+      const dia = ymd(new Date(it.em));
+      if (!grupos.length || grupos[grupos.length - 1].dia !== dia) grupos.push({ dia, linhas: [] });
+      grupos[grupos.length - 1].linhas.push(`<li class="${it.alerta ? 'alerta' : ''}" data-i="${i}" tabindex="-1">${ICON[it.icone]}<span>${esc(it.texto)}</span><time datetime="${esc(it.em)}">${hora(it.em)}</time></li>`);
+    });
+    const faltam = itens.length - mostrados;
+    el.innerHTML = grupos.map((g) => `<h4 class="atv-dia">${esc(nomeDoDia(g.dia))}</h4><ul class="linha-tempo">${g.linhas.join('')}</ul>`).join('')
+      + (faltam > 0 ? `<button class="btn-sec mais-atividade" type="button" data-mais-atividade>Mostrar mais (${faltam})</button>` : '');
+    if (focarEm != null) { const li = el.querySelector(`li[data-i="${focarEm}"]`); if (li) li.focus(); }
+  }
 
   function abrirDetalhe(id) {
     detalheId = id;
@@ -998,7 +1026,8 @@
         em: e.criado_em, icone: ICONE_EVENTO[e.tipo] || 'ponto', alerta: ['erro', 'sessao_perdida'].includes(e.tipo),
         texto: (NOMES_EVENTO[e.tipo] || (() => e.tipo))(e.dados || {}),
       })),
-    ].sort((a, b) => (a.em < b.em ? 1 : -1)).slice(0, 25);
+    ].sort((a, b) => (a.em < b.em ? 1 : -1));
+    atividade = { itens, mostrados: POR_VEZ };
     $('det-corpo').innerHTML = `
       <div class="det-topo">
         <span class="avatar" aria-hidden="true">${esc(iniciais(u.nome, u.email))}</span>
@@ -1029,9 +1058,9 @@
       </section>
       <section class="det-sec" aria-labelledby="det-tempo">
         <h3 id="det-tempo">Atividade recente</h3>
-        ${itens.length ? `<ul class="linha-tempo">${itens.map((it) => `<li class="${it.alerta ? 'alerta' : ''}">${ICON[it.icone]}<span>${esc(it.texto)}</span><time>${quando(it.em)}</time></li>`).join('')}</ul>`
-          : '<p class="nota">Nenhuma atividade registrada.</p>'}
+        <div id="det-atividade"></div>
       </section>`;
+    renderAtividade();
     const dlg = $('detalhe');
     if (!dlg.open) dlg.showModal();
   }
@@ -1075,6 +1104,11 @@
     if (e.target.closest('#sair')) { desligarOnline(); await sb.auth.signOut(); return iniciar(); }
     if (e.target.closest('#tentar-online')) { desligarOnline(); return ligarOnline(); }
     if (e.target.closest('#ver-erro-online')) { verErroOnline = !verErroOnline; return atualizarOnline(); }
+    if (e.target.closest('[data-mais-atividade]')) {
+      const primeiroNovo = atividade.mostrados;
+      atividade.mostrados += POR_VEZ;
+      return renderAtividade(primeiroNovo);
+    }
     const abrir = e.target.closest('#on-corpo [data-abrir]');
     if (abrir) return abrirDetalhe(abrir.dataset.abrir);
     if (e.target.closest('#tentar')) return iniciar();
