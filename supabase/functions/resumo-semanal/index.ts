@@ -129,7 +129,9 @@ const COR = {
 };
 const corDoTipo = (t: string) => (GRUPOS.find(([g]) => g === (TIPOS[t] || TIPOS.t1).grupo) as [string, string, string])[2];
 
-export function montarEmail(r: Resumo, links: { app: string; sair: string }) {
+// links.app é o destino do botão (o link de clique registrado, quando houver); links.pixel, a imagem
+// invisível que registra a abertura.
+export function montarEmail(r: Resumo, links: { app: string; sair: string; pixel?: string }) {
   const pct = Math.round(r.aderencia * 100);
   const comp = comparacao(r);
   const dif = r.total - r.anterior;
@@ -230,8 +232,10 @@ export function montarEmail(r: Resumo, links: { app: string; sair: string }) {
       </tr></table>
     </td></tr>
     <tr><td style="padding:16px 6px 0;font-size:12px;line-height:1.5;color:${COR.tinta2};text-align:center">
-      Você recebe este e-mail porque o resumo semanal está ligado no App Treino (Você → Conta).<br>
+      Você recebe este e-mail porque o resumo semanal está ligado no App Treino (Você → Conta).
+      Registramos se ele foi aberto e se o botão foi tocado, para melhorar o resumo.<br>
       <a href="${esc(links.sair)}" style="color:${COR.azulTinta}">Não quero mais receber</a>
+      ${links.pixel ? `<img src="${esc(links.pixel)}" width="1" height="1" alt="" style="display:block;width:1px;height:1px;border:0;margin:0 auto">` : ''}
     </td></tr>
   </table>
 </td></tr></table>
@@ -271,11 +275,45 @@ type Env = { RESUMO_TOKEN: string; APP_URL: string; FUNCAO_URL: string };
 type Envio = { para: string; assunto: string; html: string; texto: string; sair: string };
 type Deps = { db: any; enviar: (e: Envio) => Promise<void>; env: Env; agora?: () => Date };
 
+// GIF transparente de 1×1 px.
+const PIXEL = Uint8Array.from(atob('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'), (c) => c.charCodeAt(0));
+
+// Guarda a primeira abertura/clique e conta as repetições. Clicar também conta como aberto.
+export async function registrarInteracao(db: any, id: string, ref: string, acao: 'aberto' | 'clique', quando: Date) {
+  const { data, error } = await db.from('emails_enviados').select('aberto_em, aberturas, clicado_em, cliques')
+    .eq('usuario_id', id).eq('tipo', TIPO).eq('referencia', ref);
+  if (error) throw new Error(error.message);
+  const linha = (data || [])[0];
+  if (!linha) return false; // prévia ou link antigo: não há envio registrado
+  const agoraIso = quando.toISOString();
+  const campos = acao === 'clique'
+    ? { clicado_em: linha.clicado_em || agoraIso, cliques: (linha.cliques || 0) + 1, aberto_em: linha.aberto_em || agoraIso }
+    : { aberto_em: linha.aberto_em || agoraIso, aberturas: (linha.aberturas || 0) + 1 };
+  const { error: e2 } = await db.from('emails_enviados').update(campos).eq('usuario_id', id).eq('tipo', TIPO).eq('referencia', ref);
+  if (e2) throw new Error(e2.message);
+  return true;
+}
+
 const json = (corpo: unknown, status = 200) => new Response(JSON.stringify(corpo), { status, headers: { 'content-type': 'application/json; charset=utf-8' } });
 
 export function criarHandler({ db, enviar, env, agora = () => new Date() }: Deps) {
   return async (req: Request): Promise<Response> => {
     const url = new URL(req.url);
+
+    // Abertura (imagem invisível) e clique no botão do e-mail. A assinatura impede registros falsos;
+    // a imagem é sempre devolvida, mesmo com link inválido, para não revelar nada.
+    if (url.searchParams.has('aberto') || url.searchParams.has('clique')) {
+      const acao = url.searchParams.has('clique') ? 'clique' : 'aberto';
+      const id = url.searchParams.get(acao) || '';
+      const ref = url.searchParams.get('ref') || '';
+      const valido = /^[0-9a-f-]{36}$/i.test(id) && /^\d{4}-\d{2}-\d{2}$/.test(ref)
+        && iguais(url.searchParams.get('t') || '', await assinar(`${acao}:${id}:${ref}`, env.RESUMO_TOKEN));
+      if (valido) {
+        try { await registrarInteracao(db, id, ref, acao, agora()); } catch (e) { console.warn('registro de', acao, 'falhou', String(e)); }
+      }
+      if (acao === 'clique') return new Response(null, { status: 302, headers: { location: env.APP_URL } });
+      return new Response(PIXEL, { headers: { 'content-type': 'image/gif', 'cache-control': 'no-store, max-age=0' } });
+    }
 
     // Descadastro em um clique (link do e-mail ou botão "Cancelar inscrição" do Gmail).
     if (url.searchParams.has('sair')) {
@@ -330,7 +368,10 @@ export function criarHandler({ db, enviar, env, agora = () => new Date() }: Deps
       if (!u.email || (!corpo.previa && enviados.has(u.id))) { resultado.pulados += 1; continue; }
       const r = montarResumo(u, checkins || [], recordes || [], p);
       const sair = `${env.FUNCAO_URL}?sair=${u.id}&t=${await assinar(u.id, env.RESUMO_TOKEN)}`;
-      const email = montarEmail(r, { app: env.APP_URL, sair });
+      // Na prévia não há envio registrado, então abertura e clique não contam (referência "previa").
+      const ref = corpo.previa ? 'previa' : p.fim;
+      const rastro = async (acao: string) => `${env.FUNCAO_URL}?${acao}=${u.id}&ref=${ref}&t=${await assinar(`${acao}:${u.id}:${ref}`, env.RESUMO_TOKEN)}`;
+      const email = montarEmail(r, { app: await rastro('clique'), sair, pixel: await rastro('aberto') });
       if (corpo.simular) { resultado.simulacao.push({ email: u.email, assunto: email.assunto, treinos: r.total, aderencia: Math.round(r.aderencia * 100) }); continue; }
       try {
         await enviar({ para: u.email, ...email, sair });
