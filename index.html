@@ -149,6 +149,11 @@
   .treino-btn span { font-size: 12.5px; line-height: 1.25; }
   .treino-btn[aria-selected="true"] { background: var(--tatame); color: var(--sobre-tatame); }
   .treino-btn[aria-selected="true"] b { color: var(--sobre-tatame); }
+  .treinos { grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr)); }
+  /* De 4 treinos em diante as abas rolam para o lado. */
+  .treinos.muitos { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(112px, 1fr); overflow-x: auto; scrollbar-width: none; }
+  .treinos.muitos::-webkit-scrollbar { display: none; }
+  .treino-btn b, .treino-btn span { overflow-wrap: anywhere; }
 
   .chips { display: flex; gap: 8px; margin-top: 8px; padding: 2px 0; overflow-x: auto; scrollbar-width: none; }
   .chips::-webkit-scrollbar { display: none; }
@@ -731,6 +736,91 @@
   .opcao input:focus-visible + span { outline: 2px solid var(--tatame-tinta); outline-offset: 2px; }
   .rec .opcoes { display: grid; grid-template-columns: repeat(5, 1fr); }
   .rec-legenda { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--tinta-2); }
+
+  /* Aviso da novidade e editor "Meus treinos" */
+  .novidade-selo {
+    justify-self: start; padding: 3px 10px; border-radius: 999px; background: var(--feito-suave); color: var(--feito-tinta);
+    font-size: 12.5px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase;
+  }
+  .novidade-lista { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+  .novidade-lista li { display: flex; gap: 10px; align-items: flex-start; font-size: 15px; }
+  .novidade-lista svg { flex: 0 0 auto; margin-top: 3px; color: var(--checkin); }
+  .novidade-acoes { display: grid; gap: 8px; }
+  .escolha-cards { display: grid; gap: 8px; }
+  .escolha-card {
+    display: grid; gap: 2px; padding: 14px; border: 1.5px solid var(--fio); border-radius: 12px;
+    background: var(--papel); text-align: left;
+  }
+  .escolha-card b { font-size: 16px; }
+  .escolha-card span { font-size: 14px; color: var(--tinta-2); }
+  .escolha-card:hover { border-color: var(--tatame); background: var(--tatame-suave); }
+
+  dialog.modal.editor { width: min(640px, calc(100vw - 32px)); }
+  @media (max-width: 560px) {
+    dialog.modal.editor { width: 100%; max-width: 100%; height: 100dvh; max-height: 100dvh; margin: 0; border-radius: 0; border: 0; }
+  }
+  .editor .modal-body { gap: 14px; }
+  .ed-abas { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 2px; }
+  .ed-abas::-webkit-scrollbar { display: none; }
+  .ed-aba {
+    flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 12px;
+    border: 1px solid var(--fio); border-radius: 10px; background: var(--papel); font-size: 14px; font-weight: 700;
+  }
+  .ed-aba[aria-pressed="true"] { background: var(--tatame); border-color: var(--tatame); color: var(--sobre-tatame); }
+  .ed-aba[aria-pressed="true"] .selo { box-shadow: 0 0 0 2px var(--sobre-tatame); }
+  .ed-aba.novo { border-style: dashed; color: var(--tatame-tinta); }
+  .ed-aba:disabled { opacity: .5; cursor: not-allowed; }
+  .ed-exs { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+  .ed-ex {
+    display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 8px 10px; align-items: center;
+    padding: 10px 10px 10px 12px; border: 1px solid var(--fio); border-radius: 12px; background: var(--papel);
+  }
+  .ed-ex > .ex-num { align-self: start; padding-top: 2px; font-size: 13px; }
+  .ed-ex-nome { display: grid; min-width: 0; }
+  .ed-ex-nome b { font-size: 15px; line-height: 1.25; overflow-wrap: anywhere; }
+  .ed-ex-nome small { font-size: 12.5px; color: var(--tinta-2); }
+  .ed-ex-campos { grid-column: 2 / -1; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .ed-ex-campos label { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--tinta-2); }
+  .ed-ex-campos input, .ed-ex-campos select {
+    min-height: 40px; padding: 6px 10px; border: 1px solid var(--fio); border-radius: 8px; background: var(--gi);
+    font: inherit; font-size: 15px; color: var(--tinta);
+  }
+  .ed-ex-campos input { width: 9.5em; }
+  .ed-mover { display: inline-flex; gap: 4px; margin-left: auto; }
+  .ed-icone {
+    width: 40px; height: 40px; display: grid; place-items: center; border: 1px solid var(--fio); border-radius: 8px;
+    background: var(--papel); color: var(--tinta-2);
+  }
+  .ed-icone:hover:not(:disabled) { color: var(--tinta); background: var(--gi); }
+  .ed-icone:disabled { opacity: .35; cursor: not-allowed; }
+  .ed-icone svg { width: 18px; height: 18px; }
+  .ed-vazio { padding: 14px; border: 1px dashed var(--fio); border-radius: 12px; color: var(--tinta-2); font-size: 14px; }
+  .ed-rodape { display: flex; flex-wrap: wrap; gap: 8px; }
+  .ed-confirma { display: grid; gap: 8px; padding: 12px; border-radius: 12px; background: var(--tatame-suave); font-size: 14px; }
+  .ed-confirma p { margin: 0; }
+  .ed-confirma div { display: flex; flex-wrap: wrap; gap: 8px; }
+  .ed-voltar { justify-self: start; display: inline-flex; align-items: center; gap: 4px; min-height: 40px; padding: 0 8px 0 2px; border: 0; background: none; color: var(--tatame-tinta); font-size: 14px; font-weight: 700; }
+  .ed-busca { width: 100%; min-height: 48px; padding: 10px 12px; border: 1px solid var(--fio); border-radius: 10px; background: var(--gi); font-size: 16px; }
+  .ed-grupos { margin-top: 0; }
+  .ed-bib { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+  .ed-bib-item {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; align-items: center; width: 100%;
+    padding: 10px 12px; border: 1px solid var(--fio); border-radius: 12px; background: var(--papel); text-align: left;
+  }
+  .ed-bib-item b { font-size: 15px; }
+  .ed-bib-item small { grid-column: 1; font-size: 12.5px; color: var(--tinta-2); }
+  .ed-bib-item .ed-marca {
+    grid-row: 1 / 3; grid-column: 2; width: 32px; height: 32px; display: grid; place-items: center;
+    border: 1.5px solid var(--tatame); border-radius: 50%; color: var(--tatame-tinta);
+  }
+  .ed-bib-item[aria-pressed="true"] { border-color: var(--checkin); background: var(--feito-suave); }
+  .ed-bib-item[aria-pressed="true"] .ed-marca { border-color: var(--checkin); background: var(--checkin); color: var(--sobre-checkin); }
+  .ed-bib-item .ed-marca svg { width: 18px; height: 18px; }
+  .ed-fixo { position: sticky; bottom: 0; margin: 0 -16px; padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px)); background: var(--papel); border-top: 1px solid var(--fio); }
+  .ed-fixo .modal-done { width: 100%; }
+  .meus-treinos { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+  .meus-treinos li { display: flex; align-items: center; gap: 10px; font-size: 15px; }
+  .meus-treinos small { color: var(--tinta-2); font-size: 13px; }
 </style>
 </head>
 <body class="deslogado">
@@ -886,6 +976,15 @@
     </div>
   </section>
 
+  <section class="bloco" aria-labelledby="meus-treinos-titulo">
+    <div class="bloco-topo"><h2 class="secao" id="meus-treinos-titulo">Meus treinos</h2></div>
+    <div class="cartao">
+      <p class="nota-campo" id="meus-treinos-nota"></p>
+      <ul class="meus-treinos" id="meus-treinos"></ul>
+      <button class="btn" type="button" id="editar-treinos">Personalizar meus treinos</button>
+    </div>
+  </section>
+
   <section class="bloco" aria-labelledby="semana-cfg-titulo">
     <div class="bloco-topo"><h2 class="secao" id="semana-cfg-titulo">Minha semana</h2></div>
     <div class="cartao">
@@ -953,6 +1052,12 @@
 <dialog class="modal" id="ativ-dialog" aria-labelledby="ativ-title">
   <div class="modal-body" id="ativ-body"></div>
 </dialog>
+<dialog class="modal" id="novidade-dialog" aria-labelledby="novidade-title">
+  <div class="modal-body" id="novidade-body"></div>
+</dialog>
+<dialog class="modal editor" id="editor-dialog" aria-labelledby="editor-title">
+  <div class="modal-body" id="editor-body"></div>
+</dialog>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
 <script>
@@ -968,7 +1073,8 @@
   // ---------- Dados (do PDF) ----------
   // Níveis: 'alta' | 'media' | 'baixa'
   // H = Hipertrofia, M = Mobilidade, F = Força, E = Explosão
-  const TREINOS = {
+  // Plano pronto: é o que a conta usa enquanto a pessoa não monta os próprios treinos (perfis.treinos vazio).
+  const PLANO_PADRAO = {
     '1': {
       nome: 'Treino 1',
       subtitulo: 'Costas + bíceps',
@@ -977,21 +1083,21 @@
       impacto_jiu: 'Puxadas mais fortes para controlar pegadas, quebrar a postura do oponente e manter a sua. Pegada que aguenta mais tempo no rola.',
       impacto_fisico: 'Costas mais largas e braços maiores, com melhora da postura.',
       exercicios: [
-        { nome: 'Escorpião', dose: '3×10', pse: 5, H: 'baixa', M: 'alta', F: 'baixa', E: 'baixa',
+        { nome: 'Escorpião', grupo: 'Mobilidade', dose: '3×10', pse: 5, H: 'baixa', M: 'alta', F: 'baixa', E: 'baixa',
           why: 'Mobilidade de quadril e coluna; preparação para movimentos de rotação.' },
-        { nome: 'Carregada na marcha', dose: '3×20', pse: 5, H: 'media', M: 'baixa', F: 'alta', E: 'media',
+        { nome: 'Carregada na marcha', grupo: 'Core', dose: '3×20', pse: 5, H: 'media', M: 'baixa', F: 'alta', E: 'media',
           why: 'Pegada, core, estabilidade e força unilateral; grande transferência para grappling.' },
-        { nome: 'Alcance diagonal', dose: '3×10', pse: 7, H: 'baixa', M: 'media', F: 'media', E: 'media',
+        { nome: 'Alcance diagonal', grupo: 'Core', dose: '3×10', pse: 7, H: 'baixa', M: 'media', F: 'media', E: 'media',
           why: 'Coordenação diagonal, estabilidade e controle do tronco.' },
-        { nome: 'Remada inversa', dose: '3×10', pse: 8, H: 'alta', M: 'baixa', F: 'alta', E: 'media',
+        { nome: 'Remada inversa', grupo: 'Costas', dose: '3×10', pse: 8, H: 'alta', M: 'baixa', F: 'alta', E: 'media',
           why: 'Costas, bíceps, escápulas e controle corporal; excelente para puxadas.' },
-        { nome: 'Rotação no cabo', dose: '3×10 / lado', pse: 8, H: 'media', M: 'media', F: 'alta', E: 'media',
+        { nome: 'Rotação no cabo', grupo: 'Core', dose: '3×10 / lado', pse: 8, H: 'media', M: 'media', F: 'alta', E: 'media',
           why: 'Rotação e resistência do tronco, importantes para controlar e transferir força.' },
-        { nome: 'Puxada', dose: '3×10', pse: 8, H: 'alta', M: 'baixa', F: 'alta', E: 'media',
+        { nome: 'Puxada', grupo: 'Costas', dose: '3×10', pse: 8, H: 'alta', M: 'baixa', F: 'alta', E: 'media',
           why: 'Dorsais e flexores do cotovelo; força de puxada e massa nas costas.' },
-        { nome: 'Superman', dose: '3×30 s', pse: 7, H: 'baixa', M: 'media', F: 'media', E: 'baixa',
+        { nome: 'Superman', grupo: 'Core', dose: '3×30 s', pse: 7, H: 'baixa', M: 'media', F: 'media', E: 'baixa',
           why: 'Resistência da cadeia posterior e controle lombopélvico.' },
-        { nome: 'Rosca bíceps', dose: '3×10–15', pse: 8, H: 'alta', M: 'baixa', F: 'media', E: 'baixa',
+        { nome: 'Rosca bíceps', grupo: 'Braços', dose: '3×10–15', pse: 8, H: 'alta', M: 'baixa', F: 'media', E: 'baixa',
           why: 'Complemento direto para bíceps e hipertrofia do braço.' },
       ],
     },
@@ -1003,21 +1109,21 @@
       impacto_jiu: 'Mais força para enquadrar, criar distância e escapar de posições por baixo (cem quilos, montada). Base mais firme nos braços e ombros mais preparados para apoio e pressão.',
       impacto_fisico: 'Peito e ombros mais cheios e braços mais volumosos com o tríceps.',
       exercicios: [
-        { nome: 'Rolamento', dose: '3×10', pse: 5, H: 'baixa', M: 'media', F: 'baixa', E: 'media',
+        { nome: 'Rolamento', grupo: 'Mobilidade', dose: '3×10', pse: 5, H: 'baixa', M: 'media', F: 'baixa', E: 'media',
           why: 'Controle corporal, orientação espacial e transferência para quedas e transições.' },
-        { nome: 'Quadrupedia tocando os ombros', dose: '3×20', pse: 6, H: 'baixa', M: 'media', F: 'media', E: 'media',
+        { nome: 'Quadrupedia tocando os ombros', grupo: 'Core', dose: '3×20', pse: 6, H: 'baixa', M: 'media', F: 'media', E: 'media',
           why: 'Estabilidade de core e cintura escapular; prepara para apoio e controle no chão.' },
-        { nome: 'Supino no chão', dose: '3×20', pse: 8, H: 'media', M: 'baixa', F: 'media', E: 'baixa',
+        { nome: 'Supino no chão', grupo: 'Peito', dose: '3×20', pse: 8, H: 'media', M: 'baixa', F: 'media', E: 'baixa',
           why: 'Peitoral e tríceps com boa estabilidade; ajuda a manter massa da parte superior.' },
-        { nome: 'TGU parcial', dose: '3×5 / lado', pse: 8, H: 'baixa', M: 'alta', F: 'alta', E: 'media',
+        { nome: 'TGU parcial', grupo: 'Core', dose: '3×5 / lado', pse: 8, H: 'baixa', M: 'alta', F: 'alta', E: 'media',
           why: 'Estabilidade de ombro, core, quadril e controle global do corpo.' },
-        { nome: 'Desenvolvimento', dose: '3×10', pse: 8, H: 'alta', M: 'baixa', F: 'alta', E: 'baixa',
+        { nome: 'Desenvolvimento', grupo: 'Ombros', dose: '3×10', pse: 8, H: 'alta', M: 'baixa', F: 'alta', E: 'baixa',
           why: 'Deltoides e tríceps; força de empurrar e desenvolvimento de ombros.' },
-        { nome: 'Halo', dose: '3×10', pse: 8, H: 'media', M: 'alta', F: 'media', E: 'baixa',
+        { nome: 'Halo', grupo: 'Ombros', dose: '3×10', pse: 8, H: 'media', M: 'alta', F: 'media', E: 'baixa',
           why: 'Mobilidade e estabilidade dos ombros com controle do core.' },
-        { nome: 'Elevação lateral', dose: '3×12–15', pse: 8, H: 'alta', M: 'baixa', F: 'media', E: 'baixa',
+        { nome: 'Elevação lateral', grupo: 'Ombros', dose: '3×12–15', pse: 8, H: 'alta', M: 'baixa', F: 'media', E: 'baixa',
           why: 'Complemento estético para deltoide lateral, aumentando o estímulo de hipertrofia.' },
-        { nome: 'Tríceps', dose: '3×10–15', pse: 8, H: 'alta', M: 'baixa', F: 'media', E: 'baixa',
+        { nome: 'Tríceps', grupo: 'Braços', dose: '3×10–15', pse: 8, H: 'alta', M: 'baixa', F: 'media', E: 'baixa',
           why: 'Complemento direto para tríceps e hipertrofia do braço.' },
       ],
     },
@@ -1029,21 +1135,174 @@
       impacto_jiu: 'Base mais firme e mais força para quedas, raspagens, passagem com pressão e para levantar com o oponente. Quadril mais solto para guarda e transições.',
       impacto_fisico: 'Pernas e glúteos maiores e maior gasto de energia, o que ajuda na perda de gordura rumo aos 73–74 kg.',
       exercicios: [
-        { nome: 'Cócoras', dose: '3×1 min', pse: 5, H: 'baixa', M: 'alta', F: 'baixa', E: 'baixa',
+        { nome: 'Cócoras', grupo: 'Mobilidade', dose: '3×1 min', pse: 5, H: 'baixa', M: 'alta', F: 'baixa', E: 'baixa',
           why: 'Mobilidade de quadril/tornozelo e preparação para posições baixas do grappling.' },
-        { nome: 'Quadril alto/baixo', dose: '3×5', pse: 6, H: 'baixa', M: 'alta', F: 'media', E: 'media',
+        { nome: 'Quadril alto/baixo', grupo: 'Mobilidade', dose: '3×5', pse: 6, H: 'baixa', M: 'alta', F: 'media', E: 'media',
           why: 'Controle do quadril e transição entre posições; útil para mobilidade no solo.' },
-        { nome: 'Agachamento', dose: '3×10', pse: 8, H: 'alta', M: 'media', F: 'alta', E: 'media',
+        { nome: 'Agachamento', grupo: 'Pernas', dose: '3×10', pse: 8, H: 'alta', M: 'media', F: 'alta', E: 'media',
           why: 'Força de pernas e quadril; base, pressão e capacidade de produzir força.' },
-        { nome: 'Deadlift', dose: '3×10', pse: 8, H: 'alta', M: 'baixa', F: 'alta', E: 'alta',
+        { nome: 'Deadlift', grupo: 'Pernas', dose: '3×10', pse: 8, H: 'alta', M: 'baixa', F: 'alta', E: 'alta',
           why: 'Cadeia posterior, quadril e força de puxada; essencial para força global.' },
-        { nome: 'Passada para frente', dose: '3×10', pse: 8, H: 'alta', M: 'media', F: 'alta', E: 'media',
+        { nome: 'Passada para frente', grupo: 'Pernas', dose: '3×10', pse: 8, H: 'alta', M: 'media', F: 'alta', E: 'media',
           why: 'Força unilateral, equilíbrio e estabilidade de quadril e joelho.' },
-        { nome: 'Panturrilha', dose: '3×10–15', pse: 8, H: 'alta', M: 'baixa', F: 'media', E: 'baixa',
+        { nome: 'Panturrilha', grupo: 'Pernas', dose: '3×10–15', pse: 8, H: 'alta', M: 'baixa', F: 'media', E: 'baixa',
           why: 'Complemento para panturrilha e capacidade de produzir força no apoio.' },
       ],
     },
   };
+
+  // Biblioteca para montar os treinos: os exercícios do plano pronto e os das fichas de treino (PDFs),
+  // sem repetir. Variações do mesmo movimento com outro equipamento (halter ou barra) entram uma vez só.
+  const EXERCICIOS_EXTRAS = [
+    // Mobilidade
+    { nome: 'Jefferson curl', grupo: 'Mobilidade', dose: '2–3×8', pse: 8, H: 'baixa', M: 'alta', F: 'media', E: 'baixa',
+      why: 'Mobilidade da coluna e dos posteriores de coxa com carga, ganhando controle ao dobrar o tronco.' },
+    { nome: 'Alcance da ponte alternada', grupo: 'Mobilidade', dose: '2–3×12 totais', pse: 6, H: 'baixa', M: 'alta', F: 'baixa', E: 'baixa',
+      why: 'Abre quadril, ombros e coluna torácica alternando os lados; bom preparo para a ponte e as rotações.' },
+    { nome: 'Mobilidade de ombros 180°', grupo: 'Mobilidade', dose: '2–3×8', pse: 8, H: 'baixa', M: 'alta', F: 'baixa', E: 'baixa',
+      why: 'Amplitude e controle do ombro em todo o arco (quanto mais amplo, melhor); prepara para empurrar e puxar acima da cabeça.' },
+    { nome: 'Mobilidade de quadril', grupo: 'Mobilidade', dose: '2–3×10 totais', pse: 6, H: 'baixa', M: 'alta', F: 'baixa', E: 'baixa',
+      why: 'Rotação interna e externa do quadril; mais amplitude para a guarda e as transições.' },
+    { nome: 'Mobilidade de quadril na cócoras', grupo: 'Mobilidade', dose: '2–3×12 totais', pse: 6, H: 'baixa', M: 'alta', F: 'baixa', E: 'baixa',
+      why: 'Mobilidade de quadril e tornozelo a partir da cócoras; mais conforto nas posições baixas do grappling.' },
+    // Core e carregadas
+    { nome: 'Levantamento turco', grupo: 'Core', dose: '2–3×2 / lado', pse: 8, H: 'baixa', M: 'alta', F: 'alta', E: 'baixa',
+      why: 'TGU completo: estabilidade de ombro, core e quadril enquanto o corpo sai do chão e volta.' },
+    { nome: 'Carregada overhead', grupo: 'Core', dose: '2–3×15 s / lado', pse: 8, H: 'baixa', M: 'media', F: 'alta', E: 'baixa',
+      why: 'Andar com o peso acima da cabeça: ombro estável e core que não deixa o tronco inclinar.' },
+    { nome: 'Carregada farmer', grupo: 'Core', dose: '2–3×30 s', pse: 8, H: 'media', M: 'baixa', F: 'alta', E: 'baixa',
+      why: 'Andar com um halter pesado em cada mão; pegada, trapézio e postura firme.' },
+    { nome: 'Ponte Copenhagen dinâmica', grupo: 'Core', dose: '2–3×8 / lado', pse: 8, H: 'media', M: 'baixa', F: 'alta', E: 'baixa',
+      why: 'Adutores e oblíquos; protege a virilha e firma as pernas para fechar a guarda.' },
+    { nome: 'Lift diagonal no cabo', grupo: 'Core', dose: '2–3×12 / lado', pse: 8, H: 'baixa', M: 'media', F: 'media', E: 'media',
+      why: 'Força em diagonal, de baixo para cima; core que leva a força das pernas até os braços.' },
+    { nome: 'Flexão lateral semiajoelhada overhead', grupo: 'Core', dose: '2–3×8 / lado', pse: 7, H: 'baixa', M: 'alta', F: 'media', E: 'baixa',
+      why: 'Inclinação lateral com o peso acima da cabeça; mobilidade e força dos oblíquos e do ombro.' },
+    { nome: 'Rotação com velocidade', grupo: 'Core', dose: '3×12 / lado', pse: 8, H: 'baixa', M: 'media', F: 'media', E: 'alta',
+      why: 'Rotação rápida do tronco; potência para raspagens e para girar o quadril.' },
+    { nome: 'Rotação unilateral no landmine', grupo: 'Core', dose: '3×8 / lado', pse: 8, H: 'baixa', M: 'media', F: 'media', E: 'alta',
+      why: 'Rotação do tronco com a barra presa no chão; potência de giro e controle do core.' },
+    { nome: 'Ponte lateral dinâmica com apoio', grupo: 'Core', dose: '2–3×8 / lado', pse: 7, H: 'baixa', M: 'baixa', F: 'media', E: 'baixa',
+      why: 'Oblíquos e glúteo médio subindo e descendo o quadril de lado; estabilidade lateral do tronco.' },
+    { nome: 'L-sit', grupo: 'Core', dose: '2–3×20 s', pse: 7, H: 'baixa', M: 'media', F: 'alta', E: 'baixa',
+      why: 'Sustentar as pernas estendidas à frente; abdômen, flexores do quadril e tríceps.' },
+    // Explosivos (levantamentos olímpicos e pliometria)
+    { nome: 'Hang power snatch unilateral', grupo: 'Explosivos', dose: '3×6', pse: 9, H: 'baixa', M: 'media', F: 'media', E: 'alta',
+      why: 'Explosão do quadril levada até o braço num movimento só; potência e coordenação de um lado por vez.' },
+    { nome: 'Snatch', grupo: 'Explosivos', dose: '2×4 válidas', pse: 9, H: 'baixa', M: 'media', F: 'alta', E: 'alta',
+      why: 'Arranco do chão até acima da cabeça; o mais explosivo dos levantamentos, com mobilidade de ombro.' },
+    { nome: 'Hang power clean', grupo: 'Explosivos', dose: '3×6', pse: 9, H: 'media', M: 'baixa', F: 'alta', E: 'alta',
+      why: 'Extensão explosiva do quadril e puxada rápida; potência para quedas e para levantar o oponente.' },
+    { nome: 'Clean', grupo: 'Explosivos', dose: '2×4 válidas', pse: 9, H: 'media', M: 'baixa', F: 'alta', E: 'alta',
+      why: 'Arremesso do chão até os ombros; potência de corpo inteiro e coordenação.' },
+    { nome: 'Puxada alta', grupo: 'Explosivos', dose: '2×5 válidas', pse: 9, H: 'media', M: 'baixa', F: 'alta', E: 'alta',
+      why: 'Puxada explosiva da carga até a altura do peito; potência de quadril e trapézio.' },
+    { nome: 'Push press', grupo: 'Explosivos', dose: '2×5 válidas', pse: 9, H: 'media', M: 'baixa', F: 'alta', E: 'alta',
+      why: 'Impulso das pernas passado para os braços; força e potência de empurrar acima da cabeça.' },
+    { nome: 'Salto', grupo: 'Explosivos', dose: '3×4', pse: 8, H: 'baixa', M: 'baixa', F: 'media', E: 'alta',
+      why: 'Pliometria: potência das pernas para entradas de queda e mudanças rápidas de posição.' },
+    { nome: 'Passada alternada com salto', grupo: 'Explosivos', dose: '3×12 totais', pse: 8, H: 'baixa', M: 'baixa', F: 'media', E: 'alta',
+      why: 'Pliometria trocando as pernas no ar; explosão e troca rápida de base.' },
+    // Pernas
+    { nome: 'Agachamento Zercher', grupo: 'Pernas', dose: '2×4 válidas', pse: 9, H: 'alta', M: 'media', F: 'alta', E: 'media',
+      why: 'Agachamento com a carga na dobra dos cotovelos; pernas, core e costas firmes, como ao levantar alguém agarrado.' },
+    { nome: 'Agachamento unilateral Zercher', grupo: 'Pernas', dose: '3×4 / lado', pse: 9, H: 'alta', M: 'media', F: 'alta', E: 'media',
+      why: 'Uma perna por vez com a carga na dobra dos cotovelos; força unilateral e core firme.' },
+    { nome: 'Deadlift split', grupo: 'Pernas', dose: '3×4 / lado', pse: 9, H: 'alta', M: 'baixa', F: 'alta', E: 'media',
+      why: 'Levantamento terra com as pernas afastadas, uma à frente; força unilateral da cadeia posterior.' },
+    { nome: 'Stiff', grupo: 'Pernas', dose: '3×8', pse: 8, H: 'alta', M: 'media', F: 'alta', E: 'baixa',
+      why: 'Posteriores de coxa e glúteos levando o quadril para trás; cadeia posterior forte.' },
+    { nome: 'Elevação de quadril', grupo: 'Pernas', dose: '4×8', pse: 8, H: 'alta', M: 'baixa', F: 'alta', E: 'media',
+      why: 'Glúteos fortes na extensão do quadril; ajuda a fazer a ponte e a explodir nas raspagens.' },
+    { nome: 'Elevação pélvica unilateral', grupo: 'Pernas', dose: '3×10 / lado', pse: 8, H: 'alta', M: 'baixa', F: 'media', E: 'baixa',
+      why: 'Glúteo de uma perna por vez; estabilidade de quadril e força para a ponte.' },
+    { nome: 'Mesa flexora', grupo: 'Pernas', dose: '3×10', pse: 8, H: 'alta', M: 'baixa', F: 'media', E: 'baixa',
+      why: 'Isola os posteriores de coxa; protege o joelho e dá força para fechar a guarda.' },
+    { nome: 'Cadeira extensora', grupo: 'Pernas', dose: '3×8', pse: 8, H: 'alta', M: 'baixa', F: 'media', E: 'baixa',
+      why: 'Isola o quadríceps; complemento de hipertrofia e proteção do joelho.' },
+    { nome: 'Cadeira adutora', grupo: 'Pernas', dose: '3×12', pse: 8, H: 'alta', M: 'baixa', F: 'media', E: 'baixa',
+      why: 'Adutores fortes para fechar a guarda e proteger a virilha.' },
+    // Costas
+    { nome: 'Barra fixa', grupo: 'Costas', dose: '4×8', pse: 8, H: 'alta', M: 'baixa', F: 'alta', E: 'media',
+      why: 'Puxada com o peso do corpo; dorsais, bíceps e pegada para controlar o oponente. Se não conseguir, faça a puxada no cabo.' },
+    { nome: 'Remada curvada', grupo: 'Costas', dose: '1×6 válida', pse: 9, H: 'alta', M: 'baixa', F: 'alta', E: 'media',
+      why: 'Dorsais e trapézio com a lombar firme; força de puxada para quebrar a postura do oponente.' },
+    { nome: 'Remada unilateral no cabo', grupo: 'Costas', dose: '3×5 / lado', pse: 8, H: 'alta', M: 'baixa', F: 'alta', E: 'baixa',
+      why: 'Um lado por vez com o tronco controlando a rotação; corrige diferenças de força entre os lados.' },
+    // Peito
+    { nome: 'Supino inclinado', grupo: 'Peito', dose: '3×5', pse: 8, H: 'alta', M: 'baixa', F: 'alta', E: 'baixa',
+      why: 'Parte de cima do peitoral e ombros; força para empurrar e criar distância.' },
+    { nome: 'Supino reto alternado', grupo: 'Peito', dose: '3×12 totais', pse: 8, H: 'alta', M: 'baixa', F: 'media', E: 'baixa',
+      why: 'Peito e tríceps um braço por vez; ombro estável e core que segura a rotação.' },
+    { nome: 'Paralela', grupo: 'Peito', dose: '4×8', pse: 8, H: 'alta', M: 'baixa', F: 'alta', E: 'baixa',
+      why: 'Peitoral, tríceps e ombros com o peso do corpo; força de empurrar e braços firmes na base.' },
+    { nome: 'Crucifixo', grupo: 'Peito', dose: '2–3×8', pse: 8, H: 'alta', M: 'media', F: 'baixa', E: 'baixa',
+      why: 'Isola o peitoral com alongamento controlado; complemento de hipertrofia do peito.' },
+    // Ombros
+    { nome: 'Desenvolvimento semiajoelhado', grupo: 'Ombros', dose: '2×4 válidas', pse: 9, H: 'alta', M: 'media', F: 'alta', E: 'baixa',
+      why: 'Empurrar acima da cabeça com um joelho no chão; ombro forte sem compensar com a lombar.' },
+    { nome: 'Peso à frente', grupo: 'Ombros', dose: '3×10', pse: 8, H: 'media', M: 'baixa', F: 'media', E: 'baixa',
+      why: 'Deltoide anterior e core segurando o peso à frente do corpo; ombros firmes para enquadrar.' },
+    { nome: 'Cuban press', grupo: 'Ombros', dose: '2–3×8', pse: 7, H: 'baixa', M: 'alta', F: 'media', E: 'baixa',
+      why: 'Rotação externa e elevação do ombro; manguito rotador forte e ombro protegido.' },
+    { nome: 'Ananias com peso dinâmico', grupo: 'Ombros', dose: '2–3×12', pse: 7, H: 'baixa', M: 'alta', F: 'media', E: 'baixa',
+      why: 'Feito junto do Cuban press, em sequência: mobilidade e controle do ombro com carga leve. Veja a execução no vídeo.' },
+    // Braços, pegada e pescoço
+    { nome: 'Bíceps neutro alternado', grupo: 'Braços', dose: '2–3×16 totais', pse: 8, H: 'alta', M: 'baixa', F: 'media', E: 'baixa',
+      why: 'Bíceps e antebraço com a pegada neutra; braço mais forte para segurar e puxar.' },
+    { nome: 'Bíceps isométrico', grupo: 'Braços', dose: '2–3×20 s', pse: 8, H: 'media', M: 'baixa', F: 'media', E: 'baixa',
+      why: 'Segurar o cotovelo dobrado sob carga; resistência para manter a pegada no controle.' },
+    { nome: 'Tríceps francês unilateral', grupo: 'Braços', dose: '3×12 / lado', pse: 8, H: 'alta', M: 'media', F: 'media', E: 'baixa',
+      why: 'Tríceps alongado acima da cabeça, um braço por vez; hipertrofia da parte de trás do braço.' },
+    { nome: 'Flexão de punho', grupo: 'Braços', dose: '3×15', pse: 8, H: 'media', M: 'baixa', F: 'media', E: 'baixa',
+      why: 'Antebraço e pegada; aguenta mais tempo segurando a gola e a manga.' },
+    { nome: 'Flexão de pescoço', grupo: 'Pescoço', dose: '2–3×12', pse: 8, H: 'media', M: 'baixa', F: 'media', E: 'baixa',
+      why: 'Fortalece a frente do pescoço para resistir a estrangulamentos e à quebra de postura.' },
+    { nome: 'Ponte posterior isométrica', grupo: 'Pescoço', dose: '3×20–30 s', pse: 8, H: 'media', M: 'baixa', F: 'alta', E: 'baixa',
+      why: 'Parte de trás do pescoço em isometria; postura firme quando puxam sua cabeça para baixo.' },
+  ];
+  const GRUPOS_EX = ['Mobilidade', 'Core', 'Explosivos', 'Pernas', 'Costas', 'Peito', 'Ombros', 'Braços', 'Pescoço'];
+  const BIBLIOTECA = [...Object.values(PLANO_PADRAO).flatMap((t) => t.exercicios), ...EXERCICIOS_EXTRAS]
+    .map((ex) => ({ ...ex }))
+    .sort((a, b) => GRUPOS_EX.indexOf(a.grupo) - GRUPOS_EX.indexOf(b.grupo) || a.nome.localeCompare(b.nome, 'pt-BR'));
+  const exDaBiblioteca = (nome) => BIBLIOTECA.find((ex) => ex.nome === nome);
+
+  // Treinos da conta: os montados em "Meus treinos" (perfis.treinos) ou, sem eles, o plano pronto.
+  // No banco vão só nome, dose e PSE de cada exercício; níveis, grupo e explicação vêm da biblioteca.
+  const MAX_TREINOS = 5, MAX_EXERCICIOS = 15;
+  let TREINOS = PLANO_PADRAO;
+  let treinosDaConta = false;
+  const limpar = (t, max) => String(t ?? '').replace(/[<>"&]/g, '').trim().slice(0, max);
+  function exercicioCompleto(e) {
+    const base = exDaBiblioteca(e.nome) || { nome: limpar(e.nome, 80), grupo: '', H: 'baixa', M: 'baixa', F: 'baixa', E: 'baixa', why: '' };
+    const pse = Number(e.pse);
+    return { ...base, dose: limpar(e.dose, 30) || base.dose || '3×10', pse: pse >= 1 && pse <= 10 ? Math.round(pse) : base.pse || 8 };
+  }
+  const qtdExercicios = (n) => `${n} ${n === 1 ? 'exercício' : 'exercícios'}`;
+  const nomesDos = (exs) => exs.map((e) => e.nome).join('|');
+  function montarTreinos(salvos) {
+    if (!salvos || typeof salvos !== 'object' || Array.isArray(salvos)) return null;
+    const treinos = {};
+    for (let n = 1; n <= MAX_TREINOS; n++) {
+      const t = salvos[n];
+      const exercicios = t && Array.isArray(t.exercicios)
+        ? t.exercicios.filter((e) => e && e.nome).slice(0, MAX_EXERCICIOS).map(exercicioCompleto) : [];
+      if (!exercicios.length) continue;
+      treinos[n] = { nome: limpar(t.nome, 40) || `Treino ${n}`, subtitulo: limpar(t.subtitulo, 60), exercicios };
+      // O texto "Sobre o treino" do plano pronto só vale enquanto os exercícios forem os mesmos.
+      const p = PLANO_PADRAO[n];
+      if (p && nomesDos(p.exercicios) === nomesDos(exercicios)) {
+        const { objetivo, esperado, impacto_jiu, impacto_fisico } = p;
+        Object.assign(treinos[n], { objetivo, esperado, impacto_jiu, impacto_fisico });
+      }
+    }
+    return Object.keys(treinos).length ? treinos : null;
+  }
+  // Formato gravado em perfis.treinos.
+  const treinosParaSalvar = (treinos) => Object.fromEntries(Object.entries(treinos).map(([id, t]) => [id, {
+    nome: t.nome, subtitulo: t.subtitulo, exercicios: t.exercicios.map(({ nome, dose, pse }) => ({ nome, dose, pse })),
+  }]));
+  const mesmoQuePadrao = (treinos) => JSON.stringify(treinosParaSalvar(treinos)) === JSON.stringify(treinosParaSalvar(PLANO_PADRAO));
 
   // ---------- Perfil e configurações (vêm do Supabase depois do login) ----------
   const lerJSON = (k) => {
@@ -1053,6 +1312,8 @@
   let config = { tema: 'auto', semana: [[], ['t2'], ['jiu'], ['t1'], ['jiu'], ['t3'], ['bike']], semPeso: new Set(), resumoEmail: true };
   // A conta já tem a semana salva (coluna perfis.semana)? Senão, ela vem dos antigos dias de jiu.
   let semanaDaConta = false;
+  // Aviso "Baita atualização" dos treinos personalizados (uma vez por conta; resposta em perfis.novidade_treinos).
+  let novidade = { disponivel: false, vista: true, contaNova: false };
   let perfil = { nome: '', email: '', foto: '' };
   // Só uma cópia do tema fica no navegador, para aplicá-lo antes da primeira pintura.
   const guardarTemaLocal = () => { try { localStorage.setItem('bauer-tema', config.tema); } catch (_) {} };
@@ -1069,8 +1330,9 @@
   const naDia = (i) => `${i === 0 || i === 6 ? 'No' : 'Na'} ${NOMES_DIA[i]}`;
   const daDia = (i) => `${i === 0 || i === 6 ? 'do' : 'da'} ${NOMES_DIA[i]}`;
   const copiaSemana = (s) => s.map((d) => [...d]);
-  const ehTreino = (t) => /^t[123]$/.test(t);
-  const nomeAtividade = (t) => (ehTreino(t) ? TREINOS[t.slice(1)].nome : t === 'jiu' ? 'Jiu-jitsu' : 'Cardio');
+  // Treino de musculação que existe hoje na conta (t1 a t5; um treino excluído deixa de valer na semana).
+  const ehTreino = (t) => /^t[1-5]$/.test(t) && !!TREINOS[t.slice(1)];
+  const nomeAtividade = (t) => (TIPOS[t] ? TIPOS[t].nome : t);
   // Contas antigas só tinham os dias de jiu: a semana é montada com eles sobre o plano original.
   function semanaDeDiasJiu(dias) {
     const s = [[], ['t2'], [], ['t1'], [], ['t3'], []];
@@ -1079,6 +1341,8 @@
     return s;
   }
   const SEMANA_PADRAO = semanaDeDiasJiu([2, 4]);
+  // Com treinos montados pela pessoa, a semana padrão fica só com os que existem.
+  const semanaPadrao = () => validarSemana(SEMANA_PADRAO);
   function validarSemana(s) {
     if (!Array.isArray(s) || s.length !== 7) return null;
     return s.map((d) => (Array.isArray(d)
@@ -1090,7 +1354,7 @@
     const tipoTreino = tipos.find(ehTreino);
     const treino = tipoTreino ? tipoTreino.slice(1) : undefined;
     const grupos = [...new Set(tipos.map((t) => (ehTreino(t) ? 'musc' : t)))];
-    const notaDe = (t) => (ehTreino(t) ? TREINOS[t.slice(1)].subtitulo : t === 'jiu' ? 'aula de jiu' : 'cardio leve');
+    const notaDe = (t) => (ehTreino(t) ? TREINOS[t.slice(1)].subtitulo || 'musculação' : t === 'jiu' ? 'aula de jiu' : 'cardio leve');
     let titulo = 'Descanso', nota = 'Recuperação';
     if (tipos.length === 1) {
       titulo = nomeAtividade(tipos[0]);
@@ -1103,15 +1367,20 @@
   }
 
   // Tipos de check-in. Musculação usa uma cor só; o número no selo diz qual treino foi.
+  // t1 a t5 existem sempre, para os check-ins de um treino que foi excluído continuarem com nome.
   const TIPOS = {
-    t1: { nome: 'Treino 1', selo: '1', grupo: 'musc', treino: '1' },
-    t2: { nome: 'Treino 2', selo: '2', grupo: 'musc', treino: '2' },
-    t3: { nome: 'Treino 3', selo: '3', grupo: 'musc', treino: '3' },
     jiu: { nome: 'Jiu-jitsu', selo: 'J', grupo: 'jiu' },
     // A chave 'bike' fica no banco (check-ins e semana já salvos); na tela o tipo se chama Cardio.
     bike: { nome: 'Cardio', selo: 'C', grupo: 'bike' },
   };
-  const ORDEM_TIPOS = ['t1', 't2', 't3', 'jiu', 'bike'];
+  let ORDEM_TIPOS = [];
+  function atualizarTipos() {
+    for (let n = 1; n <= MAX_TREINOS; n++) {
+      TIPOS[`t${n}`] = { nome: TREINOS[n] ? TREINOS[n].nome : `Treino ${n}`, selo: String(n), grupo: 'musc', treino: String(n) };
+    }
+    ORDEM_TIPOS = [...Object.keys(TREINOS).map((n) => `t${n}`), 'jiu', 'bike'];
+  }
+  atualizarTipos();
   const DURACAO_PADRAO = { musc: 60, jiu: 60, bike: 30 };
 
   const FOCOS = [
@@ -1151,6 +1420,58 @@
     'Superman': '0DxJJQkkBb8',
     'Halo': '4sizzeQpT-k',
     'Puxada': 'ptL4ALz_nXg',
+    // Fichas de treino (PDFs)
+    'Jefferson curl': 'JqpTiNIeqQU',
+    'Hang power snatch unilateral': 'k4qgizguZDE',
+    'Paralela': 'uLjTLqjXUsg',
+    'Crucifixo': 'uVDQyIRk6xg',
+    'Flexão de pescoço': 'ypvIKSATrzw',
+    'Alcance da ponte alternada': '2MKWKAp6gnU',
+    'Mobilidade de ombros 180°': 'YhJv0aR-HAY',
+    'Hang power clean': 'oOSe6rxPcJM',
+    'Remada curvada': 'w_Dl2kD9R3I',
+    'Elevação de quadril': 'cnt7t5SJVHc',
+    'Barra fixa': 'Rghbh0EODjc',
+    'Ponte Copenhagen dinâmica': 'Nv8gSojAzpQ',
+    'Bíceps neutro alternado': '_UaN0WCHTvM',
+    'Levantamento turco': 'RUesixeaQao',
+    'Carregada overhead': '5UqoIBM8UMQ',
+    'Push press': '7QUSJyTElrk',
+    'Supino inclinado': '1YxnbkMD9X8',
+    'Peso à frente': 'd35i3ivwhGQ',
+    'Tríceps': '8wSgswntDO8',
+    'Mobilidade de quadril': 'uJsO4jYb_Mc',
+    'Puxada alta': 'NUJWTA2kKqc',
+    'Remada unilateral no cabo': 'XiGQpJCnq28',
+    'Mesa flexora': 'YSymhETkpfM',
+    'Elevação pélvica unilateral': 'DDCzTf-GC8M',
+    'Ponte posterior isométrica': 'HH150PGRkZg',
+    'Mobilidade de quadril na cócoras': 'Xj6Bs3TmK_w',
+    'Lift diagonal no cabo': 'RoTAyMo1WP8',
+    'Clean': 'uJTIwF-hG0o',
+    'Agachamento unilateral Zercher': 'IjIqctaP4IE',
+    'Salto': 'AP6MxHb67mI',
+    'Supino reto alternado': 'QfALvDzu7jE',
+    'Cadeira extensora': '3vnb6DN_tR8',
+    'Tríceps francês unilateral': 'G117PNYbQac',
+    'Cadeira adutora': 'cpLuUkNHaGE',
+    'Flexão lateral semiajoelhada overhead': 'AY48_OFNYRM',
+    'Carregada farmer': 'rgT6MCyjPw0',
+    'Snatch': 'QnhOZxMTozY',
+    'Deadlift split': 'zv5AOwtfNc4',
+    'Passada alternada com salto': 'ck3oGO7ETJc',
+    'Rotação com velocidade': '8DfJRSjP67U',
+    'Flexão de punho': 't9dfiobf6UQ',
+    'Cuban press': 'ATTTnK9Sl_E',
+    'Ananias com peso dinâmico': '7UBXiUna7bY',
+    'Agachamento Zercher': 'islCozcv0os',
+    'Desenvolvimento semiajoelhado': 'HP5gHsvw7Jw',
+    'Rotação unilateral no landmine': 'j7wW42od2Kk',
+    'Elevação lateral': '3HL0_9Mn1zA',
+    'Ponte lateral dinâmica com apoio': 'j_HG4yRhH6A',
+    'L-sit': 'b_YT5GImOKQ',
+    'Stiff': 'HiTWWIpzu9I',
+    'Bíceps isométrico': 'uPcsppXmPEs',
   };
 
   // ---------- Datas ----------
@@ -1252,6 +1573,7 @@
     if (/semana/.test(msg)) toast('Para salvar a semana, rode de novo o supabase/schema.sql no Supabase (veja o README).');
     else if (/emails_resumo/.test(msg)) toast('Para salvar essa opção, rode de novo o supabase/schema.sql no Supabase (veja o README).');
     else if (/sem_peso/.test(msg)) toast('Para salvar essa opção, rode de novo o supabase/schema.sql no Supabase (veja o README).');
+    else if (/treinos/.test(msg)) toast('Para salvar seus treinos, rode de novo o supabase/schema.sql no Supabase (veja o README).');
     else if (/cargas/.test(msg)) toast('Para salvar os pesos, rode de novo o supabase/schema.sql no Supabase (veja o README).');
     else toast('Não foi possível salvar. Confira a internet; os dados foram recarregados do servidor.');
     try { await carregarDados(); renderizarApp(); } catch (_) {}
@@ -1419,11 +1741,18 @@
       if (error) throw error;
     }
     perfil = { nome: linha.nome || '', email: usuario.email || linha.email || '', foto: linha.foto || '' };
+    const proprios = montarTreinos(linha.treinos);
+    treinosDaConta = !!proprios;
+    TREINOS = proprios || PLANO_PADRAO;
+    atualizarTipos();
+    if (!TREINOS[estado.treino]) estado.treino = Object.keys(TREINOS)[0];
+    // Sem a coluna (schema.sql antigo) o aviso da novidade não aparece, porque a resposta não teria onde ficar salva.
+    novidade = { disponivel: 'novidade_treinos' in linha, vista: !!linha.novidade_treinos, contaNova: !(c.data || []).length && !cargas.length };
     const semana = validarSemana(linha.semana);
     semanaDaConta = !!semana;
     config = {
       tema: linha.tema || 'auto',
-      semana: semana || semanaDeDiasJiu((linha.dias_jiu || [2, 4]).map(Number)),
+      semana: semana || validarSemana(semanaDeDiasJiu((linha.dias_jiu || [2, 4]).map(Number))),
       semPeso: new Set(Array.isArray(linha.sem_peso) ? linha.sem_peso : []),
       resumoEmail: linha.emails_resumo !== false,
     };
@@ -1531,22 +1860,25 @@
     ...cargas.filter((r) => r.treino === tipo).map((r) => r.data),
     ...checkins.filter((c) => c.tipo === tipo).map(dataDe),
   ])];
+  // Cargas de um exercício em dias anteriores a `antesDe`, em qualquer treino: em "Meus treinos" o
+  // exercício pode mudar de treino e o histórico vai junto. [{ data, series }], do mais recente ao mais antigo.
+  const TIPOS_MUSC = ['t1', 't2', 't3', 't4', 't5'];
+  const historicoDe = (nome, antesDe) => TIPOS_MUSC
+    .flatMap((t) => datasDoTreino(t).filter((d) => d < antesDe).map((d) => ({ data: d, series: pesosDoDia(d, t)[nome] })))
+    .filter((r) => temCarga(r.series))
+    .sort((a, b) => b.data.localeCompare(a.data));
   // Pesos do dia anterior mais recente com carga no exercício (pré-preenchimento, RF-14).
-  function ultimasCargas(tipo, nome, antesDe = hoje()) {
-    for (const d of datasDoTreino(tipo).filter((d) => d < antesDe).sort().reverse()) {
-      const s = pesosDoDia(d, tipo)[nome];
-      if (temCarga(s)) return s;
-    }
-    return null;
+  function ultimasCargas(nome, antesDe = hoje()) {
+    const r = historicoDe(nome, antesDe)[0];
+    return r ? r.series : null;
   }
 
   // Recorde: maior carga de uma série no exercício, só em dias anteriores a `antesDe`.
   const maxDoDia = (series) => Math.max(0, ...(series || []).filter((x) => x && x.carga != null).map((x) => Number(x.carga) || 0));
-  function recordeAntes(tipo, nome, antesDe) {
+  function recordeAntes(nome, antesDe) {
     let rec = null;
-    for (const d of datasDoTreino(tipo)) {
-      if (d >= antesDe) continue;
-      const kg = maxDoDia(pesosDoDia(d, tipo)[nome]);
+    for (const { data: d, series } of historicoDe(nome, antesDe)) {
+      const kg = maxDoDia(series);
       if (kg > 0 && (!rec || kg > rec.kg || (kg === rec.kg && d < rec.data))) rec = { kg, data: d };
     }
     return rec;
@@ -1554,7 +1886,7 @@
   // Novo recorde no dia: a maior carga do dia supera o recorde anterior (o primeiro registro não conta).
   function recordeNoDia(tipo, nome, data) {
     if (config.semPeso.has(nome)) return null;
-    const antes = recordeAntes(tipo, nome, data);
+    const antes = recordeAntes(nome, data);
     const kg = maxDoDia(pesosDoDia(data, tipo)[nome]);
     return antes && kg > antes.kg ? { kg, antes: antes.kg } : null;
   }
@@ -1626,7 +1958,8 @@
   // Painel do exercício: na tela Treino vale para hoje e o treino da aba; pelo Dashboard, para o
   // dia e o treino do check-in. { data, tipo, origem: 'treino' | 'dash' }
   let logCtx = null;
-  const exsDoCtx = () => TREINOS[logCtx.tipo.slice(1)].exercicios;
+  // O detalhe de um check-in antigo pode ter exercícios que saíram do treino (logCtx.exs).
+  const exsDoCtx = () => logCtx.exs || TREINOS[logCtx.tipo.slice(1)].exercicios;
   const camposDoModal = () => [...logDialog.querySelectorAll('[data-campo]')];
 
   // Salvar um peso só grava o peso do dia: não abre check-in nem temporizador.
@@ -1684,7 +2017,7 @@
   function logHTML(ex) {
     const { data, tipo } = logCtx;
     const atual = pesosDoDia(data, tipo)[ex.nome] || [];
-    const ultimo = ultimasCargas(tipo, ex.nome, data);
+    const ultimo = ultimasCargas(ex.nome, data);
     const quando = data === hoje() ? 'hoje' : `em ${fmtData(data, { day: 'numeric', month: 'long' })}`;
     const total = numSeries(ex);
     const linhas = Array.from({ length: total }, (_, n) => {
@@ -1701,7 +2034,7 @@
         </div>`;
     }).join('');
     const hint = ultimo ? `<span class="log-hint">Última vez: ${listaKg(ultimo)} kg</span>` : '';
-    const rec = recordeAntes(tipo, ex.nome, data);
+    const rec = recordeAntes(ex.nome, data);
     const linhaRec = rec
       ? `<p class="log-recorde">${ICON_TROFEU}Recorde: <b>${fmtKg(rec.kg)} kg</b> em ${fmtData(rec.data, { day: '2-digit', month: '2-digit' })}</p>`
       : '';
@@ -1798,7 +2131,7 @@
     depoisEncerrar = depois;
     const min = minutosEntre(a.inicio, agoraIso());
     let resumo = '';
-    if (TIPOS[a.tipo].grupo === 'musc') {
+    if (TREINOS[TIPOS[a.tipo].treino]) {
       const exs = TREINOS[TIPOS[a.tipo].treino].exercicios;
       const pesos = pesosDoDia(dataDe(a), a.tipo);
       const feitos = exs.filter((ex) => exercicioFeito(ex, pesos)).length;
@@ -1874,7 +2207,7 @@
       <fieldset class="campo">
         <legend>Treino</legend>
         <div class="opcoes">
-          ${ORDEM_TIPOS.map((t) => `
+          ${(ORDEM_TIPOS.includes(tipo) ? ORDEM_TIPOS : [tipo, ...ORDEM_TIPOS]).map((t) => `
             <label class="opcao"><input type="radio" name="f-tipo" value="${t}"${t === tipo ? ' checked' : ''}><span>${seloHTML(t)}${TIPOS[t].nome}</span></label>`).join('')}
         </div>
       </fieldset>
@@ -1950,9 +2283,12 @@
   }
 
   function renderTreinos() {
-    $('treinos').innerHTML = Object.entries(TREINOS).map(([id, t]) => `
+    const ids = Object.keys(TREINOS);
+    $('treinos').style.setProperty('--n', ids.length);
+    $('treinos').classList.toggle('muitos', ids.length > 3);
+    $('treinos').innerHTML = ids.map((id) => `
       <button class="treino-btn" role="tab" data-treino="${id}" aria-selected="${id === estado.treino}">
-        <b>${t.nome}</b><span>${t.subtitulo}</span>
+        <b>${TREINOS[id].nome}</b><span>${TREINOS[id].subtitulo || qtdExercicios(TREINOS[id].exercicios.length)}</span>
       </button>`).join('');
   }
 
@@ -1963,6 +2299,8 @@
 
   function renderSobre() {
     const t = TREINOS[estado.treino];
+    // Treinos montados pela pessoa não têm o texto de objetivo e impacto.
+    if (!t.objetivo) { $('sobre').innerHTML = ''; return; }
     $('sobre').innerHTML = `
       <details class="sobre"${estado.descAberta ? ' open' : ''}>
         <summary>
@@ -2154,7 +2492,7 @@
         </li>`;
     }).join('');
     // A nota explica a semana padrão; com a semana mudada ela deixa de valer.
-    $('semana-nota').hidden = JSON.stringify(config.semana) !== JSON.stringify(SEMANA_PADRAO);
+    $('semana-nota').hidden = treinosDaConta || JSON.stringify(config.semana) !== JSON.stringify(SEMANA_PADRAO);
   }
 
   function renderAtivo() {
@@ -2251,11 +2589,23 @@
     $('cal-grade').innerHTML = cab + vazios + dias;
   }
 
+  // Exercícios de um check-in de musculação: os do treino de hoje e os que tiveram peso no dia
+  // (o treino pode ter mudado ou sido excluído depois).
+  function exerciciosDoCheckin(c) {
+    const t = TREINOS[TIPOS[c.tipo].treino];
+    const exs = t ? [...t.exercicios] : [];
+    const pesos = pesosDoDia(dataDe(c), c.tipo);
+    Object.keys(pesos).forEach((nome) => {
+      if (!exs.some((ex) => ex.nome === nome) && (temCarga(pesos[nome]) || temFeito(pesos[nome]))) exs.push(exercicioCompleto({ nome }));
+    });
+    return exs;
+  }
+
   function detalheHTML(c) {
     const partes = [];
     if (c.obs) partes.push(`<p class="ck-obs">${esc(c.obs)}</p>`);
     if (TIPOS[c.tipo].grupo === 'musc') {
-      const exs = TREINOS[TIPOS[c.tipo].treino].exercicios;
+      const exs = exerciciosDoCheckin(c);
       const pesos = pesosDoDia(dataDe(c), c.tipo);
       if (exs.some((ex) => exercicioFeito(ex, pesos)) || c.fim) {
         partes.push(`<ul class="ck-ex">${exs.map((ex, i) => {
@@ -2319,7 +2669,8 @@
     const { ano, mes } = mesExibido;
     const prefixo = `${ano}-${pad(mes + 1)}`;
     const doMes = checkins.filter((c) => dataDe(c).startsWith(prefixo));
-    const contagem = ORDEM_TIPOS.map((t) => [t, doMes.filter((c) => c.tipo === t).length]);
+    const tipos = [...new Set([...ORDEM_TIPOS, ...doMes.map((c) => c.tipo)])].sort((a, b) => Object.keys(TIPOS).indexOf(a) - Object.keys(TIPOS).indexOf(b));
+    const contagem = tipos.map((t) => [t, doMes.filter((c) => c.tipo === t).length]);
     const max = Math.max(1, ...contagem.map(([, n]) => n));
     $('tipos-titulo').textContent = `Por tipo em ${nomeMes(ano, mes)}`;
     $('barras').innerHTML = contagem.map(([t, n]) => `
@@ -2374,18 +2725,21 @@
     const s = config.semana;
     const av = [];
     const todas = s.flat();
-    const faltam = ['t1', 't2', 't3'].filter((t) => !todas.includes(t)).map(nomeAtividade);
-    if (faltam.length) av.push(`${lista(faltam)} ${faltam.length > 1 ? 'ficaram' : 'ficou'} fora da semana. O plano usa os três treinos.`);
-    ['t1', 't2', 't3'].forEach((t) => {
+    const treinos = Object.keys(TREINOS).map((n) => `t${n}`);
+    const faltam = treinos.filter((t) => !todas.includes(t)).map(nomeAtividade);
+    if (faltam.length) {
+      av.push(`${lista(faltam)} ${faltam.length > 1 ? 'ficaram' : 'ficou'} fora da semana. ${treinosDaConta ? 'Coloque em algum dia para não deixar de fazer.' : 'O plano usa os três treinos.'}`);
+    }
+    treinos.forEach((t) => {
       const n = todas.filter((x) => x === t).length;
       if (n > 1) av.push(`O ${nomeAtividade(t)} aparece ${n} vezes na semana.`);
     });
     ORDEM_SEMANA.forEach((i) => {
       if (s[i].length === 2) av.push(`${naDia(i)} você terá ${lista(s[i].map(nomeAtividade))}; faça um check-in para cada.`);
     });
-    // Regra 5: pernas pesadas na véspera (ou no mesmo dia) do tatame.
+    // Regra 5: pernas pesadas na véspera (ou no mesmo dia) do tatame (só com o Treino 3 do plano pronto).
     ORDEM_SEMANA.forEach((i) => {
-      if (!s[i].includes('jiu')) return;
+      if (!s[i].includes('jiu') || !(TREINOS['3'] && TREINOS['3'].objetivo)) return;
       const vespera = (i + 6) % 7;
       if (s[vespera].includes('t3')) av.push(`${naDia(i)} o jiu vem logo depois do Treino 3 (pernas). Se as pernas estiverem pesadas, vá mais leve no rola.`);
       else if (s[i].includes('t3')) av.push(`${naDia(i)} o Treino 3 (pernas) e o jiu caem juntos. Se der, faça o jiu antes.`);
@@ -2408,7 +2762,7 @@
         <button class="dia-add" type="button" data-adicionar="${i}" aria-label="Escolher atividades de ${NOMES_DIA[i]}">+</button>
       </li>`).join('');
     $('avisos-semana').innerHTML = avisosSemana().map((a) => `<li class="aviso">${a}</li>`).join('');
-    $('semana-padrao').disabled = JSON.stringify(config.semana) === JSON.stringify(SEMANA_PADRAO);
+    $('semana-padrao').disabled = JSON.stringify(config.semana) === JSON.stringify(semanaPadrao());
   }
 
   let timerEventoSemana;
@@ -2491,7 +2845,7 @@
     toast('Arraste a atividade até um dia, ou toque em + no dia.');
   });
   $('semana-padrao').addEventListener('click', () => {
-    mudarSemana((s) => { s.splice(0, 7, ...copiaSemana(SEMANA_PADRAO)); });
+    mudarSemana((s) => { s.splice(0, 7, ...semanaPadrao()); });
     toast('A semana voltou ao padrão.');
   });
 
@@ -2570,9 +2924,299 @@
   document.addEventListener('pointercancel', (e) => { if (arrasto && e.pointerId === arrasto.id) terminarArrasto(false); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && arrasto) terminarArrasto(false); });
 
+  // ---------- Meus treinos (editor) ----------
+  const ICON_CIMA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg>';
+  const ICON_BAIXO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
+  const ICON_MAIS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
+  const ICON_VOLTAR = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>';
+  const editorDialog = $('editor-dialog');
+  // Rascunho: cópia dos treinos editada até tocar em Salvar. vista: 'treino' | 'escolher'.
+  // confirmar: null | 'excluir' | 'plano' | 'sair'.
+  let ed = null;
+  const copiaTreinos = (t) => Object.fromEntries(Object.entries(t).map(([id, x]) => [id, {
+    nome: x.nome, subtitulo: x.subtitulo || '', exercicios: x.exercicios.map((ex) => ({ ...ex })),
+  }]));
+  const edTreino = () => ed.treinos[ed.sel];
+  const edMudou = () => JSON.stringify(treinosParaSalvar(ed.treinos)) !== JSON.stringify(treinosParaSalvar(TREINOS));
+  const altas = (ex) => DIMS.filter(({ k }) => ex[k] === 'alta').map(({ label }) => label.toLowerCase());
+
+  function abrirEditor({ doZero = false } = {}) {
+    const treinos = doZero ? { 1: { nome: 'Treino 1', subtitulo: '', exercicios: [] } } : copiaTreinos(TREINOS);
+    const sel = doZero ? '1' : (treinos[estado.treino] ? estado.treino : Object.keys(treinos)[0]);
+    ed = { treinos, sel, vista: doZero ? 'escolher' : 'treino', busca: '', grupo: 'todos', confirmar: null, erro: '', doZero };
+    renderEditor();
+    if (!editorDialog.open) editorDialog.showModal();
+    registrarEvento('editor_treinos', { origem: doZero ? 'do_zero' : telaAtual() });
+  }
+
+  function renderEditor() {
+    const t = edTreino();
+    const ids = Object.keys(ed.treinos);
+    if (ed.vista === 'escolher') {
+      $('editor-body').innerHTML = `
+        <div class="modal-head">
+          <div>
+            <button class="ed-voltar" type="button" data-ed-vista="treino">${ICON_VOLTAR}${esc(t.nome)}</button>
+            <h3 id="editor-title">Adicionar exercícios</h3>
+          </div>
+          ${BOTAO_FECHAR}
+        </div>
+        <input class="ed-busca" id="ed-busca" type="search" placeholder="Buscar exercício" autocomplete="off" value="${esc(ed.busca)}" aria-label="Buscar exercício">
+        <div class="chips ed-grupos" role="group" aria-label="Filtrar por grupo">
+          ${['todos', ...GRUPOS_EX].map((g) => `<button class="chip" type="button" data-ed-grupo="${g}" aria-pressed="${ed.grupo === g}">${g === 'todos' ? 'Todos' : g}</button>`).join('')}
+        </div>
+        <p class="nota-campo" id="ed-contagem" aria-live="polite"></p>
+        <ul class="ed-bib" id="ed-bib"></ul>
+        <div class="ed-fixo"><button class="modal-done" type="button" data-ed-vista="treino">Pronto</button></div>`;
+      renderBiblioteca();
+      return;
+    }
+    const exs = t.exercicios;
+    const confirma = {
+      excluir: `<div class="ed-confirma" role="alert"><p>Excluir o ${esc(t.nome)}? Os check-ins e pesos já registrados continuam salvos.</p>
+        <div><button class="btn-perigo cheio" type="button" data-ed-excluir-sim>Excluir treino</button><button class="btn-sec" type="button" data-ed-cancelar>Cancelar</button></div></div>`,
+      plano: `<div class="ed-confirma" role="alert"><p>Voltar ao plano pronto? Os treinos daqui serão trocados pelos 3 treinos do plano (Costas e bíceps, Peito, tríceps e ombro, e Pernas). Nada muda até você salvar.</p>
+        <div><button class="btn" type="button" data-ed-plano-sim>Usar o plano pronto</button><button class="btn-sec" type="button" data-ed-cancelar>Cancelar</button></div></div>`,
+      sair: `<div class="ed-confirma" role="alert"><p>Sair sem salvar? As mudanças nos treinos serão perdidas.</p>
+        <div><button class="btn-perigo cheio" type="button" data-ed-sair-sim>Sair sem salvar</button><button class="btn-sec" type="button" data-ed-cancelar>Continuar editando</button></div></div>`,
+    }[ed.confirmar] || '';
+    $('editor-body').innerHTML = `
+      <div class="modal-head">
+        <div><h3 id="editor-title">Meus treinos</h3><p class="resumo-enc">Até ${MAX_TREINOS} treinos, com até ${MAX_EXERCICIOS} exercícios cada.</p></div>
+        ${BOTAO_FECHAR}
+      </div>
+      <div class="ed-abas" role="group" aria-label="Treinos">
+        ${ids.map((id) => `<button class="ed-aba" type="button" data-ed-treino="${id}" aria-pressed="${id === ed.sel}">${seloHTML(`t${id}`)}${esc(ed.treinos[id].nome || `Treino ${id}`)}</button>`).join('')}
+        <button class="ed-aba novo" type="button" data-ed-novo${ids.length >= MAX_TREINOS ? ' disabled' : ''}>+ Novo treino</button>
+      </div>
+      <div class="linha2">
+        <div class="campo"><label for="ed-nome">Nome</label><input id="ed-nome" maxlength="40" value="${esc(t.nome)}" placeholder="Treino ${ed.sel}" autocomplete="off"></div>
+        <div class="campo"><label for="ed-sub">Foco <span class="opcional">(opcional)</span></label><input id="ed-sub" maxlength="60" value="${esc(t.subtitulo)}" placeholder="Ex.: Peito e tríceps" autocomplete="off"></div>
+      </div>
+      <div class="log-head"><h4>Exercícios (${exs.length})</h4><span class="log-hint">Toque nas setas para mudar a ordem</span></div>
+      ${exs.length ? `<ol class="ed-exs">${exs.map((ex, i) => `
+        <li class="ed-ex">
+          <span class="ex-num">${pad(i + 1)}</span>
+          <span class="ed-ex-nome"><b>${esc(ex.nome)}</b><small>${esc(ex.grupo || 'Exercício')}${VIDEOS[ex.nome] ? ' · com vídeo' : ''}</small></span>
+          <button class="ed-icone" type="button" data-ed-remover="${i}" aria-label="Tirar ${esc(ex.nome)} do treino">${ICON_X}</button>
+          <div class="ed-ex-campos">
+            <label>Séries <input type="text" value="${esc(ex.dose)}" maxlength="30" data-ed-dose="${i}" aria-label="${esc(ex.nome)}: séries e repetições"></label>
+            <label>PSE <select data-ed-pse="${i}" aria-label="${esc(ex.nome)}: PSE">${[5, 6, 7, 8, 9, 10].map((n) => `<option${n === ex.pse ? ' selected' : ''}>${n}</option>`).join('')}</select></label>
+            <span class="ed-mover">
+              <button class="ed-icone" type="button" data-ed-mover="${i}:-1" aria-label="Subir ${esc(ex.nome)}"${i === 0 ? ' disabled' : ''}>${ICON_CIMA}</button>
+              <button class="ed-icone" type="button" data-ed-mover="${i}:1" aria-label="Descer ${esc(ex.nome)}"${i === exs.length - 1 ? ' disabled' : ''}>${ICON_BAIXO}</button>
+            </span>
+          </div>
+        </li>`).join('')}</ol>`
+        : '<p class="ed-vazio">Nenhum exercício ainda. Toque em Adicionar exercícios para escolher na biblioteca.</p>'}
+      <button class="btn-sec" type="button" data-ed-vista="escolher"${exs.length >= MAX_EXERCICIOS ? ' disabled' : ''}>+ Adicionar exercícios</button>
+      ${confirma}
+      <div class="ed-rodape">
+        ${ids.length > 1 ? '<button class="btn-perigo" type="button" data-ed-excluir>Excluir este treino</button>' : ''}
+        ${mesmoQuePadrao(ed.treinos) ? '' : '<button class="btn-sec" type="button" data-ed-plano>Voltar ao plano pronto</button>'}
+      </div>
+      <div class="ed-fixo">
+        <p class="form-erro" id="ed-erro" role="alert"${ed.erro ? '' : ' hidden'}>${esc(ed.erro)}</p>
+        <button class="modal-done" type="button" data-ed-salvar>Salvar treinos</button>
+      </div>`;
+  }
+
+  const semAcento = (t) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  function renderBiblioteca() {
+    const t = edTreino();
+    const busca = semAcento(ed.busca.trim());
+    const itens = BIBLIOTECA.filter((ex) => (ed.grupo === 'todos' || ex.grupo === ed.grupo) && (!busca || semAcento(ex.nome).includes(busca)));
+    const noTreino = new Set(t.exercicios.map((ex) => ex.nome));
+    $('ed-contagem').textContent = `${t.exercicios.length} de ${MAX_EXERCICIOS} no ${t.nome || `Treino ${ed.sel}`} · ${itens.length} ${itens.length === 1 ? 'exercício' : 'exercícios'} na lista`;
+    $('ed-bib').innerHTML = itens.length ? itens.map((ex) => {
+      const dentro = noTreino.has(ex.nome);
+      const destaque = altas(ex);
+      return `
+      <li><button class="ed-bib-item" type="button" data-ed-add="${esc(ex.nome)}" aria-pressed="${dentro}">
+        <b>${esc(ex.nome)}</b>
+        <small>${esc(ex.grupo)} · ${esc(ex.dose)} · PSE ${ex.pse}${destaque.length ? ` · alta ${lista(destaque)}` : ''}${VIDEOS[ex.nome] ? ' · vídeo' : ''}</small>
+        <span class="ed-marca" aria-hidden="true">${dentro ? ICON_CHECK : ICON_MAIS}</span>
+      </button></li>`;
+    }).join('') : '<li class="ed-vazio">Nenhum exercício com esse nome. Tente outra palavra ou outro grupo.</li>';
+  }
+
+  function salvarEditor() {
+    const vazio = Object.entries(ed.treinos).find(([, t]) => !t.exercicios.length);
+    if (vazio) {
+      ed.sel = vazio[0];
+      ed.erro = `O ${vazio[1].nome || `Treino ${vazio[0]}`} está sem exercícios. Adicione pelo menos um ou exclua o treino.`;
+      return renderEditor();
+    }
+    Object.entries(ed.treinos).forEach(([id, t]) => { t.nome = limpar(t.nome, 40) || `Treino ${id}`; t.subtitulo = limpar(t.subtitulo, 60); });
+    const valor = mesmoQuePadrao(ed.treinos) ? null : treinosParaSalvar(ed.treinos);
+    const antes = Object.keys(TREINOS);
+    TREINOS = montarTreinos(valor) || PLANO_PADRAO;
+    treinosDaConta = !!valor;
+    atualizarTipos();
+    const campos = { treinos: valor };
+    // Treino excluído sai da semana; treino novo entra pelo Minha semana.
+    const semana = validarSemana(config.semana);
+    const saiuDaSemana = JSON.stringify(semana) !== JSON.stringify(config.semana);
+    if (saiuDaSemana) { config.semana = semana; campos.semana = semana; semanaDaConta = true; }
+    if (!novidade.vista && novidade.disponivel) { novidade.vista = true; campos.novidade_treinos = new Date().toISOString(); }
+    salvarPerfil(campos);
+    const novos = Object.keys(TREINOS).filter((id) => !antes.includes(id));
+    if (!TREINOS[estado.treino]) estado.treino = Object.keys(TREINOS)[0];
+    salvar();
+    registrarEvento('treinos_salvos', {
+      treinos: Object.keys(TREINOS).length, exercicios: Object.values(TREINOS).reduce((n, t) => n + t.exercicios.length, 0), plano_pronto: !valor,
+    });
+    ed = null;
+    editorDialog.close();
+    renderHoje();
+    renderTudo();
+    atualizarCheckinUI();
+    if (telaAtual() === 'voce') renderConfig();
+    const fora = Object.keys(TREINOS).filter((id) => !config.semana.flat().includes(`t${id}`));
+    toast(saiuDaSemana ? 'Treinos salvos. O treino excluído saiu da sua semana.'
+      : novos.length || fora.length ? 'Treinos salvos. Coloque os treinos na semana em Você → Minha semana.'
+        : 'Treinos salvos.');
+  }
+
+  function fecharEditor() {
+    if (ed && ed.confirmar !== 'sair' && edMudou()) { ed.confirmar = 'sair'; ed.vista = 'treino'; renderEditor(); editorDialog.querySelector('[data-ed-sair-sim]').focus(); return; }
+    ed = null;
+    editorDialog.close();
+  }
+
+  editorDialog.addEventListener('cancel', (e) => { e.preventDefault(); fecharEditor(); });
+  editorDialog.addEventListener('click', (e) => {
+    if (!ed) return;
+    if (e.target === editorDialog || e.target.closest('[data-fechar]')) return fecharEditor();
+    const alvo = (sel) => e.target.closest(sel);
+    const t = edTreino();
+    let b;
+    if ((b = alvo('[data-ed-treino]'))) { ed.sel = b.dataset.edTreino; ed.confirmar = null; ed.erro = ''; return renderEditor(); }
+    if (alvo('[data-ed-novo]')) {
+      const id = ['1', '2', '3', '4', '5'].find((n) => !ed.treinos[n]);
+      if (!id) return;
+      ed.treinos[id] = { nome: `Treino ${id}`, subtitulo: '', exercicios: [] };
+      // Mantém a ordem 1 a 5 das abas.
+      ed.treinos = Object.fromEntries(Object.entries(ed.treinos).sort(([a], [b2]) => a - b2));
+      Object.assign(ed, { sel: id, vista: 'escolher', busca: '', grupo: 'todos', confirmar: null, erro: '' });
+      return renderEditor();
+    }
+    if ((b = alvo('[data-ed-vista]'))) {
+      ed.vista = b.dataset.edVista; ed.confirmar = null; ed.erro = '';
+      renderEditor();
+      if (ed.vista === 'escolher') $('editor-body').scrollTop = 0;
+      return;
+    }
+    if ((b = alvo('[data-ed-grupo]'))) { ed.grupo = b.dataset.edGrupo; return renderEditor(); }
+    if ((b = alvo('[data-ed-add]'))) {
+      const nome = b.dataset.edAdd;
+      const k = t.exercicios.findIndex((ex) => ex.nome === nome);
+      if (k >= 0) t.exercicios.splice(k, 1);
+      else if (t.exercicios.length >= MAX_EXERCICIOS) return toast(`Cada treino tem até ${MAX_EXERCICIOS} exercícios.`);
+      else t.exercicios.push({ ...exDaBiblioteca(nome) });
+      ed.erro = '';
+      renderBiblioteca();
+      return;
+    }
+    if ((b = alvo('[data-ed-remover]'))) { t.exercicios.splice(Number(b.dataset.edRemover), 1); return renderEditor(); }
+    if ((b = alvo('[data-ed-mover]'))) {
+      const [i, d] = b.dataset.edMover.split(':').map(Number);
+      const [ex] = t.exercicios.splice(i, 1);
+      t.exercicios.splice(i + d, 0, ex);
+      renderEditor();
+      const prox = $('editor-body').querySelector(`[data-ed-mover="${i + d}:${d}"]`);
+      if (prox && !prox.disabled) prox.focus();
+      return;
+    }
+    if (alvo('[data-ed-excluir]')) { ed.confirmar = 'excluir'; return renderEditor(); }
+    if (alvo('[data-ed-excluir-sim]')) {
+      delete ed.treinos[ed.sel];
+      Object.assign(ed, { sel: Object.keys(ed.treinos)[0], confirmar: null, erro: '' });
+      return renderEditor();
+    }
+    if (alvo('[data-ed-plano]')) { ed.confirmar = 'plano'; return renderEditor(); }
+    if (alvo('[data-ed-plano-sim]')) {
+      Object.assign(ed, { treinos: copiaTreinos(PLANO_PADRAO), sel: '1', confirmar: null, erro: '' });
+      return renderEditor();
+    }
+    if (alvo('[data-ed-sair-sim]')) { ed = null; return editorDialog.close(); }
+    if (alvo('[data-ed-cancelar]')) { ed.confirmar = null; return renderEditor(); }
+    if (alvo('[data-ed-salvar]')) return salvarEditor();
+  });
+  editorDialog.addEventListener('input', (e) => {
+    if (!ed) return;
+    const t = edTreino();
+    if (e.target.id === 'ed-busca') { ed.busca = e.target.value; return renderBiblioteca(); }
+    if (e.target.id === 'ed-nome') {
+      t.nome = e.target.value;
+      const aba = $('editor-body').querySelector(`[data-ed-treino="${ed.sel}"]`);
+      if (aba) aba.lastChild.textContent = t.nome || `Treino ${ed.sel}`;
+      return;
+    }
+    if (e.target.id === 'ed-sub') { t.subtitulo = e.target.value; return; }
+    if (e.target.dataset.edDose) t.exercicios[Number(e.target.dataset.edDose)].dose = e.target.value;
+  });
+  editorDialog.addEventListener('change', (e) => {
+    if (!ed || !e.target.dataset.edPse) return;
+    edTreino().exercicios[Number(e.target.dataset.edPse)].pse = Number(e.target.value);
+  });
+
+  // Resumo dos treinos em Você.
+  function renderMeusTreinos() {
+    $('meus-treinos-nota').textContent = treinosDaConta
+      ? 'Você está usando os treinos que montou. Mude exercícios, séries, PSE e a ordem quando quiser.'
+      : 'Você está usando o plano pronto. Monte os seus treinos com os exercícios da biblioteca.';
+    $('meus-treinos').innerHTML = Object.entries(TREINOS).map(([id, t]) => `
+      <li>${seloHTML(`t${id}`)}<span><b>${t.nome}</b> <small>${t.subtitulo ? `${t.subtitulo} · ` : ''}${qtdExercicios(t.exercicios.length)}</small></span></li>`).join('');
+  }
+  $('editar-treinos').addEventListener('click', () => abrirEditor());
+
+  // ---------- Aviso da novidade (uma vez por conta) ----------
+  const novidadeDialog = $('novidade-dialog');
+  function abrirNovidade() {
+    const comVideo = BIBLIOTECA.filter((ex) => VIDEOS[ex.nome]).length;
+    const item = (txt) => `<li>${ICON_CHECK}<span>${txt}</span></li>`;
+    $('novidade-body').innerHTML = novidade.contaNova ? `
+      <div class="modal-head"><div><span class="novidade-selo">Boas-vindas</span><h3 id="novidade-title">Como você quer treinar?</h3></div>${BOTAO_FECHAR}</div>
+      <p class="resumo-enc">Escolha como começar. Dá para mudar quando quiser em Você → Meus treinos.</p>
+      <div class="escolha-cards">
+        <button class="escolha-card" type="button" data-novidade="montar"><b>Montar meus treinos</b><span>Escolha entre ${BIBLIOTECA.length} exercícios (${comVideo} com vídeo) e monte até ${MAX_TREINOS} treinos.</span></button>
+        <button class="escolha-card" type="button" data-novidade="manter"><b>Usar o plano pronto</b><span>3 treinos: costas e bíceps; peito, tríceps e ombro; e pernas.</span></button>
+      </div>` : `
+      <div class="modal-head"><div><span class="novidade-selo">Novidade</span><h3 id="novidade-title">Baita atualização!</h3></div>${BOTAO_FECHAR}</div>
+      <p class="resumo-enc">Agora você pode montar os seus próprios treinos.</p>
+      <ul class="novidade-lista">
+        ${item(`Biblioteca com ${BIBLIOTECA.length} exercícios, ${comVideo} com vídeo da execução`)}
+        ${item(`Até ${MAX_TREINOS} treinos, com o nome e a ordem que você quiser`)}
+        ${item('Séries, repetições e PSE ajustáveis em cada exercício')}
+      </ul>
+      <p class="aviso">Seus check-ins, pesos e recordes continuam salvos. Se preferir, mantenha o treino de hoje e personalize depois em Você → Meus treinos.</p>
+      <div class="novidade-acoes">
+        <button class="modal-done" type="button" data-novidade="personalizar">Personalizar meus treinos</button>
+        <button class="btn-sec" type="button" data-novidade="manter">Manter meu treino atual</button>
+      </div>`;
+    novidadeDialog.showModal();
+    registrarEvento('novidade_treinos', { escolha: 'viu', conta_nova: novidade.contaNova });
+  }
+  function responderNovidade(escolha) {
+    novidade.vista = true;
+    salvarPerfil({ novidade_treinos: new Date().toISOString() });
+    registrarEvento('novidade_treinos', { escolha, conta_nova: novidade.contaNova });
+    novidadeDialog.close();
+    if (escolha === 'personalizar') abrirEditor();
+    else if (escolha === 'montar') abrirEditor({ doZero: true });
+  }
+  novidadeDialog.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-novidade]');
+    if (b) return responderNovidade(b.dataset.novidade);
+    if (e.target === novidadeDialog || e.target.closest('[data-fechar]')) responderNovidade('fechou');
+  });
+  novidadeDialog.addEventListener('cancel', (e) => { e.preventDefault(); responderNovidade('fechou'); });
+
   function renderConfig() {
     document.querySelectorAll('input[name="tema"]').forEach((r) => { r.checked = r.value === config.tema; });
     $('resumo-email').checked = config.resumoEmail;
+    renderMeusTreinos();
     renderSemanaConfig();
   }
 
@@ -2817,7 +3461,7 @@
     const edEx = e.target.closest('[data-editar-ex]');
     if (edEx) {
       const c = checkins.find((x) => x.id === edEx.dataset.exCk);
-      return abrirLog(Number(edEx.dataset.editarEx), { data: dataDe(c), tipo: c.tipo, origem: 'dash' });
+      return abrirLog(Number(edEx.dataset.editarEx), { data: dataDe(c), tipo: c.tipo, origem: 'dash', exs: exerciciosDoCheckin(c) });
     }
     const ed = e.target.closest('[data-editar]');
     if (ed) return abrirFormCheckin({ editar: checkins.find((x) => x.id === ed.dataset.editar) });
@@ -2971,6 +3615,7 @@
     const esquecido = encerrarEsquecidos();
     abrirTreinoDoDia();
     renderizarApp();
+    if (novidade.disponivel && !novidade.vista && !novidadeDialog.open) abrirNovidade();
     if (esquecido) {
       toast(`O check-in do ${TIPOS[esquecido.tipo].nome} ficou aberto e foi encerrado às ${horaDe(esquecido.fim)}.`);
     }
