@@ -195,7 +195,7 @@
   // A fonte de pixel não tem letras acentuadas maiúsculas: nos textos em pixel, sem acento.
   const pixel = (s) => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
 
-  const TIPOS = { t1: 'Treino 1', t2: 'Treino 2', t3: 'Treino 3', t4: 'Treino 4', t5: 'Treino 5', jiu: 'Jiu-jitsu', bike: 'Cardio' };
+  const TIPOS = { t1: 'Treino 1', t2: 'Treino 2', t3: 'Treino 3', t4: 'Treino 4', t5: 'Treino 5', jiu: 'Jiu-jitsu', muay: 'Muay Thai', bike: 'Cardio' };
   const NOMES_TELA = { treino: 'Treino', dashboard: 'Dashboard', voce: 'Você' };
 
   // ---------- Mapa ----------
@@ -265,7 +265,7 @@
     const a = meta.acao;
     const recente = a && a.em && Date.now() - new Date(a.em) < 5 * 60000 && !a.retroativo;
     if (recente) {
-      if (a.tipo === 'checkin_criado' || a.tipo === 'checkin_encerrado') return a.checkin === 'jiu' ? 'tatame' : a.checkin === 'bike' ? 'pista' : 'academia';
+      if (a.tipo === 'checkin_criado' || a.tipo === 'checkin_encerrado') return a.checkin === 'jiu' || a.checkin === 'muay' ? 'tatame' : a.checkin === 'bike' ? 'pista' : 'academia';
       if (a.tipo === 'semana_alterada') return 'casa';
       return 'academia';
     }
@@ -440,7 +440,7 @@
         ator.efeitoAte = Date.now() + 8000;
         if (a.tipo === 'recorde') pop(ator, '🏆 RECORDE!');
         else if (a.tipo === 'exercicio_concluido') pop(ator, '+XP');
-        else if (a.tipo === 'checkin_criado') pop(ator, a.checkin === 'jiu' ? 'OSS!' : 'CHECK-IN!');
+        else if (a.tipo === 'checkin_criado') pop(ator, a.checkin === 'jiu' ? 'OSS!' : a.checkin === 'muay' ? 'SAWASDEE!' : 'CHECK-IN!');
       }
     } else if (ator && antes) {
       ator.saindo = true;

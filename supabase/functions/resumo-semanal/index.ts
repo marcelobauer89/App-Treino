@@ -19,13 +19,17 @@ import nodemailer from 'npm:nodemailer@6.9.16';
 
 export const TIPO = 'resumo_semanal';
 const FUSO = 'America/Sao_Paulo';
-// Selos e cores iguais aos do app (1 a 5 = treinos de musculação; J = jiu-jitsu; C = cardio).
+// Selos e cores iguais aos do app (1 a 5 = treinos de musculação; J = jiu-jitsu; C = cardio; M = muay thai).
 const TIPOS: Record<string, { nome: string; grupo: string; selo: string }> = {
   t1: { nome: 'Treino 1', grupo: 'musc', selo: '1' }, t2: { nome: 'Treino 2', grupo: 'musc', selo: '2' }, t3: { nome: 'Treino 3', grupo: 'musc', selo: '3' },
   t4: { nome: 'Treino 4', grupo: 'musc', selo: '4' }, t5: { nome: 'Treino 5', grupo: 'musc', selo: '5' },
   jiu: { nome: 'Jiu-jitsu', grupo: 'jiu', selo: 'J' }, bike: { nome: 'Cardio', grupo: 'bike', selo: 'C' },
+  muay: { nome: 'Muay Thai', grupo: 'muay', selo: 'M' },
 };
-const GRUPOS: [string, string, string][] = [['musc', 'Musculação', '#2a78d6'], ['jiu', 'Jiu-jitsu', '#eb6834'], ['bike', 'Cardio', '#1baf7a']];
+const GRUPOS: [string, string, string][] = [['musc', 'Musculação', '#2a78d6'], ['jiu', 'Jiu-jitsu', '#eb6834'], ['bike', 'Cardio', '#1baf7a'], ['muay', 'Muay Thai', '#eda100']];
+// Muay Thai só aparece no e-mail de quem fez ou planejou muay thai; os outros continuam com 3 cartões.
+const gruposDe = (r: { porGrupo: Record<string, number>; muayNoPlano?: boolean }) =>
+  GRUPOS.filter(([g]) => g !== 'muay' || r.porGrupo.muay > 0 || r.muayNoPlano);
 const DIAS = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
 
 // ---------- Datas (dias como texto AAAA-MM-DD, no fuso de São Paulo) ----------
@@ -70,7 +74,7 @@ export function montarResumo(u: Perfil, checkins: Checkin[], recordes: Recorde[]
   const dia = (c: Checkin) => String(c.inicio).slice(0, 10);
   const daSemana = meus.filter((c) => dia(c) >= p.ini && dia(c) <= p.fim);
   const anterior = meus.filter((c) => dia(c) >= p.antIni && dia(c) <= p.antFim).length;
-  const porGrupo: Record<string, number> = { musc: 0, jiu: 0, bike: 0 };
+  const porGrupo: Record<string, number> = { musc: 0, jiu: 0, bike: 0, muay: 0 };
   daSemana.forEach((c) => { porGrupo[(TIPOS[c.tipo] || TIPOS.t1).grupo] += 1; });
   const dias = [...new Set(daSemana.map(dia))].sort();
   const planejadas = planejadasPorSemana(u);
@@ -89,6 +93,7 @@ export function montarResumo(u: Perfil, checkins: Checkin[], recordes: Recorde[]
     total: daSemana.length,
     anterior,
     porGrupo,
+    muayNoPlano: Array.isArray(u.semana) && (u.semana as unknown[][]).flat().includes('muay'),
     dias,
     diasTexto: dias.map((d) => DIAS[diaDaSemana(d)]).join(', '),
     planejadas,
@@ -158,7 +163,7 @@ export function montarEmail(r: Resumo, links: { app: string; sair: string; pixel
       </td>`).join('')}
     </tr></table>
     <p style="margin:10px 0 0;font-size:12px;line-height:1.6;color:${COR.tinta2}">
-      ${GRUPOS.map(([g, n, cor]) => `<span style="display:inline-block;white-space:nowrap;margin:0 12px 4px 0">${Object.values(TIPOS).filter((t) => t.grupo === g)
+      ${gruposDe(r).map(([g, n, cor]) => `<span style="display:inline-block;white-space:nowrap;margin:0 12px 4px 0">${Object.values(TIPOS).filter((t) => t.grupo === g)
         .map((t) => `<span style="display:inline-block;width:18px;height:18px;line-height:18px;border-radius:5px;background:${cor};color:${COR.selo};font-size:11px;font-weight:800;text-align:center;margin-right:3px">${t.selo}</span>`).join('')} ${n}</span>`).join('')}
     </p>`;
 
@@ -177,7 +182,7 @@ export function montarEmail(r: Resumo, links: { app: string; sair: string; pixel
   // Um cartão por modalidade.
   const cartoes = `
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;table-layout:fixed"><tr>
-      ${GRUPOS.map(([g, n, cor], i) => `<td style="padding:0 ${i < 2 ? 6 : 0}px 0 ${i > 0 ? 6 : 0}px">
+      ${gruposDe(r).map(([g, n, cor], i, todos) => `<td style="padding:0 ${i < todos.length - 1 ? 6 : 0}px 0 ${i > 0 ? 6 : 0}px">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate"><tr>
           <td align="center" style="border:1px solid ${COR.fio};border-top:4px solid ${cor};border-radius:10px;padding:12px 4px">
             <div style="font-size:26px;line-height:1.1;font-weight:800;color:${COR.tinta}">${r.porGrupo[g]}</div>
@@ -248,7 +253,7 @@ export function montarEmail(r: Resumo, links: { app: string; sair: string; pixel
       ? [`Você treinou ${r.total} ${r.total === 1 ? 'vez' : 'vezes'}.`, comp,
         r.dias.length ? `Dias de treino: ${r.diasTexto}` : '',
         `Plano da semana: ${r.total} de ${r.planejadas} treinos (${pct}%). ${mensagem(r)}`,
-        GRUPOS.map(([g, n]) => `${n}: ${r.porGrupo[g]}`).join(' · '),
+        gruposDe(r).map(([g, n]) => `${n}: ${r.porGrupo[g]}`).join(' · '),
         r.recordes.length ? `Recordes da semana: ${r.recordes.join(', ')}` : ''].filter(Boolean).join('\n')
       : `Semana nova, recomeço.\nNão apareceu nenhum treino no app de ${r.periodo}. Seu plano tem ${plural(r.planejadas, 'treino', 'treinos')} por semana; que tal marcar o primeiro hoje?`,
     '', `Abrir o App Treino: ${links.app}`, '',
