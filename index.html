@@ -57,6 +57,7 @@
     --musc: #2a78d6;
     --jiu: #eb6834;
     --bike: #1baf7a;
+    --muay: #eda100;
     --selo-tinta: #0b0d10;
     --display: "Archivo", "Arial Narrow", system-ui, sans-serif;
     --texto: "Archivo", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -72,7 +73,7 @@
       --feito-suave: #12301f; --feito-tinta: #6ee7a0;
       --recorde: #fbbf24; --recorde-suave: #33270a; --recorde-tinta: #fcd34d;
       --faixa: #000000; --fita: #f2f4f7; --fita-vazia: #2c2f35; --erro: #ff6b6b; --sobre-erro: #0b0d10;
-      --musc: #3987e5; --jiu: #d95926; --bike: #199e70;
+      --musc: #3987e5; --jiu: #d95926; --bike: #199e70; --muay: #c98500;
       color-scheme: dark;
     }
   }
@@ -82,7 +83,7 @@
     --feito-suave: #12301f; --feito-tinta: #6ee7a0;
     --recorde: #fbbf24; --recorde-suave: #33270a; --recorde-tinta: #fcd34d;
     --faixa: #000000; --fita: #f2f4f7; --fita-vazia: #2c2f35; --erro: #ff6b6b; --sobre-erro: #0b0d10;
-    --musc: #3987e5; --jiu: #d95926; --bike: #199e70;
+    --musc: #3987e5; --jiu: #d95926; --bike: #199e70; --muay: #c98500;
     color-scheme: dark;
   }
 
@@ -309,6 +310,7 @@
   .selo.musc { background: var(--musc); }
   .selo.jiu { background: var(--jiu); }
   .selo.bike { background: var(--bike); }
+  .selo.muay { background: var(--muay); }
   .selo.grande { width: 30px; height: 30px; border-radius: 8px; font-size: 16px; }
 
   /* Navegação inferior e barra de treino em andamento */
@@ -551,6 +553,7 @@
   .seg i.on.musc { background: var(--musc); }
   .seg i.on.jiu { background: var(--jiu); }
   .seg i.on.bike { background: var(--bike); }
+  .seg i.on.muay { background: var(--muay); }
   .meta-valor, .barra-valor { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
   .barra { display: grid; grid-template-columns: 112px minmax(0, 1fr) 28px; gap: 12px; align-items: center; font-size: 15px; }
   .barra-trilho { height: 10px; border-radius: 5px; background: var(--gi); overflow: hidden; }
@@ -558,6 +561,7 @@
   .barra-trilho i.musc { background: var(--musc); }
   .barra-trilho i.jiu { background: var(--jiu); }
   .barra-trilho i.bike { background: var(--bike); }
+  .barra-trilho i.muay { background: var(--muay); }
 
   .cal { padding: 12px; background: var(--papel); border: 1px solid var(--fio); border-radius: 14px; }
   .cal-topo { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
@@ -887,7 +891,7 @@
         <li><span class="ponteira" data-nivel="1" aria-hidden="true"><i></i><i></i><i></i></span>Baixa ou secundária</li>
       </ul>
       <p>PSE é a percepção subjetiva de esforço; o 10 fica reservado ao tatame. Use a carga que respeite a técnica e a recuperação.</p>
-      <p>A semana se monta em Você: arraste os treinos, o jiu-jitsu e o cardio para os dias (até 2 por dia). O padrão é Treino 2 na segunda, Treino 1 na quarta, Treino 3 na sexta, jiu na terça e na quinta e cardio no sábado.</p>
+      <p>A semana se monta em Você: arraste os treinos, o jiu-jitsu, o muay thai e o cardio para os dias (até 2 por dia). O padrão é Treino 2 na segunda, Treino 1 na quarta, Treino 3 na sexta, jiu na terça e na quinta e cardio no sábado.</p>
       <p>Check-ins e cargas ficam salvos na sua conta e aparecem em qualquer aparelho em que você entrar.</p>
       <p>Adaptação prática do PDF enviado. Não substitui avaliação de um profissional de educação física ou nutrição, especialmente se houver dor ou lesão.</p>
     </footer>
@@ -921,6 +925,7 @@
       <ul class="legenda-cal" aria-label="Legenda do calendário">
         <li><span class="selo musc" aria-hidden="true">1</span><span class="selo musc" aria-hidden="true">2</span><span class="selo musc" aria-hidden="true">3</span><span>Musculação</span></li>
         <li><span class="selo jiu" aria-hidden="true">J</span><span>Jiu-jitsu</span></li>
+        <li><span class="selo muay" aria-hidden="true">M</span><span>Muay Thai</span></li>
         <li><span class="selo bike" aria-hidden="true">C</span><span>Cardio</span></li>
       </ul>
     </div>
@@ -1326,7 +1331,7 @@
   } catch (_) {}
 
   // Semana do usuário: para cada dia (índice de Date.getDay(), 0 = domingo), até 2 atividades
-  // entre 't1', 't2', 't3', 'jiu' e 'bike'. Dia vazio é descanso.
+  // entre os treinos ('t1' a 't5'), 'jiu', 'muay' e 'bike'. Dia vazio é descanso.
   const CURTOS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
   const NOMES_DIA = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
   const ORDEM_SEMANA = [1, 2, 3, 4, 5, 6, 0];
@@ -1349,7 +1354,7 @@
   function validarSemana(s) {
     if (!Array.isArray(s) || s.length !== 7) return null;
     return s.map((d) => (Array.isArray(d)
-      ? [...new Set(d.filter((t) => ehTreino(t) || t === 'jiu' || t === 'bike'))].slice(0, 2)
+      ? [...new Set(d.filter((t) => ehTreino(t) || t === 'jiu' || t === 'muay' || t === 'bike'))].slice(0, 2)
       : []));
   }
   function planoDoDia(i) {
@@ -1357,11 +1362,11 @@
     const tipoTreino = tipos.find(ehTreino);
     const treino = tipoTreino ? tipoTreino.slice(1) : undefined;
     const grupos = [...new Set(tipos.map((t) => (ehTreino(t) ? 'musc' : t)))];
-    const notaDe = (t) => (ehTreino(t) ? TREINOS[t.slice(1)].subtitulo || 'musculação' : t === 'jiu' ? 'aula de jiu' : 'cardio leve');
+    const notaDe = (t) => (ehTreino(t) ? TREINOS[t.slice(1)].subtitulo || 'musculação' : t === 'jiu' ? 'aula de jiu' : t === 'muay' ? 'aula de muay thai' : 'cardio leve');
     let titulo = 'Descanso', nota = 'Recuperação';
     if (tipos.length === 1) {
       titulo = nomeAtividade(tipos[0]);
-      nota = tipos[0] === 'jiu' ? 'Prioridade técnica' : tipos[0] === 'bike' ? '20–40 min, intensidade leve' : notaDe(tipos[0]);
+      nota = tipos[0] === 'jiu' ? 'Prioridade técnica' : tipos[0] === 'muay' ? 'Aula de muay thai' : tipos[0] === 'bike' ? '20–40 min, intensidade leve' : notaDe(tipos[0]);
     } else if (tipos.length) {
       titulo = tipos.map(nomeAtividade).join(' + ');
       nota = tipos.map(notaDe).join(', ');
@@ -1373,6 +1378,7 @@
   // t1 a t5 existem sempre, para os check-ins de um treino que foi excluído continuarem com nome.
   const TIPOS = {
     jiu: { nome: 'Jiu-jitsu', selo: 'J', grupo: 'jiu' },
+    muay: { nome: 'Muay Thai', selo: 'M', grupo: 'muay' },
     // A chave 'bike' fica no banco (check-ins e semana já salvos); na tela o tipo se chama Cardio.
     bike: { nome: 'Cardio', selo: 'C', grupo: 'bike' },
   };
@@ -1381,10 +1387,10 @@
     for (let n = 1; n <= MAX_TREINOS; n++) {
       TIPOS[`t${n}`] = { nome: TREINOS[n] ? TREINOS[n].nome : `Treino ${n}`, selo: String(n), grupo: 'musc', treino: String(n) };
     }
-    ORDEM_TIPOS = [...Object.keys(TREINOS).map((n) => `t${n}`), 'jiu', 'bike'];
+    ORDEM_TIPOS = [...Object.keys(TREINOS).map((n) => `t${n}`), 'jiu', 'muay', 'bike'];
   }
   atualizarTipos();
-  const DURACAO_PADRAO = { musc: 60, jiu: 60, bike: 30 };
+  const DURACAO_PADRAO = { musc: 60, jiu: 60, muay: 60, bike: 30 };
 
   const FOCOS = [
     { id: 'todos', label: 'Todos' },
@@ -2563,6 +2569,7 @@
     $('metas').innerHTML =
       linha('Musculação', 't1', 'musc', conta('musc'), planejado('musc')) +
       linha('Jiu-jitsu', 'jiu', 'jiu', conta('jiu'), planejado('jiu')) +
+      linha('Muay Thai', 'muay', 'muay', conta('muay'), planejado('muay')) +
       linha('Cardio', 'bike', 'bike', conta('bike'), planejado('bike'));
   }
 
@@ -2672,7 +2679,7 @@
     const { ano, mes } = mesExibido;
     const prefixo = `${ano}-${pad(mes + 1)}`;
     const doMes = checkins.filter((c) => dataDe(c).startsWith(prefixo));
-    const tipos = [...new Set([...ORDEM_TIPOS, ...doMes.map((c) => c.tipo)])].sort((a, b) => Object.keys(TIPOS).indexOf(a) - Object.keys(TIPOS).indexOf(b));
+    const tipos = [...new Set([...ORDEM_TIPOS, ...doMes.map((c) => c.tipo)])].sort((a, b) => [...TIPOS_MUSC, 'jiu', 'muay', 'bike'].indexOf(a) - [...TIPOS_MUSC, 'jiu', 'muay', 'bike'].indexOf(b));
     const contagem = tipos.map((t) => [t, doMes.filter((c) => c.tipo === t).length]);
     const max = Math.max(1, ...contagem.map(([, n]) => n));
     $('tipos-titulo').textContent = `Por tipo em ${nomeMes(ano, mes)}`;

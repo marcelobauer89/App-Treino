@@ -127,7 +127,7 @@ Em https://marcelobauer89.github.io/App-Treino/mundo.html (ou pelo botão **Mund
 | --- | --- |
 | Entrou | Surge no Portão OSS |
 | Tela Treino, exercício concluído, recorde ou vídeo | Academia (levanta a barra; recorde mostra "RECORDE!") |
-| Check-in de jiu-jitsu | Tatame |
+| Check-in de jiu-jitsu ou muay thai | Tatame |
 | Check-in de cardio | Pista |
 | Tela Dashboard | Torre |
 | Tela Você ou semana alterada | Casa |
