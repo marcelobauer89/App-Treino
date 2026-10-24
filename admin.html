@@ -580,7 +580,8 @@
 
   const TIPOS = {
     t1: { nome: 'Treino 1', selo: '1', grupo: 'musc' }, t2: { nome: 'Treino 2', selo: '2', grupo: 'musc' },
-    t3: { nome: 'Treino 3', selo: '3', grupo: 'musc' }, jiu: { nome: 'Jiu-jitsu', selo: 'J', grupo: 'jiu' },
+    t3: { nome: 'Treino 3', selo: '3', grupo: 'musc' }, t4: { nome: 'Treino 4', selo: '4', grupo: 'musc' },
+    t5: { nome: 'Treino 5', selo: '5', grupo: 'musc' }, jiu: { nome: 'Jiu-jitsu', selo: 'J', grupo: 'jiu' },
     bike: { nome: 'Cardio', selo: 'C', grupo: 'bike' },
   };
   const GRUPOS = [['musc', 'Musculação'], ['jiu', 'Jiu-jitsu'], ['bike', 'Cardio']];
@@ -1346,6 +1347,9 @@
     video: (d) => `Viu o vídeo de ${d.exercicio}`,
     sem_peso: (d) => `${d.ativo ? 'Marcou' : 'Desmarcou'} ${d.exercicio} como sem peso`,
     semana_alterada: () => 'Alterou a semana',
+    novidade_treinos: (d) => ({ viu: 'Viu o aviso dos treinos personalizados', personalizar: 'Quis personalizar os treinos', montar: 'Escolheu montar os treinos', manter: 'Manteve o treino atual', fechou: 'Fechou o aviso dos treinos personalizados' }[d.escolha] || 'Respondeu ao aviso dos treinos'),
+    editor_treinos: () => 'Abriu Meus treinos',
+    treinos_salvos: (d) => (d.plano_pronto ? 'Voltou ao plano pronto' : `Salvou ${d.treinos} ${d.treinos === 1 ? 'treino' : 'treinos'} personalizados`),
     resumo_email: (d) => (d.ativo ? 'Ligou o resumo semanal por e-mail' : 'Desligou o resumo semanal por e-mail'),
     tema: (d) => `Mudou o tema para ${d.tema}`,
     foto: (d) => ({ nova: 'Adicionou foto', trocada: 'Trocou a foto', removida: 'Removeu a foto' })[d.acao] || 'Alterou a foto',

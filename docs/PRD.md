@@ -161,6 +161,9 @@ São 48 requisitos em 9 grupos; os marcados P0 bloqueiam o lançamento do MVP. A
 | RF-25 | Check-in de musculação pelo formulário (tipo, data, início, duração, recuperação, observação). Terminar um exercício (registrar pesos) não abre check-in. Check-ins abertos de versões anteriores aparecem numa barra "em andamento" com "Encerrar", que mostra quantos exercícios foram feitos no dia e pede recuperação e observação | P0 | Feito |
 | RF-26 | Permitir mais de um check-in no mesmo dia (ex.: musculação de manhã e jiu-jitsu à noite), cada um com horário, tipo e duração próprios | P0 | Feito |
 | RF-30 | Check-in rápido, extra ou retroativo (tipo, data até hoje, início, duração de 1 a 600 min, recuperação, observação); excluir check-in com confirmação; editar check-in encerrado pelo Dashboard ("Editar check-in" abre o mesmo formulário preenchido) | P1 | Feito |
+| **Treinos personalizados** |  |  |  |
+| RF-49 | Em Você → Meus treinos, cada pessoa monta até 5 treinos (até 15 exercícios cada) com os exercícios de uma biblioteca de 71, sem repetição (plano pronto + fichas em PDF). Busca por nome sem diferenciar acentos, filtro por grupo; ajusta nome, foco, ordem, séries e PSE; excluir treino pede confirmação e o tira da semana; "Voltar ao plano pronto"; sair com mudanças pede confirmação | P0 | Feito |
+| RF-50 | Aviso único "Baita atualização!" para quem já usa (Personalizar ou Manter o treino atual) e escolha inicial para conta nova (Montar meus treinos ou Usar o plano pronto); a resposta fica salva na conta | P0 | Feito |
 | **Dashboard e calendário** |  |  |  |
 | RF-27 | Calendário mensal no Dashboard: cada dia mostra selos por tipo (1, 2, 3 para musculação, J para jiu-jitsu, C para cardio); com mais de dois check-ins mostra o primeiro e "+N"; navegação entre meses até o mês atual | P0 | Feito |
 | RF-28 | Ao tocar num dia, listar os check-ins daquele dia em ordem de horário, com tipo, horário, duração e recuperação; dia sem check-in orienta tocar em "Fazer check-in", que já usa o dia selecionado | P0 | Feito |
@@ -187,15 +190,16 @@ O plano é um modelo único, compartilhado por todos os usuários e guardado com
 | Exercício | nome, dose (séries × reps/tempo/por lado), PSE-alvo, graus H/F/E/M (Alta/Média/Baixa), justificativa, vídeo, é principal (sim/não) |
 | Ajuste por fase | exercício, fase, nova dose (ex.: Passada 3×16 na fase 3) |
 | Sessão | inscrição, data, tipo (Treino 1, 2, 3, jiu-jitsu, cardio, descanso), semana, status (planejada, feita, pulada, movida) |
-| Check-in | usuário, tipo (Treino 1, 2, 3, jiu-jitsu, cardio), início, fim (vazio enquanto aberto), sem horário (sim/não), recuperação (1–5, opcional), observação, retroativo (sim/não) |
-| Cargas do dia | usuário, data, treino (1, 2 ou 3), cargas por exercício e série (kg) ou marcação de feito para exercícios sem peso |
+| Treinos da conta | usuário, até 5 treinos (nome, foco, exercícios com dose e PSE); vazio = plano pronto; data da resposta ao aviso da novidade |
+| Check-in | usuário, tipo (Treino 1 a 5, jiu-jitsu, cardio), início, fim (vazio enquanto aberto), sem horário (sim/não), recuperação (1–5, opcional), observação, retroativo (sim/não) |
+| Cargas do dia | usuário, data, treino (1 a 5), cargas por exercício e série (kg) ou marcação de feito para exercícios sem peso |
 | Medida corporal | usuário, data, peso (kg), % de gordura (opcional) |
 | Proteína | usuário, data, gramas |
 
 Um dia pode ter vários check-ins (relação 1 dia → N check-ins). As cargas ficam por dia e treino, sem depender do check-in: o detalhe de um check-in de musculação mostra as cargas daquele treino no mesmo dia. O calendário é montado agrupando os check-ins por data. A sessão planejada não é gravada: ela é calculada pela semana montada, e o dia conta como feito quando há check-in encerrado do tipo planejado.
 
 No Supabase, os dados do usuário ficam em três tabelas, todas com regras de acesso por usuário (`supabase/schema.sql`):
-- **`perfis`:** nome, e-mail, foto, tema, `semana`, `sem_peso`, `emails_resumo` (recebe o resumo semanal; padrão sim), `dias_jiu` (legado), `ultimo_acesso` e `acessos`. Os dois últimos só mudam pela função `registrar_acesso()`.
+- **`perfis`:** nome, e-mail, foto, tema, `treinos` (treinos montados; vazio = plano pronto), `novidade_treinos`, `semana`, `sem_peso`, `emails_resumo` (recebe o resumo semanal; padrão sim), `dias_jiu` (legado), `ultimo_acesso` e `acessos`. Os dois últimos só mudam pela função `registrar_acesso()`.
 - **`checkins`:** check-ins de versões anteriores também guardavam as cargas.
 - **`cargas`:** pesos por usuário, dia e treino.
 

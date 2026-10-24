@@ -24,7 +24,7 @@ create table if not exists public.checkins (
   id uuid primary key default gen_random_uuid(),
   usuario_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
   -- 'bike' aparece no app como Cardio.
-  tipo text not null check (tipo in ('t1', 't2', 't3', 'jiu', 'bike')),
+  tipo text not null check (tipo in ('t1', 't2', 't3', 't4', 't5', 'jiu', 'bike')),
   inicio timestamp not null,
   fim timestamp check (fim is null or fim >= inicio),
   sem_horario boolean not null default false,
@@ -46,7 +46,7 @@ create unique index if not exists checkins_um_aberto on public.checkins (usuario
 create table if not exists public.cargas (
   usuario_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
   data date not null,
-  treino text not null check (treino in ('t1', 't2', 't3')),
+  treino text not null check (treino in ('t1', 't2', 't3', 't4', 't5')),
   series jsonb not null default '{}' check (jsonb_typeof(series) = 'object'),
   primary key (usuario_id, data, treino)
 );
@@ -127,7 +127,41 @@ grant execute on function public.registrar_acesso() to authenticated;
 
 -- O usuário edita só as colunas que o app usa; acessos e ultimo_acesso mudam só pela função acima.
 revoke update on public.perfis from authenticated;
-grant update (id, nome, email, foto, tema, dias_jiu, semana, sem_peso, emails_resumo) on public.perfis to authenticated;
+-- ---------- Treinos personalizados ----------
+-- Cada pessoa pode montar até 5 treinos de musculação (t1 a t5). Bancos criados com só t1 a t3 recebem os novos.
+alter table public.checkins drop constraint if exists checkins_tipo_check;
+alter table public.checkins add constraint checkins_tipo_check check (tipo in ('t1', 't2', 't3', 't4', 't5', 'jiu', 'bike'));
+alter table public.cargas drop constraint if exists cargas_treino_check;
+alter table public.cargas add constraint cargas_treino_check check (treino in ('t1', 't2', 't3', 't4', 't5'));
+
+-- Treinos montados em "Meus treinos". Vazio (null) = o plano pronto que vem no app.
+-- ex.: { "1": { "nome": "Treino A", "subtitulo": "Peito", "exercicios": [{ "nome": "Agachamento", "dose": "3×10", "pse": 8 }] } }
+-- Os níveis e a explicação de cada exercício vêm da biblioteca do app, pelo nome.
+create or replace function public.treinos_validos(j jsonb)
+returns boolean
+language sql
+immutable
+set search_path = ''
+as $$
+  select j is null or (
+    jsonb_typeof(j) = 'object'
+    and pg_column_size(j) <= 30000
+    and not exists (
+      select 1 from jsonb_each(j) t
+      where t.key !~ '^[1-5]$'
+        or jsonb_typeof(t.value) <> 'object'
+        or jsonb_typeof(t.value -> 'exercicios') is distinct from 'array'
+        or jsonb_array_length(t.value -> 'exercicios') not between 1 and 15
+    )
+  );
+$$;
+alter table public.perfis add column if not exists treinos jsonb;
+alter table public.perfis drop constraint if exists perfis_treinos_check;
+alter table public.perfis add constraint perfis_treinos_check check (public.treinos_validos(treinos));
+-- Quando a pessoa respondeu ao aviso "Baita atualização" (personalizar ou manter o treino). Vazio = ainda não viu.
+alter table public.perfis add column if not exists novidade_treinos timestamptz;
+
+grant update (id, nome, email, foto, tema, dias_jiu, semana, sem_peso, emails_resumo, treinos, novidade_treinos) on public.perfis to authenticated;
 
 -- Para ver os acessos (SQL Editor):
 -- select nome, email, acessos,

@@ -65,6 +65,20 @@ A chave **secreta** (`sb_secret_...` ou `service_role`) nunca vai no app nem no 
 
 Quando uma versão nova do app precisar de mudanças no banco, rode de novo o `supabase/schema.sql` inteiro no **SQL Editor** (passo 1). Ele só cria o que falta e não apaga dados. A tela **Minha semana** precisa da coluna `perfis.semana` e o registro de pesos precisa da tabela `cargas`: se o app avisar "Para salvar a semana…" ou "Para salvar os pesos, rode de novo o supabase/schema.sql", é isso que falta.
 
+## Treinos personalizados
+
+Cada pessoa pode montar até 5 treinos (t1 a t5), com até 15 exercícios cada, em **Você → Meus treinos**:
+- **Biblioteca:** 71 exercícios, sem repetição. São os 22 do plano pronto mais os das fichas de treino em PDF, quase todos com vídeo. Variações do mesmo movimento com outro equipamento (halter ou barra) entram uma vez só.
+- **O que a pessoa ajusta:** nome e foco de cada treino, ordem dos exercícios, séries/repetições e PSE.
+- **No banco:** a coluna `perfis.treinos` guarda só nome, séries e PSE de cada exercício. Os níveis, o grupo e a explicação vêm da biblioteca no `index.html`, pelo nome.
+- **Quem já usa o app:** continua no plano pronto (coluna vazia) até salvar outra coisa. Na primeira abertura depois da atualização, aparece uma vez o aviso **"Baita atualização!"**, com "Personalizar meus treinos" ou "Manter meu treino atual".
+- **Conta nova:** escolhe entre "Montar meus treinos" e "Usar o plano pronto".
+- **A resposta do aviso:** fica em `perfis.novidade_treinos`. Sem essa coluna (schema antigo), o aviso não aparece.
+- **Treino excluído:** sai da semana. Os check-ins e pesos dele continuam no Dashboard, com o nome "Treino N".
+- **Histórico de pesos:** a carga da última vez e os recordes seguem o exercício em qualquer treino.
+
+Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 e t5 nos check-ins e nas cargas e cria as colunas `treinos` e `novidade_treinos`.
+
 ## Monitoramento de uso
 
 O app registra eventos de uso na tabela `eventos` (telas abertas, exercícios concluídos, check-ins criados, editados e excluídos, recordes, vídeos vistos, "Sem peso", semana, tema, foto, erros e sessões que caíram sem a pessoa sair). Os eventos vão em lote, a cada 10 s ou quando o app vai para segundo plano, e não levam pesos corporais, cargas nem observações. Cada usuário só grava os próprios eventos e não consegue lê-los.
@@ -207,7 +221,7 @@ Abra `http://localhost:8000/` (esse endereço precisa estar em **Redirect URLs**
 
 ## Como os dados ficam guardados
 
-- **perfis:** nome, e-mail e foto (vindos do Google no primeiro login), tema, se quer receber o resumo semanal (`emails_resumo`), os exercícios marcados como **Sem peso** (coluna `sem_peso`) e a semana montada em **Você → Minha semana** (coluna `semana`: o que fazer em cada dia, até 2 atividades). Contas sem semana salva usam a padrão, montada com os antigos dias de jiu-jitsu (`dias_jiu`).
+- **perfis:** nome, e-mail e foto (vindos do Google no primeiro login), os treinos montados em **Você → Meus treinos** (coluna `treinos`; vazia = o plano pronto do app), quando a pessoa respondeu ao aviso da novidade (`novidade_treinos`), tema, se quer receber o resumo semanal (`emails_resumo`), os exercícios marcados como **Sem peso** (coluna `sem_peso`) e a semana montada em **Você → Minha semana** (coluna `semana`: o que fazer em cada dia, até 2 atividades). Contas sem semana salva usam a padrão, montada com os antigos dias de jiu-jitsu (`dias_jiu`).
 - **checkins:** cada check-in de treino, com horário, recuperação e observação (check-ins de versões anteriores também guardavam as cargas).
 - **cargas:** os pesos registrados na ficha, por dia e treino. Salvar um peso não abre check-in.
 - **eventos:** uso do app (telas, recursos, erros), para o dashboard de monitoramento.
