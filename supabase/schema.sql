@@ -158,10 +158,12 @@ $$;
 alter table public.perfis add column if not exists treinos jsonb;
 alter table public.perfis drop constraint if exists perfis_treinos_check;
 alter table public.perfis add constraint perfis_treinos_check check (public.treinos_validos(treinos));
--- Quando a pessoa respondeu ao aviso "Baita atualização" (personalizar ou manter o treino). Vazio = ainda não viu.
+-- Última resposta ao aviso "Baita atualização" (personalizar ou manter o treino).
 alter table public.perfis add column if not exists novidade_treinos timestamptz;
+-- Quando a pessoa marcou "Não mostrar esta mensagem de novo". Vazio = o aviso aparece a cada abertura do app.
+alter table public.perfis add column if not exists novidade_oculta timestamptz;
 
-grant update (id, nome, email, foto, tema, dias_jiu, semana, sem_peso, emails_resumo, treinos, novidade_treinos) on public.perfis to authenticated;
+grant update (id, nome, email, foto, tema, dias_jiu, semana, sem_peso, emails_resumo, treinos, novidade_treinos, novidade_oculta) on public.perfis to authenticated;
 
 -- Para ver os acessos (SQL Editor):
 -- select nome, email, acessos,

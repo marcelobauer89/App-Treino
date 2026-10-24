@@ -746,6 +746,8 @@
   .novidade-lista li { display: flex; gap: 10px; align-items: flex-start; font-size: 15px; }
   .novidade-lista svg { flex: 0 0 auto; margin-top: 3px; color: var(--checkin); }
   .novidade-acoes { display: grid; gap: 8px; }
+  .novidade-ocultar { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 15px; color: var(--tinta-2); cursor: pointer; }
+  .novidade-ocultar input { flex: 0 0 auto; width: 22px; height: 22px; margin: 0; accent-color: var(--tatame); cursor: pointer; }
   .escolha-cards { display: grid; gap: 8px; }
   .escolha-card {
     display: grid; gap: 2px; padding: 14px; border: 1.5px solid var(--fio); border-radius: 12px;
@@ -1312,7 +1314,8 @@
   let config = { tema: 'auto', semana: [[], ['t2'], ['jiu'], ['t1'], ['jiu'], ['t3'], ['bike']], semPeso: new Set(), resumoEmail: true };
   // A conta já tem a semana salva (coluna perfis.semana)? Senão, ela vem dos antigos dias de jiu.
   let semanaDaConta = false;
-  // Aviso "Baita atualização" dos treinos personalizados (uma vez por conta; resposta em perfis.novidade_treinos).
+  // Aviso "Baita atualização" dos treinos personalizados: aparece a cada abertura do app até a pessoa marcar
+  // "Não mostrar esta mensagem de novo" (perfis.novidade_oculta). perfis.novidade_treinos guarda a última resposta.
   let novidade = { disponivel: false, vista: true, contaNova: false };
   let perfil = { nome: '', email: '', foto: '' };
   // Só uma cópia do tema fica no navegador, para aplicá-lo antes da primeira pintura.
@@ -1746,8 +1749,8 @@
     TREINOS = proprios || PLANO_PADRAO;
     atualizarTipos();
     if (!TREINOS[estado.treino]) estado.treino = Object.keys(TREINOS)[0];
-    // Sem a coluna (schema.sql antigo) o aviso da novidade não aparece, porque a resposta não teria onde ficar salva.
-    novidade = { disponivel: 'novidade_treinos' in linha, vista: !!linha.novidade_treinos, contaNova: !(c.data || []).length && !cargas.length };
+    // Sem a coluna (schema.sql antigo) o aviso da novidade não aparece, porque o "não mostrar mais" não teria onde ficar salvo.
+    novidade = { disponivel: 'novidade_oculta' in linha, vista: !!linha.novidade_oculta, contaNova: !(c.data || []).length && !cargas.length };
     const semana = validarSemana(linha.semana);
     semanaDaConta = !!semana;
     config = {
@@ -3058,7 +3061,6 @@
     const semana = validarSemana(config.semana);
     const saiuDaSemana = JSON.stringify(semana) !== JSON.stringify(config.semana);
     if (saiuDaSemana) { config.semana = semana; campos.semana = semana; semanaDaConta = true; }
-    if (!novidade.vista && novidade.disponivel) { novidade.vista = true; campos.novidade_treinos = new Date().toISOString(); }
     salvarPerfil(campos);
     const novos = Object.keys(TREINOS).filter((id) => !antes.includes(id));
     if (!TREINOS[estado.treino]) estado.treino = Object.keys(TREINOS)[0];
@@ -3171,12 +3173,18 @@
   }
   $('editar-treinos').addEventListener('click', () => abrirEditor());
 
-  // ---------- Aviso da novidade (uma vez por conta) ----------
+  // ---------- Aviso da novidade (até marcar "não mostrar mais") ----------
   const novidadeDialog = $('novidade-dialog');
   function abrirNovidade() {
     const comVideo = BIBLIOTECA.filter((ex) => VIDEOS[ex.nome]).length;
     const item = (txt) => `<li>${ICON_CHECK}<span>${txt}</span></li>`;
-    $('novidade-body').innerHTML = novidade.contaNova ? `
+    const ocultar = `
+      <label class="novidade-ocultar">
+        <input type="checkbox" id="novidade-ocultar">
+        <span>Não mostrar esta mensagem de novo</span>
+      </label>`;
+    // Conta nova que já montou os treinos vê a versão "Baita atualização!".
+    $('novidade-body').innerHTML = (novidade.contaNova && !treinosDaConta ? `
       <div class="modal-head"><div><span class="novidade-selo">Boas-vindas</span><h3 id="novidade-title">Como você quer treinar?</h3></div>${BOTAO_FECHAR}</div>
       <p class="resumo-enc">Escolha como começar. Dá para mudar quando quiser em Você → Meus treinos.</p>
       <div class="escolha-cards">
@@ -3194,14 +3202,17 @@
       <div class="novidade-acoes">
         <button class="modal-done" type="button" data-novidade="personalizar">Personalizar meus treinos</button>
         <button class="btn-sec" type="button" data-novidade="manter">Manter meu treino atual</button>
-      </div>`;
+      </div>`) + ocultar;
     novidadeDialog.showModal();
     registrarEvento('novidade_treinos', { escolha: 'viu', conta_nova: novidade.contaNova });
   }
+  // Sem a caixa marcada, o aviso volta na próxima vez que o app abrir.
   function responderNovidade(escolha) {
-    novidade.vista = true;
-    salvarPerfil({ novidade_treinos: new Date().toISOString() });
-    registrarEvento('novidade_treinos', { escolha, conta_nova: novidade.contaNova });
+    const agora = new Date().toISOString();
+    const ocultou = $('novidade-ocultar').checked;
+    if (ocultou) novidade.vista = true;
+    salvarPerfil(ocultou ? { novidade_treinos: agora, novidade_oculta: agora } : { novidade_treinos: agora });
+    registrarEvento('novidade_treinos', { escolha, ocultou, conta_nova: novidade.contaNova });
     novidadeDialog.close();
     if (escolha === 'personalizar') abrirEditor();
     else if (escolha === 'montar') abrirEditor({ doZero: true });
