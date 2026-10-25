@@ -113,7 +113,7 @@ São 53 requisitos em 10 grupos; os marcados P0 bloqueiam o lançamento do MVP. 
 | --- | --- | --- | --- |
 | **Contas e convites** |  |  |  |
 | RF-01 | Cadastro e login por e-mail ou conta Google/Apple | P0 | Parcial: login com Google (Supabase Auth); sem e-mail e Apple |
-| RF-02 | Administrador (Bauer) gera link ou código de convite; só entra quem foi convidado | P0 | Feito: aba Convites no monitoramento (link por pessoa, vale 7 dias, copiar ou enviar pelo WhatsApp, cancelar); quem entra sem convite vê "O OSS é só para convidados", com campo para o código e "Pedir acesso" (o pedido aparece no monitoramento para liberar ou recusar); bloquear ou liberar cada usuário no detalhe; quem já tinha conta segue liberado; check-ins e cargas exigem conta liberada também no banco |
+| RF-02 | Administrador (Bauer) gera link ou código de convite; só entra quem foi convidado | P0 | Feito: aba Convites no monitoramento (link por pessoa, vale 7 dias, copiar ou enviar pelo WhatsApp, cancelar, excluir com confirmação; convites gerados separados dos utilizados, que listam quem entrou e quando, inclusive quem foi liberado por pedido de acesso); quem entra sem convite vê "O OSS é só para convidados", com campo para o código e "Pedir acesso" (o pedido aparece no monitoramento para liberar ou recusar); bloquear ou liberar cada usuário no detalhe; quem já tinha conta segue liberado; check-ins e cargas exigem conta liberada também no banco |
 | RF-03 | Cada usuário vê apenas os próprios registros; nada é compartilhado sem ele ativar | P0 | Feito: regras de acesso (RLS) por usuário em todas as tabelas |
 | RF-04 | Sincronização dos dados entre aparelho e nuvem, mantendo o uso offline | P0 | Parcial: dados na nuvem e em qualquer aparelho; sem modo offline (falha ao salvar avisa e recarrega do servidor) |
 | RF-05 | Usuário pode excluir a conta e todos os seus dados | P0 | Feito: "Excluir conta" em Você (detalhes em RF-53) |
@@ -191,6 +191,7 @@ O plano pronto é um modelo único, compartilhado por todos os usuários e guard
 | Configuração | usuário, tema (automático, claro, escuro), semana (7 dias, até 2 atividades cada), exercícios sem peso, recebe resumo semanal (sim/não), versão da política aceita, consentimento para dados de saúde (sim/não/sem resposta) e quando respondeu |
 | E-mail enviado | usuário, tipo (resumo semanal), referência (último dia do período), enviado em, primeira abertura, aberturas, primeiro clique, cliques |
 | Convite | código (6 letras/números), para quem, criado por, criado em, expira em (7 dias), usado por, usado em, cancelado em |
+| Acesso | usuário, liberado (sim/não), pedido de acesso em, liberado como (convite, pedido ou administrador), liberado em |
 | Plano (modelo) | nome, duração (6 semanas) |
 | Inscrição no plano | usuário, plano, data de início, peso inicial, alvo, compartilha aderência (sim/não) |
 | Fase | número (1–3), semanas (1–2, 3–4, 5–6), foco, orientação |
