@@ -168,7 +168,15 @@ alter table public.perfis add column if not exists novidade_oculta timestamptz;
 alter table public.perfis add column if not exists treinos_anterior jsonb
   check (treinos_anterior is null or (jsonb_typeof(treinos_anterior) = 'object' and pg_column_size(treinos_anterior) <= 40000));
 
-grant update (id, nome, email, foto, tema, dias_jiu, semana, sem_peso, emails_resumo, treinos, novidade_treinos, novidade_oculta, treinos_anterior) on public.perfis to authenticated;
+-- ---------- Privacidade (LGPD) ----------
+-- Versão da Política de Privacidade que a pessoa viu e aceitou (aviso no app quando muda).
+alter table public.perfis add column if not exists politica_versao text check (politica_versao is null or char_length(politica_versao) <= 20);
+-- Consentimento para guardar recuperação e observações dos check-ins (podem revelar dados de saúde).
+-- Vazio = ainda não respondeu; 'sim' ou 'nao'.
+alter table public.perfis add column if not exists consentimento_saude text check (consentimento_saude is null or consentimento_saude in ('sim', 'nao'));
+alter table public.perfis add column if not exists consentimento_saude_em timestamptz;
+
+grant update (id, nome, email, foto, tema, dias_jiu, semana, sem_peso, emails_resumo, treinos, novidade_treinos, novidade_oculta, treinos_anterior, politica_versao, consentimento_saude, consentimento_saude_em) on public.perfis to authenticated;
 
 -- Para ver os acessos (SQL Editor):
 -- select nome, email, acessos,
@@ -240,10 +248,12 @@ begin
 end;
 $$;
 
-create or replace function public.admin_checkins(desde timestamp default null)
+-- Sem a recuperação: ela pode revelar dados de saúde e fica só com a própria pessoa (LGPD).
+drop function if exists public.admin_checkins(timestamp);
+create function public.admin_checkins(desde timestamp default null)
 returns table (
   id uuid, usuario_id uuid, tipo text, inicio timestamp, fim timestamp,
-  sem_horario boolean, recuperacao smallint, retroativo boolean
+  sem_horario boolean, retroativo boolean
 )
 language plpgsql
 stable
@@ -253,7 +263,7 @@ as $$
 begin
   if not public.eh_admin() then raise exception 'acesso restrito' using errcode = '42501'; end if;
   return query
-    select c.id, c.usuario_id, c.tipo, c.inicio, c.fim, c.sem_horario, c.recuperacao, c.retroativo
+    select c.id, c.usuario_id, c.tipo, c.inicio, c.fim, c.sem_horario, c.retroativo
     from public.checkins c
     where desde is null or c.inicio >= desde
     order by c.inicio;
@@ -576,3 +586,22 @@ revoke execute on function public.usar_convite(text), public.pedir_acesso(), pub
 grant execute on function public.usar_convite(text), public.pedir_acesso(), public.admin_criar_convite(text), public.admin_convites(),
   public.admin_cancelar_convite(text), public.admin_liberar_usuario(uuid), public.admin_bloquear_usuario(uuid), public.admin_recusar_pedido(uuid)
   to authenticated;
+
+-- ---------- Baixar meus dados (LGPD, direito de acesso) ----------
+-- O registro de uso e os e-mails enviados não são lidos pela API; esta função devolve só os da própria pessoa.
+create or replace function public.meus_dados_extras()
+returns jsonb
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select jsonb_build_object(
+    'eventos', coalesce((select jsonb_agg(jsonb_build_object('tipo', e.tipo, 'dados', e.dados, 'criado_em', e.criado_em) order by e.criado_em)
+      from public.eventos e where e.usuario_id = (select auth.uid())), '[]'::jsonb),
+    'emails_enviados', coalesce((select jsonb_agg(to_jsonb(m) - 'usuario_id' order by m.enviado_em)
+      from public.emails_enviados m where m.usuario_id = (select auth.uid())), '[]'::jsonb)
+  );
+$$;
+revoke execute on function public.meus_dados_extras() from public, anon;
+grant execute on function public.meus_dados_extras() to authenticated;

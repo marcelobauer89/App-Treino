@@ -168,6 +168,10 @@ São 53 requisitos em 10 grupos; os marcados P0 bloqueiam o lançamento do MVP. 
 | RF-51 | Muay Thai como tipo de check-in (selo M, amarelo, 60 min por padrão) e atividade da Minha semana: marca o dia como feito, conta em "Esta semana", no calendário, nas barras do mês, no painel de monitoramento e no resumo por e-mail (cartão só para quem fez ou planejou muay thai) | P1 | Feito |
 | RF-52 | Tela Você em lista, como os Ajustes do celular: cartão do perfil (foto, nome, e-mail) que abre Dados pessoais; grupos com ícone, nome, valor atual e seta (Meus treinos, Minha semana; Aparência, Notificações, Privacidade; Sair da conta em vermelho). Cada opção abre a própria tela (#voce/…) com "‹ Você" para voltar; o voltar do navegador também funciona | P1 | Feito |
 | RF-53 | Excluir conta: em Você, "Excluir conta" abre uma confirmação amigável que lista o que se perde (check-ins, pesos e recordes, treinos e semana, foto e preferências, resumo por e-mail), avisa que não dá para desfazer, sugere sair ou desligar o resumo para quem só quer um tempo e exige marcar "Entendi" antes do botão vermelho. No monitoramento, cada usuário tem uma lixeira que abre a mesma confirmação, com o nome da pessoa; o administrador não exclui a própria conta nem a de outro administrador. Tudo é apagado em cascata pelo banco (funções `excluir_conta()` e `admin_excluir_usuario()`) | P1 | Feito |
+| **Privacidade (LGPD)** |  |  |  |
+| RF-54 | Política de Privacidade em `privacidade.html` (responsável e contato, dados guardados, o que o administrador vê, finalidade e base legal, operadores, tempo de guarda, direitos e como exercer, segurança, mudanças). A tela de entrada avisa "Ao entrar, você concorda com a Política de Privacidade". Quando a versão aceita (`perfis.politica_versao`) é diferente da atual, o app mostra um aviso curto com "Entendi" e "Ler a política completa", antes do aviso dos treinos personalizados | P0 | Feito |
+| RF-55 | Recuperação e observações (dados de saúde) só com consentimento: sem resposta, os formulários de check-in e de encerrar mostram "Quer registrar como se sentiu?" com Concordo e Agora não; com "não", os campos somem e o check-in é salvo sem eles. Em Você → Privacidade, um interruptor liga e desliga; ao desligar, a pessoa escolhe apagar ou manter o que já registrou. O painel de monitoramento não recebe mais a recuperação | P0 | Feito |
+| RF-56 | Baixar meus dados: Você → Privacidade gera `oss-meus-dados-AAAA-MM-DD.json` com perfil (sem a foto), preferências, consentimentos, treinos, semana, check-ins, cargas, registro de uso e e-mails enviados (função `meus_dados_extras()`) | P1 | Feito |
 | **Dashboard e calendário** |  |  |  |
 | RF-27 | Calendário mensal no Dashboard: cada dia mostra selos por tipo (1 a 5 para musculação, J para jiu-jitsu, M para muay thai, C para cardio); com mais de dois check-ins mostra o primeiro e "+N"; navegação entre meses até o mês atual | P0 | Feito |
 | RF-28 | Ao tocar num dia, listar os check-ins daquele dia em ordem de horário, com tipo, horário, duração e recuperação; dia sem check-in orienta tocar em "Fazer check-in", que já usa o dia selecionado | P0 | Feito |
@@ -184,7 +188,7 @@ O plano pronto é um modelo único, compartilhado por todos os usuários e guard
 | Usuário | nome, e-mail, foto, papel (administrador ou membro), data de cadastro, último acesso, quantidade de acessos |
 | Administrador | usuário (lista preenchida por SQL; dá acesso ao monitoramento) |
 | Evento de uso | usuário, data e hora, tipo (sessão, tela, exercício concluído, recorde, check-in criado/editado/excluído/encerrado, vídeo, sem peso, semana alterada, tema, foto, erro, sessão perdida, saiu), dados (até 2 KB; sem pesos, cargas ou observações) |
-| Configuração | usuário, tema (automático, claro, escuro), semana (7 dias, até 2 atividades cada), exercícios sem peso, recebe resumo semanal (sim/não) |
+| Configuração | usuário, tema (automático, claro, escuro), semana (7 dias, até 2 atividades cada), exercícios sem peso, recebe resumo semanal (sim/não), versão da política aceita, consentimento para dados de saúde (sim/não/sem resposta) e quando respondeu |
 | E-mail enviado | usuário, tipo (resumo semanal), referência (último dia do período), enviado em, primeira abertura, aberturas, primeiro clique, cliques |
 | Convite | código (6 letras/números), para quem, criado por, criado em, expira em (7 dias), usado por, usado em, cancelado em |
 | Plano (modelo) | nome, duração (6 semanas) |
@@ -203,7 +207,7 @@ O plano pronto é um modelo único, compartilhado por todos os usuários e guard
 Um dia pode ter vários check-ins (relação 1 dia → N check-ins). As cargas ficam por dia e treino, sem depender do check-in: o detalhe de um check-in de musculação mostra as cargas daquele treino no mesmo dia. O calendário é montado agrupando os check-ins por data. A sessão planejada não é gravada: ela é calculada pela semana montada, e o dia conta como feito quando há check-in encerrado do tipo planejado.
 
 No Supabase, os dados do usuário ficam em três tabelas, todas com regras de acesso por usuário (`supabase/schema.sql`):
-- **`perfis`:** nome, e-mail, foto, tema, `treinos` (treinos montados; vazio = plano pronto), `novidade_treinos`, `novidade_oculta`, `treinos_anterior` (versão anterior dos treinos e da semana), `semana`, `sem_peso`, `emails_resumo` (recebe o resumo semanal; padrão sim), `dias_jiu` (legado), `ultimo_acesso` e `acessos`. Os dois últimos só mudam pela função `registrar_acesso()`.
+- **`perfis`:** nome, e-mail, foto, tema, `treinos` (treinos montados; vazio = plano pronto), `novidade_treinos`, `novidade_oculta`, `treinos_anterior` (versão anterior dos treinos e da semana), `semana`, `sem_peso`, `emails_resumo` (recebe o resumo semanal; padrão sim), `politica_versao` (versão da política aceita), `consentimento_saude` (`sim`, `nao` ou vazio = não respondeu) e `consentimento_saude_em`, `dias_jiu` (legado), `ultimo_acesso` e `acessos`. Os dois últimos só mudam pela função `registrar_acesso()`.
 - **`checkins`:** check-ins de versões anteriores também guardavam as cargas.
 - **`cargas`:** pesos por usuário, dia e treino.
 
@@ -216,7 +220,8 @@ O monitoramento usa mais duas tabelas e um canal ao vivo:
 - **`admins`:** quem é administrador; não pode ser lida nem alterada pela API, e a função `eh_admin()` diz se o usuário logado está nela.
 - **`eventos`:** cada usuário só grava os próprios eventos e não lê nenhum. O app envia os eventos em lote (a cada 10 s, a cada 20 eventos, ao ir para segundo plano e ao sair), sem avisar o usuário e sem falhar se a tabela não existir.
 - **Exclusão de conta:** `excluir_conta()` apaga o próprio usuário e `admin_excluir_usuario(alvo)` apaga outro, a partir de `auth.users`; perfil, check-ins, cargas, eventos e e-mails enviados saem em cascata.
-- **Funções `admin_usuarios()` (inclui se recebe o resumo), `admin_checkins()`, `admin_eventos()` e `admin_emails()`:** alimentam o `admin.html`, recusam quem não está em `admins` e não devolvem pesos, cargas nem observações.
+- **Funções `admin_usuarios()` (inclui se recebe o resumo), `admin_checkins()`, `admin_eventos()` e `admin_emails()`:** alimentam o `admin.html`, recusam quem não está em `admins` e não devolvem pesos, cargas, recuperação nem observações.
+- **`meus_dados_extras()`:** devolve à própria pessoa os seus eventos e e-mails enviados (que ela não lê pela API), para o "Baixar meus dados".
 - **Presença (Supabase Realtime):** enquanto o app está visível, publica a tela atual, desde quando está aberto, o sistema e a última ação (exercício concluído, recorde, check-in, vídeo, semana; sem cargas), usada pelo Mundo ao vivo, no canal privado `online:<id>` do usuário, e retira ao ir para segundo plano ou sair. Cada pessoa só publica e lê o próprio canal; administradores leem todos.
 
 Ajustes únicos de dados ficam em `supabase/ajustes/` e rodam uma vez no SQL Editor, depois do `schema.sql`:
@@ -326,9 +331,28 @@ Todas as regras vêm do plano original; o app as aplica sem que o usuário preci
 | Usabilidade | Layout para telas a partir de 360 px, botões ≥ 48 px, uso com uma mão; botão de check-in fixo ao alcance do polegar; tema claro por padrão para academia iluminada e escuro opcional; painéis abrem como folha inferior no celular; foco visível no teclado e respeito a "reduzir movimento" |
 | Visual | Tipografia Archivo; paleta do kimono (fundo claro), azul vivo do tatame (#2563eb) para ações e seleções, contorno azul nos botões secundários, verde (#16a34a, ícone e texto brancos) para o check-in e verde suave para pesos registrados, âmbar com troféu para recordes (a cor nunca é o único sinal); graus de contribuição mostrados como fitas na ponteira da faixa; contraste AA em todos os pares de texto e fundo, nos dois temas |
 | Dados | Supabase (Postgres) com login Google (PKCE) e regras de acesso por usuário (RLS) em `perfis`, `checkins`, `cargas` e `eventos` (`admins` fechada à API); presença ao vivo por canais privados do Supabase Realtime, com acesso público ao Realtime desligado; schema idempotente em `supabase/schema.sql`. A chave secreta nunca vai no app nem no repositório; só a chave publicável |
-| Privacidade e segurança | Regras de acesso por usuário no backend; eventos de uso gravados só pelo próprio usuário e lidos só por administradores, com aviso na tela Você; resumo semanal enviado só para o e-mail da própria pessoa, com descadastro de um clique por link assinado e aviso no rodapé de que a abertura é registrada; segredos do e-mail só no Supabase; colunas de controle (`acessos`, `ultimo_acesso`) protegidas contra edição pelo usuário; dados de saúde não são vendidos nem enviados a terceiros; consentimento no cadastro e exclusão de conta pelo próprio usuário, com todos os dados (LGPD) |
+| Privacidade e segurança | Regras de acesso por usuário no backend; eventos de uso gravados só pelo próprio usuário e lidos só por administradores, com aviso na tela Você; resumo semanal enviado só para o e-mail da própria pessoa, com descadastro de um clique por link assinado e aviso no rodapé de que a abertura é registrada; segredos do e-mail só no Supabase; colunas de controle (`acessos`, `ultimo_acesso`) protegidas contra edição pelo usuário; dados de saúde não são vendidos nem enviados a terceiros; Política de Privacidade com aviso a cada nova versão, consentimento para recuperação e observações, baixar meus dados e exclusão de conta pelo próprio usuário, com todos os dados (LGPD); fonte Archivo hospedada no próprio site, sem Google Fonts |
 | Idioma | Português do Brasil; unidades em kg e minutos; cargas aceitam vírgula decimal |
 | Aviso legal | Onboarding, tela de progresso e rodapé da tela Treino exibem que o app não substitui profissional de educação física ou nutrição |
+
+### LGPD
+
+O app trata dados pessoais de um grupo de amigos, alguns sensíveis (recuperação e observações podem revelar saúde). O que foi feito para atender a LGPD:
+
+| Ponto | Como o app atende |
+| --- | --- |
+| Transparência (art. 9) | Política de Privacidade em linguagem simples, link na entrada, aviso a cada nova versão e resumo em Você → Privacidade |
+| Monitoramento | Explicado na política como funciona: quem está com o app aberto, em que tela e há quanto tempo, histórico de uso, números e abertura dos e-mails. Sem pesos, cargas, recuperação ou observações |
+| Dados de saúde (art. 11) | Recuperação e observações só com consentimento, que pode ser retirado a qualquer momento, com a opção de apagar o que já foi registrado; a recuperação saiu do painel |
+| Direitos do titular (art. 18) | Acesso e portabilidade (baixar meus dados), correção (nome e foto), eliminação (excluir conta), revogação do consentimento e oposição ao resumo por e-mail, tudo no app; demais pedidos pelo e-mail do responsável |
+| Tempo de guarda (art. 15 e 16) | Enquanto a conta existir; ao excluir a conta, tudo é apagado em cascata. Decisão: sem limpeza automática por prazo |
+| Operadores e transferência internacional (art. 33) | Supabase, Google (login, Gmail, YouTube sem cookies), GitHub Pages e jsDelivr, listados na política; a fonte deixou de vir do Google |
+| Segurança (art. 46) | Acesso só por convite, HTTPS, regras de acesso por usuário no banco, painel restrito a administradores, chave secreta fora do repositório |
+
+Pendências e cuidados:
+- O texto da política não é parecer jurídico: vale uma revisão por advogado.
+- O Mundo ao vivo não está na política porque será retirado do app; até lá, a presença ainda leva a última ação.
+- `mundo.html` (só administradores) ainda usa o Google Fonts.
 
 ### Roadmap, riscos e questões em aberto
 
@@ -349,6 +373,8 @@ Todas as regras vêm do plano original; o app as aplica sem que o usuário preci
    - muay thai como atividade;
    - tela Você em lista, no estilo dos Ajustes do celular;
    - exclusão de conta pelo app e pelo monitoramento;
+   - acesso só por convite;
+   - Política de Privacidade, consentimento para dados de saúde e baixar meus dados (LGPD);
    - resumo semanal por e-mail.
 2. **MVP (web, grupo de amigos):**
    - PWA responsiva com modo offline e convites;
@@ -368,7 +394,8 @@ Todas as regras vêm do plano original; o app as aplica sem que o usuário preci
 | Cargas zero registradas antes da opção Sem peso distorcem recordes e o resumo do treino | Scripts de `supabase/ajustes/` convertem esses zeros em Sem peso ou em feito, com diagnóstico e prévia antes de alterar |
 | Resumo semanal enviado para todos por engano num teste | A função só envia para todos com o pedido explícito `enviar`; simulação e prévia não enviam para o grupo |
 | Resumo semanal cair no spam ou passar do limite do Gmail | Envio pelo Gmail com senha de app e cabeçalho de cancelamento de inscrição; o limite de cerca de 500 e-mails por dia é folgado para o grupo |
-| Usuários estranharem o registro de uso | Aviso em Você → Conta; nada de pesos, cargas ou observações nos eventos; só administradores leem |
+| Usuários estranharem o registro de uso | A Política de Privacidade e Você → Privacidade explicam o que o administrador vê; nada de pesos, cargas, recuperação ou observações nos eventos; só administradores leem |
+| A política ficar desatualizada quando o app mudar | Ao mudar o que é coletado ou mostrado no painel, atualizar `privacidade.html` e `POLITICA_VERSAO` no app, para todos verem o aviso de novo (README, seção Privacidade e LGPD) |
 | Esquecer de rodar o `schema.sql` após uma atualização | O app abre normalmente e avisa ao salvar ("rode de novo o supabase/schema.sql"); o README explica o passo |
 | No iPhone, o navegador limita notificações e armazenamento offline | Orientar a instalar na tela inicial; sincronizar sempre que houver conexão |
 | O plano foi montado para o perfil do Bauer e pode não servir a todos os amigos | Cada um monta a semana, define alvo e cargas; aviso para buscar profissional antes de começar |
