@@ -852,6 +852,37 @@
   .meus-treinos { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
   .meus-treinos li { display: flex; align-items: center; gap: 10px; font-size: 15px; }
   .meus-treinos small { color: var(--tinta-2); font-size: 13px; }
+
+  /* Você: lista de opções em grupos (como os Ajustes do celular); cada linha abre a sua tela. */
+  .voce-perfil {
+    display: flex; align-items: center; gap: 14px; width: 100%; padding: 14px 16px; margin-bottom: 24px;
+    border: 1px solid var(--fio); border-radius: 18px; background: var(--papel); text-align: left;
+  }
+  .voce-perfil .voce-perfil-foto { width: 60px; height: 60px; font-size: 24px; }
+  .voce-perfil-txt { display: grid; flex: 1; min-width: 0; }
+  .voce-perfil-txt b { font-size: 19px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .voce-perfil-txt small { font-size: 14px; color: var(--tinta-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .voce-grupo { margin: 0 0 24px; padding: 0; list-style: none; border: 1px solid var(--fio); border-radius: 18px; background: var(--papel); overflow: hidden; }
+  .voce-linha {
+    position: relative; display: flex; align-items: center; gap: 16px; width: 100%; min-height: 56px; padding: 0 16px;
+    border: 0; background: transparent; text-align: left; color: var(--tinta);
+  }
+  .voce-grupo li + li .voce-linha::before { content: ""; position: absolute; top: 0; left: 56px; right: 0; border-top: 1px solid var(--fio); }
+  .voce-linha:hover, .voce-perfil:hover { background: var(--gi); }
+  .voce-linha:focus-visible, .voce-perfil:focus-visible { outline: 2px solid var(--tatame-tinta); outline-offset: -2px; }
+  .voce-ic { flex: 0 0 auto; }
+  .voce-rotulo { flex: 1; min-width: 0; font-size: 17px; }
+  .voce-valor { max-width: 45%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 15px; color: var(--tinta-2); }
+  .voce-chev { flex: 0 0 auto; color: var(--tinta-2); }
+  .voce-linha.perigo { color: var(--erro); }
+  .voce-topo { padding: 12px 0 8px; }
+  .voce-topo h1 { margin: 4px 0 0; font-family: var(--display); font-stretch: 80%; font-weight: 800; font-size: 34px; line-height: 1.05; }
+  .voce-voltar {
+    display: inline-flex; align-items: center; gap: 2px; min-height: 44px; margin-left: -8px; padding: 0 10px 0 2px;
+    border: 0; border-radius: 10px; background: none; color: var(--tatame-tinta); font-size: 17px; font-weight: 600;
+  }
+  .voce-voltar:hover { background: var(--tatame-suave); }
+  .voce-pagina > .cartao, .voce-pagina > form.cartao { margin-top: 12px; }
 </style>
 </head>
 <body class="deslogado">
@@ -966,10 +997,32 @@
 </main>
 
 <main class="wrap" id="tela-voce" hidden>
-  <div class="dash-topo"><h1>Você</h1></div>
+  <div class="voce-menu" id="voce-menu">
+    <div class="dash-topo"><h1>Você</h1></div>
+    <button class="voce-perfil" type="button" data-voce="dados">
+      <span class="avatar voce-perfil-foto" id="voce-menu-avatar" aria-hidden="true"></span>
+      <span class="voce-perfil-txt"><b id="voce-menu-nome"></b><small id="voce-menu-email"></small></span>
+      <svg class="voce-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+    </button>
+    <ul class="voce-grupo" aria-label="Treinos">
+      <li><button class="voce-linha" type="button" data-voce="treinos"><svg class="voce-ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg><span class="voce-rotulo">Meus treinos</span><span class="voce-valor" id="valor-treinos"></span><svg class="voce-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button></li>
+      <li><button class="voce-linha" type="button" data-voce="semana"><svg class="voce-ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span class="voce-rotulo">Minha semana</span><span class="voce-valor" id="valor-semana"></span><svg class="voce-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button></li>
+    </ul>
+    <ul class="voce-grupo" aria-label="Configurações">
+      <li><button class="voce-linha" type="button" data-voce="aparencia"><svg class="voce-ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.7-.9 1.4-1.9l-.3-.8c-.4-1.2.5-2.3 1.7-2.3H17a4 4 0 0 0 4-4c0-5-4-9-9-9Z"/><circle cx="7.5" cy="11.5" r="1.2"/><circle cx="10.5" cy="7.5" r="1.2"/><circle cx="15" cy="7.8" r="1.2"/></svg><span class="voce-rotulo">Aparência</span><span class="voce-valor" id="valor-aparencia"></span><svg class="voce-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button></li>
+      <li><button class="voce-linha" type="button" data-voce="notificacoes"><svg class="voce-ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8"/><path d="M10.3 20a2 2 0 0 0 3.4 0"/></svg><span class="voce-rotulo">Notificações</span><span class="voce-valor" id="valor-notificacoes"></span><svg class="voce-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button></li>
+      <li><button class="voce-linha" type="button" data-voce="privacidade"><svg class="voce-ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span class="voce-rotulo">Privacidade</span><svg class="voce-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button></li>
+    </ul>
+    <ul class="voce-grupo" aria-label="Conta">
+      <li><button class="voce-linha perigo" type="button" id="sair"><svg class="voce-ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg><span class="voce-rotulo">Sair da conta</span></button></li>
+    </ul>
+  </div>
 
-  <section class="bloco" aria-labelledby="dados-titulo">
-    <div class="bloco-topo"><h2 class="secao" id="dados-titulo">Dados pessoais</h2></div>
+  <section class="voce-pagina" data-pagina="dados" aria-labelledby="pag-dados-titulo" hidden>
+    <div class="voce-topo">
+      <button class="voce-voltar" type="button" data-voltar><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Você</button>
+      <h1 id="pag-dados-titulo">Dados pessoais</h1>
+    </div>
     <form class="cartao" id="form-perfil" novalidate>
       <div class="perfil-foto">
         <div class="avatar" id="voce-avatar" aria-hidden="true"></div>
@@ -992,10 +1045,14 @@
         <p class="nota-campo" id="email-nota">E-mail da sua conta Google.</p>
       </div>
     </form>
+  
   </section>
 
-  <section class="bloco" aria-labelledby="aparencia-titulo">
-    <div class="bloco-topo"><h2 class="secao" id="aparencia-titulo">Aparência</h2></div>
+  <section class="voce-pagina" data-pagina="aparencia" aria-labelledby="pag-aparencia-titulo" hidden>
+    <div class="voce-topo">
+      <button class="voce-voltar" type="button" data-voltar><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Você</button>
+      <h1 id="pag-aparencia-titulo">Aparência</h1>
+    </div>
     <div class="cartao">
       <fieldset class="campo">
         <legend class="nota-campo">Tema do app. Automático segue o tema do celular.</legend>
@@ -1006,19 +1063,27 @@
         </div>
       </fieldset>
     </div>
+  
   </section>
 
-  <section class="bloco" aria-labelledby="meus-treinos-titulo">
-    <div class="bloco-topo"><h2 class="secao" id="meus-treinos-titulo">Meus treinos</h2></div>
+  <section class="voce-pagina" data-pagina="treinos" aria-labelledby="pag-treinos-titulo" hidden>
+    <div class="voce-topo">
+      <button class="voce-voltar" type="button" data-voltar><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Você</button>
+      <h1 id="pag-treinos-titulo">Meus treinos</h1>
+    </div>
     <div class="cartao">
       <p class="nota-campo" id="meus-treinos-nota"></p>
       <ul class="meus-treinos" id="meus-treinos"></ul>
       <button class="btn" type="button" id="editar-treinos">Personalizar meus treinos</button>
     </div>
+  
   </section>
 
-  <section class="bloco" aria-labelledby="semana-cfg-titulo">
-    <div class="bloco-topo"><h2 class="secao" id="semana-cfg-titulo">Minha semana</h2></div>
+  <section class="voce-pagina" data-pagina="semana" aria-labelledby="pag-semana-titulo" hidden>
+    <div class="voce-topo">
+      <button class="voce-voltar" type="button" data-voltar><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Você</button>
+      <h1 id="pag-semana-titulo">Minha semana</h1>
+    </div>
     <div class="cartao">
       <p class="nota-campo">Arraste uma atividade até o dia ou toque em + no dia. Até 2 por dia; dia vazio é descanso. A Semana e o treino de hoje se ajustam na hora.</p>
       <div class="paleta" id="paleta" aria-label="Atividades para arrastar"></div>
@@ -1026,18 +1091,31 @@
       <ul class="avisos" id="avisos-semana"></ul>
       <button class="btn-sec" type="button" id="semana-padrao">Voltar à semana padrão</button>
     </div>
+  
   </section>
 
-  <section class="bloco" aria-labelledby="conta-titulo">
-    <div class="bloco-topo"><h2 class="secao" id="conta-titulo">Conta</h2></div>
+  <section class="voce-pagina" data-pagina="notificacoes" aria-labelledby="pag-notificacoes-titulo" hidden>
+    <div class="voce-topo">
+      <button class="voce-voltar" type="button" data-voltar><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Você</button>
+      <h1 id="pag-notificacoes-titulo">Notificações</h1>
+    </div>
     <div class="cartao">
-      <p class="conta-linha">Conectado com o Google como <b id="conta-email"></b></p>
       <label class="sem-peso-linha resumo-email-linha">
         <span><b>Resumo semanal por e-mail</b><small>Toda sexta, às 9h, com seus treinos dos últimos 7 dias</small></span>
         <input type="checkbox" role="switch" id="resumo-email">
       </label>
+      <p class="nota-campo">O resumo usa seus check-ins e recordes e vai só para o seu e-mail. Também dá para desligar pelo link no fim de cada e-mail.</p>
+    </div>
+  </section>
+
+  <section class="voce-pagina" data-pagina="privacidade" aria-labelledby="pag-privacidade-titulo" hidden>
+    <div class="voce-topo">
+      <button class="voce-voltar" type="button" data-voltar><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Você</button>
+      <h1 id="pag-privacidade-titulo">Privacidade</h1>
+    </div>
+    <div class="cartao">
+      <p class="conta-linha">Conectado com o Google como <b id="conta-email"></b></p>
       <p class="nota-campo">Para melhorar o app, registramos como ele é usado (telas abertas, recursos usados e quando ele está aberto). Pesos, cargas e observações não entram nesse registro. O resumo semanal usa seus check-ins e recordes e vai só para o seu e-mail.</p>
-      <button class="btn-sec" type="button" id="sair">Sair da conta</button>
     </div>
   </section>
 </main>
@@ -2761,6 +2839,9 @@
     $('foto-label-texto').textContent = perfil.foto ? 'Trocar foto' : 'Escolher foto';
     $('remover-foto').hidden = !perfil.foto;
     $('nav-voce-icone').innerHTML = foto ? `<img class="nav-foto" src="${foto}" alt="" referrerpolicy="no-referrer">` : ICON_PESSOA;
+    $('voce-menu-avatar').innerHTML = $('voce-avatar').innerHTML;
+    $('voce-menu-nome').textContent = perfil.nome || 'Seu nome';
+    $('voce-menu-email').textContent = perfil.email || '';
   }
 
   // ---------- Minha semana ----------
@@ -3370,7 +3451,29 @@
   });
   novidadeDialog.addEventListener('cancel', (e) => { e.preventDefault(); responderNovidade('fechou'); });
 
+  const NOMES_TEMA = { auto: 'Automático', claro: 'Claro', escuro: 'Escuro' };
+  // Valores mostrados à direita de cada linha da lista de Você.
+  function renderMenuVoce() {
+    const n = Object.keys(TREINOS).length;
+    $('valor-treinos').textContent = treinosDaConta ? `${n} ${n === 1 ? 'treino' : 'treinos'}` : 'Plano pronto';
+    const ativ = config.semana.flat().length;
+    const descanso = config.semana.filter((d) => !d.length).length;
+    $('valor-semana').textContent = `${ativ} ${ativ === 1 ? 'atividade' : 'atividades'}${descanso ? '' : ', sem descanso'}`;
+    $('valor-aparencia').textContent = NOMES_TEMA[config.tema] || 'Automático';
+    $('valor-notificacoes').textContent = config.resumoEmail ? 'Resumo ligado' : 'Desligadas';
+  }
+  // Abrir uma opção pela lista: "‹ Você" volta pelo histórico (o botão voltar do celular também funciona).
+  let abriuPelaLista = false;
+  $('tela-voce').addEventListener('click', (e) => {
+    const linha = e.target.closest('[data-voce]');
+    if (linha) { abriuPelaLista = true; location.hash = `#voce/${linha.dataset.voce}`; return; }
+    if (e.target.closest('[data-voltar]')) {
+      if (abriuPelaLista) { abriuPelaLista = false; history.back(); } else location.hash = '#voce';
+    }
+  });
+
   function renderConfig() {
+    renderMenuVoce();
     document.querySelectorAll('input[name="tema"]').forEach((r) => { r.checked = r.value === config.tema; });
     $('resumo-email').checked = config.resumoEmail;
     renderMeusTreinos();
@@ -3412,9 +3515,15 @@
 
   // ---------- Telas ----------
   const TELAS = ['treino', 'dashboard', 'voce'];
+  // Você tem uma lista de opções (#voce) e uma tela para cada uma (#voce/semana, #voce/aparencia…).
+  const PAGINAS_VOCE = ['dados', 'aparencia', 'treinos', 'semana', 'notificacoes', 'privacidade'];
   const telaAtual = () => {
-    const t = location.hash.slice(1);
+    const t = location.hash.slice(1).split('/')[0];
     return TELAS.includes(t) ? t : 'treino';
+  };
+  const paginaVoce = () => {
+    const [t, pag] = location.hash.slice(1).split('/');
+    return t === 'voce' && PAGINAS_VOCE.includes(pag) ? pag : null;
   };
   function mostrarTela() {
     const t = telaAtual();
@@ -3426,10 +3535,15 @@
       else b.removeAttribute('aria-current');
     });
     if (t === 'dashboard') renderDashboard();
-    if (t === 'voce') { renderConfig(); erroFoto(''); }
+    const pag = t === 'voce' ? paginaVoce() : null;
+    if (t === 'voce') {
+      $('voce-menu').hidden = !!pag;
+      document.querySelectorAll('.voce-pagina').forEach((el) => { el.hidden = el.dataset.pagina !== pag; });
+      renderConfig(); erroFoto('');
+    }
     $('fab-checkin').hidden = t === 'voce';
     $('fab-checkin').classList.remove('encolhido');
-    registrarEvento('tela', { tela: t });
+    registrarEvento('tela', pag ? { tela: t, pagina: pag } : { tela: t });
     marcarPresenca();
   }
 
