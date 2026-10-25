@@ -80,6 +80,15 @@ Cada pessoa pode montar até 5 treinos (t1 a t5), com até 15 exercícios cada, 
 
 Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 e t5 nos check-ins e nas cargas e cria as colunas `treinos`, `novidade_treinos` e `novidade_oculta`.
 
+## Convites (acesso só para convidados)
+
+- **Convidar alguém:** no monitoramento, aba **Convites** → "Para quem?" (opcional) → **Gerar convite**. Copie o link ou toque em **Enviar pelo WhatsApp**. Cada link vale para uma pessoa e por 7 dias.
+- **O amigo:** abre o link, entra com o Google e o app libera a conta sozinho. Se o link já tiver sido usado, tiver expirado ou sido cancelado, ele vê o motivo e pode digitar outro código.
+- **Quem entra sem convite:** vê "O OSS é só para convidados", com um campo para o código e o botão **Pedir acesso**. Os pedidos aparecem na aba Convites, com Liberar e Recusar, e a aba mostra um selo com a quantidade.
+- **Bloquear ou liberar:** no detalhe de cada usuário (aba Usuários), seção Acesso.
+- **Quem já tinha conta:** continua liberado. Administradores também entram sempre.
+- **No banco:** `perfis.liberado` e `perfis.acesso_pedido_em`, a tabela `convites` (sem acesso direto pela API) e as funções `usar_convite`, `pedir_acesso` e `admin_*_convite` / `admin_liberar_usuario` / `admin_bloquear_usuario` / `admin_recusar_pedido`. Check-ins e cargas só são gravados por contas liberadas. Para ligar, rode de novo o `supabase/schema.sql`.
+
 ## Excluir conta
 
 - **Pelo app:** Você → **Excluir conta**. A confirmação mostra tudo o que será apagado e só libera o botão depois de a pessoa marcar "Entendi".

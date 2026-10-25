@@ -113,7 +113,7 @@ São 53 requisitos em 10 grupos; os marcados P0 bloqueiam o lançamento do MVP. 
 | --- | --- | --- | --- |
 | **Contas e convites** |  |  |  |
 | RF-01 | Cadastro e login por e-mail ou conta Google/Apple | P0 | Parcial: login com Google (Supabase Auth); sem e-mail e Apple |
-| RF-02 | Administrador (Bauer) gera link ou código de convite; só entra quem foi convidado | P0 | Pendente: hoje qualquer conta Google com o link entra |
+| RF-02 | Administrador (Bauer) gera link ou código de convite; só entra quem foi convidado | P0 | Feito: aba Convites no monitoramento (link por pessoa, vale 7 dias, copiar ou enviar pelo WhatsApp, cancelar); quem entra sem convite vê "O OSS é só para convidados", com campo para o código e "Pedir acesso" (o pedido aparece no monitoramento para liberar ou recusar); bloquear ou liberar cada usuário no detalhe; quem já tinha conta segue liberado; check-ins e cargas exigem conta liberada também no banco |
 | RF-03 | Cada usuário vê apenas os próprios registros; nada é compartilhado sem ele ativar | P0 | Feito: regras de acesso (RLS) por usuário em todas as tabelas |
 | RF-04 | Sincronização dos dados entre aparelho e nuvem, mantendo o uso offline | P0 | Parcial: dados na nuvem e em qualquer aparelho; sem modo offline (falha ao salvar avisa e recarrega do servidor) |
 | RF-05 | Usuário pode excluir a conta e todos os seus dados | P0 | Feito: "Excluir conta" em Você (detalhes em RF-53) |
@@ -186,7 +186,7 @@ O plano pronto é um modelo único, compartilhado por todos os usuários e guard
 | Evento de uso | usuário, data e hora, tipo (sessão, tela, exercício concluído, recorde, check-in criado/editado/excluído/encerrado, vídeo, sem peso, semana alterada, tema, foto, erro, sessão perdida, saiu), dados (até 2 KB; sem pesos, cargas ou observações) |
 | Configuração | usuário, tema (automático, claro, escuro), semana (7 dias, até 2 atividades cada), exercícios sem peso, recebe resumo semanal (sim/não) |
 | E-mail enviado | usuário, tipo (resumo semanal), referência (último dia do período), enviado em, primeira abertura, aberturas, primeiro clique, cliques |
-| Convite | código, criado por, validade, usado por |
+| Convite | código (6 letras/números), para quem, criado por, criado em, expira em (7 dias), usado por, usado em, cancelado em |
 | Plano (modelo) | nome, duração (6 semanas) |
 | Inscrição no plano | usuário, plano, data de início, peso inicial, alvo, compartilha aderência (sim/não) |
 | Fase | número (1–3), semanas (1–2, 3–4, 5–6), foco, orientação |
@@ -364,7 +364,7 @@ Todas as regras vêm do plano original; o app as aplica sem que o usuário preci
 | --- | --- |
 | Registrar séries atrapalha o treino e o usuário abandona | Carga pré-preenchida, Enter passa para a próxima série, Concluir salva o que está na tela; salvar peso não abre check-in nem temporizador |
 | Sem internet na academia o app não salva | Hoje o app avisa e recarrega do servidor; o modo offline com sincronização está no MVP |
-| Qualquer conta Google com o link consegue entrar | Os dados de cada um ficam isolados pelas regras de acesso; convites (RF-02) estão no MVP; os acessos podem ser acompanhados no Supabase |
+| Qualquer conta Google com o link consegue entrar | Resolvido com convites (RF-02): contas novas só usam o app com convite ou liberação de um administrador |
 | Cargas zero registradas antes da opção Sem peso distorcem recordes e o resumo do treino | Scripts de `supabase/ajustes/` convertem esses zeros em Sem peso ou em feito, com diagnóstico e prévia antes de alterar |
 | Resumo semanal enviado para todos por engano num teste | A função só envia para todos com o pedido explícito `enviar`; simulação e prévia não enviam para o grupo |
 | Resumo semanal cair no spam ou passar do limite do Gmail | Envio pelo Gmail com senha de app e cabeçalho de cancelamento de inscrição; o limite de cerca de 500 e-mails por dia é folgado para o grupo |
@@ -381,7 +381,7 @@ Todas as regras vêm do plano original; o app as aplica sem que o usuário preci
 **Questões em aberto**
 
 - Quantos amigos entram no grupo inicial?
-- O acesso deve ser restrito a convidados (RF-02) ou basta o link?
+- ~~O acesso deve ser restrito a convidados (RF-02) ou basta o link?~~ Decidido: só convidados, com link por pessoa válido por 7 dias e pedido de acesso.
 - Os amigos podem ver o progresso uns dos outros ou cada um vê só o seu?
 - Todos seguem exatamente o plano do Bauer ou alguns precisam de variações?
 - Quais são os vídeos de Rosca bíceps, Elevação lateral, Tríceps e Panturrilha (os outros 18 exercícios já têm)?
