@@ -2565,7 +2565,10 @@
       try { localStorage.setItem('bauer-deslizou', '1'); } catch (_) {}
     }
     atualizarVideo(sl);
-    sl.style.height = `${sl.children[idx].offsetHeight}px`;
+    // Com a tela Treino escondida (ex.: salvando treinos em Você) a altura mede 0; mede de novo ao voltar.
+    const altura = sl.children[idx].offsetHeight;
+    if (altura) sl.style.height = `${altura}px`;
+    else sl.style.height = '';
     const card = sl.closest('.ex');
     card.querySelectorAll('.ex-ponto').forEach((p, k) => p.setAttribute('aria-current', String(k === idx)));
     card.querySelector('.ex-dica').textContent = idx ? 'Deslize para voltar' : 'Deslize para ver a execução';
@@ -3612,6 +3615,8 @@
       else b.removeAttribute('aria-current');
     });
     if (t === 'dashboard') renderDashboard();
+    // A ficha pode ter sido redesenhada com a tela escondida: refaz a altura dos cartões.
+    if (t === 'treino') ajustarTodos();
     const pag = t === 'voce' ? paginaVoce() : null;
     if (t === 'voce') {
       $('voce-menu').hidden = !!pag;
