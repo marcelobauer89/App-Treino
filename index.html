@@ -778,10 +778,24 @@
   .ed-aba:disabled { opacity: .5; cursor: not-allowed; }
   .ed-exs { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
   .ed-ex {
-    display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 8px 10px; align-items: center;
-    padding: 10px 10px 10px 12px; border: 1px solid var(--fio); border-radius: 12px; background: var(--papel);
+    display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 8px 10px; align-items: center;
+    padding: 10px 10px 10px 6px; border: 1px solid var(--fio); border-radius: 12px; background: var(--papel);
   }
-  .ed-ex > .ex-num { align-self: start; padding-top: 2px; font-size: 13px; }
+  .ed-ex .ed-num { margin-right: 6px; font-family: var(--display); font-stretch: 80%; font-weight: 800; font-size: 13px; color: var(--tinta-2); }
+  /* Alça para arrastar: segura e arrasta para mudar a ordem (no teclado, setas para cima e para baixo). */
+  .ed-alca {
+    align-self: start; width: 32px; height: 44px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 8px;
+    background: none; color: var(--tinta-2); cursor: grab; touch-action: none;
+  }
+  .ed-alca:hover { color: var(--tinta); background: var(--gi); }
+  .ed-alca svg { width: 20px; height: 20px; }
+  .ed-exs.arrastando .ed-ex:not(.ed-arrastando) { transition: transform .15s ease; }
+  .ed-ex.ed-arrastando {
+    position: relative; z-index: 3; cursor: grabbing; border-color: var(--tatame);
+    box-shadow: 0 10px 28px rgba(16, 19, 24, .28), 0 2px 6px rgba(16, 19, 24, .16);
+  }
+  .ed-ex.ed-arrastando .ed-alca { cursor: grabbing; color: var(--tatame-tinta); }
+  body.arrastando-ex { -webkit-user-select: none; user-select: none; cursor: grabbing; }
   .ed-ex-nome { display: grid; min-width: 0; }
   .ed-ex-nome b { font-size: 15px; line-height: 1.25; overflow-wrap: anywhere; }
   .ed-ex-nome small { font-size: 12.5px; color: var(--tinta-2); }
@@ -2961,6 +2975,8 @@
   // Rascunho: cópia dos treinos editada até tocar em Salvar. vista: 'treino' | 'escolher'.
   // confirmar: null | 'excluir' | 'plano' | 'sair'.
   let ed = null;
+  const ICON_ALCA = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>';
+  const ICON_ALCA_TEXTO = ICON_ALCA.replace('<svg ', '<svg width="14" height="14" style="vertical-align:-2px" ');
   // Botão flutuante "Adicionar exercício": encolhe ao rolar a lista para baixo e volta ao subir (como o do check-in).
   let edFabEncolhido = false, edUltimoScroll = 0;
   const copiaTreinos = (t) => Object.fromEntries(Object.entries(t).map(([id, x]) => [id, {
@@ -3024,11 +3040,12 @@
         <div class="campo"><label for="ed-nome">Nome</label><input id="ed-nome" maxlength="40" value="${esc(t.nome)}" placeholder="Treino ${ed.sel}" autocomplete="off"></div>
         <div class="campo"><label for="ed-sub">Foco <span class="opcional">(opcional)</span></label><input id="ed-sub" maxlength="60" value="${esc(t.subtitulo)}" placeholder="Ex.: Peito e tríceps" autocomplete="off"></div>
       </div>
-      <div class="log-head"><h4>Exercícios (${exs.length})</h4></div>
+      <div class="log-head"><h4>Exercícios (${exs.length})</h4>${exs.length > 1 ? `<span class="log-hint" id="ed-dica-ordem">Segure ${ICON_ALCA_TEXTO} e arraste para mudar a ordem</span>` : ''}</div>
+      <p class="sr-only" id="ed-anuncio" aria-live="polite"></p>
       ${exs.length ? `<ol class="ed-exs">${exs.map((ex, i) => `
-        <li class="ed-ex">
-          <span class="ex-num">${pad(i + 1)}</span>
-          <span class="ed-ex-nome"><b>${esc(ex.nome)}</b><small>${esc(ex.grupo || 'Exercício')}${VIDEOS[ex.nome] ? ' · com vídeo' : ''}</small></span>
+        <li class="ed-ex" data-ed-pos="${i}">
+          <button class="ed-alca" type="button" data-ed-alca="${i}" aria-label="Mover ${esc(ex.nome)}, posição ${i + 1} de ${exs.length}. Arraste, ou use as setas do teclado." aria-describedby="ed-dica-ordem">${ICON_ALCA}</button>
+          <span class="ed-ex-nome"><b><span class="ed-num">${pad(i + 1)}</span>${esc(ex.nome)}</b><small>${esc(ex.grupo || 'Exercício')}${VIDEOS[ex.nome] ? ' · com vídeo' : ''}</small></span>
           <button class="ed-icone" type="button" data-ed-remover="${i}" aria-label="Tirar ${esc(ex.nome)} do treino">${ICON_X}</button>
           <div class="ed-ex-campos">
             <label>Séries<input type="text" value="${esc(ex.dose)}" maxlength="30" data-ed-dose="${i}" aria-label="${esc(ex.nome)}: séries e repetições"></label>
@@ -3113,7 +3130,100 @@
     editorDialog.close();
   }
 
-  editorDialog.addEventListener('cancel', (e) => { e.preventDefault(); fecharEditor(); });
+  editorDialog.addEventListener('cancel', (e) => {
+    e.preventDefault();
+    // Esc durante o arrasto só cancela o arrasto.
+    if (arrastoEx) return terminarArrastoEx(false);
+    fecharEditor();
+  });
+  // ---------- Mudar a ordem dos exercícios arrastando a alça ----------
+  function moverExercicio(de, para) {
+    const exs = edTreino().exercicios;
+    if (de === para || para < 0 || para >= exs.length) return false;
+    const [ex] = exs.splice(de, 1);
+    exs.splice(para, 0, ex);
+    renderEditor();
+    const alca = $('editor-body').querySelector(`[data-ed-alca="${para}"]`);
+    if (alca) alca.focus({ preventScroll: true });
+    $('ed-anuncio').textContent = `${ex.nome} na posição ${para + 1} de ${exs.length}.`;
+    return true;
+  }
+  let arrastoEx = null;
+  function posicaoAlvo(a) {
+    // Centro do cartão arrastado comparado ao meio dos outros cartões (posições guardadas no começo).
+    const centro = a.topos[a.de] + a.dy + a.alturas[a.de] / 2;
+    let alvo = 0;
+    a.topos.forEach((t, j) => { if (j !== a.de && t + a.alturas[j] / 2 < centro) alvo += 1; });
+    return alvo;
+  }
+  function moverArrastoEx() {
+    const a = arrastoEx;
+    a.dy = a.y - a.y0 + (editorDialog.scrollTop - a.scroll0);
+    a.alvo = posicaoAlvo(a);
+    const passo = a.alturas[a.de] + a.vao;
+    a.itens.forEach((li, j) => {
+      if (j === a.de) li.style.transform = `translateY(${a.dy}px)`;
+      else if (j > a.de && j <= a.alvo) li.style.transform = `translateY(${-passo}px)`;
+      else if (j < a.de && j >= a.alvo) li.style.transform = `translateY(${passo}px)`;
+      else li.style.transform = '';
+    });
+  }
+  function rolarArrastoEx() {
+    if (!arrastoEx || !arrastoEx.ativo) return;
+    const r = editorDialog.getBoundingClientRect();
+    const fundo = r.bottom - ($('editor-body').querySelector('.ed-fixo') || { offsetHeight: 0 }).offsetHeight;
+    const y = arrastoEx.y;
+    const vel = y < r.top + 60 ? -Math.ceil((r.top + 60 - y) / 4) : y > fundo - 60 ? Math.ceil((y - fundo + 60) / 4) : 0;
+    if (vel) { editorDialog.scrollTop += vel; moverArrastoEx(); }
+    arrastoEx.raf = requestAnimationFrame(rolarArrastoEx);
+  }
+  function terminarArrastoEx(soltar) {
+    const a = arrastoEx;
+    arrastoEx = null;
+    if (!a || !a.ativo) return;
+    cancelAnimationFrame(a.raf);
+    document.body.classList.remove('arrastando-ex');
+    if (soltar && a.alvo !== a.de) return moverExercicio(a.de, a.alvo);
+    renderEditor();
+  }
+  editorDialog.addEventListener('pointerdown', (e) => {
+    const alca = e.target.closest('[data-ed-alca]');
+    if (!alca || !ed || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    e.preventDefault();
+    arrastoEx = { de: Number(alca.dataset.edAlca), id: e.pointerId, y0: e.clientY, y: e.clientY, ativo: false };
+    try { alca.setPointerCapture(e.pointerId); } catch (_) {}
+  });
+  editorDialog.addEventListener('pointermove', (e) => {
+    const a = arrastoEx;
+    if (!a || e.pointerId !== a.id) return;
+    a.y = e.clientY;
+    if (!a.ativo) {
+      if (Math.abs(a.y - a.y0) < 4) return;
+      const lista = $('editor-body').querySelector('.ed-exs');
+      a.itens = [...lista.querySelectorAll('.ed-ex')];
+      a.topos = a.itens.map((li) => li.getBoundingClientRect().top + editorDialog.scrollTop);
+      a.alturas = a.itens.map((li) => li.offsetHeight);
+      a.vao = a.itens.length > 1 ? Math.abs(a.topos[1] - a.topos[0]) - a.alturas[0] : 8;
+      a.scroll0 = editorDialog.scrollTop;
+      a.ativo = true;
+      lista.classList.add('arrastando');
+      a.itens[a.de].classList.add('ed-arrastando');
+      document.body.classList.add('arrastando-ex');
+      a.raf = requestAnimationFrame(rolarArrastoEx);
+    }
+    e.preventDefault();
+    moverArrastoEx();
+  });
+  editorDialog.addEventListener('pointerup', (e) => { if (arrastoEx && e.pointerId === arrastoEx.id) terminarArrastoEx(true); });
+  editorDialog.addEventListener('pointercancel', (e) => { if (arrastoEx && e.pointerId === arrastoEx.id) terminarArrastoEx(false); });
+  editorDialog.addEventListener('keydown', (e) => {
+    const alca = e.target.closest && e.target.closest('[data-ed-alca]');
+    if (!alca || !ed || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return;
+    e.preventDefault();
+    const de = Number(alca.dataset.edAlca);
+    moverExercicio(de, de + (e.key === 'ArrowUp' ? -1 : 1));
+  });
+
   editorDialog.addEventListener('scroll', () => {
     const y = editorDialog.scrollTop;
     if (Math.abs(y - edUltimoScroll) < 8) return;
