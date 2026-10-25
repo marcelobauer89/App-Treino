@@ -509,6 +509,8 @@
   .toast-acao:hover { background: rgba(127, 127, 127, .25); }
   .anterior-confirma { display: grid; gap: 8px; }
   .anterior-confirma > div { display: flex; flex-wrap: wrap; gap: 8px; }
+  /* Na tela de entrada não há barra de navegação: o aviso fica no topo para não cobrir o botão do Google. */
+  body.deslogado .toast { top: max(16px, env(safe-area-inset-top, 0px)); bottom: auto; }
   body.com-ativo .toast { bottom: calc(var(--nav-h) + var(--ativo-h) + env(safe-area-inset-bottom, 0px) + 84px); }
 
   /* Botão fixo de check-in: pílula com texto que vira círculo ao rolar para baixo. */
@@ -891,6 +893,20 @@
   }
   .voce-voltar:hover { background: var(--tatame-suave); }
   .voce-pagina > .cartao, .voce-pagina > form.cartao { margin-top: 12px; }
+
+  /* Excluir conta: confirmação com o que se perde, caixa de "entendi" e botão vermelho. */
+  .excluir-lista { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+  .excluir-lista li { display: flex; gap: 10px; align-items: flex-start; font-size: 15px; }
+  .excluir-lista svg { flex: 0 0 auto; margin-top: 3px; color: var(--erro); }
+  .excluir-alerta { margin: 0; padding: 12px 14px; border-radius: 12px; font-size: 14px; color: var(--tinta);
+    background: color-mix(in srgb, var(--erro) 12%, var(--papel)); border: 1px solid color-mix(in srgb, var(--erro) 35%, transparent); }
+  .excluir-dica { margin: 0; font-size: 14px; color: var(--tinta-2); }
+  .excluir-entendi { display: flex; align-items: flex-start; gap: 10px; min-height: 44px; padding-top: 10px; font-size: 15px; font-weight: 600; cursor: pointer; }
+  .excluir-entendi input { flex: 0 0 auto; width: 22px; height: 22px; margin: 0; accent-color: var(--erro); cursor: pointer; }
+  .excluir-acoes { display: grid; gap: 8px; }
+  .modal-done.perigo { background: var(--erro); color: var(--sobre-erro); }
+  .modal-done.perigo:hover:not(:disabled) { filter: brightness(.92); }
+  .modal-done:disabled { opacity: .45; cursor: not-allowed; }
 </style>
 </head>
 <body class="deslogado">
@@ -1023,6 +1039,7 @@
     </ul>
     <ul class="voce-grupo" aria-label="Conta">
       <li><button class="voce-linha perigo" type="button" id="sair"><svg class="voce-ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg><span class="voce-rotulo">Sair da conta</span></button></li>
+      <li><button class="voce-linha perigo" type="button" id="excluir-conta"><svg class="voce-ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6"/></svg><span class="voce-rotulo">Excluir conta</span></button></li>
     </ul>
   </div>
 
@@ -1173,6 +1190,9 @@
 </dialog>
 <dialog class="modal" id="novidade-dialog" aria-labelledby="novidade-title">
   <div class="modal-body" id="novidade-body"></div>
+</dialog>
+<dialog class="modal" id="excluir-dialog" aria-labelledby="excluir-title">
+  <div class="modal-body" id="excluir-body"></div>
 </dialog>
 <dialog class="modal editor" id="editor-dialog" aria-labelledby="editor-title">
   <div class="modal-body" id="editor-body"></div>
@@ -3906,6 +3926,69 @@
     desligarPresenca();
     await Promise.all([fila, enviarEventos()]);
     await sb.auth.signOut();
+  });
+
+  // ---------- Excluir conta ----------
+  const excluirDialog = $('excluir-dialog');
+  const ICON_MENOS = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+  function abrirExcluirConta() {
+    $('excluir-body').innerHTML = `
+      <div class="modal-head"><div><h3 id="excluir-title">Excluir sua conta?</h3></div>${BOTAO_FECHAR}</div>
+      <p class="resumo-enc">Que pena ver você indo embora! Antes de confirmar, é importante saber que a exclusão é definitiva. Vamos apagar para sempre:</p>
+      <ul class="excluir-lista">
+        <li>${ICON_MENOS}<span>Todos os seus check-ins e o histórico do calendário</span></li>
+        <li>${ICON_MENOS}<span>Os pesos, as cargas e os recordes de cada exercício</span></li>
+        <li>${ICON_MENOS}<span>Os treinos que você montou e a sua semana</span></li>
+        <li>${ICON_MENOS}<span>Sua foto, seu nome e suas preferências</span></li>
+        <li>${ICON_MENOS}<span>O resumo semanal por e-mail, que para de chegar</span></li>
+      </ul>
+      <p class="excluir-alerta"><b>Não dá para desfazer.</b> Se você entrar de novo com o Google depois, a conta começa do zero, sem nada do que foi salvo até hoje.</p>
+      <p class="excluir-dica">Só quer dar um tempo? Você pode sair da conta ou desligar o resumo em Notificações: tudo continua guardado para quando voltar.</p>
+      <label class="excluir-entendi"><input type="checkbox" id="excluir-entendi"><span>Entendi que vou perder todas as minhas informações.</span></label>
+      <p class="form-erro" id="excluir-erro" role="alert" hidden></p>
+      <div class="excluir-acoes">
+        <button class="modal-done perigo" type="button" id="excluir-sim" disabled>Excluir minha conta</button>
+        <button class="btn-sec" type="button" data-fechar>Quero continuar treinando</button>
+      </div>`;
+    excluirDialog.showModal();
+    registrarEvento('excluir_conta', { etapa: 'abriu' });
+  }
+  async function confirmarExcluirConta() {
+    const botao = $('excluir-sim');
+    botao.disabled = true;
+    botao.textContent = 'Excluindo…';
+    $('excluir-erro').hidden = true;
+    salvarSeriesPendentes();
+    await fila;
+    const { error } = await sb.rpc('excluir_conta');
+    if (error) {
+      const semFuncao = /could not find the function|excluir_conta/i.test(error.message || '');
+      $('excluir-erro').textContent = semFuncao
+        ? 'A exclusão de conta ainda não foi ligada no servidor. Tente de novo mais tarde.'
+        : 'Não foi possível excluir agora. Confira a internet e tente de novo.';
+      $('excluir-erro').hidden = false;
+      botao.textContent = 'Excluir minha conta';
+      botao.disabled = !$('excluir-entendi').checked;
+      registrarErro('excluir_conta', error.message);
+      return;
+    }
+    // A conta não existe mais: nada de eventos, presença nem marcas deste usuário no aparelho.
+    eventosFila = []; clearTimeout(eventosTimer); eventosTimer = null;
+    try {
+      [CHAVE_SESSAO, chaveNovidade(), `bauer-migrado-${usuario.id}`].forEach((k) => localStorage.removeItem(k));
+    } catch (_) {}
+    desligarPresenca();
+    excluirDialog.close();
+    await sb.auth.signOut();
+    toast('Sua conta foi excluída. Obrigado por ter treinado com a gente!');
+  }
+  $('excluir-conta').addEventListener('click', abrirExcluirConta);
+  excluirDialog.addEventListener('change', (e) => {
+    if (e.target.id === 'excluir-entendi') $('excluir-sim').disabled = !e.target.checked;
+  });
+  excluirDialog.addEventListener('click', (e) => {
+    if (e.target.closest('#excluir-sim')) return confirmarExcluirConta();
+    if (e.target === excluirDialog || e.target.closest('[data-fechar]')) excluirDialog.close();
   });
 
   // ---------- Entrada (login com Google) ----------

@@ -80,6 +80,12 @@ Cada pessoa pode montar até 5 treinos (t1 a t5), com até 15 exercícios cada, 
 
 Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 e t5 nos check-ins e nas cargas e cria as colunas `treinos`, `novidade_treinos` e `novidade_oculta`.
 
+## Excluir conta
+
+- **Pelo app:** Você → **Excluir conta**. A confirmação mostra tudo o que será apagado e só libera o botão depois de a pessoa marcar "Entendi".
+- **Pelo monitoramento:** na aba Usuários, a lixeira de cada usuário abre a mesma confirmação. O administrador não exclui a própria conta nem a de outro administrador.
+- **No banco:** as funções `excluir_conta()` e `admin_excluir_usuario(alvo)` apagam o usuário em `auth.users`. Perfil, check-ins, cargas, eventos e e-mails enviados saem junto, em cascata. Para ligar, rode de novo o `supabase/schema.sql`.
+
 ## Monitoramento de uso
 
 O app registra eventos de uso na tabela `eventos` (telas abertas, exercícios concluídos, check-ins criados, editados e excluídos, recordes, vídeos vistos, "Sem peso", semana, tema, foto, erros e sessões que caíram sem a pessoa sair). Os eventos vão em lote, a cada 10 s ou quando o app vai para segundo plano, e não levam pesos corporais, cargas nem observações. Cada usuário só grava os próprios eventos e não consegue lê-los.

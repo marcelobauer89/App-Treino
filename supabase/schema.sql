@@ -345,3 +345,48 @@ end;
 $$;
 revoke execute on function public.admin_emails() from public, anon;
 grant execute on function public.admin_emails() to authenticated;
+
+-- ---------- Exclusão de conta ----------
+-- Apagar o usuário em auth.users leva junto, em cascata, perfil, check-ins, cargas, eventos e e-mails enviados.
+-- Pelo app: a própria pessoa (Você → Excluir conta).
+create or replace function public.excluir_conta()
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if (select auth.uid()) is null then
+    raise exception 'Entre na conta para excluí-la.';
+  end if;
+  delete from auth.users where id = (select auth.uid());
+end;
+$$;
+revoke execute on function public.excluir_conta() from public, anon;
+grant execute on function public.excluir_conta() to authenticated;
+
+-- Pelo monitoramento: um administrador exclui a conta de outro usuário (não a própria nem a de outro administrador).
+create or replace function public.admin_excluir_usuario(alvo uuid)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if not public.eh_admin() then
+    raise exception 'Acesso restrito a administradores.';
+  end if;
+  if alvo = (select auth.uid()) then
+    raise exception 'Para excluir a sua própria conta, use o app (Você → Excluir conta).';
+  end if;
+  if exists (select 1 from public.admins where usuario_id = alvo) then
+    raise exception 'Não é possível excluir a conta de outro administrador.';
+  end if;
+  delete from auth.users where id = alvo;
+  if not found then
+    raise exception 'Usuário não encontrado.';
+  end if;
+end;
+$$;
+revoke execute on function public.admin_excluir_usuario(uuid) from public, anon;
+grant execute on function public.admin_excluir_usuario(uuid) to authenticated;
