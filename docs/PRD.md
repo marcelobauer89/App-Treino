@@ -10,7 +10,7 @@ O App Bauer transforma o plano de 6 semanas "Jiu-Jitsu + Hipertrofia" (hoje um P
 
 **Solução.** Um app que:
 
-- Mostra a atividade do dia (treinos de musculação, jiu-jitsu, muay thai, cardio ou descanso) com base na semana que o próprio usuário monta.
+- Mostra a atividade do dia (treinos de musculação, jiu-jitsu, muay thai, surf, cardio ou descanso) com base na semana que o próprio usuário monta.
 - Registra a carga de cada série por exercício, pré-preenchida com a da última vez, com vídeo de execução no próprio cartão.
 - Faz check-in de cada treino (musculação, jiu-jitsu ou cardio) por um botão fixo, quantas vezes for preciso no mesmo dia.
 - Mostra um Dashboard com calendário de check-ins, os treinos feitos em cada um e a semana comparada ao plano.
@@ -166,6 +166,7 @@ São 53 requisitos em 10 grupos; os marcados P0 bloqueiam o lançamento do MVP. 
 | RF-49 | Em Você → Meus treinos, cada pessoa monta até 5 treinos (até 15 exercícios cada) com os exercícios de uma biblioteca de 71, sem repetição (plano pronto + fichas em PDF). Busca por nome sem diferenciar acentos, filtro por grupo; ajusta nome, foco, séries e PSE (campos com o mesmo formato) e muda a ordem arrastando a alça de cada exercício (mouse, dedo ou setas do teclado); botão flutuante "+ Adicionar exercício", que encolhe ao rolar como o de check-in; excluir treino pede confirmação e o tira da semana; "Voltar ao plano pronto"; sair com mudanças pede confirmação; ao salvar, "Desfazer" por 8 s e "Restaurar versão anterior" (treinos e semana guardados em `perfis.treinos_anterior`) | P0 | Feito |
 | RF-50 | Aviso "Baita atualização!" para quem já usa (Personalizar ou Manter o treino atual) e escolha inicial para conta nova (Montar meus treinos ou Usar o plano pronto). Aparece a cada abertura do app (e ao voltar depois de 30 min em segundo plano, sem abrir por cima de outra janela) até a pessoa marcar "Não mostrar esta mensagem de novo"; a última resposta e o "não mostrar mais" ficam salvos na conta | P0 | Feito |
 | RF-51 | Muay Thai como tipo de check-in (selo M, amarelo, 60 min por padrão) e atividade da Minha semana: marca o dia como feito, conta em "Esta semana", no calendário, nas barras do mês, no painel de monitoramento e no resumo por e-mail (cartão só para quem fez ou planejou muay thai) | P1 | Feito |
+| RF-57 | Surf como tipo de check-in (selo S, magenta, 90 min por padrão), entre Muay Thai e Cardio. Não entra na semana padrão: aparece na Minha semana só se a pessoa colocar, como as outras atividades. Conta em "Esta semana" (como extra quando não está no plano), no calendário, nas barras do mês, no painel de monitoramento e no resumo por e-mail (cartão só para quem surfou ou planejou surf) | P1 | Feito |
 | RF-52 | Tela Você em lista, como os Ajustes do celular: cartão do perfil (foto, nome, e-mail) que abre Dados pessoais; grupos com ícone, nome, valor atual e seta (Meus treinos, Minha semana; Aparência, Notificações, Privacidade; Sair da conta em vermelho). Cada opção abre a própria tela (#voce/…) com "‹ Você" para voltar; o voltar do navegador também funciona | P1 | Feito |
 | RF-53 | Excluir conta: em Você, "Excluir conta" abre uma confirmação amigável que lista o que se perde (check-ins, pesos e recordes, treinos e semana, foto e preferências, resumo por e-mail), avisa que não dá para desfazer, sugere sair ou desligar o resumo para quem só quer um tempo e exige marcar "Entendi" antes do botão vermelho. No monitoramento, cada usuário tem uma lixeira que abre a mesma confirmação, com o nome da pessoa; o administrador não exclui a própria conta nem a de outro administrador. Tudo é apagado em cascata pelo banco (funções `excluir_conta()` e `admin_excluir_usuario()`) | P1 | Feito |
 | **Privacidade (LGPD)** |  |  |  |
@@ -173,7 +174,7 @@ São 53 requisitos em 10 grupos; os marcados P0 bloqueiam o lançamento do MVP. 
 | RF-55 | Recuperação e observações (dados de saúde) só com consentimento: sem resposta, os formulários de check-in e de encerrar mostram "Quer registrar como se sentiu?" com Concordo e Agora não; com "não", os campos somem e o check-in é salvo sem eles. Em Você → Privacidade, um interruptor liga e desliga; ao desligar, a pessoa escolhe apagar ou manter o que já registrou. O painel de monitoramento não recebe mais a recuperação | P0 | Feito |
 | RF-56 | Baixar meus dados: Você → Privacidade gera `oss-meus-dados-AAAA-MM-DD.json` com perfil (sem a foto), preferências, consentimentos, treinos, semana, check-ins, cargas, registro de uso e e-mails enviados (função `meus_dados_extras()`) | P1 | Feito |
 | **Dashboard e calendário** |  |  |  |
-| RF-27 | Calendário mensal no Dashboard: cada dia mostra selos por tipo (1 a 5 para musculação, J para jiu-jitsu, M para muay thai, C para cardio); com mais de dois check-ins mostra o primeiro e "+N"; navegação entre meses até o mês atual | P0 | Feito |
+| RF-27 | Calendário mensal no Dashboard: cada dia mostra selos por tipo (1 a 5 para musculação, J para jiu-jitsu, M para muay thai, S para surf, C para cardio); com mais de dois check-ins mostra o primeiro e "+N"; navegação entre meses até o mês atual | P0 | Feito |
 | RF-28 | Ao tocar num dia, listar os check-ins daquele dia em ordem de horário, com tipo, horário, duração e recuperação; dia sem check-in orienta tocar em "Fazer check-in", que já usa o dia selecionado | P0 | Feito |
 | RF-29 | Ao abrir um check-in de musculação, mostrar a observação e cada exercício do treino com as cargas do dia por série; exercícios sem carga aparecem como "sem registro", e os marcados como Sem peso como "feito (sem peso)" ou "sem peso"; em check-ins encerrados, tocar num exercício abre o painel para corrigir os pesos (ou o "feito" sem peso) daquele dia | P0 | Feito |
 | RF-34 | Números do Dashboard: check-ins no total, check-ins e horas treinadas no mês, recuperação média dos últimos 30 dias | P1 | Feito |
@@ -198,9 +199,9 @@ O plano pronto é um modelo único, compartilhado por todos os usuários e guard
 | Treino-modelo | código (1, 2 ou 3, no plano pronto; 1 a 5 nos treinos da conta), nome, subtítulo, objetivo, o que esperar, impacto no jiu-jitsu, impacto no físico, lista ordenada de exercícios |
 | Exercício (biblioteca) | nome, grupo muscular, dose (séries × reps/tempo/por lado), PSE-alvo, graus H/F/E/M (Alta/Média/Baixa), justificativa, vídeo, é principal (sim/não) |
 | Ajuste por fase | exercício, fase, nova dose (ex.: Passada 3×16 na fase 3) |
-| Sessão | inscrição, data, tipo (Treino 1 a 5, jiu-jitsu, muay thai, cardio, descanso), semana, status (planejada, feita, pulada, movida) |
+| Sessão | inscrição, data, tipo (Treino 1 a 5, jiu-jitsu, muay thai, surf, cardio, descanso), semana, status (planejada, feita, pulada, movida) |
 | Treinos da conta | usuário, até 5 treinos (nome, foco, exercícios com dose e PSE); vazio = plano pronto; última resposta ao aviso da novidade e quando pediu para não mostrar mais |
-| Check-in | usuário, tipo (Treino 1 a 5, jiu-jitsu, muay thai, cardio), início, fim (vazio enquanto aberto), sem horário (sim/não), recuperação (1–5, opcional), observação, retroativo (sim/não) |
+| Check-in | usuário, tipo (Treino 1 a 5, jiu-jitsu, muay thai, surf, cardio), início, fim (vazio enquanto aberto), sem horário (sim/não), recuperação (1–5, opcional), observação, retroativo (sim/não) |
 | Cargas do dia | usuário, data, treino (1 a 5), cargas por exercício e série (kg) ou marcação de feito para exercícios sem peso |
 | Medida corporal | usuário, data, peso (kg), % de gordura (opcional) |
 | Proteína | usuário, data, gramas |
