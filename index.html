@@ -501,6 +501,14 @@
     width: max-content; max-width: calc(100vw - 32px); padding: 12px 16px; border-radius: 12px;
     background: var(--tinta); color: var(--gi); font-size: 14px; box-shadow: 0 6px 24px rgba(0, 0, 0, .18);
   }
+  .toast.com-acao { display: flex; align-items: center; gap: 12px; padding: 6px 6px 6px 16px; }
+  .toast-acao {
+    flex: 0 0 auto; min-height: 40px; padding: 0 12px; border: 0; border-radius: 8px; background: transparent;
+    color: inherit; font-size: 14px; font-weight: 800; text-decoration: underline; text-underline-offset: 3px;
+  }
+  .toast-acao:hover { background: rgba(127, 127, 127, .25); }
+  .anterior-confirma { display: grid; gap: 8px; }
+  .anterior-confirma > div { display: flex; flex-wrap: wrap; gap: 8px; }
   body.com-ativo .toast { bottom: calc(var(--nav-h) + var(--ativo-h) + env(safe-area-inset-bottom, 0px) + 84px); }
 
   /* Botão fixo de check-in: pílula com texto que vira círculo ao rolar para baixo. */
@@ -1075,6 +1083,7 @@
       <p class="nota-campo" id="meus-treinos-nota"></p>
       <ul class="meus-treinos" id="meus-treinos"></ul>
       <button class="btn" type="button" id="editar-treinos">Personalizar meus treinos</button>
+      <div id="treinos-anterior"></div>
     </div>
   
   </section>
@@ -1382,6 +1391,8 @@
   const MAX_TREINOS = 5, MAX_EXERCICIOS = 15;
   let TREINOS = PLANO_PADRAO;
   let treinosDaConta = false;
+  // Versão anterior dos treinos (perfis.treinos_anterior): { treinos, semana, em }. Serve para Desfazer e recuperar.
+  let treinosAnterior = null;
   const limpar = (t, max) => String(t ?? '').replace(/[<>"&]/g, '').trim().slice(0, max);
   function exercicioCompleto(e) {
     const base = exDaBiblioteca(e.nome) || { nome: limpar(e.nome, 80), grupo: '', H: 'baixa', M: 'baixa', F: 'baixa', E: 'baixa', why: '' };
@@ -1868,6 +1879,7 @@
     if (!TREINOS[estado.treino]) estado.treino = Object.keys(TREINOS)[0];
     let ocultaNoAparelho = false;
     try { ocultaNoAparelho = !!localStorage.getItem(chaveNovidade()); } catch (_) {}
+    treinosAnterior = linha.treinos_anterior && linha.treinos_anterior.treinos ? linha.treinos_anterior : null;
     novidade = { disponivel: true, vista: !!linha.novidade_oculta || ocultaNoAparelho, contaNova: !(c.data || []).length && !cargas.length };
     const semana = validarSemana(linha.semana);
     semanaDaConta = !!semana;
@@ -2042,9 +2054,20 @@
   function toast(msg) {
     const t = $('toast');
     t.textContent = msg;
+    t.classList.remove('com-acao');
     t.hidden = false;
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => { t.hidden = true; }, 4000);
+  }
+  // Aviso com um botão (ex.: "Desfazer"), que fica um pouco mais na tela.
+  function toastAcao(msg, rotulo, acao, ms = 8000) {
+    const t = $('toast');
+    t.innerHTML = `<span>${esc(msg)}</span><button class="toast-acao" type="button">${esc(rotulo)}</button>`;
+    t.classList.add('com-acao');
+    t.querySelector('.toast-acao').addEventListener('click', () => { clearTimeout(toastTimer); t.hidden = true; acao(); }, { once: true });
+    t.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { t.hidden = true; }, ms);
   }
 
   const recHTML = (nome, valor) => `
@@ -3178,15 +3201,17 @@
     Object.entries(ed.treinos).forEach(([id, t]) => { t.nome = limpar(t.nome, 40) || `Treino ${id}`; t.subtitulo = limpar(t.subtitulo, 60); });
     const valor = mesmoQuePadrao(ed.treinos) ? null : treinosParaSalvar(ed.treinos);
     const antes = Object.keys(TREINOS);
+    // Cópia do que existia antes de salvar, para Desfazer agora ou restaurar depois.
+    treinosAnterior = fotoDosTreinos();
     TREINOS = montarTreinos(valor) || PLANO_PADRAO;
     treinosDaConta = !!valor;
     atualizarTipos();
-    const campos = { treinos: valor };
+    const campos = { treinos: valor, treinos_anterior: treinosAnterior };
     // Treino excluído sai da semana; treino novo entra pelo Minha semana.
     const semana = validarSemana(config.semana);
     const saiuDaSemana = JSON.stringify(semana) !== JSON.stringify(config.semana);
     if (saiuDaSemana) { config.semana = semana; campos.semana = semana; semanaDaConta = true; }
-    salvarPerfil(campos);
+    salvarTreinosNoBanco(campos);
     const novos = Object.keys(TREINOS).filter((id) => !antes.includes(id));
     if (!TREINOS[estado.treino]) estado.treino = Object.keys(TREINOS)[0];
     salvar();
@@ -3200,9 +3225,42 @@
     atualizarCheckinUI();
     if (telaAtual() === 'voce') renderConfig();
     const fora = Object.keys(TREINOS).filter((id) => !config.semana.flat().includes(`t${id}`));
-    toast(saiuDaSemana ? 'Treinos salvos. O treino excluído saiu da sua semana.'
+    toastAcao(saiuDaSemana ? 'Treinos salvos. O treino excluído saiu da sua semana.'
       : novos.length || fora.length ? 'Treinos salvos. Coloque os treinos na semana em Você → Minha semana.'
-        : 'Treinos salvos.');
+        : 'Treinos salvos.', 'Desfazer', () => restaurarAnterior('desfazer'));
+  }
+
+  const fotoDosTreinos = () => ({ treinos: treinosParaSalvar(TREINOS), semana: copiaSemana(config.semana), em: new Date().toISOString() });
+  // Num banco sem a coluna treinos_anterior (schema.sql antigo), grava sem ela: salvar nunca trava por causa da cópia.
+  function salvarTreinosNoBanco(campos) {
+    enviar(async () => {
+      const r = await sb.from('perfis').update(campos).eq('id', usuario.id);
+      if (!r.error || !/treinos_anterior/.test(r.error.message || '')) return r;
+      const { treinos_anterior: _, ...resto } = campos;
+      return sb.from('perfis').update(resto).eq('id', usuario.id);
+    });
+  }
+  // Volta para a versão anterior (treinos e semana). A versão de agora vira a anterior, então dá para desfazer de novo.
+  function restaurarAnterior(origem) {
+    const foto = treinosAnterior;
+    if (!foto) return;
+    treinosAnterior = fotoDosTreinos();
+    const valor = mesmoQuePadrao(foto.treinos) ? null : montarTreinos(foto.treinos) && foto.treinos;
+    TREINOS = montarTreinos(valor) || PLANO_PADRAO;
+    treinosDaConta = !!valor;
+    atualizarTipos();
+    config.semana = validarSemana(foto.semana) || validarSemana(config.semana);
+    semanaDaConta = true;
+    if (!TREINOS[estado.treino]) estado.treino = Object.keys(TREINOS)[0];
+    salvar();
+    salvarTreinosNoBanco({ treinos: valor, semana: config.semana, treinos_anterior: treinosAnterior });
+    registrarEvento('treinos_desfeitos', { origem });
+    restaurarConfirmando = false;
+    renderHoje();
+    renderTudo();
+    atualizarCheckinUI();
+    if (telaAtual() === 'voce') renderConfig();
+    toast('Treinos restaurados.');
   }
 
   function fecharEditor() {
@@ -3387,8 +3445,27 @@
       : 'Você está usando o plano pronto. Monte os seus treinos com os exercícios da biblioteca.';
     $('meus-treinos').innerHTML = Object.entries(TREINOS).map(([id, t]) => `
       <li>${seloHTML(`t${id}`)}<span><b>${t.nome}</b> <small>${t.subtitulo ? `${t.subtitulo} · ` : ''}${qtdExercicios(t.exercicios.length)}</small></span></li>`).join('');
+    renderTreinosAnterior();
   }
   $('editar-treinos').addEventListener('click', () => abrirEditor());
+  let restaurarConfirmando = false;
+  function renderTreinosAnterior() {
+    const el = $('treinos-anterior');
+    if (!treinosAnterior) { el.innerHTML = ''; return; }
+    const local = treinosAnterior.em ? isoLocal(new Date(treinosAnterior.em)) : '';
+    const quando = local ? ` (salva em ${fmtData(local.slice(0, 10), { day: '2-digit', month: '2-digit' })} às ${horaDe(local)})` : '';
+    const nomes = Object.values(treinosAnterior.treinos).map((t) => t.nome);
+    el.innerHTML = restaurarConfirmando ? `
+      <div class="ed-confirma anterior-confirma" role="alert">
+        <p>Voltar para a versão anterior${quando}? Ela tem ${lista(nomes)}. Os treinos de agora ficam guardados como versão anterior.</p>
+        <div><button class="btn" type="button" data-anterior-sim>Restaurar</button><button class="btn-sec" type="button" data-anterior-nao>Cancelar</button></div>
+      </div>` : `<button class="btn-sec" type="button" data-anterior>Restaurar versão anterior${quando}</button>`;
+  }
+  $('treinos-anterior').addEventListener('click', (e) => {
+    if (e.target.closest('[data-anterior]')) { restaurarConfirmando = true; renderTreinosAnterior(); return; }
+    if (e.target.closest('[data-anterior-nao]')) { restaurarConfirmando = false; renderTreinosAnterior(); return; }
+    if (e.target.closest('[data-anterior-sim]')) restaurarAnterior('versao_anterior');
+  });
 
   // ---------- Aviso da novidade (até marcar "não mostrar mais") ----------
   const novidadeDialog = $('novidade-dialog');
