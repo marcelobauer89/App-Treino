@@ -13,6 +13,8 @@
     if (temaSalvo === 'claro') document.documentElement.dataset.theme = 'light';
     if (temaSalvo === 'escuro') document.documentElement.dataset.theme = 'dark';
   } catch (_) {}
+  // Aberta dentro do app (janela da política): sem o "Voltar" nem o título, que já estão na janela.
+  if (/[?&]embed=1/.test(location.search)) document.documentElement.classList.add('embed');
 </script>
 <link rel="stylesheet" href="fonts/archivo.css">
 <style>
@@ -54,6 +56,8 @@
   ul:last-child { margin-bottom: 0; }
   li { margin: 4px 0; }
   .nao { color: var(--tinta-2); }
+  .embed .voltar, .embed h1 { display: none; }
+  .embed .wrap { padding-top: 16px; }
   footer { margin-top: 24px; color: var(--tinta-2); font-size: 14px; }
 </style>
 </head>
@@ -155,6 +159,10 @@
   </footer>
 </main>
 <script>
+  // Dentro do app, os links da política abrem fora da janela (o site em outra aba, o e-mail no app de e-mail).
+  if (document.documentElement.classList.contains('embed')) {
+    document.querySelectorAll('main a:not(#voltar)').forEach(function (a) { a.target = '_blank'; a.rel = 'noopener'; });
+  }
   // A política abre numa aba nova a partir do app: "Voltar" fecha esta aba e volta para o app
   // como estava, sem carregar tudo de novo. Aberta direto pelo link, volta pelo histórico ou abre o app.
   document.getElementById('voltar').addEventListener('click', function (e) {
