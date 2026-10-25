@@ -1,6 +1,6 @@
 ## PRD — App Bauer: Jiu-Jitsu + Hipertrofia
 
-2026-10-23 · @Bauer
+2026-10-25 · @Bauer
 
 ### Visão geral
 
@@ -25,9 +25,9 @@ O app está no ar em https://marcelobauer89.github.io/App-Treino/ (GitHub Pages)
 
 | Tela | O que já faz |
 | --- | --- |
-| **Treino** | Data, hora e atividade de hoje no topo; abas Treino 1, 2 e 3 (abre no treino do dia); filtro por foco (Hipertrofia, Força, Explosão, Mobilidade); "Sobre o treino" com objetivo, o que esperar e impacto no jiu e no físico; cada exercício num cartão próprio com dose, PSE-alvo, graus H/F/E/M e botão "Terminei o exercício" (com peso: cargas por série; sem peso: marca como feito) e troféu quando a carga do dia é recorde; deslizando o cartão para o lado aparece o vídeo de execução, que toca sem som; agenda da semana com dias feitos e treinos extras |
+| **Treino** | Data, hora e atividade de hoje no topo; uma aba por treino (os 3 do plano pronto ou até 5 montados pela pessoa, com nome e foco ou número de exercícios; abre no treino do dia); filtro por foco (Hipertrofia, Força, Explosão, Mobilidade); "Sobre o treino" com objetivo, o que esperar e impacto no jiu e no físico; cada exercício num cartão próprio com dose, PSE-alvo, graus H/F/E/M e botão "Terminei o exercício" (com peso: cargas por série; sem peso: marca como feito) e troféu quando a carga do dia é recorde; deslizando o cartão para o lado aparece o vídeo de execução, que toca sem som; agenda da semana com dias feitos e treinos extras |
 | **Dashboard** | Números (check-ins no total, no mês, horas treinadas no mês, recuperação média em 30 dias); esta semana × plano; calendário mensal com selos por tipo; lista dos check-ins do dia com detalhe dos exercícios e cargas; edição do check-in e correção dos pesos de cada exercício naquele dia; exclusão de check-in; barras por tipo no mês |
-| **Você** | Dados pessoais salvos automaticamente (nome, e-mail da conta Google, foto recortada no aparelho e exibida na barra inferior); tema (automático, claro, escuro); **Minha semana**, para montar a semana arrastando as atividades para os dias, com avisos; conta, interruptor "Resumo semanal por e-mail" (ligado por padrão), aviso de que o uso do app é registrado (sem pesos, cargas ou observações) e saída |
+| **Você** | Lista no estilo dos Ajustes do celular: cartão do perfil (foto, nome, e-mail) que abre Dados pessoais, salvos automaticamente; grupos com ícone, nome, valor atual e seta: **Meus treinos** (montar até 5 treinos com a biblioteca de 71 exercícios, Desfazer e Restaurar versão anterior), **Minha semana** (arrastar as atividades para os dias, com avisos), **Aparência** (tema), **Notificações** (resumo semanal por e-mail), **Privacidade** (aviso do registro de uso) e Sair da conta em vermelho; cada opção abre a própria tela com "‹ Você" para voltar |
 | **Monitoramento** (`admin.html`, só administradores) | Quatro abas (Visão geral, Usuários, Saúde do app, E-mails), com o período comum (Hoje, 7, 30, 90 dias ou Tudo) e a aba guardada no endereço (ex.: `admin.html#saude`). **Visão geral:** On-line agora (ao vivo, com a tela atual, há quanto tempo está no app e status da conexão: "Ao vivo", "Ao vivo em X de Y usuários" ou o erro exato), com ponto verde pulsando na aba quando há alguém on-line; números do período (usuários ativos, check-ins, treinos por semana, ou por usuário em Hoje, aderência e retorno), cada um com seta de comparação com o período anterior e ícone de informação; gráficos de check-ins por tipo e de usuários ativos (por hora em Hoje, por dia ou por semana), também com ícone de informação e "Ver tabela". **Usuários:** lista com situação, busca, ordenação e CSV; detalhe com check-ins das últimas 8 semanas, semana montada, exercícios sem peso, se recebe o resumo e atividade recente (7 por vez, com "Mostrar mais", agrupada por dia). **Saúde do app:** erros e usuários afetados, sessões perdidas por navegador, falhas do ao vivo, gráfico de erros, erros agrupados com "Acontecendo agora" e ocorrências por usuário, bolinha com os erros das últimas 24 h. **E-mails:** cartão do próximo resumo (dia, quanto falta, período e quem vai receber), envios por semana com abertos e clicados, quem recebeu (Enviado, Abriu, Clicou) e quem não recebeu e por quê. Nunca mostra pesos, cargas nem observações |
 | **Mundo ao vivo** (`mundo.html`, só administradores) | Mapa em pixel art com um personagem por pessoa com o app aberto, que anda até o lugar da tela ou da última ação (Portão, Academia, Tatame, Pista, Torre, Casa), com balão do nome e da ação e animação de recorde; placar de quem está no app e dos check-ins e recordes de hoje; linha do tempo do dia; quem está fora do app e há quanto tempo; tela cheia para telão. Nunca mostra pesos, cargas nem observações |
 
@@ -83,7 +83,8 @@ O MVP cobre um grupo de amigos convidados, cada um com conta e dados próprios, 
 - Plano Bauer como modelo comum; cada usuário define peso, alvo e data de início.
 - Perfil do usuário (nome, e-mail, foto) e tema claro/escuro.
 - Semana montada pelo usuário (até 2 atividades por dia), com a atividade do dia no topo da tela Treino.
-- Execução dos Treinos 1, 2 e 3 com registro da carga de cada série.
+- Treinos personalizados: até 5 treinos montados com uma biblioteca de exercícios, ou o plano pronto (Treinos 1, 2 e 3).
+- Execução dos treinos com registro da carga de cada série.
 - Filtro dos exercícios por foco e explicação de cada treino ("Sobre o treino").
 - Vídeo de referência por exercício (YouTube Shorts), dentro do cartão.
 - Progressão automática por fase (semanas 1–2, 3–4, 5–6).
@@ -106,7 +107,7 @@ O MVP cobre um grupo de amigos convidados, cada um com conta e dados próprios, 
 
 ### Requisitos funcionais
 
-São 48 requisitos em 9 grupos; os marcados P0 bloqueiam o lançamento do MVP. A coluna Status mostra o que o app atual já entrega: **Feito**, **Parcial** ou **Pendente**.
+São 52 requisitos em 10 grupos; os marcados P0 bloqueiam o lançamento do MVP. A coluna Status mostra o que o app atual já entrega: **Feito**, **Parcial** ou **Pendente**.
 
 | ID | Requisito | Prioridade | Status |
 | --- | --- | --- | --- |
@@ -175,7 +176,7 @@ São 48 requisitos em 9 grupos; os marcados P0 bloqueiam o lançamento do MVP. A
 
 ### Modelo de dados
 
-O plano é um modelo único, compartilhado por todos os usuários e guardado como dados, não como 12 telas fixas: 3 treinos-modelo, 22 exercícios e 3 fases geram as 6 semanas.
+O plano pronto é um modelo único, compartilhado por todos os usuários e guardado como dados, não como 12 telas fixas: 3 treinos-modelo, 22 exercícios e 3 fases geram as 6 semanas. Quem prefere monta os próprios treinos (até 5) com os exercícios de uma biblioteca de 71, que inclui os 22 do plano.
 
 | Entidade | Campos principais |
 | --- | --- |
@@ -188,10 +189,10 @@ O plano é um modelo único, compartilhado por todos os usuários e guardado com
 | Plano (modelo) | nome, duração (6 semanas) |
 | Inscrição no plano | usuário, plano, data de início, peso inicial, alvo, compartilha aderência (sim/não) |
 | Fase | número (1–3), semanas (1–2, 3–4, 5–6), foco, orientação |
-| Treino-modelo | código (1, 2 ou 3), nome, subtítulo, objetivo, o que esperar, impacto no jiu-jitsu, impacto no físico, lista ordenada de exercícios |
-| Exercício | nome, dose (séries × reps/tempo/por lado), PSE-alvo, graus H/F/E/M (Alta/Média/Baixa), justificativa, vídeo, é principal (sim/não) |
+| Treino-modelo | código (1, 2 ou 3, no plano pronto; 1 a 5 nos treinos da conta), nome, subtítulo, objetivo, o que esperar, impacto no jiu-jitsu, impacto no físico, lista ordenada de exercícios |
+| Exercício (biblioteca) | nome, grupo muscular, dose (séries × reps/tempo/por lado), PSE-alvo, graus H/F/E/M (Alta/Média/Baixa), justificativa, vídeo, é principal (sim/não) |
 | Ajuste por fase | exercício, fase, nova dose (ex.: Passada 3×16 na fase 3) |
-| Sessão | inscrição, data, tipo (Treino 1, 2, 3, jiu-jitsu, cardio, descanso), semana, status (planejada, feita, pulada, movida) |
+| Sessão | inscrição, data, tipo (Treino 1 a 5, jiu-jitsu, muay thai, cardio, descanso), semana, status (planejada, feita, pulada, movida) |
 | Treinos da conta | usuário, até 5 treinos (nome, foco, exercícios com dose e PSE); vazio = plano pronto; última resposta ao aviso da novidade e quando pediu para não mostrar mais |
 | Check-in | usuário, tipo (Treino 1 a 5, jiu-jitsu, muay thai, cardio), início, fim (vazio enquanto aberto), sem horário (sim/não), recuperação (1–5, opcional), observação, retroativo (sim/não) |
 | Cargas do dia | usuário, data, treino (1 a 5), cargas por exercício e série (kg) ou marcação de feito para exercícios sem peso |
@@ -214,7 +215,7 @@ O monitoramento usa mais duas tabelas e um canal ao vivo:
 - **`admins`:** quem é administrador; não pode ser lida nem alterada pela API, e a função `eh_admin()` diz se o usuário logado está nela.
 - **`eventos`:** cada usuário só grava os próprios eventos e não lê nenhum. O app envia os eventos em lote (a cada 10 s, a cada 20 eventos, ao ir para segundo plano e ao sair), sem avisar o usuário e sem falhar se a tabela não existir.
 - **Funções `admin_usuarios()` (inclui se recebe o resumo), `admin_checkins()`, `admin_eventos()` e `admin_emails()`:** alimentam o `admin.html`, recusam quem não está em `admins` e não devolvem pesos, cargas nem observações.
-- **Presença (Supabase Realtime):** enquanto o app está visível, publica a tela atual, desde quando está aberto e o sistema no canal privado `online:<id>` do usuário, e retira ao ir para segundo plano ou sair. Cada pessoa só publica e lê o próprio canal; administradores leem todos.
+- **Presença (Supabase Realtime):** enquanto o app está visível, publica a tela atual, desde quando está aberto, o sistema e a última ação (exercício concluído, recorde, check-in, vídeo, semana; sem cargas), usada pelo Mundo ao vivo, no canal privado `online:<id>` do usuário, e retira ao ir para segundo plano ou sair. Cada pessoa só publica e lê o próprio canal; administradores leem todos.
 
 Ajustes únicos de dados ficam em `supabase/ajustes/` e rodam uma vez no SQL Editor, depois do `schema.sql`:
 - **`2026-10-20-peso-zero-para-sem-peso.sql`:** marca como Sem peso os exercícios em que todas as cargas do usuário são zero (número ou texto, como `"0"`), com prévia antes de alterar; não apaga registros.
@@ -223,7 +224,7 @@ Ajustes únicos de dados ficam em `supabase/ajustes/` e rodam uma vez no SQL Edi
 
 No primeiro login em cada aparelho, os check-ins e configurações que estavam só no navegador (versões anteriores) são enviados para a conta. Contas sem semana salva usam a padrão, montada com os antigos dias de jiu-jitsu.
 
-Exercícios por treino, conforme o app:
+Exercícios do plano pronto, por treino:
 
 - **Treino 1 — Costas + bíceps (8):** Escorpião, Carregada na marcha, Alcance diagonal, Remada inversa, Rotação no cabo, Puxada, Superman, Rosca bíceps.
 - **Treino 2 — Peito, tríceps e ombro (8):** Rolamento, Quadrupedia tocando os ombros, Supino no chão, TGU parcial, Desenvolvimento, Halo, Elevação lateral, Tríceps.
@@ -247,12 +248,14 @@ Terminar exercícios (registrar pesos) e fazer check-in são ações separadas. 
 | --- | --- |
 | Entrada | Painel azul com a faixa branca de 4 graus, título "OSS", "Exercícios de Jiu Jitsu e hipertrofia", "Continuar com o Google", crédito com link para o LinkedIn |
 | Onboarding | Peso, % de gordura, alvo, data de início (pendente) |
-| Treino | Data, hora e atividade de hoje; abas Treino 1, 2 e 3; filtro por foco; "Sobre o treino"; um cartão por exercício com dose, PSE-alvo, graus H/F/E/M, "Terminei o exercício" e vídeo ao deslizar; agenda da semana com dias feitos e extras; botão fixo "Fazer check-in" |
+| Treino | Data, hora e atividade de hoje; uma aba por treino (plano pronto ou treinos montados); filtro por foco; "Sobre o treino"; um cartão por exercício com dose, PSE-alvo, graus H/F/E/M, "Terminei o exercício" e vídeo ao deslizar; agenda da semana com dias feitos e extras; botão fixo "Fazer check-in" |
 | Terminei o exercício | Painel (folha inferior no celular) com o interruptor "Sem peso", uma linha por série, carga pré-preenchida, "Última vez", "Recorde: X kg em dd/mm" e selo "Novo recorde" no campo que passa dele, Concluir; sem peso, só Concluir (marca como feito, com "Desfazer") |
 | Novo check-in | Aberto pelo botão fixo: tipo, data, início, duração, recuperação 1–5, observação |
 | Encerrar check-in | Só para check-ins que ficaram abertos: início e duração, exercícios com carga no dia, recuperação 1–5, observação |
 | Dashboard | Números, esta semana × plano, calendário mensal, check-ins do dia com detalhe, "Editar check-in", exclusão e exercícios que abrem o painel para corrigir os pesos daquele dia; barras por tipo no mês; botão fixo "Fazer check-in" |
-| Você | Dados pessoais e foto (salvos sozinhos, sem botão), tema, Minha semana (arrastar e soltar, botão +, avisos, voltar ao padrão), conta com aviso sobre o registro de uso |
+| Você | Lista com cartão do perfil e grupos de opções; telas Dados pessoais (nome e foto salvos sozinhos), Meus treinos, Minha semana (arrastar e soltar, botão +, avisos, voltar ao padrão), Aparência, Notificações, Privacidade e Sair da conta |
+| Meus treinos | Até 5 treinos de até 15 exercícios: nome e foco do treino; por exercício, séries e PSE em campos iguais e alça para arrastar a ordem; biblioteca com busca sem acento e filtro por grupo; botão flutuante "+ Adicionar exercício"; excluir treino, voltar ao plano pronto; Salvar treinos com Desfazer por 8 s e Restaurar versão anterior |
+| Aviso da novidade | "Baita atualização!" (Personalizar ou Manter o treino atual) para quem já usa; conta nova escolhe entre Montar meus treinos ou Usar o plano pronto; caixa "Não mostrar esta mensagem de novo" |
 | Monitoramento (`admin.html`) | Só administradores, com login Google, em quatro abas: Visão geral (On-line agora, números e gráficos com explicação), Usuários (busca, ordenação, CSV, detalhe), Saúde do app (erros, sessões perdidas, falhas do ao vivo) e E-mails (próximo resumo, envios, aberturas e cliques); no celular, números em 2 colunas e usuários em cartões compactos |
 | Progresso | Peso médio por semana, cargas principais, aderência, % de gordura (pendente) |
 | Ajustes | Unidades, exportação, privacidade, convidar amigos (administrador), excluir conta, aviso legal (pendente; parte já está em Você) |
@@ -266,7 +269,7 @@ Todas as regras vêm do plano original; o app as aplica sem que o usuário preci
 3. **Semana montada:** cada dia aceita até 2 atividades; ao colocar uma terceira, sai a mais antiga e o app avisa. Dia vazio é descanso. Todos os 7 dias podem receber atividades.
 4. **Conflito de sexta:** com jiu-jitsu na sexta, o usuário move o Treino 3 em Minha semana. O ajuste automático (Treino 3 para sábado ou marcado como pulado) fica pendente.
 5. **Avisos da semana:** o app avisa quando:
-   - um dos três treinos ficou fora da semana ou aparece mais de uma vez;
+   - algum treino (do plano pronto ou montado) ficou fora da semana ou aparece mais de uma vez;
    - um dia tem 2 atividades (fazer um check-in para cada);
    - o jiu-jitsu vem no dia seguinte ao Treino 3 (pernas) ou no mesmo dia;
    - a semana não tem dia de descanso.
@@ -280,7 +283,7 @@ Todas as regras vêm do plano original; o app as aplica sem que o usuário preci
 13. **Vários check-ins por dia:** não há limite de check-ins por dia, mas check-ins do mesmo dia não podem se sobrepor no horário. Só um check-in pode ficar aberto por vez.
 14. **Check-in esquecido:** um check-in que ficou aberto há mais de 3 horas gera aviso na barra "em andamento"; na próxima abertura do app, ele é encerrado na hora da última série registrada (ou 1 hora após o início) e o usuário é avisado. Vale para check-ins abertos em versões anteriores, já que o formulário atual registra o check-in encerrado.
 15. **Check-in retroativo e edição:** a data não pode ser no futuro e a duração vai de 1 a 600 min; check-ins de datas passadas ficam marcados como retroativos. As mesmas regras valem ao editar (a sobreposição ignora o próprio check-in), e um check-in "sem horário" passa a ter horário ao ser editado. Os pesos ficam no dia e no treino: mudar a data ou o tipo de um check-in não leva os pesos junto.
-16. **Duração padrão:** 60 min para musculação e jiu-jitsu, 30 min para cardio.
+16. **Duração padrão:** 60 min para musculação, jiu-jitsu e muay thai, 30 min para cardio.
 17. **Exclusão:** excluir um check-in pede confirmação; os pesos registrados na ficha continuam salvos.
 18. **Pesos:** salvar um peso grava as cargas do dia daquele treino e não abre check-in nem temporizador. Editar um peso de hoje mantém as outras séries já registradas.
 19. **Acessos:** cada abertura do app já logado atualiza o último acesso; a quantidade só sobe se o acesso anterior foi há mais de 30 min. A hora é a do servidor, e o usuário não consegue alterar esses campos.
@@ -303,6 +306,10 @@ Todas as regras vêm do plano original; o app as aplica sem que o usuário preci
    - **Abertura e clique:** o e-mail leva uma imagem invisível (abertura, aproximada: alguns apps carregam imagens sozinhos e quem bloqueia imagens não conta) e o botão passa pela função antes de abrir o app (clique, exato). Os links são assinados com o `RESUMO_TOKEN`, o rodapé avisa que a abertura é registrada e a prévia não conta.
    - **Envio só com pedido explícito:** a função só envia para todos quando o pedido diz `enviar` (no corpo ou na URL), como faz o agendamento. Sem pedido, responde 400 com o que recebeu e não envia nada. Simulação (quem receberia) e prévia (só para um e-mail, sem diferenciar maiúsculas) também funcionam pela URL, e a resposta diz o modo entendido.
    - **Descadastro:** o link do rodapé é assinado (HMAC com o `RESUMO_TOKEN`) e desliga a opção com um clique, sem login; ao voltar para o app, aparece "Pronto: você não vai mais receber o resumo semanal.". Ligar ou desligar em Você mostra um aviso e gera o evento de uso `resumo_email`.
+
+26. **Treinos personalizados:** até 5 treinos, cada um com até 15 exercícios da biblioteca. A conta guarda só nome, dose e PSE de cada exercício; sem treinos salvos, vale o plano pronto. Excluir um treino o tira da semana. O histórico de pesos e os recordes seguem o exercício em qualquer treino.
+27. **Versão anterior dos treinos:** ao salvar, a versão anterior (treinos, semana e data) fica guardada; "Desfazer" (8 s) e "Restaurar versão anterior" (com confirmação) voltam treinos e semana para como estavam. Sem a coluna no banco, os treinos são salvos do mesmo jeito, sem a cópia.
+28. **Aviso da novidade:** aparece a cada abertura do app, e ao voltar depois de 30 min em segundo plano, sem abrir por cima de outra janela, até a pessoa marcar "Não mostrar esta mensagem de novo" (a caixa só marca ao tocar nela ou no texto). Responder, fechar no X ou Esc grava só a última resposta, em silêncio; sem a coluna no banco, o "não mostrar mais" fica guardado no aparelho.
 
 ### Requisitos não funcionais
 
@@ -333,6 +340,10 @@ Todas as regras vêm do plano original; o app as aplica sem que o usuário preci
    - exercícios sem peso e recordes pessoais;
    - registro de acessos e eventos de uso;
    - painel de monitoramento para administradores em abas, com quem está on-line agora, saúde do app e acompanhamento dos e-mails;
+   - Mundo ao vivo para administradores;
+   - treinos personalizados (até 5) com biblioteca de 71 exercícios;
+   - muay thai como atividade;
+   - tela Você em lista, no estilo dos Ajustes do celular;
    - resumo semanal por e-mail.
 2. **MVP (web, grupo de amigos):**
    - PWA responsiva com modo offline, convites e exclusão de conta;
