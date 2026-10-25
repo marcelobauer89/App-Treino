@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f3f4f6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1115" media="(prefers-color-scheme: dark)">
+<title>Política de Privacidade • OSS</title>
+<script>
+  // Mesmo tema escolhido no app (Você → Aparência).
+  try {
+    var temaSalvo = localStorage.getItem('bauer-tema');
+    if (temaSalvo === 'claro') document.documentElement.dataset.theme = 'light';
+    if (temaSalvo === 'escuro') document.documentElement.dataset.theme = 'dark';
+  } catch (_) {}
+</script>
+<link rel="stylesheet" href="fonts/archivo.css">
+<style>
+  :root {
+    --gi: #f3f4f6; --papel: #ffffff; --tinta: #101318; --tinta-2: #4b5361; --fio: #dde1e7;
+    --tatame: #2563eb; --tatame-tinta: #1d4ed8; --tatame-suave: #e8effd;
+    --display: "Archivo", "Arial Narrow", system-ui, sans-serif;
+    --texto: "Archivo", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --gi: #0f1115; --papel: #171a20; --tinta: #f2f4f7; --tinta-2: #a3abb8; --fio: #2a2f38;
+      --tatame: #3566d6; --tatame-tinta: #8db0ff; --tatame-suave: #1b2740;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --gi: #0f1115; --papel: #171a20; --tinta: #f2f4f7; --tinta-2: #a3abb8; --fio: #2a2f38;
+    --tatame: #3566d6; --tatame-tinta: #8db0ff; --tatame-suave: #1b2740;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--gi); color: var(--tinta); font-family: var(--texto); font-size: 16px; line-height: 1.6; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 24px max(16px, env(safe-area-inset-right, 0px)) 48px max(16px, env(safe-area-inset-left, 0px)); }
+  a { color: var(--tatame-tinta); text-underline-offset: 3px; }
+  a:focus-visible { outline: 2px solid var(--tatame-tinta); outline-offset: 2px; border-radius: 4px; }
+  .voltar { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; font-weight: 600; text-decoration: none; }
+  h1 { margin: 8px 0 4px; font-family: var(--display); font-stretch: 80%; font-weight: 800; font-size: clamp(34px, 9vw, 48px); line-height: 1.05; }
+  .vigencia { margin: 0 0 20px; color: var(--tinta-2); font-size: 14px; }
+  .resumo { margin: 0 0 24px; padding: 16px; border-radius: 14px; background: var(--tatame-suave); }
+  .resumo p { margin: 0; }
+  section { margin-top: 12px; padding: 18px 16px; border: 1px solid var(--fio); border-radius: 14px; background: var(--papel); }
+  h2 { margin: 0 0 8px; font-family: var(--display); font-stretch: 85%; font-weight: 800; font-size: 22px; line-height: 1.2; }
+  section p { margin: 0 0 10px; }
+  section p:last-child { margin-bottom: 0; }
+  ul { margin: 0 0 10px; padding-left: 20px; }
+  ul:last-child { margin-bottom: 0; }
+  li { margin: 4px 0; }
+  .nao { color: var(--tinta-2); }
+  footer { margin-top: 24px; color: var(--tinta-2); font-size: 14px; }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <a class="voltar" href="./">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+    Voltar ao app
+  </a>
+  <h1>Política de Privacidade</h1>
+  <p class="vigencia">Versão de 25 de outubro de 2026. Vale para o OSS (App Treino), em <a href="https://marcelobauer89.github.io/App-Treino/">marcelobauer89.github.io/App-Treino</a>.</p>
+
+  <div class="resumo">
+    <p><b>Em resumo:</b> guardamos seus treinos para o app funcionar, só enquanto sua conta existir. O administrador vê quem está usando o app e como, mas não vê seus pesos, cargas, recuperação nem observações. Não vendemos dados nem mostramos anúncios. Você pode baixar seus dados ou excluir a conta quando quiser.</p>
+  </div>
+
+  <section aria-labelledby="s1">
+    <h2 id="s1">1. Quem cuida dos seus dados</h2>
+    <p>O responsável pelos dados (controlador, na LGPD) é <b>Marcelo Bauer</b>, que criou e mantém o app para um grupo de amigos convidados.</p>
+    <p>Para qualquer pedido ou dúvida sobre seus dados, escreva para <a href="mailto:marcelobauer.mbb@gmail.com">marcelobauer.mbb@gmail.com</a>.</p>
+  </section>
+
+  <section aria-labelledby="s2">
+    <h2 id="s2">2. Que dados guardamos</h2>
+    <ul>
+      <li><b>Conta Google:</b> nome, e-mail e foto, que você pode trocar no app.</li>
+      <li><b>Seus treinos:</b> check-ins (tipo, data, horário e duração), pesos e cargas de cada série, treinos montados, sua semana e preferências (tema, exercícios sem peso, resumo por e-mail).</li>
+      <li><b>Recuperação e observações dos check-ins:</b> só se você concordar, porque podem revelar dados de saúde. Você pode desligar e apagar em Você → Privacidade.</li>
+      <li><b>Registro de uso:</b> telas abertas, recursos usados (por exemplo, exercício concluído, recorde, vídeo visto, semana alterada), erros do app, navegador e sistema do aparelho, data do último acesso e quantidade de acessos. Esse registro não leva pesos, cargas, recuperação nem observações.</li>
+      <li><b>Resumo semanal por e-mail:</b> quando foi enviado e se foi aberto (por uma imagem invisível no e-mail) ou clicado.</li>
+      <li><b>Acesso:</b> o convite usado para entrar e, se for o caso, o pedido de acesso.</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="s3">
+    <h2 id="s3">3. O que o administrador vê</h2>
+    <p>Para acompanhar o uso e melhorar o app, o administrador tem um painel de monitoramento, em que vê:</p>
+    <ul>
+      <li>quem está com o app aberto agora, em que tela e há quanto tempo;</li>
+      <li>o histórico de uso de cada pessoa: check-ins feitos (tipo e horário), exercícios concluídos, recordes, vídeos vistos, configurações alteradas e erros;</li>
+      <li>números gerais, como quantos treinos foram feitos e a aderência à semana;</li>
+      <li>quem recebeu, abriu e clicou no resumo semanal.</li>
+    </ul>
+    <p class="nao">O administrador <b>não vê</b> seus pesos e cargas, a recuperação nem as observações dos check-ins.</p>
+  </section>
+
+  <section aria-labelledby="s4">
+    <h2 id="s4">4. Para que usamos e com qual base legal</h2>
+    <ul>
+      <li><b>Fazer o app funcionar</b> (seus treinos, check-ins, pesos, semana e preferências): para prestar o serviço que você pediu.</li>
+      <li><b>Recuperação e observações:</b> com o seu consentimento, que você pode retirar a qualquer momento.</li>
+      <li><b>Registro de uso e monitoramento:</b> por interesse legítimo, para entender como o app é usado, corrigir erros e melhorar a experiência.</li>
+      <li><b>Resumo semanal por e-mail:</b> por interesse legítimo, com desligamento em um toque, em Você → Notificações ou pelo link no fim de cada e-mail.</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="s5">
+    <h2 id="s5">5. Com quem compartilhamos</h2>
+    <p>Não vendemos nem compartilhamos seus dados para publicidade. Usamos estes serviços para o app funcionar:</p>
+    <ul>
+      <li><b>Supabase:</b> banco de dados e login. Os servidores podem ficar fora do Brasil, o que é uma transferência internacional de dados, feita com as garantias de segurança do serviço.</li>
+      <li><b>Google:</b> login com a sua conta, envio do resumo semanal pelo Gmail e vídeos e miniaturas do YouTube (no modo sem cookies; o vídeo só carrega quando você abre a execução).</li>
+      <li><b>GitHub Pages:</b> hospedagem do site do app.</li>
+      <li><b>jsDelivr:</b> entrega de uma biblioteca de programação usada pelo app.</li>
+    </ul>
+    <p>Esses serviços recebem dados técnicos, como o endereço IP do seu aparelho, para entregar o conteúdo.</p>
+  </section>
+
+  <section aria-labelledby="s6">
+    <h2 id="s6">6. Por quanto tempo guardamos</h2>
+    <p>Enquanto a sua conta existir. Quando você exclui a conta, apagamos tudo: perfil, check-ins, pesos, treinos, registro de uso e o histórico de e-mails.</p>
+  </section>
+
+  <section aria-labelledby="s7">
+    <h2 id="s7">7. Seus direitos e como usar</h2>
+    <p>Pela LGPD (art. 18), você pode confirmar quais dados temos, acessá-los, corrigi-los, levá-los para outro lugar, apagá-los, saber com quem compartilhamos e retirar o consentimento. No próprio app:</p>
+    <ul>
+      <li><b>Baixar meus dados:</b> Você → Privacidade gera um arquivo com tudo o que guardamos sobre você;</li>
+      <li><b>Corrigir:</b> nome e foto em Você → Dados pessoais;</li>
+      <li><b>Retirar o consentimento:</b> desligue "Registrar recuperação e observações" em Você → Privacidade, com a opção de apagar o que já foi registrado;</li>
+      <li><b>Parar os e-mails:</b> Você → Notificações;</li>
+      <li><b>Excluir a conta e todos os dados:</b> Você → Excluir conta.</li>
+    </ul>
+    <p>Para qualquer outro pedido, escreva para <a href="mailto:marcelobauer.mbb@gmail.com">marcelobauer.mbb@gmail.com</a>. Você também pode procurar a Autoridade Nacional de Proteção de Dados (ANPD).</p>
+  </section>
+
+  <section aria-labelledby="s8">
+    <h2 id="s8">8. Segurança</h2>
+    <p>O app é só para convidados, a conexão é sempre segura (HTTPS) e as regras do banco de dados deixam cada pessoa ler e alterar apenas os próprios dados. O painel de monitoramento é restrito ao administrador.</p>
+  </section>
+
+  <section aria-labelledby="s9">
+    <h2 id="s9">9. Mudanças nesta política</h2>
+    <p>Quando esta política mudar, avisamos dentro do app na próxima vez que você abrir, com um resumo do que mudou.</p>
+  </section>
+
+  <footer>
+    <p>OSS (App Treino) · Desenvolvido por Marcelo Bauer.</p>
+  </footer>
+</main>
+</body>
+</html>

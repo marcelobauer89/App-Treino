@@ -16,9 +16,7 @@
     if (localStorage.getItem('bauer-deslizou')) document.documentElement.classList.add('ja-deslizou');
   } catch (_) {}
 </script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap">
+<link rel="stylesheet" href="fonts/archivo.css">
 <style>
   /* Layout: a ficha de treino da academia — uma coluna, linhas separadas por fios.
      A ousadia fica num lugar só: os níveis aparecem como graus de fita na ponteira da faixa. */
@@ -915,6 +913,21 @@
   .modal-done.perigo { background: var(--erro); color: var(--sobre-erro); }
   .modal-done.perigo:hover:not(:disabled) { filter: brightness(.92); }
   .modal-done:disabled { opacity: .45; cursor: not-allowed; }
+
+  /* Privacidade (LGPD) */
+  .priv-resumo { display: grid; gap: 10px; }
+  .priv-resumo p { margin: 0; font-size: 15px; color: var(--tinta-2); }
+  .priv-resumo b { color: var(--tinta); }
+  .priv-link { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+  .priv-baixar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .priv-baixar span { display: grid; }
+  .priv-baixar b { font-size: 15px; }
+  .priv-baixar small { font-size: 13px; color: var(--tinta-2); }
+  .saude-card { display: grid; gap: 10px; padding: 14px; border: 1px solid var(--fio); border-radius: 12px; background: var(--gi); }
+  .saude-card p { margin: 0; font-size: 14px; }
+  .saude-card .saude-botoes { display: flex; flex-wrap: wrap; gap: 8px; }
+  .saude-card .btn, .saude-card .btn-sec { min-height: 44px; }
+  .entrar-privacidade a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
 </style>
 </head>
 <body class="deslogado">
@@ -932,7 +945,7 @@
       <span class="entrar-carga" id="entrar-carga" aria-hidden="true"></span>
       <button class="btn-google" type="button" id="entrar-google" hidden></button>
       <button class="btn" type="button" id="entrar-tentar" hidden>Tentar de novo</button>
-      <p class="entrar-privacidade" id="entrar-privacidade" hidden>Usamos sua conta Google só para entrar e guardar seus treinos.</p>
+      <p class="entrar-privacidade" id="entrar-privacidade" hidden>Usamos sua conta Google só para entrar e guardar seus treinos. Ao entrar, você concorda com a <a href="privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a>.</p>
       <form class="convite-form" id="convite-form" novalidate hidden>
         <div class="campo">
           <label for="convite-codigo">Código do convite</label>
@@ -1161,7 +1174,26 @@
     </div>
     <div class="cartao">
       <p class="conta-linha">Conectado com o Google como <b id="conta-email"></b></p>
-      <p class="nota-campo">Para melhorar o app, registramos como ele é usado (telas abertas, recursos usados e quando ele está aberto). Pesos, cargas e observações não entram nesse registro. O resumo semanal usa seus check-ins e recordes e vai só para o seu e-mail.</p>
+      <div class="priv-resumo">
+        <p><b>O que guardamos:</b> seu nome, e-mail e foto do Google, seus check-ins, pesos, treinos, semana e preferências. Recuperação e observações só com o seu consentimento.</p>
+        <p><b>O que o administrador vê:</b> quem está com o app aberto agora, em que tela e há quanto tempo; o histórico de uso (check-ins, exercícios concluídos, recordes, vídeos vistos, configurações e erros) e se o resumo semanal foi aberto. Ele <b>não vê</b> pesos, cargas, recuperação nem observações.</p>
+        <p><b>Por quanto tempo:</b> enquanto sua conta existir. Ao excluir a conta, tudo é apagado.</p>
+      </div>
+      <a class="btn-sec priv-link" href="privacidade.html" target="_blank" rel="noopener">Ler a Política de Privacidade completa</a>
+    </div>
+    <div class="cartao">
+      <label class="sem-peso-linha">
+        <span><b>Registrar recuperação e observações</b><small>Podem revelar dados de saúde; só guardamos com o seu consentimento</small></span>
+        <input type="checkbox" role="switch" id="saude-consent">
+      </label>
+      <div id="saude-confirma"></div>
+    </div>
+    <div class="cartao">
+      <div class="priv-baixar">
+        <span><b>Baixar meus dados</b><small>Um arquivo com tudo o que o app guarda sobre você</small></span>
+        <button class="btn-sec" type="button" id="baixar-dados">Baixar</button>
+      </div>
+      <p class="nota-campo" id="baixar-status" role="status" hidden></p>
     </div>
   </section>
 </main>
@@ -1210,6 +1242,9 @@
 </dialog>
 <dialog class="modal" id="novidade-dialog" aria-labelledby="novidade-title">
   <div class="modal-body" id="novidade-body"></div>
+</dialog>
+<dialog class="modal" id="politica-dialog" aria-labelledby="politica-title">
+  <div class="modal-body" id="politica-body"></div>
 </dialog>
 <dialog class="modal" id="excluir-dialog" aria-labelledby="excluir-title">
   <div class="modal-body" id="excluir-body"></div>
@@ -1433,6 +1468,10 @@
   let treinosDaConta = false;
   // { liberado, pedidoEm }: contas novas só usam o app depois de um convite ou de um administrador liberar.
   let acesso = { liberado: true, pedidoEm: null };
+  // Política de Privacidade: versão atual (mude junto com privacidade.html) e se a pessoa já viu esta versão.
+  const POLITICA_VERSAO = '2026-10-25';
+  let politica = { disponivel: false, aceita: true, contaNova: false };
+  let perfilLinha = null;
   // Versão anterior dos treinos (perfis.treinos_anterior): { treinos, semana, em }. Serve para Desfazer e recuperar.
   let treinosAnterior = null;
   const limpar = (t, max) => String(t ?? '').replace(/[<>"&]/g, '').trim().slice(0, max);
@@ -1923,6 +1962,8 @@
     try { ocultaNoAparelho = !!localStorage.getItem(chaveNovidade()); } catch (_) {}
     // Acesso por convite: sem a coluna (schema.sql antigo), todo mundo entra como antes.
     acesso = { liberado: linha.liberado !== false, pedidoEm: linha.acesso_pedido_em || null };
+    politica = { disponivel: 'politica_versao' in linha, aceita: linha.politica_versao === POLITICA_VERSAO, contaNova: !(c.data || []).length && !cargas.length };
+    perfilLinha = linha;
     treinosAnterior = linha.treinos_anterior && linha.treinos_anterior.treinos ? linha.treinos_anterior : null;
     novidade = { disponivel: true, vista: !!linha.novidade_oculta || ocultaNoAparelho, contaNova: !(c.data || []).length && !cargas.length };
     const semana = validarSemana(linha.semana);
@@ -1932,6 +1973,8 @@
       semana: semana || validarSemana(semanaDeDiasJiu((linha.dias_jiu || [2, 4]).map(Number))),
       semPeso: new Set(Array.isArray(linha.sem_peso) ? linha.sem_peso : []),
       resumoEmail: linha.emails_resumo !== false,
+      // Sem a coluna (schema.sql antigo), os campos aparecem como antes.
+      saude: 'consentimento_saude' in linha ? linha.consentimento_saude || null : 'sim',
     };
     checkins = (c.data || []).map(deLinha);
   }
@@ -2123,6 +2166,43 @@
       </div>
       <div class="rec-legenda"><span>1 muito cansado</span><span>5 recuperado</span></div>
     </fieldset>`;
+  // Recuperação e observação podem revelar dados de saúde: só aparecem com consentimento (LGPD).
+  // config.saude: null = ainda não respondeu, 'sim' ou 'nao'.
+  function camposSaudeHTML(prefixo, rec, obs, exemplo) {
+    if (config.saude === 'sim') {
+      return `${recHTML(`${prefixo}-rec`, rec)}
+      <div class="campo">
+        <label for="${prefixo}-obs">Observação <span class="opcional">(opcional)</span></label>
+        <textarea id="${prefixo}-obs" placeholder="${exemplo}">${esc(obs)}</textarea>
+      </div>`;
+    }
+    if (config.saude === 'nao') {
+      return '<p class="nota-campo">Recuperação e observações estão desligadas. Para registrar, ative em Você → Privacidade.</p>';
+    }
+    return `
+      <div class="saude-card" role="group" aria-label="Consentimento para dados de saúde">
+        <p><b>Quer registrar como se sentiu?</b> A recuperação e as observações podem revelar dados de saúde, por isso só guardamos com o seu consentimento. Só você vê; o administrador não.</p>
+        <div class="saude-botoes">
+          <button class="btn" type="button" data-saude="sim">Concordo</button>
+          <button class="btn-sec" type="button" data-saude="nao">Agora não</button>
+        </div>
+      </div>`;
+  }
+  function responderSaude(resposta, bloco) {
+    config.saude = resposta;
+    salvarPerfil({ consentimento_saude: resposta, consentimento_saude_em: new Date().toISOString() });
+    registrarEvento('consentimento_saude', { resposta, origem: 'checkin' });
+    if (bloco) {
+      const p = bloco.dataset.prefixo;
+      bloco.innerHTML = camposSaudeHTML(p, null, '', p === 'enc' ? 'Ex.: ombro incomodou no supino' : 'Ex.: aula de raspagens, muitos rolas');
+      const foco = bloco.querySelector('input, textarea');
+      if (foco) foco.focus();
+    }
+  }
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('.saude-bloco [data-saude]');
+    if (b) responderSaude(b.dataset.saude, b.closest('.saude-bloco'));
+  });
   const valorRec = (raiz, nome) => {
     const r = raiz.querySelector(`input[name="${nome}"]:checked`);
     return r ? Number(r.value) : null;
@@ -2335,11 +2415,7 @@
       </div>
       ${motivo ? `<p class="aviso">${motivo}</p>` : ''}
       ${resumo ? `<p class="resumo-enc">${resumo}</p>` : ''}
-      ${recHTML('enc-rec', a.recuperacao)}
-      <div class="campo">
-        <label for="enc-obs">Observação <span class="opcional">(opcional)</span></label>
-        <textarea id="enc-obs" placeholder="Ex.: ombro incomodou no supino">${esc(a.obs)}</textarea>
-      </div>
+      <div class="saude-bloco" data-prefixo="enc">${camposSaudeHTML('enc', a.recuperacao, a.obs, 'Ex.: ombro incomodou no supino')}</div>
       <button class="modal-done" type="button" data-confirmar-enc>Encerrar check-in</button>`;
     encDialog.showModal();
   }
@@ -2348,8 +2424,10 @@
     const a = checkinAberto();
     if (!a) return encDialog.close();
     a.fim = agoraIso() > a.inicio ? agoraIso() : a.inicio;
-    a.recuperacao = valorRec(encDialog, 'enc-rec');
-    a.obs = $('enc-obs').value.trim();
+    if ($('enc-obs')) {
+      a.recuperacao = valorRec(encDialog, 'enc-rec');
+      a.obs = $('enc-obs').value.trim();
+    }
     salvarSeriesPendentes();
     salvarCheckin(a);
     const depois = depoisEncerrar;
@@ -2407,11 +2485,7 @@
         <div class="campo"><label for="f-inicio">Início</label><input type="time" id="f-inicio" value="${inicio}"></div>
         <div class="campo"><label for="f-dur">Duração (min)</label><input type="text" inputmode="numeric" id="f-dur" value="${dur}"></div>
       </div>
-      ${recHTML('f-rec', rec)}
-      <div class="campo">
-        <label for="f-obs">Observação <span class="opcional">(opcional)</span></label>
-        <textarea id="f-obs" placeholder="Ex.: aula de raspagens, muitos rolas">${esc(obs)}</textarea>
-      </div>
+      <div class="saude-bloco" data-prefixo="f">${camposSaudeHTML('f', rec, obs, 'Ex.: aula de raspagens, muitos rolas')}</div>
       ${editar && TIPOS[tipo].grupo === 'musc' ? '<p class="nota-campo">Os pesos ficam guardados no dia e no treino; para corrigi-los, toque no exercício no detalhe do check-in.</p>' : ''}
       <p class="form-erro" id="f-erro" role="alert" hidden></p>
       <button class="modal-done" type="button" data-salvar-form>${editar ? 'Salvar alterações' : 'Salvar check-in'}</button>`;
@@ -2437,7 +2511,7 @@
     if (editado) {
       Object.assign(editado, {
         tipo, inicio, fim, semHorario: false,
-        recuperacao: valorRec(formDialog, 'f-rec'), obs: $('f-obs').value.trim(), retroativo: data < hoje(),
+        ...($('f-obs') ? { recuperacao: valorRec(formDialog, 'f-rec'), obs: $('f-obs').value.trim() } : {}), retroativo: data < hoje(),
       });
       salvarCheckin(editado);
       formDialog.close();
@@ -2451,7 +2525,7 @@
     }
     const novo = {
       id: novoId(), tipo, inicio, fim, semHorario: false,
-      recuperacao: valorRec(formDialog, 'f-rec'), obs: $('f-obs').value.trim(),
+      recuperacao: $('f-obs') ? valorRec(formDialog, 'f-rec') : null, obs: $('f-obs') ? $('f-obs').value.trim() : '',
       retroativo: data < hoje(), series: {},
     };
     checkins.push(novo);
@@ -3598,6 +3672,7 @@
 
   function renderConfig() {
     renderMenuVoce();
+    renderPrivacidade();
     document.querySelectorAll('input[name="tema"]').forEach((r) => { r.checked = r.value === config.tema; });
     $('resumo-email').checked = config.resumoEmail;
     renderMeusTreinos();
@@ -4015,6 +4090,109 @@
     if (e.target === excluirDialog || e.target.closest('[data-fechar]')) excluirDialog.close();
   });
 
+  // ---------- Privacidade (LGPD) ----------
+  const politicaDialog = $('politica-dialog');
+  function abrirPolitica() {
+    $('politica-body').innerHTML = `
+      <div class="modal-head"><div><span class="novidade-selo">Privacidade</span><h3 id="politica-title">${politica.contaNova ? 'Antes de começar' : 'Atualizamos nossa Política de Privacidade'}</h3></div></div>
+      <p class="resumo-enc">${politica.contaNova ? 'Veja como cuidamos dos seus dados.' : 'Deixamos mais claro o que guardamos e o que o administrador vê.'}</p>
+      <ul class="novidade-lista">
+        <li>${ICON_CHECK}<span>Guardamos seus treinos, check-ins e pesos para o app funcionar, só enquanto sua conta existir.</span></li>
+        <li>${ICON_CHECK}<span>O administrador vê quem está com o app aberto, em que tela, e o histórico de uso. Não vê pesos, cargas, recuperação nem observações.</span></li>
+        <li>${ICON_CHECK}<span>Recuperação e observações só são guardadas se você concordar.</span></li>
+        <li>${ICON_CHECK}<span>Em Você → Privacidade você baixa seus dados, e em Você dá para excluir a conta.</span></li>
+      </ul>
+      <div class="novidade-acoes">
+        <button class="modal-done" type="button" data-politica-ok>Entendi</button>
+        <a class="btn-sec priv-link" href="privacidade.html" target="_blank" rel="noopener">Ler a política completa</a>
+      </div>`;
+    politicaDialog.showModal();
+  }
+  function aceitarPolitica() {
+    politica.aceita = true;
+    salvarPerfil({ politica_versao: POLITICA_VERSAO });
+    registrarEvento('politica_aceita', { versao: POLITICA_VERSAO });
+    politicaDialog.close();
+    mostrarNovidadeSeFaltar();
+  }
+  politicaDialog.addEventListener('click', (e) => { if (e.target.closest('[data-politica-ok]')) aceitarPolitica(); });
+  // Fechar com Esc conta como "Entendi" (o aviso já foi mostrado e a política fica a um toque em Privacidade).
+  politicaDialog.addEventListener('cancel', (e) => { e.preventDefault(); aceitarPolitica(); });
+
+  // Consentimento de saúde em Você → Privacidade.
+  function renderPrivacidade() {
+    $('saude-consent').checked = config.saude === 'sim';
+    $('saude-confirma').innerHTML = '';
+  }
+  $('saude-consent').addEventListener('change', (e) => {
+    if (e.target.checked) {
+      config.saude = 'sim';
+      salvarPerfil({ consentimento_saude: 'sim', consentimento_saude_em: new Date().toISOString() });
+      registrarEvento('consentimento_saude', { resposta: 'sim', origem: 'privacidade' });
+      toast('Pronto: recuperação e observações voltam a aparecer no check-in.');
+      return;
+    }
+    e.target.checked = true;
+    const temRegistro = checkins.some((c) => c.recuperacao || c.obs);
+    $('saude-confirma').innerHTML = `
+      <div class="ed-confirma" role="alert">
+        <p>Parar de registrar recuperação e observações?${temRegistro ? ' Você também pode apagar as que já foram registradas.' : ''}</p>
+        <div>
+          ${temRegistro ? '<button class="btn-perigo cheio" type="button" data-saude-parar="apagar">Parar e apagar o que foi registrado</button>' : ''}
+          <button class="btn-sec" type="button" data-saude-parar="manter">${temRegistro ? 'Só parar' : 'Parar'}</button>
+          <button class="btn-sec" type="button" data-saude-parar="cancelar">Cancelar</button>
+        </div>
+      </div>`;
+  });
+  $('saude-confirma').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-saude-parar]');
+    if (!b) return;
+    if (b.dataset.saudeParar === 'cancelar') return renderPrivacidade();
+    config.saude = 'nao';
+    salvarPerfil({ consentimento_saude: 'nao', consentimento_saude_em: new Date().toISOString() });
+    if (b.dataset.saudeParar === 'apagar') {
+      checkins.forEach((c) => { c.recuperacao = null; c.obs = ''; });
+      enviar(() => sb.from('checkins').update({ recuperacao: null, obs: '' }).eq('usuario_id', usuario.id));
+    }
+    registrarEvento('consentimento_saude', { resposta: 'nao', origem: 'privacidade', apagou: b.dataset.saudeParar === 'apagar' });
+    renderPrivacidade();
+    atualizarCheckinUI();
+    toast(b.dataset.saudeParar === 'apagar' ? 'Recuperação e observações apagadas e desligadas.' : 'Recuperação e observações desligadas.');
+  });
+
+  // Baixar meus dados: arquivo JSON com tudo o que o app guarda sobre a pessoa.
+  $('baixar-dados').addEventListener('click', async () => {
+    const botao = $('baixar-dados');
+    botao.disabled = true;
+    salvarSeriesPendentes();
+    await fila;
+    const extras = await sb.rpc('meus_dados_extras');
+    const p = perfilLinha || {};
+    const { foto, ...semFoto } = p;
+    const arquivo = {
+      gerado_em: new Date().toISOString(),
+      app: 'OSS · App Treino',
+      politica_versao: POLITICA_VERSAO,
+      perfil: { ...semFoto, nome: perfil.nome, email: perfil.email, tem_foto: !!perfil.foto, tema: config.tema, semana: config.semana,
+        sem_peso: [...config.semPeso], emails_resumo: config.resumoEmail, consentimento_saude: config.saude, treinos: treinosDaConta ? treinosParaSalvar(TREINOS) : 'plano pronto' },
+      checkins: checkins.map((c) => ({ ...c })),
+      cargas: cargas.map((c) => ({ ...c })),
+      ...(extras.error ? { aviso: 'O registro de uso e os e-mails enviados não puderam ser incluídos agora.' } : extras.data || {}),
+    };
+    const blob = new Blob([JSON.stringify(arquivo, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `oss-meus-dados-${hoje()}.json`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    botao.disabled = false;
+    $('baixar-status').textContent = extras.error
+      ? 'Arquivo baixado. O registro de uso não veio agora; tente de novo mais tarde.'
+      : 'Arquivo baixado com seus dados.';
+    $('baixar-status').hidden = false;
+    registrarEvento('dados_baixados');
+  });
+
   // ---------- Convites ----------
   // O link ?convite=CODIGO é guardado no aparelho para sobreviver à ida e volta do login do Google.
   const CHAVE_CONVITE = 'bauer-convite';
@@ -4161,7 +4339,8 @@
     const esquecido = encerrarEsquecidos();
     abrirTreinoDoDia();
     renderizarApp();
-    mostrarNovidadeSeFaltar();
+    if (politica.disponivel && !politica.aceita) abrirPolitica();
+    else mostrarNovidadeSeFaltar();
     if (esquecido) {
       toast(`O check-in do ${TIPOS[esquecido.tipo].nome} ficou aberto e foi encerrado às ${horaDe(esquecido.fim)}.`);
     }

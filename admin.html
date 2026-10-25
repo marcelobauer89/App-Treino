@@ -13,9 +13,7 @@
     if (temaSalvo === 'escuro') document.documentElement.dataset.theme = 'dark';
   } catch (_) {}
 </script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap">
+<link rel="stylesheet" href="fonts/archivo.css">
 <style>
   /* Mesmos tokens do app (index.html). */
   :root {
@@ -1530,7 +1528,7 @@
     const itens = [
       ...dados.checkins.filter((c) => c.usuario_id === id).map((c) => ({
         em: new Date(`${String(c.inicio).slice(0, 19)}`).toISOString(), icone: 'cal', alerta: false,
-        texto: `Check-in de ${(TIPOS[c.tipo] || {}).nome || c.tipo}${c.recuperacao ? `, recuperação ${c.recuperacao}/5` : ''}${c.retroativo ? ' (retroativo)' : ''}`,
+        texto: `Check-in de ${(TIPOS[c.tipo] || {}).nome || c.tipo}${c.retroativo ? ' (retroativo)' : ''}`,
       })),
       ...dados.eventos.filter((e) => e.usuario_id === id && !['tela', 'checkin_criado'].includes(e.tipo) && !ehRuido(e)).map((e) => ({
         em: e.criado_em, icone: ICONE_EVENTO[e.tipo] || 'ponto', alerta: ['erro', 'sessao_perdida'].includes(e.tipo),
