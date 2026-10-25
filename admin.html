@@ -447,6 +447,12 @@
   .conv-estado { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 700; background: var(--gi); color: var(--tinta-2); }
   .conv-estado.aguardando { background: var(--tatame-suave); color: var(--tatame-tinta); }
   .conv-estado.usado { background: var(--feito-suave); color: var(--feito-tinta); }
+  @media (max-width: 560px) {
+    .conv-item .conv-botoes.varios { grid-row: auto; grid-column: 1 / -1; margin-top: 6px; }
+  }
+  .conv-estado.pedido { background: var(--tatame-suave); color: var(--tatame-tinta); }
+  .conv-pessoa { padding: 0; border: 0; background: none; font: inherit; font-weight: 700; color: var(--tatame-tinta); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; overflow-wrap: anywhere; text-align: left; }
+  .conv-pessoa:focus-visible { outline: 2px solid var(--tatame-tinta); outline-offset: 2px; border-radius: 4px; }
   .btn-peq { min-height: 40px; padding: 0 12px; border-radius: 10px; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
   .btn-peq.prim { border: 0; background: var(--tatame); color: var(--sobre-tatame); }
   .btn-peq.sec { border: 1.5px solid var(--fio); background: var(--papel); color: var(--tinta); }
@@ -640,6 +646,11 @@
         <div class="bloco-topo"><h2 id="convites-titulo">Convites gerados</h2></div>
         <div class="cartao lista-cartao" id="convites-lista"></div>
       </section>
+      <section class="bloco" aria-labelledby="utilizados-titulo">
+        <div class="bloco-topo"><h2 id="utilizados-titulo">Convites utilizados</h2></div>
+        <p class="nota" style="margin:-4px 0 10px">Quem entrou no app com um convite ou depois de pedir acesso.</p>
+        <div class="cartao lista-cartao" id="utilizados-lista"></div>
+      </section>
     </div>
   </div>
 </main>
@@ -648,6 +659,9 @@
   <p>Página restrita a administradores. Os dados de uso não incluem pesos, cargas nem observações dos usuários.</p>
 </footer>
 
+<dialog class="modal-excluir" id="conv-excluir-dialog" aria-labelledby="conv-excluir-title">
+  <div class="excluir-corpo" id="conv-excluir-body"></div>
+</dialog>
 <dialog class="modal-excluir" id="excluir-dialog" aria-labelledby="excluir-title">
   <div class="excluir-corpo" id="excluir-body"></div>
 </dialog>
@@ -1765,20 +1779,82 @@
       </div>`).join('') : '<p class="vazio">Nenhum pedido de acesso.</p>';
     if (!dados.convites) {
       $('convites-lista').innerHTML = '<p class="vazio">Os convites ainda não estão ligados no banco: rode de novo o supabase/schema.sql no Supabase.</p>';
+      $('utilizados-lista').innerHTML = '';
       return;
     }
-    $('convites-lista').innerHTML = dados.convites.length ? dados.convites.map((c) => {
+    const lixeira = (c) => `<button class="excluir-btn" type="button" data-excluir-convite="${esc(c.codigo)}" aria-label="Excluir o convite ${esc(c.codigo)}" title="Excluir convite">${ICON.lixeira}</button>`;
+    const gerados = dados.convites.filter((c) => !c.usado_em);
+    $('convites-lista').innerHTML = gerados.length ? gerados.map((c) => {
       const e = estadoConvite(c);
       return `
       <div class="conv-item">
         <b>${esc(c.nome || 'Sem nome')} <span class="conv-codigo">${esc(c.codigo)}</span> <span class="conv-estado ${e.c}">${esc(e.t)}</span></b>
         <small>Criado em ${fmtData(diaDeInstante(c.criado_em))}${e.c === 'aguardando' ? ` · vale até ${fmtData(diaDeInstante(c.expira_em))}` : ''}</small>
-        <span class="conv-botoes">${e.c === 'aguardando' ? `
+        <span class="conv-botoes${e.c === 'aguardando' ? ' varios' : ''}">${e.c === 'aguardando' ? `
           <button class="btn-peq sec" type="button" data-copiar-convite="${esc(c.codigo)}">Copiar link</button>
-          <button class="btn-peq sec" type="button" data-cancelar-convite="${esc(c.codigo)}">Cancelar</button>` : ''}</span>
+          <button class="btn-peq sec" type="button" data-cancelar-convite="${esc(c.codigo)}">Cancelar</button>` : ''}
+          ${lixeira(c)}</span>
       </div>`;
-    }).join('') : '<p class="vazio">Nenhum convite gerado ainda.</p>';
+    }).join('') : '<p class="vazio">Nenhum convite aguardando.</p>';
+    // Utilizados: convites usados + quem foi liberado depois de pedir acesso (sem código).
+    const pessoa = (id, nome, email) => {
+      const u = id && dados.usuarios.find((x) => x.id === id);
+      const rotulo = esc(nome || email || 'conta excluída');
+      return u ? `<button class="conv-pessoa" type="button" data-abrir-usuario="${u.id}">${rotulo}</button>` : `<span>${rotulo}</span>`;
+    };
+    const usados = dados.convites.filter((c) => c.usado_em).map((c) => ({ quando: c.usado_em, html: `
+      <div class="conv-item">
+        <b>${pessoa(c.usado_por, c.usado_por_nome, c.usado_por_email)} <span class="conv-estado usado">Convite <span class="conv-codigo">${esc(c.codigo)}</span></span></b>
+        <small>${c.usado_por_nome && c.usado_por_email ? `${esc(c.usado_por_email)} · ` : ''}entrou em ${fmtData(diaDeInstante(c.usado_em))}${c.nome ? ` · convite para ${esc(c.nome)}` : ''}</small>
+        <span class="conv-botoes">${lixeira(c)}</span>
+      </div>` }));
+    const pedidosLiberados = dados.usuarios.filter((u) => u.liberado && u.liberado_como === 'pedido').map((u) => ({ quando: u.liberado_em || '', html: `
+      <div class="conv-item">
+        <b>${pessoa(u.id, u.nome, u.email)} <span class="conv-estado pedido">Pedido de acesso</span></b>
+        <small>${u.nome ? `${esc(u.email)} · ` : ''}${u.liberado_em ? `liberado em ${fmtData(diaDeInstante(u.liberado_em))}` : 'liberado pelo administrador'}</small>
+      </div>` }));
+    const utilizados = usados.concat(pedidosLiberados).sort((a, b) => (a.quando < b.quando ? 1 : -1));
+    $('utilizados-lista').innerHTML = utilizados.length ? utilizados.map((x) => x.html).join('') : '<p class="vazio">Ninguém entrou por convite ainda.</p>';
   }
+  // Excluir o registro de um convite (usado ou não). Quem já entrou continua usando o app.
+  let convExcluir = null;
+  function abrirExcluirConvite(codigo) {
+    const c = dados.convites.find((x) => x.codigo === codigo);
+    if (!c) return;
+    convExcluir = codigo;
+    const usado = !!c.usado_em;
+    $('conv-excluir-body').innerHTML = `
+      <div class="excluir-topo"><h2 id="conv-excluir-title">Excluir o convite <span class="conv-codigo">${esc(codigo)}</span>?</h2>
+        <button class="excluir-fechar" type="button" data-fechar-conv aria-label="Fechar">${ICON.xis}</button></div>
+      <p class="excluir-intro">${usado
+        ? `O registro sai da lista de convites utilizados. ${esc(c.usado_por_nome || c.usado_por_email || 'Quem entrou com ele')} continua usando o app normalmente.`
+        : `O registro sai da lista${estadoConvite(c).c === 'aguardando' ? ' e o link para de funcionar' : ''}.`}</p>
+      <p class="excluir-erro" id="conv-excluir-erro" role="alert" hidden></p>
+      <div class="excluir-acoes">
+        <button class="btn-excluir" type="button" id="conv-excluir-sim">Excluir convite</button>
+        <button class="btn-sec" type="button" data-fechar-conv>Cancelar</button>
+      </div>`;
+    $('conv-excluir-dialog').showModal();
+  }
+  $('conv-excluir-dialog').addEventListener('click', async (e) => {
+    if (e.target === $('conv-excluir-dialog') || e.target.closest('[data-fechar-conv]')) return $('conv-excluir-dialog').close();
+    if (!e.target.closest('#conv-excluir-sim')) return;
+    const botao = $('conv-excluir-sim');
+    botao.disabled = true; botao.textContent = 'Excluindo…';
+    const { error } = await sb.rpc('admin_excluir_convite', { p_codigo: convExcluir });
+    if (error) {
+      $('conv-excluir-erro').textContent = /could not find the function/i.test(error.message || '')
+        ? 'A exclusão de convites ainda não está ligada no banco: rode de novo o supabase/schema.sql no Supabase.'
+        : `Não foi possível excluir: ${error.message}`;
+      $('conv-excluir-erro').hidden = false;
+      botao.disabled = false; botao.textContent = 'Excluir convite';
+      return;
+    }
+    $('conv-excluir-dialog').close();
+    toast('Convite excluído.');
+    const cv = await sb.rpc('admin_convites');
+    if (!cv.error) { dados.convites = cv.data || []; renderConvites(); }
+  });
   function mensagemConvite(nome, link) {
     return `Oi${nome ? `, ${nome}` : ''}! Te convidei para o OSS, o app de treino que eu uso. Entra por este link com a sua conta Google (vale 7 dias): ${link}`;
   }
@@ -1826,8 +1902,10 @@
     if ($('detalhe').open && detalheId === alvo) abrirDetalhe(alvo);
   }
   document.addEventListener('click', async (e) => {
-    const b = e.target.closest('[data-liberar], [data-recusar], [data-bloquear], [data-copiar-convite], [data-cancelar-convite], #conv-copiar');
+    const b = e.target.closest('[data-liberar], [data-recusar], [data-bloquear], [data-copiar-convite], [data-cancelar-convite], [data-excluir-convite], [data-abrir-usuario], #conv-copiar');
     if (!b) return;
+    if (b.dataset.excluirConvite) return abrirExcluirConvite(b.dataset.excluirConvite);
+    if (b.dataset.abrirUsuario) return abrirDetalhe(b.dataset.abrirUsuario);
     const nome = (id) => { const u = dados.usuarios.find((x) => x.id === id); return u ? u.nome || u.email : 'usuário'; };
     if (b.id === 'conv-copiar') return copiar($('conv-link').value, b);
     if (b.dataset.copiarConvite) return copiar(linkConvite(b.dataset.copiarConvite), b);

@@ -85,9 +85,11 @@ Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 e t5 nos check-i
 - **Convidar alguém:** no monitoramento, aba **Convites** → "Para quem?" (opcional) → **Gerar convite**. Copie o link ou toque em **Enviar pelo WhatsApp**. Cada link vale para uma pessoa e por 7 dias.
 - **O amigo:** abre o link, entra com o Google e o app libera a conta sozinho. Se o link já tiver sido usado, tiver expirado ou sido cancelado, ele vê o motivo e pode digitar outro código.
 - **Quem entra sem convite:** vê "O OSS é só para convidados", com um campo para o código e o botão **Pedir acesso**. Os pedidos aparecem na aba Convites, com Liberar e Recusar, e a aba mostra um selo com a quantidade.
+- **Convites gerados e utilizados:** a aba separa os convites ainda não usados (aguardando, expirados e cancelados) dos **convites utilizados**, que mostram quem entrou e quando. Quem foi liberado depois de pedir acesso também aparece ali, com o selo "Pedido de acesso". Tocar no nome abre o detalhe da pessoa.
+- **Excluir convite:** a lixeira de cada convite apaga o registro, com confirmação. Excluir um convite usado não tira o acesso de quem entrou; num convite aguardando, o link para de funcionar.
 - **Bloquear ou liberar:** no detalhe de cada usuário (aba Usuários), seção Acesso.
 - **Quem já tinha conta:** continua liberado. Administradores também entram sempre.
-- **No banco:** `perfis.liberado` e `perfis.acesso_pedido_em`, a tabela `convites` (sem acesso direto pela API) e as funções `usar_convite`, `pedir_acesso` e `admin_*_convite` / `admin_liberar_usuario` / `admin_bloquear_usuario` / `admin_recusar_pedido`. Check-ins e cargas só são gravados por contas liberadas. Para ligar, rode de novo o `supabase/schema.sql`.
+- **No banco:** `perfis.liberado`, `perfis.acesso_pedido_em` e `perfis.liberado_como` / `liberado_em` (convite, pedido ou administrador; só as funções gravam), a tabela `convites` (sem acesso direto pela API) e as funções `usar_convite`, `pedir_acesso` e `admin_*_convite` (inclusive `admin_excluir_convite`) / `admin_liberar_usuario` / `admin_bloquear_usuario` / `admin_recusar_pedido`. Check-ins e cargas só são gravados por contas liberadas. Para ligar, rode de novo o `supabase/schema.sql`.
 
 ## Excluir conta
 

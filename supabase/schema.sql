@@ -231,7 +231,7 @@ create function public.admin_usuarios()
 returns table (
   id uuid, nome text, email text, cadastro timestamptz, ultimo_acesso timestamptz, acessos integer,
   semana jsonb, dias_jiu smallint[], sem_peso text[], emails_resumo boolean,
-  liberado boolean, acesso_pedido_em timestamptz
+  liberado boolean, acesso_pedido_em timestamptz, liberado_como text, liberado_em timestamptz
 )
 language plpgsql
 stable
@@ -242,7 +242,7 @@ begin
   if not public.eh_admin() then raise exception 'acesso restrito' using errcode = '42501'; end if;
   return query
     select p.id, p.nome, p.email, u.created_at, p.ultimo_acesso, p.acessos, p.semana, p.dias_jiu, p.sem_peso, p.emails_resumo,
-      p.liberado, p.acesso_pedido_em
+      p.liberado, p.acesso_pedido_em, p.liberado_como, p.liberado_em
     from public.perfis p join auth.users u on u.id = p.id
     order by p.nome;
 end;
@@ -411,6 +411,9 @@ update public.perfis set liberado = true where liberado is null;
 alter table public.perfis alter column liberado set default false;
 alter table public.perfis alter column liberado set not null;
 alter table public.perfis add column if not exists acesso_pedido_em timestamptz;
+-- Como e quando a conta foi liberada (aparece em "Convites utilizados" no monitoramento). Só as funções gravam.
+alter table public.perfis add column if not exists liberado_como text check (liberado_como is null or liberado_como in ('convite', 'pedido', 'admin'));
+alter table public.perfis add column if not exists liberado_em timestamptz;
 
 create table if not exists public.convites (
   codigo text primary key check (codigo ~ '^[A-HJ-NP-Z2-9]{6}$'),
@@ -470,7 +473,7 @@ begin
   if c.usado_em is not null then return 'usado'; end if;
   if c.expira_em < now() then return 'expirado'; end if;
   update public.convites set usado_por = eu, usado_em = now() where codigo = c.codigo;
-  update public.perfis set liberado = true, acesso_pedido_em = null where id = eu;
+  update public.perfis set liberado = true, acesso_pedido_em = null, liberado_como = 'convite', liberado_em = now() where id = eu;
   return 'ok';
 end;
 $$;
@@ -548,7 +551,11 @@ set search_path = ''
 as $$
 begin
   if not public.eh_admin() then raise exception 'Acesso restrito a administradores.'; end if;
-  update public.perfis set liberado = true, acesso_pedido_em = null where id = alvo;
+  update public.perfis set
+      liberado_como = case when liberado then liberado_como when acesso_pedido_em is not null then 'pedido' else 'admin' end,
+      liberado_em = case when liberado then liberado_em else now() end,
+      liberado = true, acesso_pedido_em = null
+    where id = alvo;
   if not found then raise exception 'Usuário não encontrado.'; end if;
 end;
 $$;
@@ -580,11 +587,35 @@ begin
 end;
 $$;
 
+-- Excluir o registro de um convite (usado ou não). Quem já entrou com ele continua liberado.
+create or replace function public.admin_excluir_convite(p_codigo text)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if not public.eh_admin() then raise exception 'Acesso restrito a administradores.'; end if;
+  delete from public.convites where codigo = p_codigo;
+  if not found then raise exception 'Convite não encontrado.'; end if;
+end;
+$$;
+
+-- Histórico de quem já entrou antes de existir liberado_como (roda só onde está vazio).
+update public.perfis p set liberado_como = 'convite', liberado_em = c.usado_em
+  from public.convites c
+  where c.usado_por = p.id and p.liberado and p.liberado_como is null;
+-- Liberados depois de pedir acesso: a data é a primeira tela aberta depois do último pedido.
+update public.perfis p set liberado_como = 'pedido',
+    liberado_em = (select min(t.criado_em) from public.eventos t where t.usuario_id = p.id and t.tipo = 'tela' and t.criado_em > ped.ultimo)
+  from (select usuario_id, max(criado_em) as ultimo from public.eventos where tipo = 'acesso_pedido' group by usuario_id) ped
+  where ped.usuario_id = p.id and p.liberado and p.liberado_como is null;
+
 revoke execute on function public.usar_convite(text), public.pedir_acesso(), public.admin_criar_convite(text), public.admin_convites(),
-  public.admin_cancelar_convite(text), public.admin_liberar_usuario(uuid), public.admin_bloquear_usuario(uuid), public.admin_recusar_pedido(uuid)
+  public.admin_cancelar_convite(text), public.admin_excluir_convite(text), public.admin_liberar_usuario(uuid), public.admin_bloquear_usuario(uuid), public.admin_recusar_pedido(uuid)
   from public, anon;
 grant execute on function public.usar_convite(text), public.pedir_acesso(), public.admin_criar_convite(text), public.admin_convites(),
-  public.admin_cancelar_convite(text), public.admin_liberar_usuario(uuid), public.admin_bloquear_usuario(uuid), public.admin_recusar_pedido(uuid)
+  public.admin_cancelar_convite(text), public.admin_excluir_convite(text), public.admin_liberar_usuario(uuid), public.admin_bloquear_usuario(uuid), public.admin_recusar_pedido(uuid)
   to authenticated;
 
 -- ---------- Baixar meus dados (LGPD, direito de acesso) ----------
