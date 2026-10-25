@@ -24,7 +24,7 @@
     --feito-suave: #e7f8ee; --feito-tinta: #166534;
     --online: #16a34a; --online-anel: rgba(22, 163, 74, .45);
     --recorde-suave: #fef3c7; --recorde-tinta: #92400e;
-    --erro: #c62828;
+    --erro: #c62828; --sobre-erro: #ffffff;
     /* Tipos de treino (paleta categórica do app, validada para daltonismo) */
     --musc: #2a78d6; --jiu: #eb6834; --bike: #1baf7a; --muay: #eda100; --selo-tinta: #0b0d10;
     /* Intensidade do mapa de atividade: um tom só, do claro ao escuro */
@@ -37,7 +37,7 @@
     :root:not([data-theme="light"]) {
       --gi: #0f1115; --papel: #171a20; --tinta: #f2f4f7; --tinta-2: #a3abb8; --fio: #2a2f38;
       --tatame: #3566d6; --tatame-forte: #2b57bf; --tatame-tinta: #8db0ff; --tatame-suave: #1b2740;
-      --feito-suave: #12301f; --feito-tinta: #6ee7a0; --online: #22c55e; --online-anel: rgba(34, 197, 94, .45); --recorde-suave: #33270a; --recorde-tinta: #fcd34d; --erro: #ff6b6b;
+      --feito-suave: #12301f; --feito-tinta: #6ee7a0; --online: #22c55e; --online-anel: rgba(34, 197, 94, .45); --recorde-suave: #33270a; --recorde-tinta: #fcd34d; --erro: #ff6b6b; --sobre-erro: #0b0d10;
       --musc: #3987e5; --jiu: #d95926; --bike: #199e70; --muay: #c98500;
       --int-0: #1f242c; --int-1: #1e3561; --int-2: #2b57bf; --int-3: #5b8ef0; --int-4: #a9c4ff;
       color-scheme: dark;
@@ -46,7 +46,7 @@
   :root[data-theme="dark"] {
     --gi: #0f1115; --papel: #171a20; --tinta: #f2f4f7; --tinta-2: #a3abb8; --fio: #2a2f38;
     --tatame: #3566d6; --tatame-forte: #2b57bf; --tatame-tinta: #8db0ff; --tatame-suave: #1b2740;
-    --feito-suave: #12301f; --feito-tinta: #6ee7a0; --online: #22c55e; --online-anel: rgba(34, 197, 94, .45); --recorde-suave: #33270a; --recorde-tinta: #fcd34d; --erro: #ff6b6b;
+    --feito-suave: #12301f; --feito-tinta: #6ee7a0; --online: #22c55e; --online-anel: rgba(34, 197, 94, .45); --recorde-suave: #33270a; --recorde-tinta: #fcd34d; --erro: #ff6b6b; --sobre-erro: #0b0d10;
     --musc: #3987e5; --jiu: #d95926; --bike: #199e70; --muay: #c98500;
     --int-0: #1f242c; --int-1: #1e3561; --int-2: #2b57bf; --int-3: #5b8ef0; --int-4: #a9c4ff;
     color-scheme: dark;
@@ -382,6 +382,54 @@
     dialog.detalhe[open] { animation-name: sobe; }
     @keyframes sobe { from { transform: translateY(32px); opacity: 0; } }
   }
+
+  /* Excluir conta: a mesma confirmação do app (o que se perde, caixa de "entendi" e botão vermelho). */
+  .usuarios th.acoes { width: 52px; }
+  .cel-excluir { width: 52px; text-align: right; }
+  .excluir-btn {
+    width: 40px; height: 40px; display: inline-grid; place-items: center; border: 1px solid var(--fio); border-radius: 10px;
+    background: var(--papel); color: var(--tinta-2); cursor: pointer;
+  }
+  .excluir-btn:hover:not(:disabled) { color: var(--erro); border-color: var(--erro); }
+  .excluir-btn:disabled { opacity: .35; cursor: not-allowed; }
+  .excluir-btn svg { width: 18px; height: 18px; }
+  @media (max-width: 720px) {
+    .usuarios td.cel-excluir { display: block; position: absolute; right: 0; bottom: 10px; width: auto; }
+    .usuarios tr { padding-right: 48px; }
+  }
+  dialog.modal-excluir {
+    width: min(460px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); padding: 0;
+    border: 1px solid var(--fio); border-radius: 18px; background: var(--papel); color: var(--tinta);
+  }
+  dialog.modal-excluir::backdrop { background: rgba(10, 12, 16, .55); }
+  @media (max-width: 720px) {
+    dialog.modal-excluir { width: 100%; max-width: 100%; max-height: 92dvh; margin: auto 0 0; border-bottom: 0; border-radius: 18px 18px 0 0; }
+  }
+  .excluir-corpo { display: grid; gap: 14px; padding: 20px 16px calc(20px + env(safe-area-inset-bottom, 0px)); }
+  .excluir-topo { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .excluir-topo h2 { margin: 0; font-size: 24px; }
+  .excluir-fechar { flex: 0 0 auto; width: 44px; height: 44px; margin: -8px -8px 0 0; display: grid; place-items: center; border: 0; border-radius: 10px; background: transparent; color: var(--tinta-2); cursor: pointer; }
+  .excluir-fechar:hover { background: var(--gi); color: var(--tinta); }
+  .excluir-intro { margin: 0; color: var(--tinta-2); font-size: 15px; }
+  .excluir-lista { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+  .excluir-lista li { display: flex; gap: 10px; align-items: flex-start; font-size: 15px; }
+  .excluir-lista svg { flex: 0 0 auto; margin-top: 3px; color: var(--erro); }
+  .excluir-alerta { margin: 0; padding: 12px 14px; border-radius: 12px; font-size: 14px;
+    background: color-mix(in srgb, var(--erro) 12%, var(--papel)); border: 1px solid color-mix(in srgb, var(--erro) 35%, transparent); }
+  .excluir-dica { margin: 0; font-size: 14px; color: var(--tinta-2); }
+  .excluir-entendi { display: flex; align-items: flex-start; gap: 10px; min-height: 44px; padding-top: 10px; font-size: 15px; font-weight: 600; cursor: pointer; }
+  .excluir-entendi input { flex: 0 0 auto; width: 22px; height: 22px; margin: 0; accent-color: var(--erro); cursor: pointer; }
+  .excluir-erro { margin: 0; color: var(--erro); font-size: 14px; }
+  .excluir-acoes { display: grid; gap: 8px; }
+  .btn-excluir { min-height: 52px; border: 0; border-radius: 10px; background: var(--erro); color: var(--sobre-erro); font: inherit; font-size: 16px; font-weight: 700; cursor: pointer; }
+  .btn-excluir:hover:not(:disabled) { filter: brightness(.92); }
+  .btn-excluir:disabled { opacity: .45; cursor: not-allowed; }
+  .excluir-acoes .btn-sec { min-height: 48px; }
+  .toast {
+    position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 40;
+    width: max-content; max-width: calc(100vw - 32px); padding: 12px 16px; border-radius: 12px;
+    background: var(--tinta); color: var(--gi); font-size: 14px; box-shadow: 0 6px 24px rgba(0, 0, 0, .18);
+  }
 </style>
 </head>
 <body>
@@ -498,6 +546,7 @@
               <th scope="col" data-col="checkins" class="num"><button type="button">Check-ins</button></th>
               <th scope="col" data-col="aderencia"><button type="button">Aderência</button></th>
               <th scope="col" data-col="treino"><button type="button">Último treino</button></th>
+              <th scope="col" class="acoes"><span class="sr">Excluir</span></th>
             </tr>
           </thead>
           <tbody id="usuarios-corpo"></tbody>
@@ -554,6 +603,11 @@
   <p>Página restrita a administradores. Os dados de uso não incluem pesos, cargas nem observações dos usuários.</p>
 </footer>
 
+<dialog class="modal-excluir" id="excluir-dialog" aria-labelledby="excluir-title">
+  <div class="excluir-corpo" id="excluir-body"></div>
+</dialog>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
 <dialog class="detalhe" id="detalhe" aria-labelledby="det-nome">
   <div class="det-corpo" id="det-corpo"></div>
 </dialog>
@@ -591,6 +645,8 @@
   const ORDEM_SEMANA = [1, 2, 3, 4, 5, 6, 0];
 
   const ICON = {
+    lixeira: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6"/></svg>',
+    xis: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>',
     sobe: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg>',
     desce: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>',
     check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>',
@@ -611,6 +667,7 @@
 
   // ---------- Estado ----------
   let dados = null; // { usuarios, checkins, eventos }
+  let meuId = null; // administrador logado: a própria conta não é excluída por aqui
   let periodo = '30';
   let ordem = { col: 'ultimo', dir: -1 };
   let busca = '';
@@ -631,6 +688,7 @@
         <p>Entre com a sua conta Google de administrador para ver o monitoramento.</p>
         <button class="btn" type="button" id="entrar">Entrar com Google</button>`);
     }
+    meuId = session.user.id;
     const { data: admin, error } = await sb.rpc('eh_admin');
     if (error) return mostrarEstado(`<p>Não foi possível verificar o acesso. Confira se o <code>supabase/schema.sql</code> foi aplicado.</p>${botaoTentar()}`);
     if (!admin) {
@@ -1048,7 +1106,7 @@
     }[ordem.col];
     linhas.sort((a, b) => { const x = chave(a), y = chave(b); return (x < y ? -1 : x > y ? 1 : 0) * ordem.dir; });
     linhasAtuais = linhas;
-    document.querySelectorAll('#usuarios th').forEach((th) => {
+    document.querySelectorAll('#usuarios th[data-col]').forEach((th) => {
       const ativo = th.dataset.col === ordem.col;
       if (ativo) th.setAttribute('aria-sort', ordem.dir > 0 ? 'ascending' : 'descending'); else th.removeAttribute('aria-sort');
       const b = th.querySelector('button');
@@ -1067,7 +1125,10 @@
         <td data-rotulo="Check-ins" class="num">${fmtNum(l.checkins)}</td>
         <td data-rotulo="Aderência"><span class="barra-ader"><span aria-hidden="true"><i style="width:${Math.round((l.aderencia || 0) * 100)}%"></i></span>${pctAder(l.aderencia)}</span></td>
         <td data-rotulo="Último treino">${l.ultimoTreino ? fmtData(l.ultimoTreino) : '—'}</td>
-      </tr>`).join('') : `<tr><td colspan="7" class="nenhum">${q ? 'Nenhum usuário encontrado.' : 'Nenhum usuário cadastrado.'}</td></tr>`;
+        <td class="cel-excluir">${l.u.id === meuId
+          ? `<button class="excluir-btn" type="button" disabled title="Esta é a sua conta: para excluí-la, use o app (Você → Excluir conta)" aria-label="Não é possível excluir a sua própria conta por aqui">${ICON.lixeira}</button>`
+          : `<button class="excluir-btn" type="button" data-excluir="${l.u.id}" aria-label="Excluir a conta de ${esc(l.u.nome || l.u.email)}" title="Excluir conta">${ICON.lixeira}</button>`}</td>
+      </tr>`).join('') : `<tr><td colspan="8" class="nenhum">${q ? 'Nenhum usuário encontrado.' : 'Nenhum usuário cadastrado.'}</td></tr>`;
   }
   let linhasAtuais = [];
 
@@ -1349,6 +1410,7 @@
     video: (d) => `Viu o vídeo de ${d.exercicio}`,
     sem_peso: (d) => `${d.ativo ? 'Marcou' : 'Desmarcou'} ${d.exercicio} como sem peso`,
     semana_alterada: () => 'Alterou a semana',
+    excluir_conta: () => 'Abriu a opção de excluir a conta',
     novidade_treinos: (d) => ({ viu: 'Viu o aviso dos treinos personalizados', personalizar: 'Quis personalizar os treinos', montar: 'Escolheu montar os treinos', manter: 'Manteve o treino atual', fechou: 'Fechou o aviso dos treinos personalizados' }[d.escolha] || 'Respondeu ao aviso dos treinos') + (d.ocultou ? ' e pediu para não mostrar mais' : ''),
     editor_treinos: () => 'Abriu Meus treinos',
     treinos_desfeitos: (d) => (d.origem === 'desfazer' ? 'Desfez a alteração dos treinos' : 'Restaurou a versão anterior dos treinos'),
@@ -1545,12 +1607,78 @@
       ordem = { col, dir: ordem.col === col ? -ordem.dir : (col === 'nome' || col === 'situacao' ? 1 : -1) };
       return render();
     }
+    const exc = e.target.closest('[data-excluir]');
+    if (exc) return abrirExcluir(exc.dataset.excluir);
+    if (e.target.closest('.excluir-btn')) return;
     const tr = e.target.closest('#usuarios-corpo tr[data-usuario]');
     if (tr) return abrirDetalhe(tr.dataset.usuario);
     if (e.target.closest('#csv')) return exportarCSV();
     if (e.target.closest('#atualizar')) return carregar();
     if (e.target === $('detalhe') || e.target.closest('[data-fechar]')) $('detalhe').close();
   });
+
+  // ---------- Excluir conta de um usuário (mesma confirmação do app) ----------
+  let excluirId = null, toastTimer = null;
+  function toast(msg) {
+    $('toast').textContent = msg; $('toast').hidden = false;
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => { $('toast').hidden = true; }, 5000);
+  }
+  function abrirExcluir(id) {
+    const u = dados && dados.usuarios.find((x) => x.id === id);
+    if (!u) return;
+    excluirId = id;
+    const nome = esc(u.nome || u.email);
+    const primeiro = esc((u.nome || '').trim().split(/\s+/)[0] || 'a pessoa');
+    const item = (t) => `<li>${ICON.xis}<span>${t}</span></li>`;
+    $('excluir-body').innerHTML = `
+      <div class="excluir-topo"><h2 id="excluir-title">Excluir a conta de ${nome}?</h2>
+        <button class="excluir-fechar" type="button" data-fechar-excluir aria-label="Fechar">${ICON.xis}</button></div>
+      <p class="excluir-intro">A exclusão é definitiva: ${nome}${u.email && u.nome ? ` (${esc(u.email)})` : ''} vai perder tudo o que já salvou no app. Vamos apagar para sempre:</p>
+      <ul class="excluir-lista">
+        ${item('Todos os check-ins e o histórico do calendário')}
+        ${item('Os pesos, as cargas e os recordes de cada exercício')}
+        ${item('Os treinos montados e a semana')}
+        ${item('Foto, nome e preferências')}
+        ${item('O resumo semanal por e-mail, que para de chegar')}
+      </ul>
+      <p class="excluir-alerta"><b>Não dá para desfazer.</b> Se ${primeiro} entrar de novo com o Google depois, a conta começa do zero, sem nada do que foi salvo até hoje.</p>
+      <p class="excluir-dica">Se a ideia é só parar os e-mails, a pessoa pode desligar o resumo em Você → Notificações, e tudo continua guardado.</p>
+      <label class="excluir-entendi"><input type="checkbox" id="excluir-entendi"><span>Entendi que ${nome} vai perder todas as informações.</span></label>
+      <p class="excluir-erro" id="excluir-erro" role="alert" hidden></p>
+      <div class="excluir-acoes">
+        <button class="btn-excluir" type="button" id="excluir-sim" disabled>Excluir conta</button>
+        <button class="btn-sec" type="button" data-fechar-excluir>Cancelar</button>
+      </div>`;
+    $('excluir-dialog').showModal();
+  }
+  async function confirmarExcluir() {
+    const botao = $('excluir-sim');
+    const u = dados.usuarios.find((x) => x.id === excluirId);
+    botao.disabled = true; botao.textContent = 'Excluindo…';
+    $('excluir-erro').hidden = true;
+    const { error } = await sb.rpc('admin_excluir_usuario', { alvo: excluirId });
+    if (error) {
+      $('excluir-erro').textContent = /could not find the function/i.test(error.message || '')
+        ? 'A exclusão ainda não está ligada no banco: rode de novo o supabase/schema.sql no Supabase.'
+        : `Não foi possível excluir: ${error.message}`;
+      $('excluir-erro').hidden = false;
+      botao.textContent = 'Excluir conta'; botao.disabled = !$('excluir-entendi').checked;
+      return;
+    }
+    $('excluir-dialog').close();
+    if (detalheId === excluirId && $('detalhe').open) $('detalhe').close();
+    toast(`A conta de ${u ? u.nome || u.email : 'usuário'} foi excluída.`);
+    excluirId = null;
+    await carregar();
+  }
+  $('excluir-dialog').addEventListener('change', (e) => {
+    if (e.target.id === 'excluir-entendi') $('excluir-sim').disabled = !e.target.checked;
+  });
+  $('excluir-dialog').addEventListener('click', (e) => {
+    if (e.target.closest('#excluir-sim')) return confirmarExcluir();
+    if (e.target === $('excluir-dialog') || e.target.closest('[data-fechar-excluir]')) $('excluir-dialog').close();
+  });
+
   $('busca').addEventListener('input', (e) => { busca = e.target.value; if (dados) renderUsuarios(janela(periodo), diasAtivos()); });
   $('ordenar-cel').addEventListener('change', (e) => {
     const col = e.target.value;
