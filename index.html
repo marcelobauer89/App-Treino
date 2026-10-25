@@ -451,6 +451,14 @@
   .btn-google:hover { border-color: var(--tinta-2); }
   .btn-google:focus-visible, .entrar-acoes .btn:focus-visible { outline: 2px solid var(--tatame-tinta); outline-offset: 2px; }
   .btn-google:disabled { opacity: .6; cursor: wait; }
+  .convite-form { display: grid; gap: 12px; }
+  .convite-form .btn, .convite-form .btn-sec { min-height: 52px; }
+  .convite-form input { text-transform: uppercase; letter-spacing: .12em; font-family: var(--display); font-weight: 700; font-size: 20px; }
+  .convite-form input::placeholder { letter-spacing: normal; text-transform: none; font-family: var(--texto); font-weight: 400; font-size: 16px; }
+  .convite-ou { display: flex; align-items: center; gap: 12px; color: var(--tinta-2); font-size: 13px; }
+  .convite-ou::before, .convite-ou::after { content: ""; flex: 1; border-top: 1px solid var(--fio); }
+  .convite-pedido { margin: 0; padding: 10px 12px; border-radius: 10px; background: var(--feito-suave); color: var(--feito-tinta); font-size: 14px; }
+  .convite-sair { justify-self: center; }
   .entrar-privacidade { margin: 0; font-size: 13px; color: var(--tinta-2); text-align: center; }
   /* Enquanto a sessão carrega, uma barra fina corre no lugar do botão. */
   .entrar-carga { position: relative; height: 3px; border-radius: 2px; overflow: hidden; background: var(--fio); }
@@ -925,6 +933,18 @@
       <button class="btn-google" type="button" id="entrar-google" hidden></button>
       <button class="btn" type="button" id="entrar-tentar" hidden>Tentar de novo</button>
       <p class="entrar-privacidade" id="entrar-privacidade" hidden>Usamos sua conta Google só para entrar e guardar seus treinos.</p>
+      <form class="convite-form" id="convite-form" novalidate hidden>
+        <div class="campo">
+          <label for="convite-codigo">Código do convite</label>
+          <input id="convite-codigo" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="12" placeholder="Ex.: K7P2QX" aria-describedby="convite-erro">
+        </div>
+        <p class="form-erro" id="convite-erro" role="alert" hidden></p>
+        <button class="btn" type="submit" id="convite-usar">Entrar com o convite</button>
+        <div class="convite-ou" aria-hidden="true"><span>ou</span></div>
+        <button class="btn-sec" type="button" id="convite-pedir">Pedir acesso</button>
+        <p class="convite-pedido" id="convite-pedido" role="status" hidden></p>
+        <button class="link-btn convite-sair" type="button" id="convite-sair">Sair e entrar com outra conta</button>
+      </form>
     </div>
     <p class="credito">Desenvolvido por <a href="https://www.linkedin.com/in/marcelo-bauer" target="_blank" rel="noopener">Marcelo Bauer</a></p>
   </div>
@@ -1411,6 +1431,8 @@
   const MAX_TREINOS = 5, MAX_EXERCICIOS = 15;
   let TREINOS = PLANO_PADRAO;
   let treinosDaConta = false;
+  // { liberado, pedidoEm }: contas novas só usam o app depois de um convite ou de um administrador liberar.
+  let acesso = { liberado: true, pedidoEm: null };
   // Versão anterior dos treinos (perfis.treinos_anterior): { treinos, semana, em }. Serve para Desfazer e recuperar.
   let treinosAnterior = null;
   const limpar = (t, max) => String(t ?? '').replace(/[<>"&]/g, '').trim().slice(0, max);
@@ -1899,6 +1921,8 @@
     if (!TREINOS[estado.treino]) estado.treino = Object.keys(TREINOS)[0];
     let ocultaNoAparelho = false;
     try { ocultaNoAparelho = !!localStorage.getItem(chaveNovidade()); } catch (_) {}
+    // Acesso por convite: sem a coluna (schema.sql antigo), todo mundo entra como antes.
+    acesso = { liberado: linha.liberado !== false, pedidoEm: linha.acesso_pedido_em || null };
     treinosAnterior = linha.treinos_anterior && linha.treinos_anterior.treinos ? linha.treinos_anterior : null;
     novidade = { disponivel: true, vista: !!linha.novidade_oculta || ocultaNoAparelho, contaNova: !(c.data || []).length && !cargas.length };
     const semana = validarSemana(linha.semana);
@@ -3991,6 +4015,89 @@
     if (e.target === excluirDialog || e.target.closest('[data-fechar]')) excluirDialog.close();
   });
 
+  // ---------- Convites ----------
+  // O link ?convite=CODIGO é guardado no aparelho para sobreviver à ida e volta do login do Google.
+  const CHAVE_CONVITE = 'bauer-convite';
+  const conviteGuardado = () => { try { return localStorage.getItem(CHAVE_CONVITE) || ''; } catch (_) { return ''; } };
+  const esquecerConvite = () => { try { localStorage.removeItem(CHAVE_CONVITE); } catch (_) {} };
+  (() => {
+    const busca = new URLSearchParams(location.search);
+    const codigo = (busca.get('convite') || '').replace(/\s/g, '').toUpperCase().slice(0, 12);
+    if (!codigo) return;
+    try { localStorage.setItem(CHAVE_CONVITE, codigo); } catch (_) {}
+    busca.delete('convite');
+    history.replaceState(null, '', location.pathname + (busca.toString() ? `?${busca}` : '') + location.hash);
+  })();
+  const MOTIVOS_CONVITE = {
+    invalido: 'Não encontramos esse código. Confira as letras e os números e tente de novo.',
+    usado: 'Esse convite já foi usado. Peça um novo para quem te convidou.',
+    expirado: 'Esse convite expirou (ele vale 7 dias). Peça um novo para quem te convidou.',
+    cancelado: 'Esse convite foi cancelado. Peça um novo para quem te convidou.',
+  };
+  // Libera a entrada no app: conta liberada, administrador ou convite válido. Senão mostra a tela de convidados.
+  async function temAcesso() {
+    if (acesso.liberado) return true;
+    const admin = await sb.rpc('eh_admin');
+    if (!admin.error && admin.data) return true;
+    const codigo = conviteGuardado();
+    if (codigo) {
+      esquecerConvite();
+      const r = await usarConvite(codigo);
+      if (r === 'ok' || r === 'ja_liberado') return true;
+      return mostrarConvidados(MOTIVOS_CONVITE[r] || '');
+    }
+    return mostrarConvidados('');
+  }
+  async function usarConvite(codigo) {
+    const { data, error } = await sb.rpc('usar_convite', { p_codigo: codigo });
+    const r = error ? 'erro' : data;
+    registrarEvento('convite_usado', { resultado: r });
+    if (r === 'ok' || r === 'ja_liberado') {
+      acesso.liberado = true;
+      toast('Convite aceito! Bem-vindo ao OSS.');
+    }
+    return r;
+  }
+  function mostrarConvidados(motivo) {
+    mostrarEntrada('convite');
+    $('convite-erro').textContent = motivo;
+    $('convite-erro').hidden = !motivo;
+    if (motivo) $('convite-codigo').setAttribute('aria-invalid', 'true'); else $('convite-codigo').removeAttribute('aria-invalid');
+    renderPedido();
+    return false;
+  }
+  function renderPedido() {
+    const em = acesso.pedidoEm;
+    $('convite-pedir').hidden = !!em;
+    $('convite-pedido').hidden = !em;
+    if (em) {
+      const local = isoLocal(new Date(em));
+      $('convite-pedido').textContent = `Pedido de acesso enviado em ${fmtData(local.slice(0, 10), { day: '2-digit', month: '2-digit' })} às ${horaDe(local)}. Quando for aprovado, é só abrir o app de novo.`;
+    }
+  }
+  $('convite-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const codigo = $('convite-codigo').value.replace(/\s/g, '').toUpperCase();
+    if (!codigo) return mostrarConvidados('Digite o código do convite.');
+    $('convite-usar').disabled = true;
+    const r = await usarConvite(codigo);
+    $('convite-usar').disabled = false;
+    if (r === 'ok' || r === 'ja_liberado') return entrarNoApp({ user: usuario });
+    mostrarConvidados(r === 'erro' ? 'Não foi possível conferir o convite. Confira a internet e tente de novo.' : MOTIVOS_CONVITE[r]);
+    $('convite-codigo').focus();
+  });
+  $('convite-codigo').addEventListener('input', () => { $('convite-erro').hidden = true; $('convite-codigo').removeAttribute('aria-invalid'); });
+  $('convite-pedir').addEventListener('click', async () => {
+    $('convite-pedir').disabled = true;
+    const { error } = await sb.rpc('pedir_acesso');
+    $('convite-pedir').disabled = false;
+    if (error) return mostrarConvidados('Não foi possível enviar o pedido. Confira a internet e tente de novo.');
+    acesso.pedidoEm = new Date().toISOString();
+    registrarEvento('acesso_pedido');
+    renderPedido();
+  });
+  $('convite-sair').addEventListener('click', async () => { await enviarEventos(); await sb.auth.signOut(); });
+
   // ---------- Entrada (login com Google) ----------
   const ICONE_GOOGLE = '<svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>';
 
@@ -4003,10 +4110,12 @@
     $('entrar-carga').hidden = modo !== 'carregando';
     $('entrar-erro').textContent = modo === 'login' ? msg : '';
     $('entrar-erro').hidden = !(modo === 'login' && msg);
+    $('convite-form').hidden = modo !== 'convite';
     $('entrar-status').textContent = {
       carregando: 'Carregando seus treinos…',
       config: 'O app ainda não está ligado ao Supabase. Preencha SUPABASE_URL e SUPABASE_KEY no index.html (o passo a passo está no README).',
-      login: 'Exercícios de Jiu Jitsu e hipertrofia',
+      login: conviteGuardado() ? 'Você foi convidado para o OSS! Entre com o Google para começar.' : 'Exercícios de Jiu Jitsu e hipertrofia',
+      convite: 'O OSS é só para convidados. Digite o código do convite que você recebeu ou peça acesso.',
       erro: msg,
     }[modo];
   }
@@ -4029,6 +4138,7 @@
     if (/[?&]code=/.test(location.search)) history.replaceState(null, '', location.pathname + location.hash);
     try {
       await carregarDados();
+      if (!(await temAcesso())) return;
       await migrarDadosLocais();
     } catch (_) {
       mostrarEntrada('erro', 'Não foi possível carregar seus dados. Confira a internet e tente de novo.');

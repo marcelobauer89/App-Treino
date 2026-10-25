@@ -430,6 +430,30 @@
     width: max-content; max-width: calc(100vw - 32px); padding: 12px 16px; border-radius: 12px;
     background: var(--tinta); color: var(--gi); font-size: 14px; box-shadow: 0 6px 24px rgba(0, 0, 0, .18);
   }
+
+  /* Convites */
+  .conv-form { display: flex; flex-wrap: wrap; gap: 8px; }
+  .conv-form input { flex: 1 1 220px; min-height: 48px; padding: 0 12px; border: 1px solid var(--fio); border-radius: 10px; background: var(--gi); color: var(--tinta); font: inherit; font-size: 16px; }
+  .conv-form .btn { min-height: 48px; }
+  .conv-gerado { display: grid; gap: 10px; margin-top: 14px; padding: 14px; border-radius: 12px; background: var(--feito-suave); }
+  .conv-gerado p { margin: 0; color: var(--feito-tinta); font-weight: 700; }
+  .conv-link { width: 100%; min-height: 44px; padding: 0 12px; border: 1px solid var(--fio); border-radius: 10px; background: var(--papel); color: var(--tinta); font: inherit; font-size: 15px; }
+  .conv-acoes { display: flex; flex-wrap: wrap; gap: 8px; }
+  .conv-acoes .btn, .conv-acoes .btn-sec { min-height: 44px; }
+  .conv-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--fio); }
+  .conv-item:last-child { border-bottom: 0; }
+  .conv-item b { overflow-wrap: anywhere; }
+  .conv-item small { grid-column: 1; color: var(--tinta-2); font-size: 13px; }
+  .conv-item .conv-botoes { grid-row: 1 / 3; grid-column: 2; display: flex; gap: 6px; }
+  .conv-codigo { font-family: var(--display); font-weight: 800; letter-spacing: .08em; }
+  .conv-estado { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 700; background: var(--gi); color: var(--tinta-2); }
+  .conv-estado.aguardando { background: var(--tatame-suave); color: var(--tatame-tinta); }
+  .conv-estado.usado { background: var(--feito-suave); color: var(--feito-tinta); }
+  .btn-peq { min-height: 40px; padding: 0 12px; border-radius: 10px; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+  .btn-peq.prim { border: 0; background: var(--tatame); color: var(--sobre-tatame); }
+  .btn-peq.sec { border: 1.5px solid var(--fio); background: var(--papel); color: var(--tinta); }
+  .situacao.bloqueado { background: color-mix(in srgb, var(--erro) 12%, var(--papel)); color: var(--erro); }
+  .det-acesso { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 </style>
 </head>
 <body>
@@ -467,6 +491,7 @@
       <button type="button" role="tab" id="tab-usuarios" data-aba="usuarios" aria-controls="aba-usuarios" aria-selected="false" tabindex="-1">Usuários</button>
       <button type="button" role="tab" id="tab-saude" data-aba="saude" aria-controls="aba-saude" aria-selected="false" tabindex="-1"><span class="aba-longo">Saúde do app</span><span class="aba-curto" aria-hidden="true">Saúde</span><span class="aba-alerta" id="alerta-saude" hidden></span></button>
       <button type="button" role="tab" id="tab-emails" data-aba="emails" aria-controls="aba-emails" aria-selected="false" tabindex="-1">E-mails</button>
+      <button type="button" role="tab" id="tab-convites" data-aba="convites" aria-controls="aba-convites" aria-selected="false" tabindex="-1">Convites<span class="aba-alerta" id="alerta-convites" hidden></span></button>
     </div>
 
     <div role="tabpanel" id="aba-geral" aria-labelledby="tab-geral">
@@ -596,6 +621,28 @@
         <div class="cartao lista-cartao" id="destinatarios"></div>
       </section>
     </div>
+
+    <div role="tabpanel" id="aba-convites" aria-labelledby="tab-convites" hidden>
+      <section class="bloco cartao conv-novo" aria-labelledby="conv-novo-titulo">
+        <h2 id="conv-novo-titulo">Novo convite</h2>
+        <p class="nota" style="margin:4px 0 12px">Cada link vale para uma pessoa e por 7 dias. Quem já usa o app continua entrando normalmente.</p>
+        <form class="conv-form" id="conv-form" novalidate>
+          <label class="sr" for="conv-nome">Para quem?</label>
+          <input id="conv-nome" type="text" maxlength="80" autocomplete="off" placeholder="Para quem? (opcional, ex.: João)">
+          <button class="btn" type="submit" id="conv-gerar">Gerar convite</button>
+        </form>
+        <div id="conv-gerado"></div>
+      </section>
+      <section class="bloco" aria-labelledby="pedidos-titulo">
+        <div class="bloco-topo"><h2 id="pedidos-titulo">Pedidos de acesso</h2></div>
+        <p class="nota" style="margin:-4px 0 10px">Quem entrou com o Google sem convite e pediu para usar o app.</p>
+        <div class="cartao lista-cartao" id="pedidos-lista"></div>
+      </section>
+      <section class="bloco" aria-labelledby="convites-titulo">
+        <div class="bloco-topo"><h2 id="convites-titulo">Convites gerados</h2></div>
+        <div class="cartao lista-cartao" id="convites-lista"></div>
+      </section>
+    </div>
   </div>
 </main>
 
@@ -703,14 +750,15 @@
   async function carregar() {
     if (!dados) mostrarEstado('<p>Carregando os dados…</p>');
     $('atualizar').disabled = true;
-    const [u, c, e, em] = await Promise.all([sb.rpc('admin_usuarios'), sb.rpc('admin_checkins'), sb.rpc('admin_eventos'), sb.rpc('admin_emails')]);
+    const [u, c, e, em, cv] = await Promise.all([sb.rpc('admin_usuarios'), sb.rpc('admin_checkins'), sb.rpc('admin_eventos'), sb.rpc('admin_emails'), sb.rpc('admin_convites')]);
     $('atualizar').disabled = false;
     if (u.error || c.error || e.error) {
       return mostrarEstado(`<p>Não foi possível carregar os dados. ${esc((u.error || c.error || e.error).message)}</p>${botaoTentar()}`);
     }
     // Sem a função admin_emails (schema antigo), só a aba E-mails fica sem dados.
     dados = { usuarios: u.data || [], checkins: c.data || [], eventos: e.data || [],
-      emails: em.error ? null : (em.data || []).filter((x) => x.tipo === 'resumo_semanal'), erroEmails: em.error ? em.error.message : '' };
+      emails: em.error ? null : (em.data || []).filter((x) => x.tipo === 'resumo_semanal'), erroEmails: em.error ? em.error.message : '',
+      convites: cv.error ? null : cv.data || [] };
     const agora = new Date();
     $('atualizado').textContent = `Atualizado às ${pad(agora.getHours())}:${pad(agora.getMinutes())}`;
     $('estado').hidden = true;
@@ -874,6 +922,7 @@
     renderUsuarios(j, ativosMap);
     renderSaude(j);
     renderEmails(j);
+    renderConvites();
     atualizarOnline();
   }
 
@@ -1092,7 +1141,8 @@
       const noPeriodo = meus.filter((c) => dentro(diaDeCheckin(c), j)).length;
       const ultimoTreino = meus.map(diaDeCheckin).sort().pop() || null;
       return {
-        u, ultimo, sit: situacao(ultimo), checkins: noPeriodo, aderencia: aderenciaDe(noPeriodo, planejadasNoPeriodo(u, j)),
+        u, ultimo, sit: u.liberado === false
+          ? { chave: 'bloqueado', rotulo: u.acesso_pedido_em ? 'Pediu acesso' : 'Bloqueado', icone: ICON.alerta, ordem: 4 } : situacao(ultimo), checkins: noPeriodo, aderencia: aderenciaDe(noPeriodo, planejadasNoPeriodo(u, j)),
         acessos: u.acessos || 0, ultimoTreino, total: meus.length,
       };
     });
@@ -1364,7 +1414,7 @@
   }
 
   // ---------- Abas ----------
-  const ABAS = ['geral', 'usuarios', 'saude', 'emails'];
+  const ABAS = ['geral', 'usuarios', 'saude', 'emails', 'convites'];
   let aba = ABAS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'geral';
   // Gráficos são desenhados na largura real, então são redesenhados ao aparecer.
   function renderVisivel() {
@@ -1411,6 +1461,8 @@
     sem_peso: (d) => `${d.ativo ? 'Marcou' : 'Desmarcou'} ${d.exercicio} como sem peso`,
     semana_alterada: () => 'Alterou a semana',
     excluir_conta: () => 'Abriu a opção de excluir a conta',
+    convite_usado: (d) => ({ ok: 'Entrou com um convite', ja_liberado: 'Abriu um convite (já tinha acesso)', invalido: 'Tentou um código de convite inválido', usado: 'Tentou um convite já usado', expirado: 'Tentou um convite expirado', cancelado: 'Tentou um convite cancelado' }[d.resultado] || 'Tentou usar um convite'),
+    acesso_pedido: () => 'Pediu acesso ao app',
     novidade_treinos: (d) => ({ viu: 'Viu o aviso dos treinos personalizados', personalizar: 'Quis personalizar os treinos', montar: 'Escolheu montar os treinos', manter: 'Manteve o treino atual', fechou: 'Fechou o aviso dos treinos personalizados' }[d.escolha] || 'Respondeu ao aviso dos treinos') + (d.ocultou ? ' e pediu para não mostrar mais' : ''),
     editor_treinos: () => 'Abriu Meus treinos',
     treinos_desfeitos: (d) => (d.origem === 'desfazer' ? 'Desfez a alteração dos treinos' : 'Restaurou a versão anterior dos treinos'),
@@ -1514,6 +1566,16 @@
         <h3 id="det-sp">Exercícios sem peso</h3>
         ${(u.sem_peso || []).length ? `<ul class="chips">${u.sem_peso.map((n) => `<li>${esc(n)}</li>`).join('')}</ul>` : '<p class="nota">Nenhum.</p>'}
       </section>
+      ${typeof u.liberado === 'boolean' ? `<section class="det-sec" aria-labelledby="det-acesso-t">
+        <h3 id="det-acesso-t">Acesso</h3>
+        <div class="det-acesso">
+          <span class="nota" style="flex:1 1 200px">${u.liberado ? 'Pode usar o app.' : u.acesso_pedido_em ? `Pediu acesso ${relativo(diaDeInstante(u.acesso_pedido_em))}.` : 'Bloqueado: não usa o app até ser liberado.'}</span>
+          ${u.id === meuId ? '' : u.liberado
+            ? `<button class="btn-peq sec" type="button" data-bloquear="${u.id}">Bloquear acesso</button>`
+            : `<button class="btn-peq prim" type="button" data-liberar="${u.id}">Liberar acesso</button>`}
+        </div>
+        <p class="excluir-erro" id="det-acesso-erro" role="alert" hidden></p>
+      </section>` : ''}
       <section class="det-sec" aria-labelledby="det-tempo">
         <h3 id="det-tempo">Atividade recente</h3>
         <div id="det-atividade"></div>
@@ -1677,6 +1739,111 @@
   $('excluir-dialog').addEventListener('click', (e) => {
     if (e.target.closest('#excluir-sim')) return confirmarExcluir();
     if (e.target === $('excluir-dialog') || e.target.closest('[data-fechar-excluir]')) $('excluir-dialog').close();
+  });
+
+  // ---------- Convites ----------
+  const linkConvite = (codigo) => `${new URL('./', location.href).href}?convite=${codigo}`;
+  function estadoConvite(c) {
+    if (c.cancelado_em) return { c: 'cancelado', t: 'Cancelado' };
+    if (c.usado_em) return { c: 'usado', t: `Usado por ${c.usado_por_nome || c.usado_por_email || 'conta excluída'} em ${fmtData(diaDeInstante(c.usado_em))}` };
+    if (new Date(c.expira_em) < new Date()) return { c: 'expirado', t: 'Expirou' };
+    return { c: 'aguardando', t: 'Aguardando' };
+  }
+  function renderConvites() {
+    if (!dados) return;
+    const pedidos = dados.usuarios.filter((u) => u.liberado === false && u.acesso_pedido_em)
+      .sort((a, b) => (a.acesso_pedido_em < b.acesso_pedido_em ? 1 : -1));
+    $('alerta-convites').hidden = !pedidos.length;
+    $('alerta-convites').textContent = pedidos.length;
+    $('alerta-convites').setAttribute('aria-label', `${pedidos.length} ${pedidos.length === 1 ? 'pedido' : 'pedidos'} de acesso`);
+    $('pedidos-lista').innerHTML = pedidos.length ? pedidos.map((u) => `
+      <div class="conv-item">
+        <b>${esc(u.nome || 'Sem nome')}</b>
+        <small>${esc(u.email)} · pediu ${relativo(diaDeInstante(u.acesso_pedido_em))}</small>
+        <span class="conv-botoes">
+          <button class="btn-peq prim" type="button" data-liberar="${u.id}">Liberar</button>
+          <button class="btn-peq sec" type="button" data-recusar="${u.id}">Recusar</button>
+        </span>
+      </div>`).join('') : '<p class="vazio">Nenhum pedido de acesso.</p>';
+    if (!dados.convites) {
+      $('convites-lista').innerHTML = '<p class="vazio">Os convites ainda não estão ligados no banco: rode de novo o supabase/schema.sql no Supabase.</p>';
+      return;
+    }
+    $('convites-lista').innerHTML = dados.convites.length ? dados.convites.map((c) => {
+      const e = estadoConvite(c);
+      return `
+      <div class="conv-item">
+        <b>${esc(c.nome || 'Sem nome')} <span class="conv-codigo">${esc(c.codigo)}</span> <span class="conv-estado ${e.c}">${esc(e.t)}</span></b>
+        <small>Criado em ${fmtData(diaDeInstante(c.criado_em))}${e.c === 'aguardando' ? ` · vale até ${fmtData(diaDeInstante(c.expira_em))}` : ''}</small>
+        <span class="conv-botoes">${e.c === 'aguardando' ? `
+          <button class="btn-peq sec" type="button" data-copiar-convite="${esc(c.codigo)}">Copiar link</button>
+          <button class="btn-peq sec" type="button" data-cancelar-convite="${esc(c.codigo)}">Cancelar</button>` : ''}</span>
+      </div>`;
+    }).join('') : '<p class="vazio">Nenhum convite gerado ainda.</p>';
+  }
+  function mensagemConvite(nome, link) {
+    return `Oi${nome ? `, ${nome}` : ''}! Te convidei para o OSS, o app de treino que eu uso. Entra por este link com a sua conta Google (vale 7 dias): ${link}`;
+  }
+  async function copiar(texto, botao) {
+    try { await navigator.clipboard.writeText(texto); } catch (_) {
+      const t = document.createElement('textarea'); t.value = texto; document.body.appendChild(t); t.select();
+      try { document.execCommand('copy'); } catch (__) {} t.remove();
+    }
+    if (botao) { const antes = botao.textContent; botao.textContent = 'Copiado!'; setTimeout(() => { botao.textContent = antes; }, 1500); }
+  }
+  $('conv-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const nome = $('conv-nome').value.trim();
+    $('conv-gerar').disabled = true;
+    const { data: codigo, error } = await sb.rpc('admin_criar_convite', { p_nome: nome });
+    $('conv-gerar').disabled = false;
+    if (error) {
+      $('conv-gerado').innerHTML = `<p class="excluir-erro" role="alert" style="margin-top:12px">${/could not find the function/i.test(error.message || '')
+        ? 'Os convites ainda não estão ligados no banco: rode de novo o supabase/schema.sql no Supabase.' : `Não foi possível gerar o convite: ${esc(error.message)}`}</p>`;
+      return;
+    }
+    const link = linkConvite(codigo);
+    $('conv-gerado').innerHTML = `
+      <div class="conv-gerado" role="status">
+        <p>Convite${nome ? ` para ${esc(nome)}` : ''} criado: <span class="conv-codigo">${esc(codigo)}</span></p>
+        <input class="conv-link" id="conv-link" type="text" readonly value="${esc(link)}" aria-label="Link do convite">
+        <div class="conv-acoes">
+          <button class="btn" type="button" id="conv-copiar">Copiar link</button>
+          <a class="btn-sec" id="conv-whats" href="https://wa.me/?text=${encodeURIComponent(mensagemConvite(nome, link))}" target="_blank" rel="noopener">Enviar pelo WhatsApp</a>
+        </div>
+      </div>`;
+    $('conv-nome').value = '';
+    const cv = await sb.rpc('admin_convites');
+    if (!cv.error) { dados.convites = cv.data || []; renderConvites(); }
+  });
+  async function acaoAcesso(fn, alvo, msgOk) {
+    const { error } = await sb.rpc(fn, { alvo });
+    if (error) {
+      const el = $('det-acesso-erro');
+      if (el && $('detalhe').open) { el.textContent = error.message; el.hidden = false; } else toast(error.message);
+      return;
+    }
+    toast(msgOk);
+    await carregar();
+    if ($('detalhe').open && detalheId === alvo) abrirDetalhe(alvo);
+  }
+  document.addEventListener('click', async (e) => {
+    const b = e.target.closest('[data-liberar], [data-recusar], [data-bloquear], [data-copiar-convite], [data-cancelar-convite], #conv-copiar');
+    if (!b) return;
+    const nome = (id) => { const u = dados.usuarios.find((x) => x.id === id); return u ? u.nome || u.email : 'usuário'; };
+    if (b.id === 'conv-copiar') return copiar($('conv-link').value, b);
+    if (b.dataset.copiarConvite) return copiar(linkConvite(b.dataset.copiarConvite), b);
+    if (b.dataset.cancelarConvite) {
+      const { error } = await sb.rpc('admin_cancelar_convite', { p_codigo: b.dataset.cancelarConvite });
+      if (error) return toast(error.message);
+      toast('Convite cancelado.');
+      const cv = await sb.rpc('admin_convites');
+      if (!cv.error) { dados.convites = cv.data || []; renderConvites(); }
+      return;
+    }
+    if (b.dataset.liberar) return acaoAcesso('admin_liberar_usuario', b.dataset.liberar, `${nome(b.dataset.liberar)} pode usar o app.`);
+    if (b.dataset.recusar) return acaoAcesso('admin_recusar_pedido', b.dataset.recusar, `Pedido de ${nome(b.dataset.recusar)} recusado.`);
+    if (b.dataset.bloquear) return acaoAcesso('admin_bloquear_usuario', b.dataset.bloquear, `${nome(b.dataset.bloquear)} foi bloqueado.`);
   });
 
   $('busca').addEventListener('input', (e) => { busca = e.target.value; if (dados) renderUsuarios(janela(periodo), diasAtivos()); });

@@ -222,7 +222,8 @@ drop function if exists public.admin_usuarios();
 create function public.admin_usuarios()
 returns table (
   id uuid, nome text, email text, cadastro timestamptz, ultimo_acesso timestamptz, acessos integer,
-  semana jsonb, dias_jiu smallint[], sem_peso text[], emails_resumo boolean
+  semana jsonb, dias_jiu smallint[], sem_peso text[], emails_resumo boolean,
+  liberado boolean, acesso_pedido_em timestamptz
 )
 language plpgsql
 stable
@@ -232,7 +233,8 @@ as $$
 begin
   if not public.eh_admin() then raise exception 'acesso restrito' using errcode = '42501'; end if;
   return query
-    select p.id, p.nome, p.email, u.created_at, p.ultimo_acesso, p.acessos, p.semana, p.dias_jiu, p.sem_peso, p.emails_resumo
+    select p.id, p.nome, p.email, u.created_at, p.ultimo_acesso, p.acessos, p.semana, p.dias_jiu, p.sem_peso, p.emails_resumo,
+      p.liberado, p.acesso_pedido_em
     from public.perfis p join auth.users u on u.id = p.id
     order by p.nome;
 end;
@@ -390,3 +392,187 @@ end;
 $$;
 revoke execute on function public.admin_excluir_usuario(uuid) from public, anon;
 grant execute on function public.admin_excluir_usuario(uuid) to authenticated;
+
+-- ---------- Convites (acesso só para convidados) ----------
+-- Quem já tinha conta continua liberado; contas novas entram bloqueadas até usar um convite
+-- (link ?convite=CODIGO, válido por 7 dias e para uma pessoa) ou até um administrador liberar o pedido de acesso.
+alter table public.perfis add column if not exists liberado boolean;
+update public.perfis set liberado = true where liberado is null;
+alter table public.perfis alter column liberado set default false;
+alter table public.perfis alter column liberado set not null;
+alter table public.perfis add column if not exists acesso_pedido_em timestamptz;
+
+create table if not exists public.convites (
+  codigo text primary key check (codigo ~ '^[A-HJ-NP-Z2-9]{6}$'),
+  nome text not null default '' check (char_length(nome) <= 80),
+  criado_por uuid references auth.users (id) on delete set null,
+  criado_em timestamptz not null default now(),
+  expira_em timestamptz not null default now() + interval '7 days',
+  usado_por uuid references auth.users (id) on delete set null,
+  usado_em timestamptz,
+  cancelado_em timestamptz
+);
+-- Sem políticas: ninguém lê nem grava direto pela API; só pelas funções abaixo.
+alter table public.convites enable row level security;
+
+-- A pessoa logada pode usar o app (liberada ou administradora)?
+create or replace function public.liberado()
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select coalesce((select liberado from public.perfis where id = (select auth.uid())), false) or public.eh_admin();
+$$;
+revoke execute on function public.liberado() from public, anon;
+grant execute on function public.liberado() to authenticated;
+
+-- Quem não foi liberado não grava check-ins nem pesos (a trava vale também fora do app).
+drop policy if exists "check-ins próprios" on public.checkins;
+create policy "check-ins próprios" on public.checkins
+  for all to authenticated
+  using (usuario_id = (select auth.uid()))
+  with check (usuario_id = (select auth.uid()) and public.liberado());
+
+drop policy if exists "cargas próprias" on public.cargas;
+create policy "cargas próprias" on public.cargas
+  for all to authenticated
+  using (usuario_id = (select auth.uid()))
+  with check (usuario_id = (select auth.uid()) and public.liberado());
+
+-- Usar um convite: 'ok', 'ja_liberado', 'invalido', 'usado', 'expirado' ou 'cancelado'.
+create or replace function public.usar_convite(p_codigo text)
+returns text
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  eu uuid := (select auth.uid());
+  c public.convites;
+begin
+  if eu is null then raise exception 'Entre com o Google para usar o convite.'; end if;
+  if (select liberado from public.perfis where id = eu) then return 'ja_liberado'; end if;
+  select * into c from public.convites where codigo = upper(regexp_replace(coalesce(p_codigo, ''), '\s', '', 'g')) for update;
+  if not found then return 'invalido'; end if;
+  if c.cancelado_em is not null then return 'cancelado'; end if;
+  if c.usado_em is not null then return 'usado'; end if;
+  if c.expira_em < now() then return 'expirado'; end if;
+  update public.convites set usado_por = eu, usado_em = now() where codigo = c.codigo;
+  update public.perfis set liberado = true, acesso_pedido_em = null where id = eu;
+  return 'ok';
+end;
+$$;
+
+-- Pedir acesso sem convite: aparece no monitoramento para um administrador liberar.
+create or replace function public.pedir_acesso()
+returns void
+language sql
+security definer
+set search_path = ''
+as $$
+  update public.perfis set acesso_pedido_em = now() where id = (select auth.uid()) and not liberado;
+$$;
+
+create or replace function public.admin_criar_convite(p_nome text default '')
+returns text
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  letras constant text := 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  novo text;
+begin
+  if not public.eh_admin() then raise exception 'Acesso restrito a administradores.'; end if;
+  loop
+    novo := '';
+    for i in 1..6 loop
+      novo := novo || substr(letras, 1 + floor(random() * length(letras))::int, 1);
+    end loop;
+    exit when not exists (select 1 from public.convites where codigo = novo);
+  end loop;
+  insert into public.convites (codigo, nome, criado_por) values (novo, left(trim(coalesce(p_nome, '')), 80), (select auth.uid()));
+  return novo;
+end;
+$$;
+
+create or replace function public.admin_convites()
+returns table (
+  codigo text, nome text, criado_em timestamptz, expira_em timestamptz, usado_em timestamptz, cancelado_em timestamptz,
+  usado_por uuid, usado_por_nome text, usado_por_email text
+)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  if not public.eh_admin() then raise exception 'acesso restrito' using errcode = '42501'; end if;
+  return query
+    select c.codigo, c.nome, c.criado_em, c.expira_em, c.usado_em, c.cancelado_em, c.usado_por, p.nome, p.email
+    from public.convites c left join public.perfis p on p.id = c.usado_por
+    order by c.criado_em desc;
+end;
+$$;
+
+create or replace function public.admin_cancelar_convite(p_codigo text)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if not public.eh_admin() then raise exception 'Acesso restrito a administradores.'; end if;
+  update public.convites set cancelado_em = now() where codigo = p_codigo and usado_em is null and cancelado_em is null;
+  if not found then raise exception 'Convite não encontrado ou já usado.'; end if;
+end;
+$$;
+
+create or replace function public.admin_liberar_usuario(alvo uuid)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if not public.eh_admin() then raise exception 'Acesso restrito a administradores.'; end if;
+  update public.perfis set liberado = true, acesso_pedido_em = null where id = alvo;
+  if not found then raise exception 'Usuário não encontrado.'; end if;
+end;
+$$;
+
+create or replace function public.admin_bloquear_usuario(alvo uuid)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if not public.eh_admin() then raise exception 'Acesso restrito a administradores.'; end if;
+  if alvo = (select auth.uid()) then raise exception 'Você não pode bloquear a sua própria conta.'; end if;
+  if exists (select 1 from public.admins where usuario_id = alvo) then raise exception 'Não é possível bloquear outro administrador.'; end if;
+  update public.perfis set liberado = false where id = alvo;
+  if not found then raise exception 'Usuário não encontrado.'; end if;
+end;
+$$;
+
+create or replace function public.admin_recusar_pedido(alvo uuid)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if not public.eh_admin() then raise exception 'Acesso restrito a administradores.'; end if;
+  update public.perfis set acesso_pedido_em = null where id = alvo;
+end;
+$$;
+
+revoke execute on function public.usar_convite(text), public.pedir_acesso(), public.admin_criar_convite(text), public.admin_convites(),
+  public.admin_cancelar_convite(text), public.admin_liberar_usuario(uuid), public.admin_bloquear_usuario(uuid), public.admin_recusar_pedido(uuid)
+  from public, anon;
+grant execute on function public.usar_convite(text), public.pedir_acesso(), public.admin_criar_convite(text), public.admin_convites(),
+  public.admin_cancelar_convite(text), public.admin_liberar_usuario(uuid), public.admin_bloquear_usuario(uuid), public.admin_recusar_pedido(uuid)
+  to authenticated;
