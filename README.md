@@ -74,6 +74,7 @@ Cada pessoa pode montar até 5 treinos (t1 a t5), com até 15 exercícios cada, 
 - **Quem já usa o app:** continua no plano pronto (coluna vazia) até salvar outra coisa. Ao abrir o app, aparece o aviso **"Baita atualização!"**, com "Personalizar meus treinos" ou "Manter meu treino atual". Ele volta a cada abertura (inclusive ao voltar para o app depois de 30 min em segundo plano) até a pessoa marcar **"Não mostrar esta mensagem de novo"**.
 - **Conta nova:** escolhe entre "Montar meus treinos" e "Usar o plano pronto".
 - **O aviso no banco:** a última resposta fica em `perfis.novidade_treinos` e o "não mostrar mais" em `perfis.novidade_oculta`. Sem essa coluna (schema antigo), o aviso aparece do mesmo jeito e o "não mostrar mais" fica guardado só no aparelho.
+- **Desfazer e versão anterior:** ao salvar, aparece "Desfazer" por 8 s, e a versão de antes (treinos e semana) fica em `perfis.treinos_anterior`. Em Você → Meus treinos, "Restaurar versão anterior" traz ela de volta depois.
 - **Treino excluído:** sai da semana. Os check-ins e pesos dele continuam no Dashboard, com o nome "Treino N".
 - **Histórico de pesos:** a carga da última vez e os recordes seguem o exercício em qualquer treino.
 

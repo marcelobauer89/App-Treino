@@ -163,8 +163,12 @@ alter table public.perfis add constraint perfis_treinos_check check (public.trei
 alter table public.perfis add column if not exists novidade_treinos timestamptz;
 -- Quando a pessoa marcou "Não mostrar esta mensagem de novo". Vazio = o aviso aparece a cada abertura do app.
 alter table public.perfis add column if not exists novidade_oculta timestamptz;
+-- Versão anterior dos treinos, gravada a cada vez que a pessoa salva em Meus treinos: { treinos, semana, em }.
+-- Serve para o "Desfazer" e para "Restaurar versão anterior".
+alter table public.perfis add column if not exists treinos_anterior jsonb
+  check (treinos_anterior is null or (jsonb_typeof(treinos_anterior) = 'object' and pg_column_size(treinos_anterior) <= 40000));
 
-grant update (id, nome, email, foto, tema, dias_jiu, semana, sem_peso, emails_resumo, treinos, novidade_treinos, novidade_oculta) on public.perfis to authenticated;
+grant update (id, nome, email, foto, tema, dias_jiu, semana, sem_peso, emails_resumo, treinos, novidade_treinos, novidade_oculta, treinos_anterior) on public.perfis to authenticated;
 
 -- Para ver os acessos (SQL Editor):
 -- select nome, email, acessos,

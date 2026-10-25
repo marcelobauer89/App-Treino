@@ -1351,6 +1351,7 @@
     semana_alterada: () => 'Alterou a semana',
     novidade_treinos: (d) => ({ viu: 'Viu o aviso dos treinos personalizados', personalizar: 'Quis personalizar os treinos', montar: 'Escolheu montar os treinos', manter: 'Manteve o treino atual', fechou: 'Fechou o aviso dos treinos personalizados' }[d.escolha] || 'Respondeu ao aviso dos treinos') + (d.ocultou ? ' e pediu para não mostrar mais' : ''),
     editor_treinos: () => 'Abriu Meus treinos',
+    treinos_desfeitos: (d) => (d.origem === 'desfazer' ? 'Desfez a alteração dos treinos' : 'Restaurou a versão anterior dos treinos'),
     treinos_salvos: (d) => (d.plano_pronto ? 'Voltou ao plano pronto' : `Salvou ${d.treinos} ${d.treinos === 1 ? 'treino' : 'treinos'} personalizados`),
     resumo_email: (d) => (d.ativo ? 'Ligou o resumo semanal por e-mail' : 'Desligou o resumo semanal por e-mail'),
     tema: (d) => `Mudou o tema para ${d.tema}`,
