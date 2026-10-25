@@ -785,14 +785,25 @@
   .ed-ex-nome { display: grid; min-width: 0; }
   .ed-ex-nome b { font-size: 15px; line-height: 1.25; overflow-wrap: anywhere; }
   .ed-ex-nome small { font-size: 12.5px; color: var(--tinta-2); }
-  .ed-ex-campos { grid-column: 2 / -1; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-  .ed-ex-campos label { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--tinta-2); }
+  /* Séries e PSE: duas colunas iguais, com o mesmo campo (o select perde a seta nativa e ganha o mesmo chevron). */
+  .ed-ex-campos { grid-column: 2 / -1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+  .ed-ex-campos label { display: grid; gap: 4px; min-width: 0; font-size: 13px; font-weight: 700; color: var(--tinta-2); }
   .ed-ex-campos input, .ed-ex-campos select {
-    min-height: 40px; padding: 6px 10px; border: 1px solid var(--fio); border-radius: 8px; background: var(--gi);
-    font: inherit; font-size: 15px; color: var(--tinta);
+    -webkit-appearance: none; appearance: none; width: 100%; min-width: 0; height: 44px; margin: 0; padding: 0 12px;
+    border: 1px solid var(--fio); border-radius: 10px; background-color: var(--gi);
+    font: inherit; font-size: 16px; font-weight: 400; line-height: 42px; color: var(--tinta);
   }
-  .ed-ex-campos input { width: 9.5em; }
-  .ed-mover { display: inline-flex; gap: 4px; margin-left: auto; }
+  .ed-ex-campos select {
+    padding-right: 36px; cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23808896' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 12px center;
+  }
+  .ed-ex-campos input:focus, .ed-ex-campos select:focus { outline: 2px solid var(--tatame-tinta); outline-offset: -1px; }
+  /* Botão flutuante "Adicionar exercício": o mesmo do check-in, preso acima do rodapé do editor. */
+  .fab.ed-fab { position: absolute; z-index: 2; right: 16px; bottom: calc(100% + 12px); }
+  .fab.ed-fab:disabled { opacity: .55; cursor: not-allowed; }
+  /* Folga para o botão flutuante não cobrir o fim da lista nem os botões de baixo. */
+  .ed-rodape { padding-bottom: 68px; }
   .ed-icone {
     width: 40px; height: 40px; display: grid; place-items: center; border: 1px solid var(--fio); border-radius: 8px;
     background: var(--papel); color: var(--tinta-2);
@@ -2944,14 +2955,14 @@
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && arrasto) terminarArrasto(false); });
 
   // ---------- Meus treinos (editor) ----------
-  const ICON_CIMA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg>';
-  const ICON_BAIXO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
   const ICON_MAIS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
   const ICON_VOLTAR = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>';
   const editorDialog = $('editor-dialog');
   // Rascunho: cópia dos treinos editada até tocar em Salvar. vista: 'treino' | 'escolher'.
   // confirmar: null | 'excluir' | 'plano' | 'sair'.
   let ed = null;
+  // Botão flutuante "Adicionar exercício": encolhe ao rolar a lista para baixo e volta ao subir (como o do check-in).
+  let edFabEncolhido = false, edUltimoScroll = 0;
   const copiaTreinos = (t) => Object.fromEntries(Object.entries(t).map(([id, x]) => [id, {
     nome: x.nome, subtitulo: x.subtitulo || '', exercicios: x.exercicios.map((ex) => ({ ...ex })),
   }]));
@@ -2963,6 +2974,7 @@
     const treinos = doZero ? { 1: { nome: 'Treino 1', subtitulo: '', exercicios: [] } } : copiaTreinos(TREINOS);
     const sel = doZero ? '1' : (treinos[estado.treino] ? estado.treino : Object.keys(treinos)[0]);
     ed = { treinos, sel, vista: doZero ? 'escolher' : 'treino', busca: '', grupo: 'todos', confirmar: null, erro: '', doZero };
+    edFabEncolhido = false;
     renderEditor();
     if (!editorDialog.open) editorDialog.showModal();
     registrarEvento('editor_treinos', { origem: doZero ? 'do_zero' : telaAtual() });
@@ -3012,29 +3024,28 @@
         <div class="campo"><label for="ed-nome">Nome</label><input id="ed-nome" maxlength="40" value="${esc(t.nome)}" placeholder="Treino ${ed.sel}" autocomplete="off"></div>
         <div class="campo"><label for="ed-sub">Foco <span class="opcional">(opcional)</span></label><input id="ed-sub" maxlength="60" value="${esc(t.subtitulo)}" placeholder="Ex.: Peito e tríceps" autocomplete="off"></div>
       </div>
-      <div class="log-head"><h4>Exercícios (${exs.length})</h4><span class="log-hint">Toque nas setas para mudar a ordem</span></div>
+      <div class="log-head"><h4>Exercícios (${exs.length})</h4></div>
       ${exs.length ? `<ol class="ed-exs">${exs.map((ex, i) => `
         <li class="ed-ex">
           <span class="ex-num">${pad(i + 1)}</span>
           <span class="ed-ex-nome"><b>${esc(ex.nome)}</b><small>${esc(ex.grupo || 'Exercício')}${VIDEOS[ex.nome] ? ' · com vídeo' : ''}</small></span>
           <button class="ed-icone" type="button" data-ed-remover="${i}" aria-label="Tirar ${esc(ex.nome)} do treino">${ICON_X}</button>
           <div class="ed-ex-campos">
-            <label>Séries <input type="text" value="${esc(ex.dose)}" maxlength="30" data-ed-dose="${i}" aria-label="${esc(ex.nome)}: séries e repetições"></label>
-            <label>PSE <select data-ed-pse="${i}" aria-label="${esc(ex.nome)}: PSE">${[5, 6, 7, 8, 9, 10].map((n) => `<option${n === ex.pse ? ' selected' : ''}>${n}</option>`).join('')}</select></label>
-            <span class="ed-mover">
-              <button class="ed-icone" type="button" data-ed-mover="${i}:-1" aria-label="Subir ${esc(ex.nome)}"${i === 0 ? ' disabled' : ''}>${ICON_CIMA}</button>
-              <button class="ed-icone" type="button" data-ed-mover="${i}:1" aria-label="Descer ${esc(ex.nome)}"${i === exs.length - 1 ? ' disabled' : ''}>${ICON_BAIXO}</button>
-            </span>
+            <label>Séries<input type="text" value="${esc(ex.dose)}" maxlength="30" data-ed-dose="${i}" aria-label="${esc(ex.nome)}: séries e repetições"></label>
+            <label>PSE<select data-ed-pse="${i}" aria-label="${esc(ex.nome)}: PSE">${[5, 6, 7, 8, 9, 10].map((n) => `<option${n === ex.pse ? ' selected' : ''}>${n}</option>`).join('')}</select></label>
           </div>
         </li>`).join('')}</ol>`
-        : '<p class="ed-vazio">Nenhum exercício ainda. Toque em Adicionar exercícios para escolher na biblioteca.</p>'}
-      <button class="btn-sec" type="button" data-ed-vista="escolher"${exs.length >= MAX_EXERCICIOS ? ' disabled' : ''}>+ Adicionar exercícios</button>
+        : '<p class="ed-vazio">Nenhum exercício ainda. Toque em Adicionar exercício para escolher na biblioteca.</p>'}
       ${confirma}
       <div class="ed-rodape">
         ${ids.length > 1 ? '<button class="btn-perigo" type="button" data-ed-excluir>Excluir este treino</button>' : ''}
         ${mesmoQuePadrao(ed.treinos) ? '' : '<button class="btn-sec" type="button" data-ed-plano>Voltar ao plano pronto</button>'}
       </div>
       <div class="ed-fixo">
+        <button class="fab ed-fab${edFabEncolhido ? ' encolhido' : ''}" type="button" data-ed-vista="escolher"
+          ${exs.length >= MAX_EXERCICIOS ? `disabled aria-label="Adicionar exercício: o treino já tem ${MAX_EXERCICIOS}, o máximo"` : 'aria-label="Adicionar exercício"'}>
+          ${ICON_MAIS}<span class="fab-txt">Adicionar exercício</span>
+        </button>
         <p class="form-erro" id="ed-erro" role="alert"${ed.erro ? '' : ' hidden'}>${esc(ed.erro)}</p>
         <button class="modal-done" type="button" data-ed-salvar>Salvar treinos</button>
       </div>`;
@@ -3103,13 +3114,21 @@
   }
 
   editorDialog.addEventListener('cancel', (e) => { e.preventDefault(); fecharEditor(); });
+  editorDialog.addEventListener('scroll', () => {
+    const y = editorDialog.scrollTop;
+    if (Math.abs(y - edUltimoScroll) < 8) return;
+    edFabEncolhido = y > edUltimoScroll && y > 80;
+    const fab = editorDialog.querySelector('.ed-fab');
+    if (fab) fab.classList.toggle('encolhido', edFabEncolhido);
+    edUltimoScroll = y;
+  }, { passive: true });
   editorDialog.addEventListener('click', (e) => {
     if (!ed) return;
     if (e.target === editorDialog || e.target.closest('[data-fechar]')) return fecharEditor();
     const alvo = (sel) => e.target.closest(sel);
     const t = edTreino();
     let b;
-    if ((b = alvo('[data-ed-treino]'))) { ed.sel = b.dataset.edTreino; ed.confirmar = null; ed.erro = ''; return renderEditor(); }
+    if ((b = alvo('[data-ed-treino]'))) { ed.sel = b.dataset.edTreino; ed.confirmar = null; ed.erro = ''; edFabEncolhido = false; return renderEditor(); }
     if (alvo('[data-ed-novo]')) {
       const id = ['1', '2', '3', '4', '5'].find((n) => !ed.treinos[n]);
       if (!id) return;
@@ -3137,15 +3156,6 @@
       return;
     }
     if ((b = alvo('[data-ed-remover]'))) { t.exercicios.splice(Number(b.dataset.edRemover), 1); return renderEditor(); }
-    if ((b = alvo('[data-ed-mover]'))) {
-      const [i, d] = b.dataset.edMover.split(':').map(Number);
-      const [ex] = t.exercicios.splice(i, 1);
-      t.exercicios.splice(i + d, 0, ex);
-      renderEditor();
-      const prox = $('editor-body').querySelector(`[data-ed-mover="${i + d}:${d}"]`);
-      if (prox && !prox.disabled) prox.focus();
-      return;
-    }
     if (alvo('[data-ed-excluir]')) { ed.confirmar = 'excluir'; return renderEditor(); }
     if (alvo('[data-ed-excluir-sim]')) {
       delete ed.treinos[ed.sel];
