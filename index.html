@@ -1320,8 +1320,13 @@
   // A conta já tem a semana salva (coluna perfis.semana)? Senão, ela vem dos antigos dias de jiu.
   let semanaDaConta = false;
   // Aviso "Baita atualização" dos treinos personalizados: aparece a cada abertura do app até a pessoa marcar
-  // "Não mostrar esta mensagem de novo" (perfis.novidade_oculta). perfis.novidade_treinos guarda a última resposta.
+  // "Não mostrar esta mensagem de novo" (perfis.novidade_oculta, com cópia no navegador para quando a coluna
+  // ainda não existe no banco). perfis.novidade_treinos guarda a última resposta.
   let novidade = { disponivel: false, vista: true, contaNova: false };
+  const chaveNovidade = () => `bauer-novidade-oculta-${usuario.id}`;
+  // Voltar ao app depois de 30 min em segundo plano conta como abrir de novo (no celular a página não recarrega).
+  const NOVA_ABERTURA_MS = 30 * 60000;
+  let escondidoEm = null;
   let perfil = { nome: '', email: '', foto: '' };
   // Só uma cópia do tema fica no navegador, para aplicá-lo antes da primeira pintura.
   const guardarTemaLocal = () => { try { localStorage.setItem('bauer-tema', config.tema); } catch (_) {} };
@@ -1649,8 +1654,11 @@
     if (!usuario) return;
     if (document.visibilityState !== 'hidden') {
       presencaDesde = new Date().toISOString();
+      if (escondidoEm && Date.now() - escondidoEm >= NOVA_ABERTURA_MS) mostrarNovidadeSeFaltar();
+      escondidoEm = null;
       return marcarPresenca();
     }
+    escondidoEm = Date.now();
     marcarSessao();
     enviarEventos();
     clearTimeout(timerPresenca); timerPresenca = null;
@@ -1755,8 +1763,9 @@
     TREINOS = proprios || PLANO_PADRAO;
     atualizarTipos();
     if (!TREINOS[estado.treino]) estado.treino = Object.keys(TREINOS)[0];
-    // Sem a coluna (schema.sql antigo) o aviso da novidade não aparece, porque o "não mostrar mais" não teria onde ficar salvo.
-    novidade = { disponivel: 'novidade_oculta' in linha, vista: !!linha.novidade_oculta, contaNova: !(c.data || []).length && !cargas.length };
+    let ocultaNoAparelho = false;
+    try { ocultaNoAparelho = !!localStorage.getItem(chaveNovidade()); } catch (_) {}
+    novidade = { disponivel: true, vista: !!linha.novidade_oculta || ocultaNoAparelho, contaNova: !(c.data || []).length && !cargas.length };
     const semana = validarSemana(linha.semana);
     semanaDaConta = !!semana;
     config = {
@@ -3213,12 +3222,22 @@
     novidadeDialog.showModal();
     registrarEvento('novidade_treinos', { escolha: 'viu', conta_nova: novidade.contaNova });
   }
+  // Aparece a cada abertura do app enquanto a pessoa não marcar "Não mostrar esta mensagem de novo"
+  // (sem outra janela aberta por cima).
+  function mostrarNovidadeSeFaltar() {
+    if (novidade.disponivel && !novidade.vista && !document.querySelector('dialog[open]')) abrirNovidade();
+  }
   // Sem a caixa marcada, o aviso volta na próxima vez que o app abrir.
+  // Gravação silenciosa: num banco sem as colunas novas, o aviso continua funcionando pelo navegador.
   function responderNovidade(escolha) {
     const agora = new Date().toISOString();
     const ocultou = $('novidade-ocultar').checked;
-    if (ocultou) novidade.vista = true;
-    salvarPerfil(ocultou ? { novidade_treinos: agora, novidade_oculta: agora } : { novidade_treinos: agora });
+    if (ocultou) {
+      novidade.vista = true;
+      try { localStorage.setItem(chaveNovidade(), agora); } catch (_) {}
+    }
+    sb.from('perfis').update(ocultou ? { novidade_treinos: agora, novidade_oculta: agora } : { novidade_treinos: agora })
+      .eq('id', usuario.id).then(() => {}, () => {});
     registrarEvento('novidade_treinos', { escolha, ocultou, conta_nova: novidade.contaNova });
     novidadeDialog.close();
     if (escolha === 'personalizar') abrirEditor();
@@ -3633,7 +3652,7 @@
     const esquecido = encerrarEsquecidos();
     abrirTreinoDoDia();
     renderizarApp();
-    if (novidade.disponivel && !novidade.vista && !novidadeDialog.open) abrirNovidade();
+    mostrarNovidadeSeFaltar();
     if (esquecido) {
       toast(`O check-in do ${TIPOS[esquecido.tipo].nome} ficou aberto e foi encerrado às ${horaDe(esquecido.fim)}.`);
     }
