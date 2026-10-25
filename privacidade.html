@@ -59,7 +59,7 @@
 </head>
 <body>
 <main class="wrap">
-  <a class="voltar" href="./">
+  <a class="voltar" id="voltar" href="./">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
     Voltar ao app
   </a>
@@ -154,5 +154,22 @@
     <p>OSS (App Treino) · Desenvolvido por Marcelo Bauer.</p>
   </footer>
 </main>
+<script>
+  // A política abre numa aba nova a partir do app: "Voltar" fecha esta aba e volta para o app
+  // como estava, sem carregar tudo de novo. Aberta direto pelo link, volta pelo histórico ou abre o app.
+  document.getElementById('voltar').addEventListener('click', function (e) {
+    var doApp = false;
+    try { doApp = !!document.referrer && new URL(document.referrer).origin === location.origin; } catch (_) {}
+    if (history.length <= 1) {
+      e.preventDefault();
+      window.close();
+      // Se o navegador não deixar fechar, segue para o app.
+      setTimeout(function () { location.href = './'; }, 300);
+    } else if (doApp) {
+      e.preventDefault();
+      history.back();
+    }
+  });
+</script>
 </body>
 </html>
