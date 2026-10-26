@@ -1190,10 +1190,9 @@
     </div>
     <div class="cartao">
       <label class="sem-peso-linha">
-        <span><b>Registrar observações nos check-ins</b><small>Opcional. Podem revelar dados de saúde (ex.: dor ou lesão); ao ligar, você concorda em guardá-las. Só você vê.</small></span>
+        <span><b>Registrar observações nos check-ins</b><small>Opcional. Podem revelar dados de saúde (ex.: dor ou lesão); ao ligar, você concorda em guardá-las. Só você vê. Desligar apaga as que já foram registradas.</small></span>
         <input type="checkbox" role="switch" id="saude-consent">
       </label>
-      <div id="saude-confirma"></div>
     </div>
     <div class="cartao">
       <div class="priv-baixar">
@@ -4106,44 +4105,24 @@
   politicaDialog.addEventListener('cancel', (e) => { e.preventDefault(); aceitarPolitica(); });
 
   // Consentimento para guardar observações (podem revelar saúde), em Você → Privacidade.
+  // Vem desligado. Ligar é consentir; desligar retira o consentimento na hora, sem confirmação,
+  // e apaga as observações já registradas (LGPD).
   function renderPrivacidade() {
     $('saude-consent').checked = config.saude === 'sim';
-    $('saude-confirma').innerHTML = '';
   }
   $('saude-consent').addEventListener('change', (e) => {
-    if (e.target.checked) {
-      config.saude = 'sim';
-      salvarPerfil({ consentimento_saude: 'sim', consentimento_saude_em: new Date().toISOString() });
-      registrarEvento('consentimento_saude', { resposta: 'sim', origem: 'privacidade' });
-      toast('Pronto: o campo Observação aparece no check-in.');
-      return;
-    }
-    e.target.checked = true;
-    const temRegistro = checkins.some((c) => c.obs);
-    $('saude-confirma').innerHTML = `
-      <div class="ed-confirma" role="alert">
-        <p>Parar de registrar observações?${temRegistro ? ' Você também pode apagar as que já foram registradas.' : ''}</p>
-        <div>
-          ${temRegistro ? '<button class="btn-perigo cheio" type="button" data-saude-parar="apagar">Parar e apagar o que foi registrado</button>' : ''}
-          <button class="btn-sec" type="button" data-saude-parar="manter">${temRegistro ? 'Só parar' : 'Parar'}</button>
-          <button class="btn-sec" type="button" data-saude-parar="cancelar">Cancelar</button>
-        </div>
-      </div>`;
-  });
-  $('saude-confirma').addEventListener('click', (e) => {
-    const b = e.target.closest('[data-saude-parar]');
-    if (!b) return;
-    if (b.dataset.saudeParar === 'cancelar') return renderPrivacidade();
-    config.saude = 'nao';
-    salvarPerfil({ consentimento_saude: 'nao', consentimento_saude_em: new Date().toISOString() });
-    if (b.dataset.saudeParar === 'apagar') {
+    const ligar = e.target.checked;
+    config.saude = ligar ? 'sim' : 'nao';
+    salvarPerfil({ consentimento_saude: config.saude, consentimento_saude_em: new Date().toISOString() });
+    let apagou = false;
+    if (!ligar && checkins.some((c) => c.obs)) {
+      apagou = true;
       checkins.forEach((c) => { c.obs = ''; });
       enviar(() => sb.from('checkins').update({ obs: '' }).eq('usuario_id', usuario.id));
     }
-    registrarEvento('consentimento_saude', { resposta: 'nao', origem: 'privacidade', apagou: b.dataset.saudeParar === 'apagar' });
-    renderPrivacidade();
+    registrarEvento('consentimento_saude', { resposta: config.saude, origem: 'privacidade', apagou });
     atualizarCheckinUI();
-    toast(b.dataset.saudeParar === 'apagar' ? 'Observações apagadas e desligadas.' : 'Observações desligadas.');
+    toast(ligar ? 'Pronto: o campo Observação aparece no check-in.' : apagou ? 'Observações desligadas e apagadas.' : 'Observações desligadas.');
   });
 
   // Baixar meus dados: arquivo JSON com tudo o que o app guarda sobre a pessoa.

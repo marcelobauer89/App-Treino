@@ -101,7 +101,7 @@ Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 e t5 nos check-i
 
 - **Política:** `privacidade.html`, com link na tela de entrada e em Você → Privacidade. O contato do responsável é marcelobauer.mbb@gmail.com.
 - **Aviso de nova versão:** quando `perfis.politica_versao` é diferente de `POLITICA_VERSAO` (no `index.html`), o app mostra um resumo com "Entendi". Ao mudar o que o app guarda ou o que o painel mostra, atualize a política (texto e data) e a constante `POLITICA_VERSAO`, para todos verem o aviso de novo.
-- **Dados de saúde:** as observações dos check-ins só aparecem para quem ligar "Registrar observações nos check-ins" em Você → Privacidade, que vem desligado; ligar é dar o consentimento (`perfis.consentimento_saude = 'sim'`). Ao desligar, dá para apagar o que já foi registrado. A nota de recuperação (1 a 5) saiu do app, e o `schema.sql` apaga a coluna `checkins.recuperacao`; rode-o **depois** de publicar essa versão do app.
+- **Dados de saúde:** as observações dos check-ins só aparecem para quem ligar "Registrar observações nos check-ins" em Você → Privacidade, que vem desligado; ligar é dar o consentimento (`perfis.consentimento_saude = 'sim'`). Desligar não pede confirmação: retira o consentimento e apaga as observações já registradas. A nota de recuperação (1 a 5) saiu do app, e o `schema.sql` apaga a coluna `checkins.recuperacao`; rode-o **depois** de publicar essa versão do app.
 - **Baixar meus dados:** Você → Privacidade gera um JSON com perfil, check-ins, cargas, treinos, registro de uso e e-mails (função `meus_dados_extras()`).
 - **Tempo de guarda:** enquanto a conta existir; excluir a conta apaga tudo.
 - **Fonte:** a Archivo fica em `fonts/` (licença OFL, em `fonts/OFL.txt`), sem Google Fonts.
