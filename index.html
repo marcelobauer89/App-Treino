@@ -1850,9 +1850,13 @@
     const instalado = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
     return { navegador, sistema, instalado, largura: innerWidth };
   }
+  // Erros comuns no dia a dia (internet caindo, conexão ao vivo reconectando, ruído do navegador) não são
+  // falhas do app: a pessoa já vê o aviso na hora e o app se recupera sozinho. Só os críticos são registrados.
+  const ERRO_COMUM = /failed to fetch|load failed|networkerror|network ?request failed|fetch failed|network connection was lost|timed? ?out|timeout|aborterror|aborted|offline|connection (closed|reset|refused)|jwt expired|refresh token|^script error\.?$|resizeobserver loop/i;
+  const ehErroComum = (origem, mensagem) => origem === 'presenca' || ERRO_COMUM.test(String(mensagem || '').trim());
   let errosNaSessao = 0;
   function registrarErro(origem, mensagem) {
-    if (errosNaSessao >= 5) return;
+    if (errosNaSessao >= 5 || ehErroComum(origem, mensagem)) return;
     errosNaSessao += 1;
     registrarEvento('erro', { origem, mensagem: String(mensagem || '').slice(0, 200), ...infoAparelho() });
   }
