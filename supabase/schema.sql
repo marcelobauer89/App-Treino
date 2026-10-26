@@ -28,7 +28,6 @@ create table if not exists public.checkins (
   inicio timestamp not null,
   fim timestamp check (fim is null or fim >= inicio),
   sem_horario boolean not null default false,
-  recuperacao smallint check (recuperacao between 1 and 5),
   obs text not null default '' check (char_length(obs) <= 2000),
   retroativo boolean not null default false,
   ultima_serie timestamp,
@@ -171,12 +170,16 @@ alter table public.perfis add column if not exists treinos_anterior jsonb
 -- ---------- Privacidade (LGPD) ----------
 -- Versão da Política de Privacidade que a pessoa viu e aceitou (aviso no app quando muda).
 alter table public.perfis add column if not exists politica_versao text check (politica_versao is null or char_length(politica_versao) <= 20);
--- Consentimento para guardar recuperação e observações dos check-ins (podem revelar dados de saúde).
--- Vazio = ainda não respondeu; 'sim' ou 'nao'.
+-- Consentimento para guardar observações nos check-ins (podem revelar dados de saúde).
+-- Só 'sim' liga o campo no app; vazio ou 'nao' = desligado (padrão).
 alter table public.perfis add column if not exists consentimento_saude text check (consentimento_saude is null or consentimento_saude in ('sim', 'nao'));
 alter table public.perfis add column if not exists consentimento_saude_em timestamptz;
 
 grant update (id, nome, email, foto, tema, dias_jiu, semana, sem_peso, emails_resumo, treinos, novidade_treinos, novidade_oculta, treinos_anterior, politica_versao, consentimento_saude, consentimento_saude_em) on public.perfis to authenticated;
+
+-- A nota de recuperação (1 a 5) saiu do app: a coluna e as notas já salvas são apagadas (LGPD: não guardar dado sem uso).
+-- Rode depois de publicar a versão do app sem a recuperação; a anterior ainda envia esse campo.
+alter table public.checkins drop column if exists recuperacao;
 
 -- Para ver os acessos (SQL Editor):
 -- select nome, email, acessos,
@@ -248,7 +251,7 @@ begin
 end;
 $$;
 
--- Sem a recuperação: ela pode revelar dados de saúde e fica só com a própria pessoa (LGPD).
+-- Sem observações nem pesos: o painel recebe só tipo e horário dos check-ins (LGPD).
 drop function if exists public.admin_checkins(timestamp);
 create function public.admin_checkins(desde timestamp default null)
 returns table (
