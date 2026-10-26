@@ -758,8 +758,6 @@
   /* O selo azul do treino continua visível sobre o fundo azul da opção marcada. */
   .opcao input:checked + span .selo { box-shadow: 0 0 0 2px var(--sobre-tatame); }
   .opcao input:focus-visible + span { outline: 2px solid var(--tatame-tinta); outline-offset: 2px; }
-  .rec .opcoes { display: grid; grid-template-columns: repeat(5, 1fr); }
-  .rec-legenda { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--tinta-2); }
 
   /* Aviso da novidade e editor "Meus treinos" */
   .novidade-selo {
@@ -935,10 +933,6 @@
   .priv-baixar span { display: grid; }
   .priv-baixar b { font-size: 15px; }
   .priv-baixar small { font-size: 13px; color: var(--tinta-2); }
-  .saude-card { display: grid; gap: 10px; padding: 14px; border: 1px solid var(--fio); border-radius: 12px; background: var(--gi); }
-  .saude-card p { margin: 0; font-size: 14px; }
-  .saude-card .saude-botoes { display: flex; flex-wrap: wrap; gap: 8px; }
-  .saude-card .btn, .saude-card .btn-sec { min-height: 44px; }
   .entrar-privacidade a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
 </style>
 </head>
@@ -1188,15 +1182,15 @@
     <div class="cartao">
       <p class="conta-linha">Conectado com o Google como <b id="conta-email"></b></p>
       <div class="priv-resumo">
-        <p><b>O que guardamos:</b> seu nome, e-mail e foto do Google, seus check-ins, pesos, treinos, semana e preferências. Recuperação e observações só com o seu consentimento.</p>
-        <p><b>O que o administrador vê:</b> quem está com o app aberto agora, em que tela e há quanto tempo; o histórico de uso (check-ins, exercícios concluídos, recordes, vídeos vistos, configurações e erros) e se o resumo semanal foi aberto. Ele <b>não vê</b> pesos, cargas, recuperação nem observações.</p>
+        <p><b>O que guardamos:</b> seu nome, e-mail e foto do Google, seus check-ins, pesos, treinos, semana e preferências. Observações dos check-ins só se você ligar a opção abaixo.</p>
+        <p><b>O que o administrador vê:</b> quem está com o app aberto agora, em que tela e há quanto tempo; o histórico de uso (check-ins, exercícios concluídos, recordes, vídeos vistos, configurações e erros) e se o resumo semanal foi aberto. Ele <b>não vê</b> pesos, cargas nem observações.</p>
         <p><b>Por quanto tempo:</b> enquanto sua conta existir. Ao excluir a conta, tudo é apagado.</p>
       </div>
       <a class="btn-sec priv-link" href="privacidade.html" target="_blank" rel="noopener">Ler a Política de Privacidade completa</a>
     </div>
     <div class="cartao">
       <label class="sem-peso-linha">
-        <span><b>Registrar recuperação e observações</b><small>Podem revelar dados de saúde; só guardamos com o seu consentimento</small></span>
+        <span><b>Registrar observações nos check-ins</b><small>Opcional. Podem revelar dados de saúde (ex.: dor ou lesão); ao ligar, você concorda em guardá-las. Só você vê.</small></span>
         <input type="checkbox" role="switch" id="saude-consent">
       </label>
       <div id="saude-confirma"></div>
@@ -1486,7 +1480,7 @@
   // { liberado, pedidoEm }: contas novas só usam o app depois de um convite ou de um administrador liberar.
   let acesso = { liberado: true, pedidoEm: null };
   // Política de Privacidade: versão atual (mude junto com privacidade.html) e se a pessoa já viu esta versão.
-  const POLITICA_VERSAO = '2026-10-25';
+  const POLITICA_VERSAO = '2026-10-26';
   let politica = { disponivel: false, aceita: true, contaNova: false };
   let perfilLinha = null;
   // Versão anterior dos treinos (perfis.treinos_anterior): { treinos, semana, em }. Serve para Desfazer e recuperar.
@@ -1749,7 +1743,7 @@
   }
 
   // ---------- Check-ins ----------
-  // checkin = { id, tipo, inicio, fim (null = aberto), semHorario, recuperacao, obs, retroativo,
+  // checkin = { id, tipo, inicio, fim (null = aberto), semHorario, obs, retroativo,
   //             series (pesos de versões anteriores, hoje ficam em "cargas"), ultimaSerie }
   let checkins = [];
   // Pesos registrados na ficha, independentes do check-in: { data, treino: 't1'|'t2'|'t3', series: { [exercício]: [{ carga }] } }
@@ -1774,14 +1768,14 @@
 
   const paraLinha = (c) => ({
     id: c.id, usuario_id: usuario.id, tipo: c.tipo, inicio: c.inicio, fim: c.fim,
-    sem_horario: !!c.semHorario, recuperacao: c.recuperacao ?? null, obs: c.obs || '',
+    sem_horario: !!c.semHorario, obs: c.obs || '',
     retroativo: !!c.retroativo, ultima_serie: c.ultimaSerie || null, series: c.series || {},
   });
   // O banco devolve "AAAA-MM-DDTHH:MM:SS"; o app trabalha com "AAAA-MM-DDTHH:MM".
   const minuto = (s) => (s ? s.slice(0, 16) : null);
   const deLinha = (r) => ({
     id: r.id, tipo: r.tipo, inicio: minuto(r.inicio), fim: minuto(r.fim), semHorario: r.sem_horario,
-    recuperacao: r.recuperacao, obs: r.obs || '', retroativo: r.retroativo,
+    obs: r.obs || '', retroativo: r.retroativo,
     ultimaSerie: minuto(r.ultima_serie), series: r.series || {},
   });
 
@@ -2049,7 +2043,7 @@
         const k = `${data}|${treino}`;
         porDia[k] = porDia[k] || {
           id: novoId(), tipo: `t${treino}`, inicio: `${data}T12:00`, fim: `${data}T13:00`,
-          semHorario: true, recuperacao: null, obs: '', retroativo: true, series: {},
+          semHorario: true, obs: '', retroativo: true, series: {},
         };
         porDia[k].series[nome] = validas;
       }
@@ -2179,56 +2173,16 @@
     toastTimer = setTimeout(() => { t.hidden = true; }, ms);
   }
 
-  const recHTML = (nome, valor) => `
-    <fieldset class="campo rec">
-      <legend>Recuperação <span class="opcional">(opcional)</span></legend>
-      <div class="opcoes">
-        ${[1, 2, 3, 4, 5].map((n) => `
-          <label class="opcao"><input type="radio" name="${nome}" value="${n}"${valor === n ? ' checked' : ''}><span>${n}</span></label>`).join('')}
-      </div>
-      <div class="rec-legenda"><span>1 muito cansado</span><span>5 recuperado</span></div>
-    </fieldset>`;
-  // Recuperação e observação podem revelar dados de saúde: só aparecem com consentimento (LGPD).
-  // config.saude: null = ainda não respondeu, 'sim' ou 'nao'.
-  function camposSaudeHTML(prefixo, rec, obs, exemplo) {
-    if (config.saude === 'sim') {
-      return `${recHTML(`${prefixo}-rec`, rec)}
+  // A observação pode revelar dados de saúde (ex.: dor ou lesão): só aparece para quem ligou
+  // "Registrar observações" em Você → Privacidade, que vem desligado (consentimento, LGPD).
+  function camposSaudeHTML(prefixo, obs, exemplo) {
+    if (config.saude !== 'sim') return '';
+    return `
       <div class="campo">
         <label for="${prefixo}-obs">Observação <span class="opcional">(opcional)</span></label>
         <textarea id="${prefixo}-obs" placeholder="${exemplo}">${esc(obs)}</textarea>
       </div>`;
-    }
-    if (config.saude === 'nao') {
-      return '<p class="nota-campo">Recuperação e observações estão desligadas. Para registrar, ative em Você → Privacidade.</p>';
-    }
-    return `
-      <div class="saude-card" role="group" aria-label="Consentimento para dados de saúde">
-        <p><b>Quer registrar como se sentiu?</b> A recuperação e as observações podem revelar dados de saúde, por isso só guardamos com o seu consentimento. Só você vê; o administrador não.</p>
-        <div class="saude-botoes">
-          <button class="btn" type="button" data-saude="sim">Concordo</button>
-          <button class="btn-sec" type="button" data-saude="nao">Agora não</button>
-        </div>
-      </div>`;
   }
-  function responderSaude(resposta, bloco) {
-    config.saude = resposta;
-    salvarPerfil({ consentimento_saude: resposta, consentimento_saude_em: new Date().toISOString() });
-    registrarEvento('consentimento_saude', { resposta, origem: 'checkin' });
-    if (bloco) {
-      const p = bloco.dataset.prefixo;
-      bloco.innerHTML = camposSaudeHTML(p, null, '', p === 'enc' ? 'Ex.: ombro incomodou no supino' : 'Ex.: aula de raspagens, muitos rolas');
-      const foco = bloco.querySelector('input, textarea');
-      if (foco) foco.focus();
-    }
-  }
-  document.addEventListener('click', (e) => {
-    const b = e.target.closest('.saude-bloco [data-saude]');
-    if (b) responderSaude(b.dataset.saude, b.closest('.saude-bloco'));
-  });
-  const valorRec = (raiz, nome) => {
-    const r = raiz.querySelector(`input[name="${nome}"]:checked`);
-    return r ? Number(r.value) : null;
-  };
 
   // ---------- Registro de pesos ----------
   const numSeries = (ex) => { const m = /^(\d+)\s*×/.exec(ex.dose); return m ? parseInt(m[1], 10) : 3; };
@@ -2437,7 +2391,7 @@
       </div>
       ${motivo ? `<p class="aviso">${motivo}</p>` : ''}
       ${resumo ? `<p class="resumo-enc">${resumo}</p>` : ''}
-      <div class="saude-bloco" data-prefixo="enc">${camposSaudeHTML('enc', a.recuperacao, a.obs, 'Ex.: ombro incomodou no supino')}</div>
+      ${camposSaudeHTML('enc', a.obs, 'Ex.: ombro incomodou no supino')}
       <button class="modal-done" type="button" data-confirmar-enc>Encerrar check-in</button>`;
     encDialog.showModal();
   }
@@ -2446,10 +2400,7 @@
     const a = checkinAberto();
     if (!a) return encDialog.close();
     a.fim = agoraIso() > a.inicio ? agoraIso() : a.inicio;
-    if ($('enc-obs')) {
-      a.recuperacao = valorRec(encDialog, 'enc-rec');
-      a.obs = $('enc-obs').value.trim();
-    }
+    if ($('enc-obs')) a.obs = $('enc-obs').value.trim();
     salvarSeriesPendentes();
     salvarCheckin(a);
     const depois = depoisEncerrar;
@@ -2466,14 +2417,13 @@
   let durTocada = false;
 
   function abrirFormCheckin({ tipo = 'jiu', data = hoje(), editar = null } = {}) {
-    let dur, inicio, rec = null, obs = '';
+    let dur, inicio, obs = '';
     if (editar) {
       // Edição: o formulário abre com os dados do check-in (o "sem horário" ganha horário ao salvar).
       ({ tipo } = editar);
       data = dataDe(editar);
       inicio = horaDe(editar.inicio);
       dur = duracaoMin(editar) ?? DURACAO_PADRAO[TIPOS[tipo].grupo];
-      rec = editar.recuperacao ?? null;
       obs = editar.obs || '';
       formDialog.dataset.editar = editar.id;
     } else {
@@ -2507,7 +2457,7 @@
         <div class="campo"><label for="f-inicio">Início</label><input type="time" id="f-inicio" value="${inicio}"></div>
         <div class="campo"><label for="f-dur">Duração (min)</label><input type="text" inputmode="numeric" id="f-dur" value="${dur}"></div>
       </div>
-      <div class="saude-bloco" data-prefixo="f">${camposSaudeHTML('f', rec, obs, 'Ex.: aula de raspagens, muitos rolas')}</div>
+      ${camposSaudeHTML('f', obs, 'Ex.: aula de raspagens, muitos rolas')}
       ${editar && TIPOS[tipo].grupo === 'musc' ? '<p class="nota-campo">Os pesos ficam guardados no dia e no treino; para corrigi-los, toque no exercício no detalhe do check-in.</p>' : ''}
       <p class="form-erro" id="f-erro" role="alert" hidden></p>
       <button class="modal-done" type="button" data-salvar-form>${editar ? 'Salvar alterações' : 'Salvar check-in'}</button>`;
@@ -2533,7 +2483,7 @@
     if (editado) {
       Object.assign(editado, {
         tipo, inicio, fim, semHorario: false,
-        ...($('f-obs') ? { recuperacao: valorRec(formDialog, 'f-rec'), obs: $('f-obs').value.trim() } : {}), retroativo: data < hoje(),
+        ...($('f-obs') ? { obs: $('f-obs').value.trim() } : {}), retroativo: data < hoje(),
       });
       salvarCheckin(editado);
       formDialog.close();
@@ -2547,7 +2497,7 @@
     }
     const novo = {
       id: novoId(), tipo, inicio, fim, semHorario: false,
-      recuperacao: $('f-obs') ? valorRec(formDialog, 'f-rec') : null, obs: $('f-obs') ? $('f-obs').value.trim() : '',
+      obs: $('f-obs') ? $('f-obs').value.trim() : '',
       retroativo: data < hoje(), series: {},
     };
     checkins.push(novo);
@@ -2812,16 +2762,14 @@
     const mesAtual = hoje().slice(0, 7);
     const noMes = checkins.filter((c) => dataDe(c).startsWith(mesAtual));
     const minutos = noMes.reduce((s, c) => s + (duracaoMin(c) || 0), 0);
-    const limite = somarDias(hoje(), -29);
-    const recs = checkins.filter((c) => c.recuperacao && dataDe(c) >= limite).map((c) => c.recuperacao);
-    const media = recs.length ? recs.reduce((s, n) => s + n, 0) / recs.length : null;
+    const dias = new Set(noMes.map(dataDe)).size;
     const agora = new Date();
     const mes = nomeMes(agora.getFullYear(), agora.getMonth());
     $('numeros').innerHTML = `
       <div><dt>Check-ins no total</dt><dd>${checkins.length}</dd></div>
       <div><dt>Check-ins em ${mes}</dt><dd>${noMes.length}</dd></div>
       <div><dt>Horas treinadas em ${mes}</dt><dd>${fmtNum(minutos / 60)}<small> h</small></dd></div>
-      <div><dt>Recuperação média, 30 dias</dt><dd>${media == null ? '–' : fmtNum(media)}<small>${media == null ? ' sem notas' : ' de 5'}</small></dd></div>`;
+      <div><dt>Dias com treino em ${mes}</dt><dd>${dias}<small>${dias === 1 ? ' dia' : ' dias'}</small></dd></div>`;
   }
 
   function renderMetas() {
@@ -2939,7 +2887,7 @@
     }
     $('dia-lista').innerHTML = `<ul class="cks">${lista.map((c) => {
       const dur = duracaoMin(c);
-      const meta = [capitalizar(horarioTexto(c)), dur != null ? fmtDur(dur) : '', c.recuperacao ? `recuperação ${c.recuperacao} de 5` : '']
+      const meta = [capitalizar(horarioTexto(c)), dur != null ? fmtDur(dur) : '']
         .filter(Boolean).join(', ');
       const aberto = ckExpandido === c.id;
       return `
@@ -4118,11 +4066,12 @@
   function abrirPolitica() {
     $('politica-body').innerHTML = `
       <div class="modal-head"><div><span class="novidade-selo">Privacidade</span><h3 id="politica-title">${politica.contaNova ? 'Antes de começar' : 'Atualizamos nossa Política de Privacidade'}</h3></div></div>
-      <p class="resumo-enc">${politica.contaNova ? 'Veja como cuidamos dos seus dados.' : 'Deixamos mais claro o que guardamos e o que o administrador vê.'}</p>
+      <p class="resumo-enc">${politica.contaNova ? 'Veja como cuidamos dos seus dados.' : 'Guardamos menos dados sobre você.'}</p>
       <ul class="novidade-lista">
         <li>${ICON_CHECK}<span>Guardamos seus treinos, check-ins e pesos para o app funcionar, só enquanto sua conta existir.</span></li>
-        <li>${ICON_CHECK}<span>O administrador vê quem está com o app aberto, em que tela, e o histórico de uso. Não vê pesos, cargas, recuperação nem observações.</span></li>
-        <li>${ICON_CHECK}<span>Recuperação e observações só são guardadas se você concordar.</span></li>
+        ${politica.contaNova ? '' : `<li>${ICON_CHECK}<span>Removemos a nota de recuperação do check-in e apagamos as que estavam salvas.</span></li>`}
+        <li>${ICON_CHECK}<span>O administrador vê quem está com o app aberto, em que tela, e o histórico de uso. Não vê pesos, cargas nem observações.</span></li>
+        <li>${ICON_CHECK}<span>Observações nos check-ins ficam desligadas até você ligar em Você → Privacidade.</span></li>
         <li>${ICON_CHECK}<span>Em Você → Privacidade você baixa seus dados, e em Você dá para excluir a conta.</span></li>
       </ul>
       <div class="novidade-acoes">
@@ -4156,7 +4105,7 @@
   // Fechar com Esc conta como "Entendi" (o aviso já foi mostrado e a política fica a um toque em Privacidade).
   politicaDialog.addEventListener('cancel', (e) => { e.preventDefault(); aceitarPolitica(); });
 
-  // Consentimento de saúde em Você → Privacidade.
+  // Consentimento para guardar observações (podem revelar saúde), em Você → Privacidade.
   function renderPrivacidade() {
     $('saude-consent').checked = config.saude === 'sim';
     $('saude-confirma').innerHTML = '';
@@ -4166,14 +4115,14 @@
       config.saude = 'sim';
       salvarPerfil({ consentimento_saude: 'sim', consentimento_saude_em: new Date().toISOString() });
       registrarEvento('consentimento_saude', { resposta: 'sim', origem: 'privacidade' });
-      toast('Pronto: recuperação e observações voltam a aparecer no check-in.');
+      toast('Pronto: o campo Observação aparece no check-in.');
       return;
     }
     e.target.checked = true;
-    const temRegistro = checkins.some((c) => c.recuperacao || c.obs);
+    const temRegistro = checkins.some((c) => c.obs);
     $('saude-confirma').innerHTML = `
       <div class="ed-confirma" role="alert">
-        <p>Parar de registrar recuperação e observações?${temRegistro ? ' Você também pode apagar as que já foram registradas.' : ''}</p>
+        <p>Parar de registrar observações?${temRegistro ? ' Você também pode apagar as que já foram registradas.' : ''}</p>
         <div>
           ${temRegistro ? '<button class="btn-perigo cheio" type="button" data-saude-parar="apagar">Parar e apagar o que foi registrado</button>' : ''}
           <button class="btn-sec" type="button" data-saude-parar="manter">${temRegistro ? 'Só parar' : 'Parar'}</button>
@@ -4188,13 +4137,13 @@
     config.saude = 'nao';
     salvarPerfil({ consentimento_saude: 'nao', consentimento_saude_em: new Date().toISOString() });
     if (b.dataset.saudeParar === 'apagar') {
-      checkins.forEach((c) => { c.recuperacao = null; c.obs = ''; });
-      enviar(() => sb.from('checkins').update({ recuperacao: null, obs: '' }).eq('usuario_id', usuario.id));
+      checkins.forEach((c) => { c.obs = ''; });
+      enviar(() => sb.from('checkins').update({ obs: '' }).eq('usuario_id', usuario.id));
     }
     registrarEvento('consentimento_saude', { resposta: 'nao', origem: 'privacidade', apagou: b.dataset.saudeParar === 'apagar' });
     renderPrivacidade();
     atualizarCheckinUI();
-    toast(b.dataset.saudeParar === 'apagar' ? 'Recuperação e observações apagadas e desligadas.' : 'Recuperação e observações desligadas.');
+    toast(b.dataset.saudeParar === 'apagar' ? 'Observações apagadas e desligadas.' : 'Observações desligadas.');
   });
 
   // Baixar meus dados: arquivo JSON com tudo o que o app guarda sobre a pessoa.
