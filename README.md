@@ -130,10 +130,11 @@ O dashboard mostra:
 - **Gráficos** de check-ins por dia (por tipo de treino) e de usuários ativos por dia, agrupados por semana em períodos longos, cada um com a opção de ver como tabela.
 - **Usuários**, com situação (Ativo até 7 dias sem usar, Em risco de 8 a 14, Inativo depois disso, Nunca usou), busca, ordenação e exportação em CSV.
 - **Detalhe de cada usuário**: check-ins das últimas 8 semanas, semana montada, exercícios sem peso, se recebe o resumo por e-mail e atividade recente (7 por vez, agrupada por dia, inclusive erros e sessões que caíram).
-- **Saúde do app**: erros no período e usuários afetados, sessões perdidas (quem precisou entrar de novo sem ter saído) e falhas do "On-line agora".
+- **Saúde do app**: só **erros críticos**, isto é, falhas do app que precisam de correção, e quantos usuários foram afetados.
+  - Entram: erros de programação, gravações recusadas pelo banco (por exemplo, `schema.sql` não rodado depois de uma versão nova, com a dica para rodar) e falha ao excluir conta.
+  - Ficam de fora, porque são normais: quedas de internet ("Failed to fetch", "Load failed", tempo esgotado), reconexões do "On-line agora", login de novo e ruídos do navegador ("Script error.", "ResizeObserver loop"). O app nem registra esses casos, e o painel também ignora os que versões antigas gravaram. A regra está em `ehErroComum`, igual no `index.html` e no `admin.html`.
   - Erros iguais aparecem agrupados, com o selo "Acontecendo agora" quando ocorreram nas últimas 24 h; tocando no grupo, aparece quando e com qual usuário.
-  - As sessões perdidas aparecem agrupadas por navegador.
-  - A aba mostra uma bolinha vermelha com os erros das últimas 24 h.
+  - A aba mostra uma bolinha vermelha com os erros críticos das últimas 24 h.
 - **E-mails**: os resumos semanais enviados no período, com quantos foram abertos e clicados.
   - Tocando numa semana, aparece quem recebeu (Enviado, Abriu ou Clicou, com o horário) e quem não recebeu e por quê.
   - A abertura é medida por uma imagem invisível e é aproximada: o Mail do iPhone/Mac pode carregar a imagem sozinho, e quem bloqueia imagens não conta. O clique no botão "Abrir o App Treino" é exato.

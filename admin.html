@@ -158,6 +158,8 @@
   button.item-topo:hover .item-titulo { text-decoration: underline; text-underline-offset: 3px; }
   .item-titulo { font-weight: 700; overflow-wrap: anywhere; }
   .item-sub { grid-column: 1 / -1; font-size: 13px; color: var(--tinta-2); }
+  .item-dica { grid-column: 1 / -1; font-size: 13px; font-weight: 600; color: var(--erro); }
+  .nota.saude-nota { margin: 0 0 12px; font-size: 14px; }
   .item-num { font-family: var(--display); font-stretch: 80%; font-weight: 800; font-size: 22px; font-variant-numeric: tabular-nums; text-align: right; }
   .item-num small { display: block; font-family: var(--texto); font-stretch: 100%; font-size: 12px; font-weight: 500; color: var(--tinta-2); }
   .item-detalhe { margin: 0 0 12px; padding: 0; list-style: none; display: grid; gap: 6px; font-size: 13.5px; }
@@ -588,11 +590,12 @@
     </div>
 
     <div role="tabpanel" id="aba-saude" aria-labelledby="tab-saude" hidden>
+      <p class="nota saude-nota">Aqui só aparecem falhas do app que precisam de correção. Quedas de internet, reconexões do "On-line agora" e login de novo são normais e ficam de fora.</p>
       <dl class="kpis" id="kpis-saude"></dl>
       <section class="bloco cartao" aria-labelledby="g3-titulo">
         <div class="bloco-topo">
           <div class="titulo-info">
-            <h2 id="g3-titulo">Erros por <span data-unidade>dia</span></h2>
+            <h2 id="g3-titulo">Erros críticos por <span data-unidade>dia</span></h2>
             <button class="info" type="button" data-info="info-g3" aria-expanded="false" aria-controls="info-g3" aria-label="Como funciona: gráfico de erros"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button>
           </div>
           <button class="link-btn" type="button" data-alternar="g3" aria-expanded="false">Ver tabela</button>
@@ -602,14 +605,9 @@
         <div class="tabela-rolagem" id="g3-tabela" hidden></div>
       </section>
       <section class="bloco" aria-labelledby="erros-titulo">
-        <div class="bloco-topo"><h2 id="erros-titulo">Erros agrupados</h2></div>
+        <div class="bloco-topo"><h2 id="erros-titulo">Erros críticos agrupados</h2></div>
         <p class="nota" style="margin:-4px 0 10px">Erros iguais viram uma linha. Toque para ver quando e com quem aconteceu.</p>
         <div class="cartao lista-cartao" id="erros-lista"></div>
-      </section>
-      <section class="bloco" aria-labelledby="sp-titulo">
-        <div class="bloco-topo"><h2 id="sp-titulo">Sessões perdidas por navegador</h2></div>
-        <p class="nota" style="margin:-4px 0 10px">Quem precisou entrar de novo sem ter tocado em "Sair". Navegadores de outros apps (Instagram, WhatsApp) costumam apagar o login.</p>
-        <div class="cartao lista-cartao" id="sessoes-lista"></div>
       </section>
     </div>
 
@@ -1211,8 +1209,8 @@
   }
 
 
-  // ---------- Saúde do app (erros e sessões perdidas) ----------
-  const ORIGEM_ERRO = { js: 'Erro no app', promessa: 'Erro no app', salvar: 'Falha ao salvar', presenca: 'On-line agora' };
+  // ---------- Saúde do app (só erros críticos) ----------
+  const ORIGEM_ERRO = { js: 'Erro no app', promessa: 'Erro no app', salvar: 'Falha ao salvar', excluir_conta: 'Falha ao excluir conta' };
   const errosAbertos = new Set();
   const nomeDe = (id) => { const u = dados.usuarios.find((x) => x.id === id); return u ? (u.nome || u.email) : 'Usuário removido'; };
   const quandoCurto = (iso) => { const d = new Date(iso); return `${fmtData(ymd(d))}, ${pad(d.getHours())}:${pad(d.getMinutes())}`; };
@@ -1224,11 +1222,14 @@
   }
   const aparelho = (d) => [d.navegador, d.sistema].filter(Boolean).join(' · ') || 'aparelho desconhecido';
   const noPeriodoEv = (e, j) => dentro(diaDeInstante(e.criado_em), j);
-  // Queda de rede da conexão ao vivo ("transport failure"): o app reconecta sozinho, então não conta como
-  // erro. Versões antigas do app ainda registram; aqui são ignoradas.
-  const ehRuido = (e) => e.tipo === 'erro' && (e.dados || {}).origem === 'presenca' && /transport failure/i.test((e.dados || {}).mensagem || '');
+  // Erros comuns no dia a dia (internet caindo, conexão ao vivo reconectando, ruído do navegador) não são
+  // falhas do app: a pessoa já vê o aviso na hora e o app se recupera sozinho. Mesma regra do app; erros comuns gravados por versões antigas são ignorados aqui.
+  const ERRO_COMUM = /failed to fetch|load failed|networkerror|network ?request failed|fetch failed|network connection was lost|timed? ?out|timeout|aborterror|aborted|offline|connection (closed|reset|refused)|jwt expired|refresh token|^script error\.?$|resizeobserver loop/i;
+  const ehErroComum = (origem, mensagem) => origem === 'presenca' || ERRO_COMUM.test(String(mensagem || '').trim());
+  const ehRuido = (e) => e.tipo === 'erro' && ehErroComum((e.dados || {}).origem, (e.dados || {}).mensagem);
   const errosDe = (j) => dados.eventos.filter((e) => e.tipo === 'erro' && !ehRuido(e) && noPeriodoEv(e, j));
-  const perdidasDe = (j) => dados.eventos.filter((e) => e.tipo === 'sessao_perdida' && noPeriodoEv(e, j));
+  // Banco desatualizado (schema.sql não rodado depois de uma versão nova): a correção é rodar o SQL.
+  const ehErroDeBanco = (msg) => /does not exist|could not find the function|violates .*constraint|permission denied|schema cache/i.test(msg || '');
   const erros24h = () => dados.eventos.filter((e) => e.tipo === 'erro' && !ehRuido(e) && Date.now() - new Date(e.criado_em) < 864e5).length;
 
   function renderSaude(j) {
@@ -1237,27 +1238,20 @@
     const alerta = $('alerta-saude');
     alerta.hidden = !n24;
     alerta.textContent = n24;
-    alerta.setAttribute('aria-label', `${n24} ${n24 === 1 ? 'erro' : 'erros'} nas últimas 24 horas`);
+    alerta.setAttribute('aria-label', `${n24} ${n24 === 1 ? 'erro crítico' : 'erros críticos'} nas últimas 24 horas`);
 
     const erros = errosDe(j);
     const ant = j.anterior ? errosDe(j.anterior) : null;
-    const perdidas = perdidasDe(j);
-    const perdAnt = j.anterior ? perdidasDe(j.anterior) : null;
     const afetados = new Set(erros.map((e) => e.usuario_id)).size;
-    const presenca = erros.filter((e) => (e.dados || {}).origem === 'presenca').length;
     const tile = fabricaDeCards('s');
     const compara = comparaDoPeriodo();
     // Para erros, subir é ruim: a seta inverte as cores.
     const deltaRuim = (a, b) => delta(a, b).replace(/delta (sobe|desce)/, (_, c) => `delta ${c === 'sobe' ? 'desce' : 'sobe'}`);
     $('kpis-saude').innerHTML = [
-      tile('Erros', fmtNum(erros.length), { longo: rotuloDoPeriodo(), curto: '', d: ant && deltaRuim(erros.length, ant.length),
-        info: `Quantas vezes o app registrou um erro no período: falhas ao salvar, erros de programação e falhas do "On-line agora". Cada pessoa registra no máximo 5 por vez que abre o app. ${compara}` }),
+      tile('Erros críticos', fmtNum(erros.length), { longo: rotuloDoPeriodo(), curto: '', d: ant && deltaRuim(erros.length, ant.length),
+        info: `Falhas do app que precisam de correção: erros de programação, gravações recusadas pelo banco (por exemplo, schema.sql não rodado depois de uma versão nova) e falha ao excluir conta. Quedas de internet, reconexões do "On-line agora" e login de novo são normais e não entram. ${compara}` }),
       tile('Usuários afetados', `${afetados}<small> de ${dados.usuarios.length}</small>`, { longo: rotuloDoPeriodo(), curto: '', d: ant && deltaRuim(afetados, new Set(ant.map((e) => e.usuario_id)).size),
-        info: `Quantas pessoas diferentes tiveram pelo menos um erro no período. ${compara}` }),
-      tile('Sessões perdidas', fmtNum(perdidas.length), { longo: 'entraram de novo sem ter saído', curto: 'login de novo', d: perdAnt && deltaRuim(perdidas.length, perdAnt.length),
-        info: `Vezes em que alguém precisou entrar com o Google de novo sem ter tocado em "Sair da conta": o navegador apagou o login. Acontece muito em navegadores de outros apps (Instagram, WhatsApp) e no Safari depois de dias sem usar. ${compara}` }),
-      tile('Falhas do ao vivo', fmtNum(presenca), { longo: 'o "On-line agora" não conectou', curto: 'on-line agora',
-        info: 'Vezes em que o app não conseguiu avisar que a pessoa estava on-line (Supabase Realtime). Se crescer, confira as regras do Realtime no README.' }),
+        info: `Quantas pessoas diferentes tiveram pelo menos um erro crítico no período. ${compara}` }),
     ].join('');
 
     // Gráfico de erros por dia (ou hora, com Hoje; semana em períodos longos).
@@ -1269,7 +1263,7 @@
     }).length }));
     if (!$('g3').hidden) barras($('g3'), serie, { empilhado: false, rotulo: 'erros', cor: 'var(--erro)' });
     $('g3-tabela').innerHTML = tabelaHTML(['Período', 'Erros'], serie.map((x) => [x.rotulo, x.total]));
-    $('info-g3').textContent = `Quantos erros aconteceram em ${porHora ? 'cada hora de hoje' : `cada ${unidade} do período`}, somando todos os usuários. Passe o dedo ou o mouse numa barra para ver o número, ou toque em Ver tabela.`;
+    $('info-g3').textContent = `Quantos erros críticos aconteceram em ${porHora ? 'cada hora de hoje' : `cada ${unidade} do período`}, somando todos os usuários. Passe o dedo ou o mouse numa barra para ver o número, ou toque em Ver tabela.`;
 
     // Erros iguais (mesma origem e mensagem) viram um grupo.
     const grupos = new Map();
@@ -1297,23 +1291,11 @@
           <span class="item-titulo">${esc(g.mensagem || '(sem mensagem)')}</span>
           <span class="item-num">${fmtNum(g.itens.length)}<small>${g.itens.length === 1 ? 'vez' : 'vezes'}</small></span>
           <span class="item-sub">${g.agora ? `<span class="chip-erro">${ICON.alerta}Acontecendo agora</span> ` : ''}${esc(ORIGEM_ERRO[g.origem] || g.origem || 'Erro')} · ${g.usuarios} ${g.usuarios === 1 ? 'usuário' : 'usuários'} · ${esc(g.aparelho)} · última ${haQuanto(g.ultima)}</span>
+          ${ehErroDeBanco(g.mensagem) ? '<span class="item-dica">Banco desatualizado: rode de novo o supabase/schema.sql no Supabase.</span>' : ''}
         </button>
         <ul class="item-detalhe" id="erro-${i}"${aberto ? '' : ' hidden'}>${g.itens.slice(0, 10).map((e) => `<li><b><button class="link-btn" type="button" data-abrir-usuario="${e.usuario_id}">${esc(nomeDe(e.usuario_id))}</button></b><time>${quandoCurto(e.criado_em)}</time><span>${esc(aparelho(e.dados || {}))}</span></li>`).join('')}${mais > 0 ? `<li>e mais ${mais} ${mais === 1 ? 'vez' : 'vezes'}</li>` : ''}</ul>
       </div>`;
-    }).join('') : '<p class="vazio">Nenhum erro registrado no período.</p>';
-
-    // Sessões perdidas por navegador e sistema.
-    const porNav = new Map();
-    perdidas.forEach((e) => {
-      const k = aparelho(e.dados || {});
-      if (!porNav.has(k)) porNav.set(k, { k, n: 0, us: new Set() });
-      const g = porNav.get(k); g.n += 1; g.us.add(e.usuario_id);
-    });
-    const navs = [...porNav.values()].sort((a, b) => b.n - a.n);
-    $('sessoes-lista').innerHTML = navs.length ? navs.map((g) => `<div class="item-lista"><div class="item-topo">
-        <span class="item-titulo">${esc(g.k)}</span><span class="item-num">${fmtNum(g.n)}<small>${g.n === 1 ? 'vez' : 'vezes'}</small></span>
-        <span class="item-sub">${[...g.us].map((id) => esc(nomeDe(id))).join(', ')}</span></div></div>`).join('')
-      : '<p class="vazio">Nenhuma sessão perdida no período.</p>';
+    }).join('') : '<p class="vazio">Nenhum erro crítico no período.</p>';
   }
 
   // ---------- E-mails (resumo semanal) ----------
@@ -1489,7 +1471,7 @@
     sessao_perdida: (d) => `Precisou entrar de novo sem ter saído (${d.horas_desde} h sem usar, ${d.navegador}, ${d.sistema})`,
     saiu: () => 'Saiu da conta',
   };
-  const ICONE_EVENTO = { sessao: 'abrir', exercicio_concluido: 'peso', recorde: 'trofeu', checkin_criado: 'cal', checkin_editado: 'cal', checkin_excluido: 'cal', checkin_encerrado: 'cal', erro: 'alerta', sessao_perdida: 'alerta' };
+  const ICONE_EVENTO = { sessao: 'abrir', exercicio_concluido: 'peso', recorde: 'trofeu', checkin_criado: 'cal', checkin_editado: 'cal', checkin_excluido: 'cal', checkin_encerrado: 'cal', erro: 'alerta' };
   // Atividade recente: 7 por vez, agrupada por dia (Hoje, Ontem, "ter, 21 de out"); ao lado, só a hora.
   const POR_VEZ = 7;
   let atividade = { itens: [], mostrados: POR_VEZ };
@@ -1548,7 +1530,7 @@
         texto: `Check-in de ${(TIPOS[c.tipo] || {}).nome || c.tipo}${c.retroativo ? ' (retroativo)' : ''}`,
       })),
       ...dados.eventos.filter((e) => e.usuario_id === id && !['tela', 'checkin_criado'].includes(e.tipo) && !ehRuido(e)).map((e) => ({
-        em: e.criado_em, icone: ICONE_EVENTO[e.tipo] || 'ponto', alerta: ['erro', 'sessao_perdida'].includes(e.tipo),
+        em: e.criado_em, icone: ICONE_EVENTO[e.tipo] || 'ponto', alerta: e.tipo === 'erro',
         texto: (NOMES_EVENTO[e.tipo] || (() => e.tipo))(e.dados || {}),
       })),
     ].sort((a, b) => (a.em < b.em ? 1 : -1));
