@@ -126,7 +126,9 @@ O dashboard é dividido em quatro abas: **Visão geral**, **Usuários**, **Saúd
 O dashboard mostra:
 
 - **On-line agora**, ao vivo: quem está com o app aberto, em que tela (Treino, Dashboard ou Você) e há quanto tempo, com um ponto verde pulsando. O mesmo ponto aparece no avatar da lista e no detalhe.
-- **Números principais** do período (7, 30, 90 dias ou tudo), com a variação em relação ao período anterior: usuários ativos, check-ins, treinos por semana por usuário ativo, aderência ao plano (feito ÷ planejado na semana montada) e quantos voltaram nesta semana.
+- **Números principais** do período (7, 30, 90 dias ou tudo), com a variação em relação ao período anterior: usuários ativos, check-ins, treinos por semana por usuário ativo, aderência ao plano (feito ÷ planejado na semana montada), quantos voltaram nesta semana, quantos sumiram e quantos recordes foram batidos.
+- **Quem sumiu**: quem fez check-in nas últimas 4 semanas, mas está há 7 dias ou mais sem check-in (conta o check-in, não a abertura do app), com o último treino e quantas vezes por semana treinava antes; quem treinava mais vem primeiro. Não muda com o período e não inclui o administrador logado.
+- **Quem mais evoluiu**: ranking de recordes pessoais no período (vezes em que a pessoa superou o próprio peso máximo num exercício; o primeiro peso não conta), com os exercícios de cada um e os exercícios com mais recordes no grupo. O painel não mostra os pesos.
 - **Gráficos** de check-ins por dia (por tipo de treino) e de usuários ativos por dia, agrupados por semana em períodos longos, cada um com a opção de ver como tabela.
 - **Usuários**, com situação (Ativo até 7 dias sem usar, Em risco de 8 a 14, Inativo depois disso, Nunca usou), busca, ordenação e exportação em CSV.
 - **Detalhe de cada usuário**: check-ins das últimas 8 semanas, semana montada, exercícios sem peso, se recebe o resumo por e-mail e atividade recente (7 por vez, agrupada por dia, inclusive erros e sessões que caíram).
