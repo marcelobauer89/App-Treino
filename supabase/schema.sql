@@ -642,7 +642,7 @@ grant execute on function public.meus_dados_extras() to authenticated;
 
 -- ---------- Foto do check-in (opcional) ----------
 -- O check-in guarda só o caminho do arquivo; a foto fica no Storage, no bucket privado "fotos-checkin",
--- em "<usuário>/<check-in>.jpg". O app não exibe a foto (só sinaliza que existe) e o painel não a lê.
+-- em "<usuário>/<check-in>.jpg". Só quem postou vê a foto no app; o painel do administrador nunca a mostra.
 alter table public.checkins add column if not exists foto text not null default '' check (char_length(foto) <= 200);
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('fotos-checkin', 'fotos-checkin', false, 2097152, array['image/jpeg'])
