@@ -167,6 +167,12 @@
   .item-detalhe time { color: var(--tinta-2); font-variant-numeric: tabular-nums; }
   .chip-erro { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; background: var(--recorde-suave); color: var(--erro); font-size: 12px; font-weight: 800; }
   .chip-erro svg { width: 13px; height: 13px; }
+  .item-sub .tag-ex { white-space: nowrap; }
+  .trofeu-num { display: inline-flex; align-items: center; gap: 4px; }
+  .trofeu-num svg { width: 18px; height: 18px; color: var(--recorde-tinta); }
+  .listas-geral { margin-top: 4px; }
+  .listas-geral .lista-cartao .ver-todos { display: block; margin: 0 auto; padding: 12px 0; }
+  .nota.top-ex { margin: 8px 0 0; }
   .item-lista[aria-current="true"] .item-topo { box-shadow: inset 3px 0 0 var(--tatame); padding-left: 10px; }
   .estado-email { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
   .estado-email svg { width: 14px; height: 14px; }
@@ -187,6 +193,8 @@
 
   /* Números principais */
   .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 0 0 28px; }
+  /* Visão geral com 7 números: no computador cabem 4 + 3 sem sobrar um cartão sozinho. */
+  @media (min-width: 721px) { #kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
   .kpi { margin: 0; padding: 16px; background: var(--papel); border: 1px solid var(--fio); border-radius: 14px; display: grid; gap: 4px; align-content: start; }
   .kpi dt { font-size: 14px; color: var(--tinta-2); display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; }
   .kpi { position: relative; }
@@ -543,6 +551,19 @@
         <p class="nota" id="g2-nota">Ativo: abriu o app ou fez check-in no dia.</p>
         <div class="grafico" id="g2"></div>
         <div class="tabela-rolagem" id="g2-tabela" hidden></div>
+      </section>
+    </div>
+    <div class="graficos listas-geral">
+      <section class="bloco" aria-labelledby="sumiu-titulo">
+        <div class="bloco-topo"><h2 id="sumiu-titulo">Quem sumiu</h2></div>
+        <p class="nota" style="margin:-4px 0 10px">Treinou nas últimas 4 semanas, mas está há 7 dias ou mais sem check-in. Conta o último check-in, não a última vez que abriu o app.</p>
+        <div class="cartao lista-cartao" id="sumiu-lista"></div>
+      </section>
+      <section class="bloco" aria-labelledby="evoluiu-titulo">
+        <div class="bloco-topo"><h2 id="evoluiu-titulo">Quem mais evoluiu</h2></div>
+        <p class="nota" style="margin:-4px 0 10px">Recordes pessoais no período: quando alguém supera o próprio peso máximo num exercício. Os pesos não aparecem aqui.</p>
+        <div class="cartao lista-cartao" id="evoluiu-lista"></div>
+        <p class="nota top-ex" id="evoluiu-exercicios" hidden></p>
       </section>
     </div>
     </div>
@@ -925,6 +946,30 @@
     return { base: base.length, voltaram: voltaram.length };
   }
 
+  // Quem sumiu: treinou nos últimos 28 dias, mas não nos últimos 7 (relativo a hoje, não ao período).
+  function sumidos() {
+    const fim = hoje();
+    const lim7 = somarDias(fim, -6), lim28 = somarDias(fim, -27);
+    let base = 0;
+    const lista = [];
+    dados.usuarios.forEach((u) => {
+      if (u.id === meuId) return;
+      const meus = dados.checkins.filter((c) => c.usuario_id === u.id && diaDeCheckin(c) <= fim);
+      const recentes = meus.filter((c) => diaDeCheckin(c) >= lim28);
+      if (!recentes.length) return;
+      base += 1;
+      if (recentes.some((c) => diaDeCheckin(c) >= lim7)) return;
+      const ultimo = meus.reduce((a, c) => (diaDeCheckin(c) > diaDeCheckin(a) ? c : a));
+      // Ritmo antes de sumir: check-ins por semana nas 3 semanas entre 28 e 8 dias atrás.
+      lista.push({ u, ultimo, dias: diasEntre(diaDeCheckin(ultimo), fim), ritmo: recentes.length / 3 });
+    });
+    lista.sort((a, b) => b.ritmo - a.ritmo || b.dias - a.dias);
+    return { base, lista };
+  }
+  // Recordes pessoais no período (eventos "recorde": quem, quando, exercício; sem o peso).
+  const recordesDe = (j) => dados.eventos.filter((e) => e.tipo === 'recorde' && dentro(diaDeInstante(e.criado_em), j));
+  let evoluiuTodos = false;
+
   // ---------- Render ----------
   function render() {
     fecharInfo();
@@ -932,6 +977,7 @@
     const ativosMap = diasAtivos();
     renderKpis(j, ativosMap);
     renderGraficos(j, ativosMap);
+    renderListasGeral(j);
     renderUsuarios(j, ativosMap);
     renderSaude(j);
     renderEmails(j);
@@ -969,6 +1015,9 @@
     const m = metricas(j, ativosMap);
     const a = j.anterior ? metricas(j.anterior, ativosMap) : null;
     const r = retencao(ativosMap);
+    const s = sumidos();
+    const rec = recordesDe(j), recAnt = j.anterior ? recordesDe(j.anterior) : null;
+    const pessoasRec = new Set(rec.map((e) => e.usuario_id)).size;
     const total = dados.usuarios.length;
     const ehHoje = periodo === 'hoje';
     const rotuloPeriodo = periodo === 'tudo' ? 'desde o início' : ehHoje ? 'hoje' : `nos últimos ${periodo} dias`;
@@ -994,7 +1043,53 @@
       tile('Voltaram nesta semana', r.base ? `${fmtNum(r.voltaram / r.base * 100)}<small>%</small>` : '—',
         { longo: r.base ? `${r.voltaram} de ${r.base} que usaram na semana anterior` : 'sem uso na semana anterior', largo: true,
           info: 'Das pessoas que usaram o app entre 8 e 14 dias atrás, quantas voltaram a usar nos últimos 7 dias. Mostra se o app está segurando os usuários. Não muda com o período escolhido.' }),
+      tile('Sumiram', s.base ? `${s.lista.length}<small> de ${s.base}</small>` : '—',
+        { longo: s.base ? 'sem check-in há 7 dias ou mais' : 'ninguém treinou nas últimas 4 semanas', curto: 'sem check-in há 7+ dias',
+          info: 'Pessoas que fizeram check-in nas últimas 4 semanas, mas nenhum nos últimos 7 dias. O número menor é quem treinou nas últimas 4 semanas. A lista está em "Quem sumiu", mais abaixo. Não muda com o período escolhido.' }),
+      tile('Recordes', fmtNum(rec.length), { longo: `de ${pessoasRec} ${pessoasRec === 1 ? 'pessoa' : 'pessoas'}`, curto: `${pessoasRec} ${pessoasRec === 1 ? 'pessoa' : 'pessoas'}`, d: recAnt && delta(rec.length, recAnt.length),
+        info: `Vezes em que alguém superou o próprio peso máximo num exercício no período (o primeiro peso registrado não conta). Os pesos não aparecem no painel. Quem mais evoluiu está mais abaixo. ${compara}` }),
     ].join('');
+  }
+
+  function renderListasGeral(j) {
+    const s = sumidos();
+    $('sumiu-lista').innerHTML = s.lista.length ? s.lista.map((x) => `<div class="item-lista">
+        <button class="item-topo" type="button" data-abrir-usuario="${x.u.id}">
+          <span class="item-titulo">${esc(x.u.nome || x.u.email)}</span>
+          <span class="item-num">${x.dias}<small>dias</small></span>
+          <span class="item-sub">último check-in ${relativo(diaDeCheckin(x.ultimo))} (${esc((TIPOS[x.ultimo.tipo] || {}).nome || x.ultimo.tipo)}) · treinava ${fmtNum(x.ritmo, Number.isInteger(x.ritmo) ? 0 : 1)}× por semana</span>
+        </button></div>`).join('')
+      : `<p class="vazio">${s.base ? 'Ninguém sumiu: todo mundo que treinava fez check-in nos últimos 7 dias.' : 'Ninguém treinou nas últimas 4 semanas.'}</p>`;
+    // Ranking de recordes no período.
+    const rec = recordesDe(j);
+    const porPessoa = new Map();
+    rec.forEach((e) => {
+      if (!porPessoa.has(e.usuario_id)) porPessoa.set(e.usuario_id, { id: e.usuario_id, n: 0, ex: new Map(), ultimo: '' });
+      const g = porPessoa.get(e.usuario_id);
+      g.n += 1;
+      const ex = (e.dados || {}).exercicio || 'exercício';
+      g.ex.set(ex, (g.ex.get(ex) || 0) + 1);
+      if (e.criado_em > g.ultimo) g.ultimo = e.criado_em;
+    });
+    const ranking = [...porPessoa.values()].sort((a, b) => b.n - a.n || (a.ultimo < b.ultimo ? 1 : -1));
+    const mostrados = evoluiuTodos ? ranking : ranking.slice(0, 5);
+    const exs = (g) => { const l = [...g.ex.entries()].sort((a, b) => b[1] - a[1]).map(([n]) => n); return esc(l.slice(0, 3).join(', ')) + (l.length > 3 ? ` e mais ${l.length - 3}` : ''); };
+    $('evoluiu-lista').innerHTML = ranking.length ? mostrados.map((g, i) => {
+      const u = dados.usuarios.find((x) => x.id === g.id);
+      return `<div class="item-lista">
+        <button class="item-topo" type="button"${u ? ` data-abrir-usuario="${g.id}"` : ''}>
+          <span class="item-titulo">${esc(u ? u.nome || u.email : 'Usuário removido')}</span>
+          <span class="item-num"><span class="trofeu-num">${i === 0 ? ICON.trofeu : ''}${g.n}</span><small>${g.n === 1 ? 'recorde' : 'recordes'}</small></span>
+          <span class="item-sub">${exs(g)}</span>
+        </button></div>`;
+    }).join('') + (ranking.length > 5 ? `<button class="link-btn ver-todos" type="button" data-evoluiu-todos aria-expanded="${evoluiuTodos}">${evoluiuTodos ? 'Mostrar menos' : `Ver todos (${ranking.length})`}</button>` : '')
+      : '<p class="vazio">Nenhum recorde no período.</p>';
+    // Exercícios com mais recordes no grupo.
+    const porEx = new Map();
+    rec.forEach((e) => { const ex = (e.dados || {}).exercicio || 'exercício'; porEx.set(ex, (porEx.get(ex) || 0) + 1); });
+    const topEx = [...porEx.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3);
+    $('evoluiu-exercicios').hidden = !topEx.length;
+    $('evoluiu-exercicios').innerHTML = topEx.length ? `<b>Exercícios com mais recordes:</b> ${topEx.map(([n, q]) => `<span class="tag-ex">${esc(n)} (${q})</span>`).join(', ')}` : '';
   }
 
   // Agrupa por dia; períodos longos (mais de 60 dias) por semana, começando na segunda.
@@ -1638,6 +1733,7 @@
     }
     const edicao = e.target.closest('[data-edicao]');
     if (edicao) { edicaoSel = edicao.dataset.edicao; return renderEmails(janela(periodo)); }
+    if (e.target.closest('[data-evoluiu-todos]')) { evoluiuTodos = !evoluiuTodos; return renderListasGeral(janela(periodo)); }
     const abrirU = e.target.closest('[data-abrir-usuario]');
     if (abrirU) return abrirDetalhe(abrirU.dataset.abrirUsuario);
     const abrir = e.target.closest('#on-corpo [data-abrir]');
