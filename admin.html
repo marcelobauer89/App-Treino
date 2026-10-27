@@ -1813,6 +1813,10 @@
     const u = dados.usuarios.find((x) => x.id === excluirId);
     botao.disabled = true; botao.textContent = 'Excluindo…';
     $('excluir-erro').hidden = true;
+    // Fotos dos check-ins ficam no Storage, fora da cascata do banco: apaga antes ("<usuário>/<check-in>.jpg").
+    // O painel nunca mostra nem baixa as fotos; o acesso de administrador existe só para conseguir apagá-las.
+    const caminhos = dados.checkins.filter((c) => c.usuario_id === excluirId && c.id).map((c) => `${excluirId}/${c.id}.jpg`);
+    if (caminhos.length && sb.storage) await sb.storage.from('fotos-checkin').remove(caminhos).catch(() => {});
     const { error } = await sb.rpc('admin_excluir_usuario', { alvo: excluirId });
     if (error) {
       $('excluir-erro').textContent = /could not find the function/i.test(error.message || '')

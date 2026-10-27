@@ -97,6 +97,15 @@ Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 e t5 nos check-i
 - **Pelo monitoramento:** na aba Usuários, a lixeira de cada usuário abre a mesma confirmação. O administrador não exclui a própria conta nem a de outro administrador.
 - **No banco:** as funções `excluir_conta()` e `admin_excluir_usuario(alvo)` apagam o usuário em `auth.users`. Perfil, check-ins, cargas, eventos e e-mails enviados saem junto, em cascata. Para ligar, rode de novo o `supabase/schema.sql`.
 
+## Foto no check-in (opcional)
+
+- **Como funciona:** no formulário de check-in (novo ou editar), "Adicionar foto" abre a câmera ou a galeria. A foto é reduzida no aparelho (lado maior até 1280 px, JPEG) e enviada ao salvar. Trocar e Remover ficam no mesmo lugar.
+- **O app não exibe a foto:** o formulário mostra "Foto anexada" e o check-in no Dashboard ganha um ícone de câmera. O painel de monitoramento também não mostra fotos.
+- **Onde fica:** no Supabase Storage, bucket privado `fotos-checkin`, em `<usuário>/<check-in>.jpg` (até 2 MB, só JPEG); o check-in guarda só o caminho em `checkins.foto`. Cada pessoa lê e grava só a própria pasta. O administrador tem leitura e exclusão só para apagar as fotos ao excluir uma conta pelo painel.
+- **Apagar:** remover a foto, excluir o check-in ou excluir a conta (pelo app ou pelo painel) apaga o arquivo. "Baixar meus dados" traz links de 24 h para cada foto.
+- **Se o envio falhar:** o check-in fica salvo e o app avisa para tentar de novo em Editar check-in.
+- **Para ligar:** rode de novo o `supabase/schema.sql`; ele cria a coluna, o bucket e as regras de acesso. O plano gratuito do Supabase tem 1 GB de Storage (cerca de 4 a 5 mil fotos).
+
 ## Privacidade e LGPD
 
 - **Política:** `privacidade.html`, com link na tela de entrada e em Você → Privacidade. O contato do responsável é marcelobauer.mbb@gmail.com.

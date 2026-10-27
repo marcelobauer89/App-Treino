@@ -639,3 +639,29 @@ as $$
 $$;
 revoke execute on function public.meus_dados_extras() from public, anon;
 grant execute on function public.meus_dados_extras() to authenticated;
+
+-- ---------- Foto do check-in (opcional) ----------
+-- O check-in guarda só o caminho do arquivo; a foto fica no Storage, no bucket privado "fotos-checkin",
+-- em "<usuário>/<check-in>.jpg". O app não exibe a foto (só sinaliza que existe) e o painel não a lê.
+alter table public.checkins add column if not exists foto text not null default '' check (char_length(foto) <= 200);
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('fotos-checkin', 'fotos-checkin', false, 2097152, array['image/jpeg'])
+on conflict (id) do update set public = false, file_size_limit = excluded.file_size_limit, allowed_mime_types = excluded.allowed_mime_types;
+
+-- Cada pessoa mexe só na própria pasta; enviar exige conta liberada. Administradores precisam de leitura
+-- para conseguir apagar (no Postgres, apagar exige ver a linha): é usada só na exclusão de conta pelo painel,
+-- que nunca mostra nem baixa as fotos.
+drop policy if exists "fotos-checkin: le a propria" on storage.objects;
+drop policy if exists "fotos-checkin: le a propria ou admin" on storage.objects;
+create policy "fotos-checkin: le a propria ou admin" on storage.objects for select to authenticated
+  using (bucket_id = 'fotos-checkin' and ((storage.foldername(name))[1] = (select auth.uid())::text or public.eh_admin()));
+drop policy if exists "fotos-checkin: envia na propria" on storage.objects;
+create policy "fotos-checkin: envia na propria" on storage.objects for insert to authenticated
+  with check (bucket_id = 'fotos-checkin' and (storage.foldername(name))[1] = (select auth.uid())::text and public.liberado());
+drop policy if exists "fotos-checkin: troca a propria" on storage.objects;
+create policy "fotos-checkin: troca a propria" on storage.objects for update to authenticated
+  using (bucket_id = 'fotos-checkin' and (storage.foldername(name))[1] = (select auth.uid())::text)
+  with check (bucket_id = 'fotos-checkin' and (storage.foldername(name))[1] = (select auth.uid())::text and public.liberado());
+drop policy if exists "fotos-checkin: apaga a propria ou admin" on storage.objects;
+create policy "fotos-checkin: apaga a propria ou admin" on storage.objects for delete to authenticated
+  using (bucket_id = 'fotos-checkin' and ((storage.foldername(name))[1] = (select auth.uid())::text or public.eh_admin()));
