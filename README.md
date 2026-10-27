@@ -89,7 +89,7 @@ Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 e t5 nos check-i
 - **Excluir convite:** a lixeira de cada convite apaga o registro, com confirmação. Excluir um convite usado não tira o acesso de quem entrou; num convite aguardando, o link para de funcionar.
 - **Bloquear ou liberar:** no detalhe de cada usuário (aba Usuários), seção Acesso.
 - **Quem já tinha conta:** continua liberado. Administradores também entram sempre.
-- **No banco:** `perfis.liberado`, `perfis.acesso_pedido_em` e `perfis.liberado_como` / `liberado_em` (convite, pedido ou administrador; só as funções gravam), a tabela `convites` (sem acesso direto pela API) e as funções `usar_convite`, `pedir_acesso` e `admin_*_convite` (inclusive `admin_excluir_convite`) / `admin_liberar_usuario` / `admin_bloquear_usuario` / `admin_recusar_pedido`. Check-ins e cargas só são gravados por contas liberadas. Para ligar, rode de novo o `supabase/schema.sql`.
+- **No banco:** `perfis.liberado`, `perfis.acesso_pedido_em` e `perfis.liberado_como` / `liberado_em` (convite, pedido ou administrador; só as funções gravam), a tabela `convites` (sem acesso direto pela API) e as funções `usar_convite`, `pedir_acesso` e `admin_*_convite` (inclusive `admin_excluir_convite`) / `admin_liberar_usuario` / `admin_bloquear_usuario` / `admin_recusar_pedido`. Check-ins e cargas só são gravados por contas liberadas. A pessoa não consegue apagar nem recriar o próprio perfil pela API (só cria as colunas básicas, e `liberado` nasce falso), para ninguém pular o convite; visitantes sem login não têm permissão em nenhuma tabela. Para ligar, rode de novo o `supabase/schema.sql`.
 
 ## Excluir conta
 

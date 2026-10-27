@@ -126,6 +126,11 @@ grant execute on function public.registrar_acesso() to authenticated;
 
 -- O usuário edita só as colunas que o app usa; acessos e ultimo_acesso mudam só pela função acima.
 revoke update on public.perfis from authenticated;
+-- Segurança do convite: sem isto, uma conta não liberada poderia apagar o próprio perfil e recriá-lo
+-- com liberado = true. O perfil nasce pelo gatilho criar_perfil; o app só cria (colunas abaixo) se faltar.
+-- A exclusão de conta usa as funções excluir_conta() e admin_excluir_usuario(), não o DELETE direto.
+revoke insert, delete on public.perfis from authenticated, anon;
+grant insert (id, nome, email, foto, tema, dias_jiu) on public.perfis to authenticated;
 -- ---------- Treinos personalizados ----------
 -- Cada pessoa pode montar até 5 treinos de musculação (t1 a t5). Bancos criados com só t1 a t3 recebem os novos.
 -- 'muay' = Muay Thai; 'surf' = Surf.
@@ -665,3 +670,8 @@ create policy "fotos-checkin: troca a propria" on storage.objects for update to 
 drop policy if exists "fotos-checkin: apaga a propria ou admin" on storage.objects;
 create policy "fotos-checkin: apaga a propria ou admin" on storage.objects for delete to authenticated
   using (bucket_id = 'fotos-checkin' and ((storage.foldername(name))[1] = (select auth.uid())::text or public.eh_admin()));
+
+-- ---------- Visitantes sem login ----------
+-- As regras de acesso (RLS) já bloqueiam tudo para quem não entrou; isto tira também as permissões
+-- padrão do Supabase nas tabelas, como reforço.
+revoke all on public.perfis, public.checkins, public.cargas, public.eventos, public.admins, public.convites, public.emails_enviados from anon;
