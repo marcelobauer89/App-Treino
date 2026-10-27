@@ -12,6 +12,8 @@
 //     {"enviar": true} / ?enviar=1          → envia os resumos para todos (é o que o agendamento usa)
 //     {"previa": "email"} / ?previa=email   → envia só para esse e-mail, sem registrar
 //     {"simular": true} / ?simular=1        → só mostra quem receberia
+//     {"pedido": "<id>"} / ?pedido=<id>     → avisa os administradores de um novo pedido de acesso
+//                                             (o gatilho de supabase/agendamentos/aviso-pedido-acesso.sql chama)
 //   Sem nenhum desses, responde 400 e não envia nada.
 //   GET/POST ?sair=<id>&t=<assinatura>      → descadastro em um clique (link do rodapé do e-mail)
 import { createClient } from 'npm:@supabase/supabase-js@2.117.2';
@@ -277,9 +279,63 @@ function iguais(a: string, b: string): boolean {
   return dif === 0;
 }
 
+// ---------- Aviso de pedido de acesso (para os administradores) ----------
+export const TIPO_PEDIDO = 'aviso_pedido';
+export function montarAvisoPedido(p: { nome?: string; email?: string; quando: string }, painel: string) {
+  const nome = (p.nome || '').trim() || 'Alguém';
+  const quando = new Intl.DateTimeFormat('pt-BR', { timeZone: FUSO, day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(p.quando));
+  const assunto = `Novo pedido de acesso: ${nome}`;
+  const texto = `${nome}${p.email ? ` (${p.email})` : ''} pediu acesso ao App Treino em ${quando}.\nPara liberar ou recusar, abra o monitoramento, aba Convites: ${painel}`;
+  const html = `<!doctype html><html lang="pt-BR"><body style="margin:0;padding:24px 12px;background:${COR.fundo};font-family:Arial,Helvetica,sans-serif;color:${COR.tinta}">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border:1px solid ${COR.fio};border-radius:14px">
+<tr><td style="padding:24px">
+<p style="margin:0 0 6px;font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:${COR.azulTinta}">App Treino · Convites</p>
+<h1 style="margin:0 0 12px;font-size:22px;line-height:1.25">Novo pedido de acesso</h1>
+<p style="margin:0 0 4px;font-size:16px"><b>${esc(nome)}</b></p>
+${p.email ? `<p style="margin:0 0 4px;font-size:15px;color:${COR.tinta2}">${esc(p.email)}</p>` : ''}
+<p style="margin:0 0 20px;font-size:14px;color:${COR.tinta2}">Pediu acesso em ${esc(quando)}.</p>
+<a href="${esc(painel)}" style="display:inline-block;padding:12px 18px;border-radius:10px;background:${COR.azul};color:#ffffff;font-weight:700;text-decoration:none">Liberar ou recusar →</a>
+<p style="margin:20px 0 0;font-size:12px;color:${COR.tinta2}">Você recebe este aviso porque é administrador do App Treino.</p>
+</td></tr></table></td></tr></table></body></html>`;
+  return { assunto, html, texto };
+}
+
+// Avisa os administradores, uma vez por pedido (emails_enviados guarda o pedido avisado).
+export async function avisarPedido(db: any, enviar: (e: Envio) => Promise<void>, env: Env, id: string) {
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return json({ erro: 'pedido inválido' }, 400);
+  const { data: ps, error: e1 } = await db.from('perfis').select('id, nome, email, liberado, acesso_pedido_em').eq('id', id);
+  if (e1) return json({ erro: e1.message }, 500);
+  const p = (ps || [])[0];
+  if (!p || p.liberado || !p.acesso_pedido_em) return json({ avisados: 0, motivo: 'sem pedido pendente' });
+  const ref = String(p.acesso_pedido_em);
+  const { data: ja, error: e2 } = await db.from('emails_enviados').select('usuario_id').eq('usuario_id', id).eq('tipo', TIPO_PEDIDO).eq('referencia', ref);
+  if (e2) return json({ erro: e2.message }, 500);
+  if ((ja || []).length) return json({ avisados: 0, motivo: 'pedido já avisado' });
+  const { data: adms, error: e3 } = await db.from('admins').select('usuario_id');
+  if (e3) return json({ erro: e3.message }, 500);
+  const ids = (adms || []).map((a: { usuario_id: string }) => a.usuario_id);
+  const { data: pa, error: e4 } = ids.length ? await db.from('perfis').select('id, email').in('id', ids) : { data: [], error: null };
+  if (e4) return json({ erro: e4.message }, 500);
+  const para = [...new Set((pa || []).map((x: { email: string }) => x.email).filter(Boolean))] as string[];
+  if (!para.length) return json({ avisados: 0, motivo: 'nenhum administrador com e-mail' });
+  const painel = `${env.APP_URL.replace(/\/?$/, '/')}admin.html#convites`;
+  const email = montarAvisoPedido({ nome: p.nome, email: p.email, quando: ref }, painel);
+  const falhas: string[] = [];
+  for (const destino of para) {
+    try { await enviar({ para: destino, ...email }); } catch (e) { falhas.push(`${destino}: ${String((e as Error)?.message || e)}`); }
+  }
+  if (falhas.length < para.length) {
+    const { error } = await db.from('emails_enviados').insert({ usuario_id: id, tipo: TIPO_PEDIDO, referencia: ref });
+    if (error) console.warn('registro do aviso falhou', id, error.message);
+  }
+  return json({ avisados: para.length - falhas.length, falhas });
+}
+
 // ---------- Handler ----------
 type Env = { RESUMO_TOKEN: string; APP_URL: string; FUNCAO_URL: string };
-type Envio = { para: string; assunto: string; html: string; texto: string; sair: string };
+// sair: link de descadastro do resumo (o aviso aos administradores não tem).
+type Envio = { para: string; assunto: string; html: string; texto: string; sair?: string };
 type Deps = { db: any; enviar: (e: Envio) => Promise<void>; env: Env; agora?: () => Date };
 
 // GIF transparente de 1×1 px.
@@ -344,6 +400,8 @@ export function criarHandler({ db, enviar, env, agora = () => new Date() }: Deps
     let lido: Record<string, unknown> = {};
     try { const j = JSON.parse(texto); if (j && typeof j === 'object') lido = j; } catch (_) { /* corpo vazio ou inválido */ }
     const q = url.searchParams;
+    const pedido = String(q.get('pedido') || lido.pedido || '').trim();
+    if (pedido) return avisarPedido(db, enviar, env, pedido);
     const sim = (v: unknown) => v === true || v === 1 || v === '1' || v === 'true';
     const corpo = {
       previa: String(q.get('previa') || lido.previa || '').trim().toLowerCase(),
@@ -422,7 +480,7 @@ function iniciar() {
   const enviar = async (e: Envio) => {
     await transporte.sendMail({
       from: `"App Treino" <${gmail}>`, to: e.para, subject: e.assunto, html: e.html, text: e.texto,
-      headers: { 'List-Unsubscribe': `<${e.sair}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' },
+      headers: e.sair ? { 'List-Unsubscribe': `<${e.sair}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' } : {},
     });
   };
   Deno.serve(criarHandler({

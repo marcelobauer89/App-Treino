@@ -1,0 +1,69 @@
+# Publica o site no GitHub Pages: a branch main vira o app de produção (/App-Treino/)
+# e a branch dev vira o app de desenvolvimento (/App-Treino/dev/), que usa o banco de testes.
+# Requer Settings → Pages → Source: "GitHub Actions" (README → "Ambiente de desenvolvimento").
+name: Publicar site
+
+on:
+  push:
+    branches: [main, dev]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+  actions: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  # O GitHub Pages só aceita publicar a partir da main; um push na dev pede uma nova publicação
+  # pela main, que monta os dois sites juntos.
+  pedir-publicacao:
+    if: github.ref == 'refs/heads/dev'
+    runs-on: ubuntu-latest
+    steps:
+      - run: gh workflow run publicar.yml --repo "$GITHUB_REPOSITORY" --ref main
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+  publicar:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          path: producao
+      - name: A branch dev existe?
+        id: dev
+        run: |
+          if git -C producao ls-remote --exit-code --heads origin dev > /dev/null; then
+            echo "existe=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "existe=false" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.dev.outputs.existe == 'true'
+        with:
+          ref: dev
+          path: desenvolvimento
+      - name: Montar o site
+        run: |
+          mkdir _site
+          rsync -a --exclude .git --exclude .github producao/ _site/
+          if [ -d desenvolvimento ]; then
+            mkdir _site/dev
+            rsync -a --exclude .git --exclude .github desenvolvimento/ _site/dev/
+          fi
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deploy
+        uses: actions/deploy-pages@v4

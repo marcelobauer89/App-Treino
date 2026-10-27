@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>Monitoramento • App Treino</title>
+<script src="ambiente.js"></script>
 <script>
   // Mesmo tema escolhido no app (Você → Aparência), aplicado antes da primeira pintura.
   try {
@@ -703,9 +704,9 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
 <script>
 (() => {
-  // ---------- Conexão (mesmo projeto do app; manter igual ao index.html) ----------
-  const SUPABASE_URL = 'https://mlovfgbndtpeczgnvivi.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_8w6VXWwfAMpSCSUF9oEOLg_uCOgvZP2';
+  // ---------- Conexão (mesmo projeto do app, definido no ambiente.js) ----------
+  const SUPABASE_URL = window.AMBIENTE.url;
+  const SUPABASE_KEY = window.AMBIENTE.chave;
   const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { flowType: 'pkce' } }) : null;
 
   const $ = (id) => document.getElementById(id);
