@@ -97,6 +97,8 @@ drop trigger if exists ao_criar_usuario on auth.users;
 create trigger ao_criar_usuario
   after insert on auth.users
   for each row execute function public.criar_perfil();
+-- Função de gatilho: não é para ser chamada pela API (Security Advisor). O gatilho continua disparando.
+revoke execute on function public.criar_perfil() from public, anon, authenticated;
 
 -- Exercícios que o usuário faz sem peso (o painel "Registrar pesos" não pede carga).
 alter table public.perfis add column if not exists sem_peso text[] not null default '{}';
