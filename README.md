@@ -5,6 +5,7 @@ App web (celular primeiro) do plano de 6 semanas **Jiu-Jitsu + Hipertrofia**: tr
 - `index.html`: o app (HTML, CSS e JavaScript, sem build).
 - `admin.html`: o monitoramento, só para administradores.
 - `mundo.html`: o Mundo ao vivo, só para administradores.
+- `ambiente.js`: endereço e chave do Supabase de produção e do de desenvolvimento (veja [Ambiente de desenvolvimento](#ambiente-de-desenvolvimento)).
 - `supabase/schema.sql`: tabelas, regras de acesso por usuário e criação automática do perfil.
 - `docs/PRD.md`: requisitos do produto.
 
@@ -22,7 +23,7 @@ São seis passos, feitos uma vez. Anote o endereço onde o app vai ficar publica
 O login com Google não funciona abrindo o arquivo direto do computador; o app precisa de um endereço HTTPS. O caminho mais simples é o GitHub Pages:
 
 1. No GitHub, abra **Settings → Pages**.
-2. Em **Build and deployment**, escolha **Deploy from a branch**, a branch `main` e a pasta `/ (root)`.
+2. Em **Build and deployment → Source**, escolha **GitHub Actions**. A publicação é feita pelo `.github/workflows/publicar.yml` a cada push na `main` (e na `dev`, veja [Ambiente de desenvolvimento](#ambiente-de-desenvolvimento)).
 3. O endereço será `https://marcelobauer89.github.io/App-Treino/`.
 
 Em repositório privado, o GitHub Pages exige plano pago; Vercel e Netlify publicam o mesmo arquivo de graça.
@@ -50,16 +51,57 @@ Em **Authentication → URL Configuration**:
 ### 6. Colocar as chaves no app
 
 1. No Supabase, abra **Project Settings → API Keys** e copie a **URL do projeto** e a chave pública (**anon**, ou **publishable** nos projetos novos).
-2. No começo do `<script>` principal do `index.html`, preencha (este repositório já está configurado):
+2. No `ambiente.js`, preencha em `producao` (este repositório já está configurado):
 
    ```js
-   const SUPABASE_URL = 'https://<seu-projeto>.supabase.co';
-   const SUPABASE_KEY = 'sb_publishable_...';
+   url: 'https://<seu-projeto>.supabase.co',
+   chave: 'sb_publishable_...',
    ```
 
 3. Faça commit e push. A chave publicável pode ficar no código: quem protege os dados são as regras de acesso (RLS) do `schema.sql`, que deixam cada usuário ler e alterar só os próprios registros.
 
 A chave **secreta** (`sb_secret_...` ou `service_role`) nunca vai no app nem no repositório, porque ela passa por cima das regras de acesso. Se ela vazar, crie outra em **Project Settings → API Keys** e apague a antiga.
+
+## Ambiente de desenvolvimento
+
+Para testar mudanças sem mexer no app de verdade, existe um segundo app, de desenvolvimento, com **banco, logins e fotos próprios**:
+
+| | Produção | Desenvolvimento |
+|---|---|---|
+| Endereço | `https://marcelobauer89.github.io/App-Treino/` | `https://marcelobauer89.github.io/App-Treino/dev/` |
+| Branch | `main` | `dev` |
+| Supabase | projeto atual | projeto só de testes |
+
+- O `ambiente.js` escolhe o projeto pelo endereço: tudo o que está em `/dev/` (e em `localhost`) usa o projeto de testes.
+- O app de desenvolvimento mostra um selo **DEV** no canto e `[DEV]` no título da aba.
+- Os dois apps ficam no mesmo domínio, então o `ambiente.js` separa o que fica guardado no aparelho: no dev, tudo ganha o prefixo `dev:`, e as sessões, a fila de check-ins e as marcas não se misturam.
+
+### Como as mudanças andam
+
+1. As mudanças entram primeiro na branch `dev` (o PR vai para `dev`). O dev é publicado sozinho em 1 a 2 minutos.
+2. Teste em `/dev/`. Se a mudança precisar de banco, rode o `schema.sql` no projeto de **testes** primeiro.
+3. Aprovado, abra um PR de `dev` para `main`. Ao fazer o merge, rode o `schema.sql` no projeto de **produção**.
+
+### Como montar (uma vez)
+
+1. **Projeto de testes no Supabase:** crie um projeto novo (ex.: `oss-dev`; o plano gratuito permite dois). No **SQL Editor**, rode o `supabase/schema.sql` inteiro.
+2. **Google:** no [Google Cloud Console](https://console.cloud.google.com), na mesma credencial do passo 3, adicione em **URIs de redirecionamento autorizados** o retorno do projeto novo: `https://<projeto-dev>.supabase.co/auth/v1/callback`. No projeto de testes, abra **Authentication → Sign In / Providers → Google**, ative e cole o mesmo **Client ID** e **Client Secret**.
+3. **Endereços:** no projeto de testes, em **Authentication → URL Configuration**:
+   - **Site URL:** `https://marcelobauer89.github.io/App-Treino/dev/`;
+   - **Redirect URLs:** `https://marcelobauer89.github.io/App-Treino/dev/**` e `http://localhost:8000/**`.
+4. **Chaves no app:** em **Project Settings → API Keys** do projeto de testes, copie a URL e a chave **publishable** e cole em `desenvolvimento`, no `ambiente.js`.
+5. **Seu acesso:** entre uma vez em `/dev/` com o Google e rode no SQL Editor do projeto de testes, com o seu e-mail, para virar administrador e ficar liberado:
+
+   ```sql
+   insert into public.admins (usuario_id)
+   select id from auth.users where email = 'seu-email@gmail.com'
+   on conflict do nothing;
+   update public.perfis set liberado = true where email = 'seu-email@gmail.com';
+   ```
+
+6. **Publicação:** em **Settings → Pages → Source**, escolha **GitHub Actions** (passo 2 de "Como colocar no ar") e crie a branch `dev` a partir da `main`.
+
+O resumo semanal e o aviso de pedido de acesso **não precisam** existir no dev. Se quiser testá-los lá, publique a função no projeto de testes e troque o endereço `mlovfgbndtpeczgnvivi` pelo do projeto de testes nos arquivos de `supabase/agendamentos/` antes de rodar (só no SQL Editor). Use também um `RESUMO_TOKEN` diferente do de produção.
 
 ## Atualizar o banco depois de uma nova versão
 
@@ -258,7 +300,7 @@ from public.perfis order by ultimo_acesso desc nulls last;
 python3 -m http.server 8000
 ```
 
-Abra `http://localhost:8000/` (esse endereço precisa estar em **Redirect URLs**, passo 5).
+Abra `http://localhost:8000/`. No computador, o app usa o projeto de **testes** (o endereço precisa estar em **Redirect URLs** dele, passo 3 de [Como montar](#como-montar-uma-vez)).
 
 ## Como os dados ficam guardados
 

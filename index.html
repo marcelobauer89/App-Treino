@@ -6,6 +6,7 @@
 <meta name="theme-color" content="#f3f4f6" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0f1115" media="(prefers-color-scheme: dark)">
 <title>Bauer • Jiu-Jitsu + Hipertrofia</title>
+<script src="ambiente.js"></script>
 <script>
   // Aplica o tema escolhido antes da primeira pintura, para a tela não piscar.
   try {
@@ -1302,11 +1303,9 @@
 <script>
 (() => {
   // ---------- Conexão com o Supabase ----------
-  // Dados do projeto (Supabase → Project Settings → API Keys).
-  // A chave publicável (ou anon) pode ficar no código: quem protege os dados são as regras de acesso (RLS) do banco.
-  // Nunca coloque aqui a chave secreta (sb_secret_... ou service_role).
-  const SUPABASE_URL = 'https://mlovfgbndtpeczgnvivi.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_8w6VXWwfAMpSCSUF9oEOLg_uCOgvZP2';
+  // Endereço e chave publicável do projeto ficam no ambiente.js (produção ou desenvolvimento).
+  const SUPABASE_URL = window.AMBIENTE.url;
+  const SUPABASE_KEY = window.AMBIENTE.chave;
   const configurado = /^https:\/\//.test(SUPABASE_URL) && !SUPABASE_URL.includes('SEU-PROJETO') && !SUPABASE_KEY.startsWith('SUA-');
 
   // ---------- Dados (do PDF) ----------
@@ -4445,7 +4444,7 @@
     $('convite-form').hidden = modo !== 'convite';
     $('entrar-status').textContent = {
       carregando: 'Carregando seus treinos…',
-      config: 'O app ainda não está ligado ao Supabase. Preencha SUPABASE_URL e SUPABASE_KEY no index.html (o passo a passo está no README).',
+      config: 'O app ainda não está ligado ao Supabase. Preencha o endereço e a chave do projeto no ambiente.js (o passo a passo está no README).',
       login: conviteGuardado() ? 'Você foi convidado para o OSS! Entre com o Google para começar.' : 'Exercícios de Jiu Jitsu e hipertrofia',
       convite: 'O OSS é só para convidados. Digite o código do convite que você recebeu ou peça acesso.',
       erro: msg,

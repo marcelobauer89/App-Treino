@@ -6,6 +6,7 @@
 <meta name="robots" content="noindex, nofollow">
 <meta name="color-scheme" content="dark">
 <title>Mundo ao vivo • App Treino</title>
+<script src="ambiente.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&family=Press+Start+2P&display=swap">
@@ -182,9 +183,9 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
 <script>
 (() => {
-  // ---------- Conexão (mesmo projeto do app; manter igual ao index.html) ----------
-  const SUPABASE_URL = 'https://mlovfgbndtpeczgnvivi.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_8w6VXWwfAMpSCSUF9oEOLg_uCOgvZP2';
+  // ---------- Conexão (mesmo projeto do app, definido no ambiente.js) ----------
+  const SUPABASE_URL = window.AMBIENTE.url;
+  const SUPABASE_KEY = window.AMBIENTE.chave;
   const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { flowType: 'pkce' } }) : null;
 
   const $ = (id) => document.getElementById(id);
