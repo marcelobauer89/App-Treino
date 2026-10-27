@@ -167,12 +167,11 @@
   .item-detalhe time { color: var(--tinta-2); font-variant-numeric: tabular-nums; }
   .chip-erro { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; background: var(--recorde-suave); color: var(--erro); font-size: 12px; font-weight: 800; }
   .chip-erro svg { width: 13px; height: 13px; }
-  .item-sub .tag-ex { white-space: nowrap; }
   .trofeu-num { display: inline-flex; align-items: center; gap: 4px; }
   .trofeu-num svg { width: 18px; height: 18px; color: var(--recorde-tinta); }
   .listas-geral { margin-top: 4px; }
   .listas-geral .lista-cartao .ver-todos { display: block; margin: 0 auto; padding: 12px 0; }
-  .nota.top-ex { margin: 8px 0 0; }
+  .cartao .lista-interna { padding: 0; }
   .item-lista[aria-current="true"] .item-topo { box-shadow: inset 3px 0 0 var(--tatame); padding-left: 10px; }
   .estado-email { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
   .estado-email svg { width: 14px; height: 14px; }
@@ -554,16 +553,25 @@
       </section>
     </div>
     <div class="graficos listas-geral">
-      <section class="bloco" aria-labelledby="sumiu-titulo">
-        <div class="bloco-topo"><h2 id="sumiu-titulo">Quem sumiu</h2></div>
-        <p class="nota" style="margin:-4px 0 10px">Treinou nas últimas 4 semanas, mas está há 7 dias ou mais sem check-in. Conta o último check-in, não a última vez que abriu o app.</p>
-        <div class="cartao lista-cartao" id="sumiu-lista"></div>
+      <section class="bloco cartao" aria-labelledby="sumiu-titulo">
+        <div class="bloco-topo">
+          <div class="titulo-info">
+            <h2 id="sumiu-titulo">Quem sumiu</h2>
+            <button class="info" type="button" data-info="info-sumiu" aria-expanded="false" aria-controls="info-sumiu" aria-label="Como funciona: quem sumiu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button>
+          </div>
+        </div>
+        <p class="info-txt" id="info-sumiu" role="note" hidden>Quem fez check-in nas últimas 4 semanas, mas está há 7 dias ou mais sem check-in. Conta o último check-in, não a última vez que abriu o app. Quem treinava mais vezes por semana aparece primeiro. Não muda com o período escolhido.</p>
+        <div class="lista-cartao lista-interna" id="sumiu-lista"></div>
       </section>
-      <section class="bloco" aria-labelledby="evoluiu-titulo">
-        <div class="bloco-topo"><h2 id="evoluiu-titulo">Quem mais evoluiu</h2></div>
-        <p class="nota" style="margin:-4px 0 10px">Recordes pessoais no período: quando alguém supera o próprio peso máximo num exercício. Os pesos não aparecem aqui.</p>
-        <div class="cartao lista-cartao" id="evoluiu-lista"></div>
-        <p class="nota top-ex" id="evoluiu-exercicios" hidden></p>
+      <section class="bloco cartao" aria-labelledby="evoluiu-titulo">
+        <div class="bloco-topo">
+          <div class="titulo-info">
+            <h2 id="evoluiu-titulo">Quem mais evoluiu</h2>
+            <button class="info" type="button" data-info="info-evoluiu" aria-expanded="false" aria-controls="info-evoluiu" aria-label="Como funciona: quem mais evoluiu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button>
+          </div>
+        </div>
+        <p class="info-txt" id="info-evoluiu" role="note" hidden>Recordes pessoais no período: quando alguém supera o próprio peso máximo num exercício (o primeiro peso registrado não conta). Mostra quem bateu mais recordes e em quais exercícios. Os pesos não aparecem aqui.</p>
+        <div class="lista-cartao lista-interna" id="evoluiu-lista"></div>
       </section>
     </div>
     </div>
@@ -1084,12 +1092,6 @@
         </button></div>`;
     }).join('') + (ranking.length > 5 ? `<button class="link-btn ver-todos" type="button" data-evoluiu-todos aria-expanded="${evoluiuTodos}">${evoluiuTodos ? 'Mostrar menos' : `Ver todos (${ranking.length})`}</button>` : '')
       : '<p class="vazio">Nenhum recorde no período.</p>';
-    // Exercícios com mais recordes no grupo.
-    const porEx = new Map();
-    rec.forEach((e) => { const ex = (e.dados || {}).exercicio || 'exercício'; porEx.set(ex, (porEx.get(ex) || 0) + 1); });
-    const topEx = [...porEx.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3);
-    $('evoluiu-exercicios').hidden = !topEx.length;
-    $('evoluiu-exercicios').innerHTML = topEx.length ? `<b>Exercícios com mais recordes:</b> ${topEx.map(([n, q]) => `<span class="tag-ex">${esc(n)} (${q})</span>`).join(', ')}` : '';
   }
 
   // Agrupa por dia; períodos longos (mais de 60 dias) por semana, começando na segunda.
