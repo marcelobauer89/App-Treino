@@ -1,0 +1,35 @@
+# Copia a produção para o banco de dev (projeto oss-dev), anonimizada. Só roda quando alguém clica em "Run workflow".
+# Precisa dos segredos PROD_DB_URL e DEV_DB_URL (README → "Copiar a produção para o dev").
+name: Copiar produção para dev
+
+on:
+  workflow_dispatch:
+    inputs:
+      email:
+        description: 'Seu e-mail (seus dados vêm completos; a conta precisa já ter entrado no app de dev)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: copiar-producao-para-dev
+  cancel-in-progress: false
+
+jobs:
+  copiar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: psql
+        run: command -v psql || (sudo apt-get update && sudo apt-get install -y postgresql-client)
+      - name: Copiar
+        env:
+          PROD_DB_URL: ${{ secrets.PROD_DB_URL }}
+          DEV_DB_URL: ${{ secrets.DEV_DB_URL }}
+          EMAIL: ${{ inputs.email }}
+          # Trava: a importação só roda no projeto de dev (oss-dev).
+          DEV_PROJETO: tnpgxukcrfcwjvzlimkm
+        run: supabase/dev/copiar.sh

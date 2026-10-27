@@ -103,6 +103,38 @@ Para testar mudanças sem mexer no app de verdade, existe um segundo app, de des
 
 O resumo semanal e o aviso de pedido de acesso **não precisam** existir no dev. Se quiser testá-los lá, publique a função no projeto de testes e troque o endereço `mlovfgbndtpeczgnvivi` pelo do projeto de testes nos arquivos de `supabase/agendamentos/` antes de rodar (só no SQL Editor). Use também um `RESUMO_TOKEN` diferente do de produção.
 
+### Copiar a produção para o dev
+
+O workflow **Copiar produção para dev** (GitHub → **Actions**) enche o banco de dev com os dados da produção, **anonimizados**:
+
+- **Os seus dados vêm completos** (pelo e-mail informado ao rodar). A conta precisa já ter entrado no app de dev.
+- **Os outros usuários:**
+  - viram "Usuário N", com e-mail `usuarioN@exemplo.invalid`, sem foto de perfil e com um id novo a cada cópia;
+  - os check-ins, pesos, semana, treinos e eventos vêm sem as observações e sem nomes ou e-mails dentro dos eventos;
+  - ninguém consegue entrar com essas contas.
+- **Os convites** viram "Convite N".
+- **Não vêm:** os e-mails enviados, as fotos dos check-ins e os logins.
+- **A anonimização acontece dentro da produção,** que só é lida (sessão em modo só leitura, com um usuário que não tem permissão de gravar).
+- **Pode rodar quantas vezes quiser:** cada cópia substitui a anterior e os seus dados no dev. Contas reais que entraram no dev continuam lá.
+
+Os arquivos ficam em `supabase/dev/`: `copiar.sh` (o passo a passo), `exportar.sql`, `importar.sql` e `leitor-producao.sql`.
+
+**Configurar (uma vez):**
+1. **Usuário de leitura na produção:**
+   - no SQL Editor da **produção**, cole o `supabase/dev/leitor-producao.sql`, troque `TROQUE-POR-UMA-SENHA-FORTE` por uma senha longa só com letras e números e rode;
+   - não salve a senha no arquivo.
+2. **Conexões:**
+   - em cada projeto, clique em **Connect** no topo e copie a **Session pooler** (os servidores do GitHub não acessam a conexão direta);
+   - produção: troque o usuário `postgres.<id>` por `leitor_copia.<id>` e `[YOUR-PASSWORD]` pela senha do passo 1;
+   - dev: use como está, trocando `[YOUR-PASSWORD]` pela senha do banco do oss-dev.
+3. **Segredos:** no GitHub, em **Settings → Secrets and variables → Actions → New repository secret**, crie `PROD_DB_URL` e `DEV_DB_URL` com as conexões do passo 2.
+
+**Rodar:**
+1. Abra **Actions → Copiar produção para dev → Run workflow**, informe o seu e-mail e confirme.
+2. Ao terminar, o log mostra quantos usuários, check-ins, pesos, eventos e convites foram copiados.
+
+Por segurança, o workflow só importa no projeto `tnpgxukcrfcwjvzlimkm` (oss-dev) e recusa rodar com as duas conexões iguais.
+
 ## Atualizar o banco depois de uma nova versão
 
 Quando uma versão nova do app precisar de mudanças no banco, rode de novo o `supabase/schema.sql` inteiro no **SQL Editor** (passo 1). Ele só cria o que falta e não apaga dados. A tela **Minha semana** precisa da coluna `perfis.semana` e o registro de pesos precisa da tabela `cargas`: se o app avisar "Para salvar a semana…" ou "Para salvar os pesos, rode de novo o supabase/schema.sql", é isso que falta.
