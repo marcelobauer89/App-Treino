@@ -10,10 +10,10 @@
       url: 'https://mlovfgbndtpeczgnvivi.supabase.co',
       chave: 'sb_publishable_8w6VXWwfAMpSCSUF9oEOLg_uCOgvZP2',
     },
-    // Preencha com os dados do projeto de testes (Supabase → Project Settings → API Keys).
+    // Projeto só de testes (oss-dev).
     desenvolvimento: {
-      url: 'https://SEU-PROJETO-DEV.supabase.co',
-      chave: 'SUA-CHAVE-DEV',
+      url: 'https://tnpgxukcrfcwjvzlimkm.supabase.co',
+      chave: 'sb_publishable_n7DNm_s14OJbyK_38N76EQ_STCVNe5W',
     },
   };
   var p = dev ? projetos.desenvolvimento : projetos.producao;
