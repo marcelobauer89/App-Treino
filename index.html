@@ -619,7 +619,7 @@
   .ck-meta { display: block; font-size: 14px; color: var(--tinta-2); }
   .ck-corpo { display: grid; gap: 12px; padding: 0 16px 16px; }
   .ck-obs { margin: 0; font-size: 15px; max-width: 65ch; }
-  /* Foto do check-in: não é exibida no app; só um sinal de que existe. */
+  /* Foto do check-in: só quem postou vê (formulário, detalhe do check-in e tela cheia); o painel nunca mostra. */
   .foto-campo { display: grid; gap: 8px; }
   .foto-rotulo { font-weight: 700; }
   .foto-add, .foto-anexada {
@@ -638,8 +638,17 @@
   .foto-acoes .btn-sec { flex: 1; min-height: 44px; }
   .ck-tem-foto { display: inline-flex; vertical-align: -3px; margin-left: 6px; color: var(--tinta-2); }
   .ck-tem-foto svg { width: 16px; height: 16px; }
-  .ck-foto-nota { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-size: 14px; color: var(--tinta-2); }
-  .ck-foto-nota svg { width: 16px; height: 16px; }
+  .foto-moldura { display: block; width: 100%; aspect-ratio: 16 / 9; padding: 0; overflow: hidden; border: 1px solid var(--fio); border-radius: 12px; background: var(--gi); }
+  .foto-moldura img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .foto-falhou::after { content: "Não foi possível carregar a foto"; display: grid; place-items: center; height: 100%; font-size: 13px; color: var(--tinta-2); }
+  button.ck-foto { max-width: 420px; cursor: zoom-in; }
+  button.ck-foto:focus-visible { outline: 2px solid var(--tatame-tinta); outline-offset: 2px; }
+  dialog.foto-ver { width: 100vw; height: 100dvh; max-width: 100vw; max-height: 100dvh; margin: 0; padding: 56px 12px 16px; border: 0; background: #000; color: #fff; }
+  dialog.foto-ver[open] { display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 12px; }
+  dialog.foto-ver::backdrop { background: #000; }
+  #foto-ver-img { width: 100%; height: 100%; object-fit: contain; }
+  #foto-ver-legenda { margin: 0; text-align: center; font-size: 15px; }
+  .foto-ver-fechar { position: absolute; top: calc(8px + env(safe-area-inset-top, 0px)); right: 8px; width: 44px; height: 44px; display: grid; place-items: center; border: 0; border-radius: 10px; background: rgba(255, 255, 255, .12); color: #fff; }
   .ck-ex { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
   .ck-ex li { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; }
   /* Exercício tocável no detalhe de um check-in encerrado (corrige os pesos daquele dia). */
@@ -1276,6 +1285,11 @@
 <dialog class="modal politica-ver" id="politica-ver" aria-labelledby="politica-ver-title">
   <div class="modal-head politica-ver-head"><h3 id="politica-ver-title">Política de Privacidade</h3><button class="modal-close" type="button" data-fechar aria-label="Fechar"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
   <iframe id="politica-frame" title="Política de Privacidade"></iframe>
+</dialog>
+<dialog class="foto-ver" id="foto-ver" aria-label="Foto do check-in">
+  <button class="foto-ver-fechar" type="button" data-fechar aria-label="Fechar"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+  <img id="foto-ver-img" alt="Foto do check-in">
+  <p id="foto-ver-legenda"></p>
 </dialog>
 <dialog class="modal" id="excluir-dialog" aria-labelledby="excluir-title">
   <div class="modal-body" id="excluir-body"></div>
@@ -2498,17 +2512,33 @@
   // ---------- Foto do check-in ----------
   // Estado da foto no formulário aberto: a atual (caminho no bucket), a nova (ainda não enviada) e se é para remover.
   let fotoForm = null;
-  // A foto não é exibida no app: o formulário e o check-in só sinalizam que há uma foto anexada.
+  // A foto aparece só para quem a postou (link assinado de 1 h); o painel do administrador nunca a mostra.
+  const urlsFoto = new Map(); // caminho → { url, ate }
+  async function urlFoto(caminho) {
+    const c = urlsFoto.get(caminho);
+    if (c && c.ate > Date.now()) return c.url;
+    const { data, error } = await sb.storage.from(BUCKET_FOTOS).createSignedUrl(caminho, 3600);
+    if (error || !data) return '';
+    urlsFoto.set(caminho, { url: data.signedUrl, ate: Date.now() + 50 * 60000 });
+    return data.signedUrl;
+  }
+  // Preenche as <img data-foto> de um trecho da tela com os links assinados.
+  function carregarFotos(raiz) {
+    raiz.querySelectorAll('img[data-foto]:not([src])').forEach(async (img) => {
+      const url = await urlFoto(img.dataset.foto);
+      if (url) img.src = url; else img.closest('.foto-moldura')?.classList.add('foto-falhou');
+    });
+  }
   function renderFotoForm() {
     const f = fotoForm;
     const temFoto = f.nova || (f.atual && !f.remover);
+    if (f.previa && !f.nova) { URL.revokeObjectURL(f.previa); f.previa = ''; }
+    if (f.nova && !f.previa) f.previa = URL.createObjectURL(f.nova);
     $('f-foto-bloco').innerHTML = `
       <span class="foto-rotulo">Foto <span class="opcional">(opcional)</span></span>
       <input type="file" id="f-foto-input" accept="image/*" hidden>
       ${temFoto ? `
-        <div class="foto-anexada">
-          ${ICON_CAMERA}<span><b>Foto anexada</b><small>${f.nova ? 'Será enviada ao salvar' : 'Já salva neste check-in'}</small></span>
-        </div>
+        <div class="foto-moldura"><img ${f.nova ? `src="${f.previa}"` : `data-foto="${esc(f.atual)}"`} alt="Foto do check-in"></div>
         <div class="foto-acoes">
           <button class="btn-sec" type="button" data-foto-escolher>Trocar</button>
           <button class="btn-sec" type="button" data-foto-remover>Remover</button>
@@ -2516,7 +2546,9 @@
       : `<button class="foto-add" type="button" data-foto-escolher>
           ${ICON_CAMERA}<span><b>Adicionar foto</b><small>Tire agora ou escolha da galeria</small></span>
         </button>`}
+      ${temFoto ? '<p class="nota-campo">Só você vê esta foto.</p>' : ''}
       <p class="form-erro" id="f-foto-erro" role="alert" hidden></p>`;
+    carregarFotos($('f-foto-bloco'));
   }
   // Reduz a foto no aparelho (lado maior até 1280 px, JPEG) já na orientação certa.
   async function reduzirFoto(arquivo) {
@@ -2562,6 +2594,7 @@
   async function aplicarFotoForm(c) {
     const f = fotoForm;
     fotoForm = null;
+    if (f && f.previa) URL.revokeObjectURL(f.previa);
     if (!f || !fotosLigadas) return;
     if (f.nova) {
       const caminho = `${usuario.id}/${c.id}.jpg`;
@@ -2573,6 +2606,7 @@
       }
       const acao = c.foto ? 'trocou' : 'adicionou';
       c.foto = caminho;
+      urlsFoto.delete(caminho);
       salvarCheckin(c);
       registrarEvento('checkin_foto', { acao });
       atualizarCheckinUI();
@@ -2585,8 +2619,20 @@
     }
   }
   function apagarFotos(caminhos) {
+    caminhos.forEach((k) => urlsFoto.delete(k));
     return caminhos.length ? sb.storage.from(BUCKET_FOTOS).remove(caminhos).catch(() => {}) : Promise.resolve();
   }
+  // Foto em tela cheia (só a própria pessoa).
+  const fotoVer = $('foto-ver');
+  async function abrirFotoVer(c) {
+    $('foto-ver-img').removeAttribute('src');
+    $('foto-ver-legenda').textContent = `${TIPOS[c.tipo].nome} · ${dataLonga(dataDe(c))}`;
+    fotoVer.showModal();
+    const url = await urlFoto(c.foto);
+    if (url) $('foto-ver-img').src = url;
+  }
+  fotoVer.addEventListener('click', (e) => { if (e.target === fotoVer || e.target.closest('[data-fechar]')) fotoVer.close(); });
+
   function salvarForm() {
     const erro = (msg) => { $('f-erro').textContent = msg; $('f-erro').hidden = false; };
     const tipo = formDialog.querySelector('input[name="f-tipo"]:checked').value;
@@ -2965,7 +3011,9 @@
 
   function detalheHTML(c) {
     const partes = [];
-    if (fotosLigadas && c.foto) partes.push(`<p class="ck-foto-nota">${ICON_CAMERA}Foto anexada</p>`);
+    if (fotosLigadas && c.foto) {
+      partes.push(`<button class="foto-moldura ck-foto" type="button" data-ver-foto="${c.id}" aria-label="Ver a foto em tela cheia"><img data-foto="${esc(c.foto)}" alt="Foto do check-in de ${esc(TIPOS[c.tipo].nome)}" loading="lazy"></button>`);
+    }
     if (c.obs) partes.push(`<p class="ck-obs">${esc(c.obs)}</p>`);
     if (TIPOS[c.tipo].grupo === 'musc') {
       const exs = exerciciosDoCheckin(c);
@@ -3026,6 +3074,7 @@
           ${aberto ? `<div class="ck-corpo">${detalheHTML(c)}</div>` : ''}
         </li>`;
     }).join('')}</ul>`;
+    carregarFotos($('dia-lista'));
   }
 
   function renderBarras() {
@@ -4032,6 +4081,8 @@
       const c = checkins.find((x) => x.id === edEx.dataset.exCk);
       return abrirLog(Number(edEx.dataset.editarEx), { data: dataDe(c), tipo: c.tipo, origem: 'dash', exs: exerciciosDoCheckin(c) });
     }
+    const vf = e.target.closest('[data-ver-foto]');
+    if (vf) return abrirFotoVer(checkins.find((x) => x.id === vf.dataset.verFoto));
     const ed = e.target.closest('[data-editar]');
     if (ed) return abrirFormCheckin({ editar: checkins.find((x) => x.id === ed.dataset.editar) });
     const exc = e.target.closest('[data-excluir]');
@@ -4198,7 +4249,7 @@
       <p class="resumo-enc">${politica.contaNova ? 'Veja como cuidamos dos seus dados.' : 'Veja o que mudou.'}</p>
       <ul class="novidade-lista">
         <li>${ICON_CHECK}<span>Guardamos seus treinos, check-ins e pesos para o app funcionar, só enquanto sua conta existir.</span></li>
-        ${politica.contaNova ? '' : `<li>${ICON_CHECK}<span>Agora dá para anexar uma foto ao check-in, se quiser. Ela fica guardada de forma privada: o app não exibe a foto e o administrador não a vê.</span></li>`}
+        ${politica.contaNova ? '' : `<li>${ICON_CHECK}<span>Agora dá para anexar uma foto ao check-in, se quiser. Ela fica guardada de forma privada: só você vê; o administrador não.</span></li>`}
         <li>${ICON_CHECK}<span>O administrador vê quem está com o app aberto, em que tela, e o histórico de uso. Não vê pesos, cargas nem observações.</span></li>
         <li>${ICON_CHECK}<span>Observações nos check-ins ficam desligadas até você ligar em Você → Privacidade.</span></li>
         <li>${ICON_CHECK}<span>Em Você → Privacidade você baixa seus dados, e em Você dá para excluir a conta.</span></li>

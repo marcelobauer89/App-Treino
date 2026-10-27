@@ -100,7 +100,7 @@ Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 e t5 nos check-i
 ## Foto no check-in (opcional)
 
 - **Como funciona:** no formulário de check-in (novo ou editar), "Adicionar foto" abre a câmera ou a galeria. A foto é reduzida no aparelho (lado maior até 1280 px, JPEG) e enviada ao salvar. Trocar e Remover ficam no mesmo lugar.
-- **O app não exibe a foto:** o formulário mostra "Foto anexada" e o check-in no Dashboard ganha um ícone de câmera. O painel de monitoramento também não mostra fotos.
+- **Quem vê:** só quem postou. A foto aparece no formulário (prévia), no detalhe do check-in no Dashboard (com ícone de câmera na linha) e em tela cheia ao tocar. O painel de monitoramento nunca mostra nem baixa fotos.
 - **Onde fica:** no Supabase Storage, bucket privado `fotos-checkin`, em `<usuário>/<check-in>.jpg` (até 2 MB, só JPEG); o check-in guarda só o caminho em `checkins.foto`. Cada pessoa lê e grava só a própria pasta. O administrador tem leitura e exclusão só para apagar as fotos ao excluir uma conta pelo painel.
 - **Apagar:** remover a foto, excluir o check-in ou excluir a conta (pelo app ou pelo painel) apaga o arquivo. "Baixar meus dados" traz links de 24 h para cada foto.
 - **Se o envio falhar:** o check-in fica salvo e o app avisa para tentar de novo em Editar check-in.
