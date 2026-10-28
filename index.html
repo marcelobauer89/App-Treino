@@ -897,8 +897,9 @@
   }
   .ed-bib-item b { font-size: 15px; }
   .ed-bib-item small { grid-column: 1; font-size: 12.5px; color: var(--tinta-2); }
+  .ed-bib-item .ed-tambem { font-style: italic; }
   .ed-bib-item .ed-marca {
-    grid-row: 1 / 3; grid-column: 2; width: 32px; height: 32px; display: grid; place-items: center;
+    grid-row: 1 / -1; grid-column: 2; width: 32px; height: 32px; display: grid; place-items: center;
     border: 1.5px solid var(--tatame); border-radius: 50%; color: var(--tatame-tinta);
   }
   .ed-bib-item[aria-pressed="true"] { border-color: var(--checkin); background: var(--feito-suave); }
@@ -1458,6 +1459,8 @@
       why: 'Isola os posteriores de coxa; protege o joelho e dá força para fechar a guarda.' },
     { nome: 'Cadeira extensora', grupo: 'Pernas', dose: '3×8', pse: 8, H: 'alta', M: 'baixa', F: 'media', E: 'baixa',
       why: 'Isola o quadríceps; complemento de hipertrofia e proteção do joelho.' },
+    { nome: 'Cadeira flexora', grupo: 'Pernas', dose: '3×10', pse: 8, H: 'alta', M: 'baixa', F: 'media', E: 'baixa',
+      why: 'Sentado na máquina, dobra os joelhos levando o apoio para baixo; isola os posteriores de coxa. É diferente da mesa flexora, em que se faz deitado.' },
     { nome: 'Cadeira adutora', grupo: 'Pernas', dose: '3×12', pse: 8, H: 'alta', M: 'baixa', F: 'media', E: 'baixa',
       why: 'Adutores fortes para fechar a guarda e proteger a virilha.' },
     // Costas
@@ -1603,12 +1606,55 @@
     { nome: 'Pega anilha', grupo: 'Braços', dose: '3×30 s', pse: 8, H: 'baixa', M: 'baixa', F: 'alta', E: 'baixa',
       why: 'Segura anilhas pela borda só com os dedos; força de pinça para pegar a gola e a manga.' },
   ];
+  // Outros nomes do mesmo exercício (como aparecem nas fichas): a busca acha por eles e a lista mostra "Também:".
+  // Nenhum deles pode ser o nome de outro exercício da biblioteca.
+  const VARIACOES = {
+    'Agachamento': ['Agachamento HBL', 'Agachamento com barra'],
+    'Passada para frente': ['Passada com halteres'],
+    'Stiff': ['Stiff com barra', 'Stiff pés afastados'],
+    'Elevação de quadril': ['Elevação de quadril com barra', 'Elevação de quadril HBL'],
+    'Elevação pélvica unilateral': ['Elevação de quadril na cadeira', 'Elevação de quadril no sofá', 'Elevação de quadril unilateral'],
+    'Mesa flexora': ['Flexão de joelhos com caneleiras'],
+    'Cadeira flexora': ['Cadeira flexora unilateral'],
+    'Cadeira adutora': ['Adução de quadril com caneleira'],
+    'Agachamento búlgaro': ['Búlgaro com halteres'],
+    'Agachamento sumô': ['Agachamento sumô no step'],
+    'Step up': ['Step up com caneleira', 'Step up com pausa embaixo'],
+    'Abdução de quadril no cabo': ['Abdução de quadril na polia baixa'],
+    'Abdução de quadril deitado de lado': ['Abdução decúbito lateral'],
+    'Coice de glúteo na polia': ['Glúteos coice na polia', 'Coice em 4 apoios na polia'],
+    'Ponte invertida unilateral': ['Ponte inversa unilateral'],
+    'Elevação de quadril unilateral com salto': ['Elevação de quadril unilateral saltando'],
+    'Puxada': ['Puxada aberta', 'Puxada com barra reta'],
+    'Face pull': ['Remada alta unilateral no rosto', 'Remada alta na polia com corda'],
+    'Crucifixo': ['Crucifixo no banco reto', 'Crucifixo na polia'],
+    'Desenvolvimento': ['Desenvolvimento sentado'],
+    'Elevação lateral': ['Abdução de ombros unilateral', 'Elevação lateral com halteres'],
+    'Elevação lateral 180°': ['Abdução de ombros 180°'],
+    'Elevação frontal': ['Flexão de ombros sentado', 'Elevação frontal na polia com corda'],
+    'Ananias com peso dinâmico': ['Ananias'],
+    'Arremesso com elástico': ['Arremesso'],
+    'Bíceps isométrico': ['Bíceps ISO'],
+    'Rosca concentrada': ['Bíceps concentrado'],
+    'Rosca com desenvolvimento': ['Bíceps com desenvolvimento'],
+    'Tríceps testa': ['Tríceps testa no TRX', 'Tríceps testa unilateral na polia'],
+    'Tríceps na corda': ['Tríceps na polia com corda'],
+    'Flexão de punho': ['Flexão de punho semiajoelhado', 'Flexão de punho no cabo'],
+    'Suspensão na barra': ['Suspensão'],
+    'Carregada farmer': ['Carregada unilateral'],
+    'Quadrupedia com flexão': ['Quadrupedia com pushup'],
+    'Jefferson curl': ['Jeff curl'],
+    'Alcance da ponte alternada': ['Ponte alta alternada'],
+    'Mobilidade de quadril': ['Mobilidade de quadril pára-brisa', 'Mobilidade de quadril capoeirinha', 'Mobilidade de quadril 90/90'],
+    'Mobilidade de ombros 180°': ['Mobilidade de ombros com halter'],
+    'Rotação de quadril ajoelhado': ['Rotação de quadril ajoelhando'],
+  };
   const GRUPOS_EX = ['Mobilidade', 'Core', 'Explosivos', 'Pernas', 'Costas', 'Peito', 'Ombros', 'Braços', 'Pescoço'];
   // Cada exercício aparece uma vez só: nomes iguais (sem diferenciar maiúsculas e acentos) ficam com o primeiro.
   const chaveExercicio = (nome) => nome.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
   const BIBLIOTECA = [...Object.values(PLANO_PADRAO).flatMap((t) => t.exercicios), ...EXERCICIOS_EXTRAS]
     .filter((ex, i, todos) => todos.findIndex((o) => chaveExercicio(o.nome) === chaveExercicio(ex.nome)) === i)
-    .map((ex) => ({ ...ex }))
+    .map((ex) => ({ ...ex, variacoes: VARIACOES[ex.nome] || [] }))
     .sort((a, b) => GRUPOS_EX.indexOf(a.grupo) - GRUPOS_EX.indexOf(b.grupo) || a.nome.localeCompare(b.nome, 'pt-BR'));
   const exDaBiblioteca = (nome) => BIBLIOTECA.find((ex) => ex.nome === nome);
 
@@ -3549,7 +3595,9 @@
   function renderBiblioteca() {
     const t = edTreino();
     const busca = semAcento(ed.busca.trim());
-    const itens = BIBLIOTECA.filter((ex) => (ed.grupo === 'todos' || ex.grupo === ed.grupo) && (!busca || semAcento(ex.nome).includes(busca)));
+    // A busca vale também para os outros nomes do exercício (ex.: "cadeira" acha a Elevação pélvica unilateral).
+    const achou = (ex) => !busca || [ex.nome, ...ex.variacoes].some((n) => semAcento(n).includes(busca));
+    const itens = BIBLIOTECA.filter((ex) => (ed.grupo === 'todos' || ex.grupo === ed.grupo) && achou(ex));
     const noTreino = new Set(t.exercicios.map((ex) => ex.nome));
     $('ed-contagem').textContent = `${t.exercicios.length} de ${MAX_EXERCICIOS} no ${t.nome || `Treino ${ed.sel}`} · ${itens.length} ${itens.length === 1 ? 'exercício' : 'exercícios'} na lista`;
     $('ed-bib').innerHTML = itens.length ? itens.map((ex) => {
@@ -3559,6 +3607,7 @@
       <li><button class="ed-bib-item" type="button" data-ed-add="${esc(ex.nome)}" aria-pressed="${dentro}">
         <b>${esc(ex.nome)}</b>
         <small>${esc(ex.grupo)} · ${esc(ex.dose)} · PSE ${ex.pse}${destaque.length ? ` · alta ${lista(destaque)}` : ''}${VIDEOS[ex.nome] ? ' · vídeo' : ''}</small>
+        ${ex.variacoes.length ? `<small class="ed-tambem">Também: ${esc(ex.variacoes.join(', '))}</small>` : ''}
         <span class="ed-marca" aria-hidden="true">${dentro ? ICON_CHECK : ICON_MAIS}</span>
       </button></li>`;
     }).join('') : '<li class="ed-vazio">Nenhum exercício com esse nome. Tente outra palavra ou outro grupo.</li>';
