@@ -1,6 +1,6 @@
 ## PRD — App Bauer: Jiu-Jitsu + Hipertrofia
 
-2026-10-26 · @Bauer
+2026-10-28 · @Bauer
 
 ### Visão geral
 
@@ -21,7 +21,7 @@ O App Bauer transforma o plano de 6 semanas "Jiu-Jitsu + Hipertrofia" (hoje um P
 
 ### Estado atual do app
 
-O app está no ar em https://marcelobauer89.github.io/App-Treino/ (GitHub Pages). É um único `index.html`, sem build, que funciona online: o login é feito com a conta Google e os dados de cada usuário ficam no **Supabase** (Postgres com regras de acesso por usuário). Na tela de entrada aparecem o título "OSS", a descrição "Exercícios de Jiu Jitsu e hipertrofia", o botão "Continuar com o Google", a nota "Usamos sua conta Google só para entrar e guardar seus treinos." e o crédito "Desenvolvido por Marcelo Bauer". Há também um painel de monitoramento separado, `admin.html`, e o Mundo ao vivo, `mundo.html`, que só administradores conseguem abrir. No app, a navegação é feita por uma barra inferior com três telas, e um botão verde fixo, "Fazer check-in", fica no canto inferior direito das telas Treino e Dashboard.
+O app está no ar em https://marcelobauer89.github.io/App-Treino/ (GitHub Pages). É um único `index.html`, sem build, que funciona online: o login é feito com a conta Google e os dados de cada usuário ficam no **Supabase** (Postgres com regras de acesso por usuário). Na tela de entrada aparecem o título "OSS", a descrição "Exercícios de Jiu Jitsu e hipertrofia", o botão "Continuar com o Google", a nota "Usamos sua conta Google só para entrar e guardar seus treinos." e o crédito "Desenvolvido por Marcelo Bauer". Existe também um ambiente de testes em https://marcelobauer89.github.io/App-Treino/dev/ (branch `dev`), com selo DEV e um projeto Supabase separado; ver Requisitos não funcionais. Há também um painel de monitoramento separado, `admin.html`, e o Mundo ao vivo, `mundo.html`, que só administradores conseguem abrir. No app, a navegação é feita por uma barra inferior com três telas, e um botão verde fixo, "Fazer check-in", fica no canto inferior direito das telas Treino e Dashboard.
 
 | Tela | O que já faz |
 | --- | --- |
@@ -107,7 +107,7 @@ O MVP cobre um grupo de amigos convidados, cada um com conta e dados próprios, 
 
 ### Requisitos funcionais
 
-São 57 requisitos em 11 grupos; os marcados P0 bloqueiam o lançamento do MVP. A coluna Status mostra o que o app atual já entrega: **Feito**, **Parcial** ou **Pendente**.
+São 58 requisitos em 11 grupos; os marcados P0 bloqueiam o lançamento do MVP. A coluna Status mostra o que o app atual já entrega: **Feito**, **Parcial** ou **Pendente**.
 
 | ID | Requisito | Prioridade | Status |
 | --- | --- | --- | --- |
@@ -222,6 +222,8 @@ O resumo semanal por e-mail usa:
 O monitoramento usa mais duas tabelas e um canal ao vivo:
 - **`admins`:** quem é administrador; não pode ser lida nem alterada pela API, e a função `eh_admin()` diz se o usuário logado está nela.
 - **`eventos`:** cada usuário só grava os próprios eventos e não lê nenhum. O app envia os eventos em lote (a cada 10 s, a cada 20 eventos, ao ir para segundo plano e ao sair), sem avisar o usuário e sem falhar se a tabela não existir.
+- **Aviso de pedido de acesso:** `supabase/agendamentos/aviso-pedido-acesso.sql` cria um gatilho em `perfis.acesso_pedido_em` que chama a Edge Function `resumo-semanal` no modo `{"pedido": "<id>"}` pelo pg_net, com o token guardado no Vault. A função manda aos administradores "Novo pedido de acesso: Nome", com e-mail da pessoa, data e hora e o botão "Liberar ou recusar"; avisa uma vez por pedido (`emails_enviados`, tipo `aviso_pedido`), não avisa quem já está liberado, ignora repetições em menos de 1 hora e nunca impede o pedido.
+- **Fotos dos check-ins:** bucket privado `fotos-checkin` no Supabase Storage, um arquivo por check-in em `<usuário>/<check-in>.jpg` (até 2 MB); cada pessoa só lê e grava a própria pasta, por links assinados de 1 h; o administrador só apaga, ao excluir uma conta.
 - **Exclusão de conta:** `excluir_conta()` apaga o próprio usuário e `admin_excluir_usuario(alvo)` apaga outro, a partir de `auth.users`; perfil, check-ins, cargas, eventos e e-mails enviados saem em cascata.
 - **Funções `admin_usuarios()` (inclui se recebe o resumo), `admin_checkins()`, `admin_eventos()` e `admin_emails()`:** alimentam o `admin.html`, recusam quem não está em `admins` e não devolvem pesos, cargas nem observações.
 - **`meus_dados_extras()`:** devolve à própria pessoa os seus eventos e e-mails enviados (que ela não lê pela API), para o "Baixar meus dados".
@@ -262,9 +264,9 @@ Terminar exercícios (registrar pesos) e fazer check-in são ações separadas. 
 | Onboarding | Peso, % de gordura, alvo, data de início (pendente) |
 | Treino | Data, hora e atividade de hoje; uma aba por treino (plano pronto ou treinos montados); filtro por foco; "Sobre o treino"; um cartão por exercício com dose, PSE-alvo, graus H/F/E/M, "Terminei o exercício" e vídeo ao deslizar; agenda da semana com dias feitos e extras; botão fixo "Fazer check-in" |
 | Terminei o exercício | Painel (folha inferior no celular) com o interruptor "Sem peso", uma linha por série, carga pré-preenchida, "Última vez", "Recorde: X kg em dd/mm" e selo "Novo recorde" no campo que passa dele, Concluir; sem peso, só Concluir (marca como feito, com "Desfazer") |
-| Novo check-in | Aberto pelo botão fixo: tipo, data, início, duração e observação (só para quem ligou em Privacidade) |
+| Novo check-in | Aberto pelo botão fixo: tipo, data, início, duração, observação (só para quem ligou em Privacidade) e "Adicionar foto" (câmera ou galeria; prévia com Trocar e Remover e "Só você vê esta foto") |
 | Encerrar check-in | Só para check-ins que ficaram abertos: início e duração, exercícios com carga no dia e observação (só para quem ligou) |
-| Dashboard | Números, esta semana × plano, calendário mensal, check-ins do dia com detalhe, "Editar check-in", exclusão e exercícios que abrem o painel para corrigir os pesos daquele dia; barras por tipo no mês; botão fixo "Fazer check-in" |
+| Dashboard | Números, esta semana × plano, calendário mensal, check-ins do dia com detalhe (ícone de câmera e miniatura da foto, que abre em tela cheia), "Editar check-in", exclusão e exercícios que abrem o painel para corrigir os pesos daquele dia; barras por tipo no mês; botão fixo "Fazer check-in" |
 | Você | Lista com cartão do perfil e grupos de opções; telas Dados pessoais (nome e foto salvos sozinhos), Meus treinos, Minha semana (arrastar e soltar, botão +, avisos, voltar ao padrão), Aparência, Notificações, Privacidade (registro de uso, política, interruptor "Registrar observações nos check-ins", desligado por padrão; desligar apaga as já registradas, Baixar meus dados), Sair da conta e Excluir conta |
 | Meus treinos | Até 5 treinos de até 15 exercícios: nome e foco do treino; por exercício, séries e PSE em campos iguais e alça para arrastar a ordem; biblioteca com busca sem acento e filtro por grupo; botão flutuante "+ Adicionar exercício"; excluir treino, voltar ao plano pronto; Salvar treinos com Desfazer por 8 s e Restaurar versão anterior |
 | Aviso da novidade | "Baita atualização!" (Personalizar ou Manter o treino atual) para quem já usa; conta nova escolhe entre Montar meus treinos ou Usar o plano pronto; caixa "Não mostrar esta mensagem de novo" |
@@ -310,6 +312,8 @@ Todas as regras vêm do plano original; o app as aplica sem que o usuário preci
    - **Treinos por semana:** check-ins do período ÷ usuários ativos ÷ semanas do período; no período Hoje vira "Treinos por usuário" (check-ins ÷ usuários ativos).
    - **Aderência ao plano:** média, entre os ativos, de check-ins ÷ treinos planejados no período (pela semana montada ou pela padrão), com limite de 100%; quem não tinha nada planejado fica fora da média; no período Hoje vale o que a semana montada prevê para o dia; a variação aparece em pontos percentuais.
    - **Voltaram nesta semana:** dos que usaram o app entre 8 e 14 dias atrás, quantos voltaram nos últimos 7 dias; não depende do período escolhido.
+   - **Sumiram:** quem fez check-in nas últimas 4 semanas e nenhum nos últimos 7 dias, sobre quem treinou nas últimas 4 semanas; a lista "Quem sumiu" mostra o último treino e o ritmo anterior (quem treinava mais primeiro); não depende do período e ignora o administrador logado.
+   - **Recordes:** vezes em que alguém superou o próprio peso máximo num exercício no período (o primeiro registro não conta); "Quem mais evoluiu" ordena as pessoas pelos recordes, com os exercícios e sem os pesos.
    - **Comparação:** a seta compara com os mesmos dias imediatamente anteriores (Hoje compara com ontem); no período Tudo não há comparação.
    - **Situação do usuário:** Ativo (último uso há até 7 dias), Em risco (8 a 14 dias), Inativo (mais de 14 dias) ou Nunca usou.
 25. **Resumo semanal por e-mail:**
@@ -330,13 +334,14 @@ Todas as regras vêm do plano original; o app as aplica sem que o usuário preci
 | Área | Requisito |
 | --- | --- |
 | Plataforma | Aplicação web responsiva, mobile first, como PWA instalável; funciona em Chrome, Safari e Edge atuais. Hoje: um único HTML com JavaScript puro, sem build, ainda sem manifesto nem service worker |
-| Distribuição | Amigos acessam por um link HTTPS, sem lojas de apps. Hoje: GitHub Pages (https://marcelobauer89.github.io/App-Treino/) |
+| Distribuição | Amigos acessam por um link HTTPS, sem lojas de apps. Hoje: GitHub Pages publicado pelo workflow "Publicar site" (GitHub Actions): a branch `main` vira https://marcelobauer89.github.io/App-Treino/ e a `dev` vira https://marcelobauer89.github.io/App-Treino/dev/ |
+| Ambiente de testes | `ambiente.js` escolhe o projeto Supabase pelo endereço: `/dev/` e `localhost` usam o projeto de testes (oss-dev), o resto usa o de produção; no dev, o armazenamento do navegador ganha o prefixo `dev:`, a página mostra o selo DEV e o título "[DEV]". Mudanças vão primeiro para `dev` e depois para `main`. O workflow manual "Copiar produção para dev" leva uma cópia anonimizada da produção para o dev: lê com um usuário só de leitura (`leitor_copia`), troca os outros usuários por "Usuário N" com ids novos, sem foto, observações, nome e e-mail nos eventos, convites viram "Convite N", e-mails enviados, fotos e logins ficam de fora; só importa no projeto oss-dev e recusa conexões iguais |
 | Offline | Service worker e cache local: registro de treino, peso e check-ins funciona sem internet e sincroniza ao reconectar; vídeos abrem com conexão. Hoje o app é só online: se uma gravação falhar, avisa e recarrega os dados do servidor |
 | Desempenho | Primeira carga ≤ 3 s em 4G; tela inicial em ≤ 1 s após instalada; registrar uma série em ≤ 2 toques; pesos digitados são enviados depois de uma pausa de 0,8 s, não a cada tecla |
 | Usabilidade | Layout para telas a partir de 360 px, botões ≥ 48 px, uso com uma mão; botão de check-in fixo ao alcance do polegar; tema claro por padrão para academia iluminada e escuro opcional; painéis abrem como folha inferior no celular; foco visível no teclado e respeito a "reduzir movimento" |
 | Visual | Tipografia Archivo; paleta do kimono (fundo claro), azul vivo do tatame (#2563eb) para ações e seleções, contorno azul nos botões secundários, verde (#16a34a, ícone e texto brancos) para o check-in e verde suave para pesos registrados, âmbar com troféu para recordes (a cor nunca é o único sinal); graus de contribuição mostrados como fitas na ponteira da faixa; contraste AA em todos os pares de texto e fundo, nos dois temas |
 | Dados | Supabase (Postgres) com login Google (PKCE) e regras de acesso por usuário (RLS) em `perfis`, `checkins`, `cargas` e `eventos` (`admins` fechada à API); presença ao vivo por canais privados do Supabase Realtime, com acesso público ao Realtime desligado; schema idempotente em `supabase/schema.sql`. A chave secreta nunca vai no app nem no repositório; só a chave publicável |
-| Privacidade e segurança | Regras de acesso por usuário no backend; eventos de uso gravados só pelo próprio usuário e lidos só por administradores, com aviso na tela Você; resumo semanal enviado só para o e-mail da própria pessoa, com descadastro de um clique por link assinado e aviso no rodapé de que a abertura é registrada; segredos do e-mail só no Supabase; colunas de controle (`acessos`, `ultimo_acesso`) protegidas contra edição pelo usuário; dados de saúde não são vendidos nem enviados a terceiros; Política de Privacidade com aviso a cada nova versão, consentimento para observações (desligado por padrão), baixar meus dados e exclusão de conta pelo próprio usuário, com todos os dados (LGPD); fonte Archivo hospedada no próprio site, sem Google Fonts |
+| Privacidade e segurança | Regras de acesso por usuário no backend; eventos de uso gravados só pelo próprio usuário e lidos só por administradores, com aviso na tela Você; resumo semanal enviado só para o e-mail da própria pessoa, com descadastro de um clique por link assinado e aviso no rodapé de que a abertura é registrada; segredos do e-mail só no Supabase; colunas de controle (`acessos`, `ultimo_acesso`) protegidas contra edição pelo usuário; dados de saúde não são vendidos nem enviados a terceiros; Política de Privacidade com aviso a cada nova versão, consentimento para observações (desligado por padrão), baixar meus dados e exclusão de conta pelo próprio usuário, com todos os dados (LGPD); fonte Archivo hospedada no próprio site, sem Google Fonts; em `perfis`, a pessoa só insere as colunas básicas (a conta nasce não liberada) e não apaga o perfil direto, para ninguém pular o convite recriando o próprio perfil; visitantes sem login não têm acesso às tabelas; a função de gatilho `criar_perfil()` não pode ser chamada pela API |
 | Idioma | Português do Brasil; unidades em kg e minutos; cargas aceitam vírgula decimal |
 | Aviso legal | Onboarding, tela de progresso e rodapé da tela Treino exibem que o app não substitui profissional de educação física ou nutrição |
 
@@ -381,7 +386,10 @@ Pendências e cuidados:
    - exclusão de conta pelo app e pelo monitoramento;
    - acesso só por convite;
    - Política de Privacidade, observações só com consentimento, sem nota de recuperação, e baixar meus dados (LGPD);
-   - resumo semanal por e-mail.
+   - resumo semanal por e-mail;
+   - surf como atividade e foto opcional no check-in;
+   - e-mail aos administradores a cada pedido de acesso;
+   - ambiente de testes separado, com cópia anonimizada da produção.
 2. **MVP (web, grupo de amigos):**
    - PWA responsiva com modo offline;
    - onboarding com peso e alvo, semana e fase, peso e proteína;
@@ -409,6 +417,7 @@ Pendências e cuidados:
 | Peso oscila e gera ajustes precipitados | Decisões só pela média de 2 semanas (regra 9) |
 | Usuário treina até a falha | PSE-alvo visível em cada exercício e lembrete "não ir à falha" nos complementos |
 | Vídeos do YouTube saem do ar | Guardar descrição curta de execução como alternativa |
+| Testes mexerem nos dados reais ou expor dados de outras pessoas | Ambiente de testes com projeto Supabase próprio; a cópia da produção é anonimizada e só pode ser importada no projeto de testes |
 | Fotos dos check-ins lotarem o armazenamento | Foto reduzida no aparelho (até 1280 px, JPEG, ~200 KB) e limite de 2 MB no bucket; o plano gratuito do Supabase tem 1 GB (cerca de 4 a 5 mil fotos) |
 | Dor ou lesão | Botão "senti dor" que pula o exercício e recomenda procurar profissional |
 
