@@ -8,6 +8,7 @@ App web (celular primeiro) do plano de 6 semanas **Jiu-Jitsu + Hipertrofia**: tr
 - `ambiente.js`: endereço e chave do Supabase de produção e do de desenvolvimento (veja [Ambiente de desenvolvimento](#ambiente-de-desenvolvimento)).
 - `supabase/schema.sql`: tabelas, regras de acesso por usuário e criação automática do perfil.
 - `docs/PRD.md`: requisitos do produto.
+- `docs/mapa-oss.html`: animação da dor à produção (negócio, design, arquitetura e ambientes), publicada em `https://marcelobauer89.github.io/App-Treino/docs/mapa-oss.html`.
 
 ## Como colocar no ar
 
