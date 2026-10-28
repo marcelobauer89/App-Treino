@@ -171,6 +171,23 @@
   .trofeu-num { display: inline-flex; align-items: center; gap: 4px; }
   .trofeu-num svg { width: 18px; height: 18px; color: var(--recorde-tinta); }
   .listas-geral { margin-top: 4px; }
+  /* Treinos mais feitos: barras horizontais em ranking (a barra mais longa é o tipo com mais check-ins). */
+  .ranking-treinos { margin: 0; padding: 0; list-style: none; display: grid; gap: 14px; }
+  .ranking-treinos li { display: grid; grid-template-columns: minmax(96px, 150px) 1fr auto; gap: 4px 12px; align-items: center; }
+  .ranking-treinos .rt-nome { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; }
+  .ranking-treinos .rt-nome i { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+  .ranking-treinos .rt-trilho { height: 12px; border-radius: 4px; background: var(--gi); overflow: hidden; }
+  .ranking-treinos .rt-barra { display: block; height: 100%; min-width: 4px; border-radius: 4px; }
+  .ranking-treinos .rt-num { font-family: var(--display); font-stretch: 80%; font-weight: 800; font-size: 20px; font-variant-numeric: tabular-nums; text-align: right; min-width: 3.2em; }
+  .ranking-treinos .rt-num small { font-family: var(--texto); font-stretch: 100%; font-size: 12px; font-weight: 600; color: var(--tinta-2); margin-left: 4px; }
+  .ranking-treinos .rt-sub { grid-column: 2 / -1; font-size: 13px; color: var(--tinta-2); }
+  .ranking-treinos li.zerado .rt-nome, .ranking-treinos li.zerado .rt-num { color: var(--tinta-2); }
+  .ranking-treinos > p.vazio { margin: 0; padding: 18px 0; color: var(--tinta-2); text-align: center; }
+  @media (max-width: 480px) {
+    .ranking-treinos li { grid-template-columns: 1fr auto; }
+    .ranking-treinos .rt-trilho { grid-column: 1 / -1; grid-row: 2; }
+    .ranking-treinos .rt-sub { grid-column: 1 / -1; }
+  }
   .listas-geral .lista-cartao .ver-todos { display: block; margin: 0 auto; padding: 12px 0; }
   .cartao .lista-interna { padding: 0; }
   .item-lista[aria-current="true"] .item-topo { box-shadow: inset 3px 0 0 var(--tatame); padding-left: 10px; }
@@ -551,6 +568,18 @@
         <p class="nota" id="g2-nota">Ativo: abriu o app ou fez check-in no dia.</p>
         <div class="grafico" id="g2"></div>
         <div class="tabela-rolagem" id="g2-tabela" hidden></div>
+      </section>
+    </div>
+    <div class="graficos">
+      <section class="bloco cartao" aria-labelledby="treinos-titulo">
+        <div class="bloco-topo">
+          <div class="titulo-info">
+            <h2 id="treinos-titulo">Treinos mais feitos</h2>
+            <button class="info" type="button" data-info="info-treinos" aria-expanded="false" aria-controls="info-treinos" aria-label="Como funciona: treinos mais feitos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button>
+          </div>
+        </div>
+        <p class="info-txt" id="info-treinos" role="note" hidden>Check-ins do período por tipo de treino, somando todos os usuários, do mais feito para o menos feito. A porcentagem é a parte de cada tipo no total de check-ins, e "pessoas" conta quem fez aquele treino pelo menos uma vez. Em Musculação, aparece também quantos check-ins teve cada treino (Treino 1, Treino 2…).</p>
+        <ol class="ranking-treinos" id="treinos-lista" aria-label="Check-ins por tipo de treino"></ol>
       </section>
     </div>
     <div class="graficos listas-geral">
@@ -987,6 +1016,7 @@
     renderKpis(j, ativosMap);
     renderGraficos(j, ativosMap);
     renderListasGeral(j);
+    renderTreinos(j);
     renderUsuarios(j, ativosMap);
     renderSaude(j);
     renderEmails(j);
@@ -1093,6 +1123,32 @@
         </button></div>`;
     }).join('') + (ranking.length > 5 ? `<button class="link-btn ver-todos" type="button" data-evoluiu-todos aria-expanded="${evoluiuTodos}">${evoluiuTodos ? 'Mostrar menos' : `Ver todos (${ranking.length})`}</button>` : '')
       : '<p class="vazio">Nenhum recorde no período.</p>';
+  }
+
+  // Treinos mais feitos no período: check-ins por tipo (Musculação junta os treinos 1 a 5), do maior para o menor.
+  function renderTreinos(j) {
+    const cks = dados.checkins.filter((c) => dentro(diaDeCheckin(c), j));
+    const grupos = GRUPOS.map(([g, nome]) => {
+      const meus = cks.filter((c) => (TIPOS[c.tipo] ? TIPOS[c.tipo].grupo : 'musc') === g);
+      const porTreino = new Map();
+      if (g === 'musc') meus.forEach((c) => porTreino.set(c.tipo, (porTreino.get(c.tipo) || 0) + 1));
+      return { g, nome, n: meus.length, pessoas: new Set(meus.map((c) => c.usuario_id)).size, porTreino };
+    }).sort((a, b) => b.n - a.n);
+    const lista = $('treinos-lista');
+    if (!cks.length) { lista.innerHTML = '<p class="vazio">Nenhum check-in no período.</p>'; return; }
+    const maior = grupos[0].n;
+    lista.innerHTML = grupos.map((x) => {
+      const pct = Math.round(x.n / cks.length * 100);
+      const treinos = [...x.porTreino.entries()].sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1))
+        .map(([t, n]) => `${esc(TIPOS[t].nome)}: ${n}`).join(' · ');
+      const sub = x.n ? `${x.pessoas} ${x.pessoas === 1 ? 'pessoa' : 'pessoas'}${treinos ? ` · ${treinos}` : ''}` : 'nenhum check-in';
+      return `<li class="${x.n ? '' : 'zerado'}">
+          <span class="rt-nome"><i style="background:var(--${x.g})" aria-hidden="true"></i>${x.nome}</span>
+          <span class="rt-trilho" aria-hidden="true">${x.n ? `<span class="rt-barra" style="width:${x.n / maior * 100}%;background:var(--${x.g})"></span>` : ''}</span>
+          <span class="rt-num">${fmtNum(x.n)}<small>${pct}%</small></span>
+          <span class="rt-sub">${sub}</span>
+        </li>`;
+    }).join('');
   }
 
   // Agrupa por dia; períodos longos (mais de 60 dias) por semana, começando na segunda.
