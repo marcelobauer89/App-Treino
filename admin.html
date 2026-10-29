@@ -1485,11 +1485,17 @@
     if (h) return `daqui a ${h} h${m ? ` e ${m} min` : ''}`;
     return `daqui a ${m} min`;
   }
+  // Mesma regra da função resumo-semanal: não liberado e quem não abre o app há 4 semanas ficam sem o resumo.
+  function motivoSemResumo(u, dia) {
+    if (u.liberado === false) return 'não liberado';
+    if (!u.ultimo_acesso || diaDeInstante(u.ultimo_acesso) < somarDias(dia, -28)) return 'sem abrir o app há 4 semanas ou mais';
+    return '';
+  }
   function renderProximoEnvio() {
     const px = proximoEnvio();
     const hojeBr = new Date(Date.now() - 3 * 36e5).toISOString().slice(0, 10);
     const quando = px.dia === hojeBr ? 'Hoje, sexta' : px.dia === somarDias(hojeBr, 1) ? 'Amanhã, sexta' : 'Sexta';
-    const recebem = dados.usuarios.filter((u) => u.emails_resumo !== false && (u.acessos || 0) > 0);
+    const recebem = dados.usuarios.filter((u) => u.emails_resumo !== false && (u.acessos || 0) > 0 && !motivoSemResumo(u, px.dia));
     const nomes = recebem.map((u) => esc((u.nome || u.email).trim().split(/\s+/)[0]));
     $('proximo-envio').innerHTML = `
       <span class="prox-icone" aria-hidden="true">${ICON.email}</span>
@@ -1555,7 +1561,7 @@
       .sort((a, b) => ordemSit[a.s.c] - ordemSit[b.s.c] || nomeDe(a.x.usuario_id).localeCompare(nomeDe(b.x.usuario_id), 'pt-BR'));
     const ids = new Set(ed.linhas.map((x) => x.usuario_id));
     const faltaram = dados.usuarios.filter((u) => !ids.has(u.id)).map((u) => `${esc(u.nome || u.email)} (${
-      u.emails_resumo === false ? 'desligou o resumo' : !u.acessos ? 'ainda não usou o app' : 'sem registro de envio'})`);
+      u.emails_resumo === false ? 'desligou o resumo' : !u.acessos ? 'ainda não usou o app' : motivoSemResumo(u, somarDias(ed.ref, 1)) || 'sem registro de envio'})`);
     $('destinatarios').innerHTML = recebidos.map(({ x, u, s }) => `<div class="item-lista"><div class="item-topo">
         <span class="item-titulo"><button class="link-btn" type="button" data-abrir-usuario="${x.usuario_id}">${esc(u ? (u.nome || u.email) : 'Usuário removido')}</button></span>
         <span class="estado-email ${s.c}">${s.i}${s.t}</span>

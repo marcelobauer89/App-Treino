@@ -262,7 +262,7 @@ Toda **sexta-feira às 9h** (Brasília), cada pessoa recebe no e-mail um resumo 
 - a comparação com a semana anterior;
 - os recordes da semana.
 
-Quem não treinou recebe uma versão de incentivo. Quem nunca usou o app não recebe nada.
+Quem não treinou recebe uma versão de incentivo. **Não recebem:** quem nunca usou o app, quem ainda não foi liberado (convite ou pedido de acesso pendente) e quem está há 4 semanas ou mais sem abrir o app. Quem volta a abrir o app volta a receber na sexta seguinte. A prévia (abaixo) vai sempre, para testar.
 
 O envio sai do seu Gmail, pela Edge Function `supabase/functions/resumo-semanal/index.ts`, e um agendamento do próprio Supabase a dispara.
 
