@@ -2,6 +2,8 @@
 //
 // Toda sexta às 9h (Brasília) o agendamento em supabase/agendamentos/resumo-semanal.sql chama esta função.
 // Ela monta, para cada pessoa, o resumo dos últimos 7 dias (de sexta a quinta) e envia pelo Gmail.
+// Recebe quem deixou o resumo ligado, já abriu o app, está liberado e abriu o app nas últimas 4 semanas
+// (quem sumiu para de receber e volta sozinho quando abrir o app de novo). A prévia vai sempre.
 //
 // Segredos (Supabase → Edge Functions → Secrets): GMAIL_USER, GMAIL_APP_PASSWORD, RESUMO_TOKEN, APP_URL
 // e FUNCAO_URL (o endereço desta função, mostrado na página dela no painel).
@@ -61,7 +63,15 @@ export function periodo(agora: Date) {
 }
 
 // ---------- Cálculo do resumo (mesma regra do painel de monitoramento) ----------
-type Perfil = { id: string; nome: string; email: string; semana: unknown; dias_jiu: number[] | null };
+type Perfil = { id: string; nome: string; email: string; semana: unknown; dias_jiu: number[] | null; liberado?: boolean | null; ultimo_acesso?: string | null };
+
+// Quem não recebe o resumo e por quê: não liberado (convite ou pedido pendente) ou 4 semanas sem abrir o app.
+export const SEMANAS_SEM_ABRIR = 4;
+export function motivoParaNaoEnviar(u: Perfil, hoje: string): 'nao_liberado' | 'sumiu' | null {
+  if (u.liberado === false) return 'nao_liberado';
+  if (!u.ultimo_acesso) return 'sumiu';
+  return hojeEm(new Date(u.ultimo_acesso)) < somarDias(hoje, -7 * SEMANAS_SEM_ABRIR) ? 'sumiu' : null;
+}
 type Checkin = { usuario_id: string; tipo: string; inicio: string };
 type Recorde = { usuario_id: string; dados: { exercicio?: string } | null; criado_em: string };
 
@@ -412,7 +422,7 @@ export function criarHandler({ db, enviar, env, agora = () => new Date() }: Deps
     if (!modo) return json({ erro: 'diga o que fazer: enviar, previa ou simular', recebido: texto.slice(0, 200) }, 400);
 
     const p = periodo(agora());
-    const perfisQ = db.from('perfis').select('id, nome, email, semana, dias_jiu, emails_resumo, acessos');
+    const perfisQ = db.from('perfis').select('id, nome, email, semana, dias_jiu, emails_resumo, acessos, liberado, ultimo_acesso');
     const { data: perfis, error: e1 } = corpo.previa
       ? await perfisQ.ilike('email', corpo.previa.replace(/[\\%_]/g, '\\$&')) // sem diferenciar maiúsculas
       : await perfisQ.eq('emails_resumo', true).gt('acessos', 0);
@@ -428,9 +438,15 @@ export function criarHandler({ db, enviar, env, agora = () => new Date() }: Deps
     if (erro) return json({ erro: erro.message }, 500);
     const enviados = new Set((jaEnviados || []).map((x: { usuario_id: string }) => x.usuario_id));
 
-    const resultado = { modo, periodo: { ini: p.ini, fim: p.fim }, enviados: 0, pulados: 0, falhas: [] as { email: string; erro: string }[], simulacao: [] as unknown[] };
+    const resultado = { modo, periodo: { ini: p.ini, fim: p.fim }, enviados: 0, pulados: 0, ignorados: {} as Record<string, number>, falhas: [] as { email: string; erro: string }[], simulacao: [] as unknown[] };
     for (const u of perfis as Perfil[]) {
       if (!u.email || (!corpo.previa && enviados.has(u.id))) { resultado.pulados += 1; continue; }
+      const motivo = corpo.previa ? null : motivoParaNaoEnviar(u, p.hoje);
+      if (motivo) {
+        resultado.ignorados[motivo] = (resultado.ignorados[motivo] || 0) + 1;
+        if (corpo.simular) resultado.simulacao.push({ email: u.email, fora: motivo });
+        continue;
+      }
       const r = montarResumo(u, checkins || [], recordes || [], p);
       const sair = `${env.FUNCAO_URL}?sair=${u.id}&t=${await assinar(u.id, env.RESUMO_TOKEN)}`;
       // Na prévia não há envio registrado, então abertura e clique não contam (referência "previa").
