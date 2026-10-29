@@ -1683,7 +1683,7 @@
 
   // Treinos da conta: os montados em "Meus treinos" (perfis.treinos) ou, sem eles, o plano pronto.
   // No banco vão só nome, dose e PSE de cada exercício; níveis, grupo e explicação vêm da biblioteca.
-  const MAX_TREINOS = 5, MAX_EXERCICIOS = 15;
+  const MAX_TREINOS = 6, MAX_EXERCICIOS = 15;
   let TREINOS = PLANO_PADRAO;
   let treinosDaConta = false;
   // { liberado, pedidoEm }: contas novas só usam o app depois de um convite ou de um administrador liberar.
@@ -1751,15 +1751,15 @@
   } catch (_) {}
 
   // Semana do usuário: para cada dia (índice de Date.getDay(), 0 = domingo), até 2 atividades
-  // entre os treinos ('t1' a 't5'), 'jiu', 'muay', 'surf' e 'bike'. Dia vazio é descanso.
+  // entre os treinos ('t1' a 't6'), 'jiu', 'muay', 'surf' e 'bike'. Dia vazio é descanso.
   const CURTOS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
   const NOMES_DIA = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
   const ORDEM_SEMANA = [1, 2, 3, 4, 5, 6, 0];
   const naDia = (i) => `${i === 0 || i === 6 ? 'No' : 'Na'} ${NOMES_DIA[i]}`;
   const daDia = (i) => `${i === 0 || i === 6 ? 'do' : 'da'} ${NOMES_DIA[i]}`;
   const copiaSemana = (s) => s.map((d) => [...d]);
-  // Treino de musculação que existe hoje na conta (t1 a t5; um treino excluído deixa de valer na semana).
-  const ehTreino = (t) => /^t[1-5]$/.test(t) && !!TREINOS[t.slice(1)];
+  // Treino de musculação que existe hoje na conta (t1 a t6; um treino excluído deixa de valer na semana).
+  const ehTreino = (t) => /^t[1-6]$/.test(t) && !!TREINOS[t.slice(1)];
   const nomeAtividade = (t) => (TIPOS[t] ? TIPOS[t].nome : t);
   // Contas antigas só tinham os dias de jiu: a semana é montada com eles sobre o plano original.
   function semanaDeDiasJiu(dias) {
@@ -1795,7 +1795,7 @@
   }
 
   // Tipos de check-in. Musculação usa uma cor só; o número no selo diz qual treino foi.
-  // t1 a t5 existem sempre, para os check-ins de um treino que foi excluído continuarem com nome.
+  // t1 a t6 existem sempre, para os check-ins de um treino que foi excluído continuarem com nome.
   const TIPOS = {
     jiu: { nome: 'Jiu-jitsu', selo: 'J', grupo: 'jiu' },
     muay: { nome: 'Muay Thai', selo: 'M', grupo: 'muay' },
@@ -2284,7 +2284,7 @@
   ])];
   // Cargas de um exercício em dias anteriores a `antesDe`, em qualquer treino: em "Meus treinos" o
   // exercício pode mudar de treino e o histórico vai junto. [{ data, series }], do mais recente ao mais antigo.
-  const TIPOS_MUSC = ['t1', 't2', 't3', 't4', 't5'];
+  const TIPOS_MUSC = ['t1', 't2', 't3', 't4', 't5', 't6'];
   const historicoDe = (nome, antesDe) => TIPOS_MUSC
     .flatMap((t) => datasDoTreino(t).filter((d) => d < antesDe).map((d) => ({ data: d, series: pesosDoDia(d, t)[nome] })))
     .filter((r) => temCarga(r.series))
@@ -3794,10 +3794,10 @@
     let b;
     if ((b = alvo('[data-ed-treino]'))) { ed.sel = b.dataset.edTreino; ed.confirmar = null; ed.erro = ''; edFabEncolhido = false; return renderEditor(); }
     if (alvo('[data-ed-novo]')) {
-      const id = ['1', '2', '3', '4', '5'].find((n) => !ed.treinos[n]);
+      const id = Array.from({ length: MAX_TREINOS }, (_, i) => String(i + 1)).find((n) => !ed.treinos[n]);
       if (!id) return;
       ed.treinos[id] = { nome: `Treino ${id}`, subtitulo: '', exercicios: [] };
-      // Mantém a ordem 1 a 5 das abas.
+      // Mantém a ordem numérica das abas.
       ed.treinos = Object.fromEntries(Object.entries(ed.treinos).sort(([a], [b2]) => a - b2));
       Object.assign(ed, { sel: id, vista: 'escolher', busca: '', grupo: 'todos', confirmar: null, erro: '' });
       return renderEditor();

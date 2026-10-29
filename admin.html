@@ -755,7 +755,7 @@
   const TIPOS = {
     t1: { nome: 'Treino 1', selo: '1', grupo: 'musc' }, t2: { nome: 'Treino 2', selo: '2', grupo: 'musc' },
     t3: { nome: 'Treino 3', selo: '3', grupo: 'musc' }, t4: { nome: 'Treino 4', selo: '4', grupo: 'musc' },
-    t5: { nome: 'Treino 5', selo: '5', grupo: 'musc' }, jiu: { nome: 'Jiu-jitsu', selo: 'J', grupo: 'jiu' },
+    t5: { nome: 'Treino 5', selo: '5', grupo: 'musc' }, t6: { nome: 'Treino 6', selo: '6', grupo: 'musc' }, jiu: { nome: 'Jiu-jitsu', selo: 'J', grupo: 'jiu' },
     bike: { nome: 'Cardio', selo: 'C', grupo: 'bike' }, muay: { nome: 'Muay Thai', selo: 'M', grupo: 'muay' },
     surf: { nome: 'Surf', selo: 'S', grupo: 'surf' },
   };
@@ -1125,7 +1125,7 @@
       : '<p class="vazio">Nenhum recorde no período.</p>';
   }
 
-  // Treinos mais feitos no período: check-ins por tipo (Musculação junta os treinos 1 a 5), do maior para o menor.
+  // Treinos mais feitos no período: check-ins por tipo (Musculação junta os treinos 1 a 6), do maior para o menor.
   function renderTreinos(j) {
     const cks = dados.checkins.filter((c) => dentro(diaDeCheckin(c), j));
     const grupos = GRUPOS.map(([g, nome]) => {
