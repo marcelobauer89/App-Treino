@@ -1541,6 +1541,27 @@
       why: 'Na prancha alta, toca o ombro oposto sem girar o quadril; core firme contra a rotação.' },
     { nome: 'Prancha trocando a base', grupo: 'Core', dose: '3×12', pse: 8, H: 'baixa', M: 'baixa', F: 'media', E: 'media',
       why: 'Na prancha, troca os apoios de lugar sem deixar o quadril girar; core firme enquanto a base muda. Para facilitar, apoie os pés na parede.' },
+    // Abdominais clássicos (sem ficha): para quem procura "abdominal" achar o básico.
+    { nome: 'Prancha', grupo: 'Core', dose: '3×30–45 s', pse: 7, H: 'baixa', M: 'baixa', F: 'media', E: 'baixa',
+      why: 'Apoiado nos antebraços e nas pontas dos pés, corpo reto sem deixar o quadril cair; abdômen e lombar firmes.' },
+    { nome: 'Prancha lateral', grupo: 'Core', dose: '3×20–30 s / lado', pse: 7, H: 'baixa', M: 'baixa', F: 'media', E: 'baixa',
+      why: 'De lado, apoiado no antebraço, quadril alto; oblíquos e glúteo médio para a base lateral.' },
+    { nome: 'Abdominal supra', grupo: 'Core', dose: '3×15–20', pse: 7, H: 'media', M: 'baixa', F: 'baixa', E: 'baixa',
+      why: 'Deitado, sobe o tronco tirando as escápulas do chão, sem puxar o pescoço; parte de cima do abdômen.' },
+    { nome: 'Abdominal infra', grupo: 'Core', dose: '3×12–15', pse: 7, H: 'media', M: 'baixa', F: 'media', E: 'baixa',
+      why: 'Deitado, sobe as pernas e tira o quadril do chão no fim, sem arquear a lombar; parte de baixo do abdômen.' },
+    { nome: 'Abdominal bicicleta', grupo: 'Core', dose: '3×20 totais', pse: 7, H: 'media', M: 'baixa', F: 'baixa', E: 'baixa',
+      why: 'Leva o cotovelo ao joelho oposto alternando, como pedalando; abdômen e oblíquos na rotação.' },
+    { nome: 'Abdominal na polia', grupo: 'Core', dose: '3×12–15', pse: 8, H: 'alta', M: 'baixa', F: 'media', E: 'baixa',
+      why: 'Ajoelhado de frente para o cabo, enrola o tronco para baixo segurando a corda; abdômen com carga.' },
+    { nome: 'Roda abdominal', grupo: 'Core', dose: '3×8–12', pse: 8, H: 'media', M: 'baixa', F: 'alta', E: 'baixa',
+      why: 'Ajoelhado, rola a roda à frente até onde mantiver a lombar firme e volta; abdômen forte contra a extensão.' },
+    { nome: 'Elevação de pernas na barra', grupo: 'Core', dose: '3×8–12', pse: 8, H: 'media', M: 'baixa', F: 'alta', E: 'baixa',
+      why: 'Pendurado na barra, sobe as pernas (ou os joelhos) sem balançar; abdômen, flexores do quadril e pegada.' },
+    { nome: 'Dead bug', grupo: 'Core', dose: '3×10 / lado', pse: 6, H: 'baixa', M: 'media', F: 'media', E: 'baixa',
+      why: 'Deitado de costas, estica braço e perna opostos com a lombar colada no chão; controle do abdômen e da coordenação.' },
+    { nome: 'Hollow hold', grupo: 'Core', dose: '3×20–30 s', pse: 7, H: 'baixa', M: 'baixa', F: 'alta', E: 'baixa',
+      why: 'Deitado, tira ombros e pernas do chão em forma de canoa e segura; abdômen firme como um bloco.' },
     { nome: 'Swing diagonal semiajoelhado', grupo: 'Core', dose: '3×12 / lado', pse: 8, H: 'baixa', M: 'media', F: 'media', E: 'alta',
       why: 'Com um joelho no chão, leva o halter em diagonal de baixo para cima; potência de rotação do tronco.' },
     // Explosivos
@@ -1671,7 +1692,19 @@
     'Rotação de quadril ajoelhado': ['Rotação de quadril ajoelhando'],
     'Cardio curto intervalado': ['Cardio 1', 'Cardio curto'],
     'Cardio intermediário': ['Cardio 2'],
+    'Prancha': ['Prancha frontal', 'Prancha isométrica'],
+    'Abdominal supra': ['Abdominal crunch', 'Abdominal reto'],
+    'Abdominal infra': ['Elevação de pernas deitado'],
+    'Abdominal na polia': ['Abdominal ajoelhado no cabo'],
+    'Roda abdominal': ['Ab wheel', 'Rolinho abdominal'],
+    'Elevação de pernas na barra': ['Elevação de joelhos na barra'],
+    'Dead bug': ['Inseto morto'],
+    'Hollow hold': ['Canoa'],
   };
+  // Nome do grupo na tela e palavras que acham o grupo inteiro na busca (ex.: "abdominal" mostra o Core).
+  const ROTULO_GRUPO = { Core: 'Core e abdômen' };
+  const rotuloGrupo = (g) => ROTULO_GRUPO[g] || g;
+  const BUSCA_GRUPO = { Core: ['core', 'abdominal', 'abdominais', 'abdomen', 'abdome', 'barriga'] };
   const GRUPOS_EX = ['Mobilidade', 'Core', 'Explosivos', 'Pernas', 'Costas', 'Peito', 'Ombros', 'Braços', 'Pescoço', 'Cardio'];
   // Cada exercício aparece uma vez só: nomes iguais (sem diferenciar maiúsculas e acentos) ficam com o primeiro.
   const chaveExercicio = (nome) => nome.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
@@ -3526,7 +3559,7 @@
         </div>
         <input class="ed-busca" id="ed-busca" type="search" placeholder="Buscar exercício" autocomplete="off" value="${esc(ed.busca)}" aria-label="Buscar exercício">
         <div class="chips ed-grupos" role="group" aria-label="Filtrar por grupo">
-          ${['todos', ...GRUPOS_EX].map((g) => `<button class="chip" type="button" data-ed-grupo="${g}" aria-pressed="${ed.grupo === g}">${g === 'todos' ? 'Todos' : g}</button>`).join('')}
+          ${['todos', ...GRUPOS_EX].map((g) => `<button class="chip" type="button" data-ed-grupo="${g}" aria-pressed="${ed.grupo === g}">${g === 'todos' ? 'Todos' : rotuloGrupo(g)}</button>`).join('')}
         </div>
         <p class="nota-campo" id="ed-contagem" aria-live="polite"></p>
         <ul class="ed-bib" id="ed-bib"></ul>
@@ -3561,7 +3594,7 @@
       ${exs.length ? `<ol class="ed-exs">${exs.map((ex, i) => `
         <li class="ed-ex" data-ed-pos="${i}">
           <button class="ed-alca" type="button" data-ed-alca="${i}" aria-label="Mover ${esc(ex.nome)}, posição ${i + 1} de ${exs.length}. Arraste, ou use as setas do teclado." aria-describedby="ed-dica-ordem">${ICON_ALCA}</button>
-          <span class="ed-ex-nome"><b><span class="ed-num">${pad(i + 1)}</span>${esc(ex.nome)}</b><small>${esc(ex.grupo || 'Exercício')}${VIDEOS[ex.nome] ? ' · com vídeo' : ''}</small></span>
+          <span class="ed-ex-nome"><b><span class="ed-num">${pad(i + 1)}</span>${esc(ex.nome)}</b><small>${esc(ex.grupo ? rotuloGrupo(ex.grupo) : 'Exercício')}${VIDEOS[ex.nome] ? ' · com vídeo' : ''}</small></span>
           <button class="ed-icone" type="button" data-ed-remover="${i}" aria-label="Tirar ${esc(ex.nome)} do treino">${ICON_X}</button>
           <div class="ed-ex-campos">
             <label>Séries<input type="text" value="${esc(ex.dose)}" maxlength="30" data-ed-dose="${i}" aria-label="${esc(ex.nome)}: séries e repetições"></label>
@@ -3589,7 +3622,9 @@
     const t = edTreino();
     const busca = semAcento(ed.busca.trim());
     // A busca vale também para os outros nomes do exercício (ex.: "cadeira" acha a Elevação pélvica unilateral).
-    const achou = (ex) => !busca || [ex.nome, ...ex.variacoes].some((n) => semAcento(n).includes(busca));
+    // E palavras do grupo: "abdominal", "abdômen" ou "barriga" mostram todo o Core e abdômen (a partir de 3 letras).
+    const doGrupo = (ex) => busca.length >= 3 && (BUSCA_GRUPO[ex.grupo] || []).some((p) => p.startsWith(busca));
+    const achou = (ex) => !busca || doGrupo(ex) || [ex.nome, ...ex.variacoes].some((n) => semAcento(n).includes(busca));
     const itens = BIBLIOTECA.filter((ex) => (ed.grupo === 'todos' || ex.grupo === ed.grupo) && achou(ex));
     const noTreino = new Set(t.exercicios.map((ex) => ex.nome));
     $('ed-contagem').textContent = `${t.exercicios.length} de ${MAX_EXERCICIOS} no ${t.nome || `Treino ${ed.sel}`} · ${itens.length} ${itens.length === 1 ? 'exercício' : 'exercícios'} na lista`;
@@ -3599,7 +3634,7 @@
       return `
       <li><button class="ed-bib-item" type="button" data-ed-add="${esc(ex.nome)}" aria-pressed="${dentro}">
         <b>${esc(ex.nome)}</b>
-        <small>${esc(ex.grupo)} · ${esc(ex.dose)} · PSE ${ex.pse}${destaque.length ? ` · alta ${lista(destaque)}` : ''}${VIDEOS[ex.nome] ? ' · vídeo' : ''}</small>
+        <small>${esc(rotuloGrupo(ex.grupo))} · ${esc(ex.dose)} · PSE ${ex.pse}${destaque.length ? ` · alta ${lista(destaque)}` : ''}${VIDEOS[ex.nome] ? ' · vídeo' : ''}</small>
         ${ex.variacoes.length ? `<small class="ed-tambem">Também: ${esc(ex.variacoes.join(', '))}</small>` : ''}
         <span class="ed-marca" aria-hidden="true">${dentro ? ICON_CHECK : ICON_MAIS}</span>
       </button></li>`;
