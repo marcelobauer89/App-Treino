@@ -195,7 +195,7 @@ Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 e t5 nos check-i
 
 ## Monitoramento de uso
 
-O app registra eventos de uso na tabela `eventos` (telas abertas, exercícios concluídos, check-ins criados, editados e excluídos, recordes, vídeos vistos, "Sem peso", semana, tema, foto, erros e sessões que caíram sem a pessoa sair). Os eventos vão em lote, a cada 10 s ou quando o app vai para segundo plano, e não levam pesos corporais, cargas nem observações. Cada usuário só grava os próprios eventos e não consegue lê-los.
+O app registra eventos de uso na tabela `eventos` (telas abertas, exercícios concluídos, check-ins criados, editados e excluídos, recordes, vídeos vistos, "Sem peso", semana, tema, foto, erros e sessões que caíram sem a pessoa sair). Os eventos vão em lote, a cada 10 s ou quando o app vai para segundo plano, e não levam pesos corporais, cargas nem observações. Se a internet cair ou a sessão vencer, o lote volta para a fila e é reenviado depois (inclusive quando a internet volta); um evento recusado pelo banco é descartado sem levar os outros junto; textos longos são encurtados para caber no limite de 2.000 bytes. Cada usuário só grava os próprios eventos e não consegue lê-los.
 
 Quem lê esses dados é o dashboard de monitoramento, só para administradores: https://marcelobauer89.github.io/App-Treino/admin.html. Ele lê tudo por funções do banco (`admin_usuarios`, `admin_checkins`, `admin_eventos`) que recusam quem não está na tabela `admins`, e nunca mostra pesos, cargas nem observações. Para se tornar administrador, rode uma vez no **SQL Editor**, com o seu e-mail:
 
@@ -314,6 +314,7 @@ Scripts em `supabase/ajustes/` corrigem dados já gravados e rodam uma vez só, 
 
 - `2026-10-20-peso-zero-para-sem-peso.sql`: marca como **Sem peso** os exercícios em que todas as cargas registradas pelo usuário são zero (gravadas como número ou como texto, como `"0"`). A primeira consulta do arquivo mostra o que vai mudar; a segunda faz o ajuste. Não apaga nenhum registro de peso.
 - `2026-10-20-zero-vira-feito-marcelo.sql`: para o usuário Marcelo Bauer (troque o nome no arquivo para outro usuário), marca como **Sem peso** os exercícios registrados só com carga zero e troca esses zeros pelo registro de "feito" do dia. Exercícios com algum peso maior que zero não mudam.
+- `2026-10-29-nome-vazio.sql`: preenche o nome dos perfis que ficaram sem nome com o nome do Google e lista quem continua sem nome (a conta do Google não tem nome). Pode rodar de novo; só mexe em quem está sem nome. O painel já mostra o nome do Google quando o perfil está vazio (depois do `schema.sql`).
 - `2026-10-20-diagnostico-sem-peso.sql`: só consulta. Lista, por usuário, os exercícios que têm alguma carga zero, com quantas séries são zero, quantas têm peso, quantas estão gravadas como texto e se o exercício já está como Sem peso.
 
 ## Ver acessos dos usuários

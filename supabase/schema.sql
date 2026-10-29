@@ -251,10 +251,13 @@ as $$
 begin
   if not public.eh_admin() then raise exception 'acesso restrito' using errcode = '42501'; end if;
   return query
-    select p.id, p.nome, p.email, u.created_at, p.ultimo_acesso, p.acessos, p.semana, p.dias_jiu, p.sem_peso, p.emails_resumo,
+    -- Perfil sem nome: usa o nome que veio do Google no login.
+    select p.id,
+      coalesce(nullif(trim(p.nome), ''), u.raw_user_meta_data ->> 'full_name', u.raw_user_meta_data ->> 'name', '')::text,
+      p.email, u.created_at, p.ultimo_acesso, p.acessos, p.semana, p.dias_jiu, p.sem_peso, p.emails_resumo,
       p.liberado, p.acesso_pedido_em, p.liberado_como, p.liberado_em
     from public.perfis p join auth.users u on u.id = p.id
-    order by p.nome;
+    order by 2;
 end;
 $$;
 
