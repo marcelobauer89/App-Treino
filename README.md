@@ -142,7 +142,7 @@ Quando uma versão nova do app precisar de mudanças no banco, rode de novo o `s
 
 ## Treinos personalizados
 
-Cada pessoa pode montar até 5 treinos (t1 a t5), com até 15 exercícios cada, em **Você → Meus treinos**:
+Cada pessoa pode montar até 6 treinos (t1 a t6), com até 15 exercícios cada, em **Você → Meus treinos**:
 - **Biblioteca:** 126 exercícios, sem repetição. São os 22 do plano pronto mais os das fichas de treino em PDF. Variações do mesmo movimento com outro equipamento (halter ou barra) entram uma vez só; os outros nomes delas (`VARIACOES`) servem para a busca.
 - **Vídeos dos exercícios:** saíram do app. A lista com os vídeos de cada exercício (nome → id do YouTube) está guardada em `docs/videos-exercicios.json`. Para voltar a mostrar, copie o objeto `videos` desse arquivo para a constante `VIDEOS` do `index.html`: os exercícios com vídeo voltam a ter o carrossel com a execução.
 - **O que a pessoa ajusta:** nome e foco de cada treino, séries/repetições e PSE. A ordem dos exercícios muda arrastando a alça ⠿ de cada cartão (no teclado, setas para cima e para baixo na alça); o botão flutuante "Adicionar exercício" abre a biblioteca.
@@ -154,7 +154,7 @@ Cada pessoa pode montar até 5 treinos (t1 a t5), com até 15 exercícios cada, 
 - **Treino excluído:** sai da semana. Os check-ins e pesos dele continuam no Dashboard, com o nome "Treino N".
 - **Histórico de pesos:** a carga da última vez e os recordes seguem o exercício em qualquer treino.
 
-Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 e t5 nos check-ins e nas cargas e cria as colunas `treinos`, `novidade_treinos` e `novidade_oculta`.
+Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 a t6 nos check-ins e nas cargas e cria as colunas `treinos`, `novidade_treinos` e `novidade_oculta`.
 
 ## Convites (acesso só para convidados)
 
