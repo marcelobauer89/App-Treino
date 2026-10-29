@@ -1950,7 +1950,8 @@
 
   // ---------- Eventos de uso (para o dashboard /admin) ----------
   // Vão numa fila e são enviados em lote: a cada 10 s, com 20 eventos ou quando a página some.
-  // Silenciosos: sem aviso e sem nova tentativa; se a tabela não existir, o envio para nesta sessão.
+  // Silenciosos: sem aviso. Se a internet cair ou a sessão vencer, o lote volta para a fila e sai depois;
+  // um evento recusado pelo banco não derruba os outros; só a falta da tabela desliga o envio nesta sessão.
   // Não levam pesos corporais, cargas nem observações.
   let eventosFila = [], eventosTimer = null, eventosLigados = true;
   const ACOES_AO_VIVO = ['exercicio_concluido', 'recorde', 'checkin_criado', 'checkin_encerrado', 'video', 'semana_alterada'];
@@ -1963,18 +1964,55 @@
       marcarPresenca();
     }
     if (!eventosLigados) return;
-    eventosFila.push({ usuario_id: usuario.id, tipo, dados });
+    eventosFila.push({ usuario_id: usuario.id, tipo, dados: caberNoBanco(dados) });
     if (eventosFila.length >= 20) enviarEventos();
     else if (!eventosTimer) eventosTimer = setTimeout(enviarEventos, 10000);
+  }
+  // O banco aceita até 2.000 bytes em "dados": textos longos são encurtados antes de entrar na fila.
+  const tamanho = (d) => new TextEncoder().encode(JSON.stringify(d)).length;
+  function caberNoBanco(dados) {
+    let d = dados && typeof dados === 'object' ? dados : {};
+    for (const max of [200, 60]) {
+      if (tamanho(d) <= 1500) return d;
+      d = Object.fromEntries(Object.entries(d).map(([k, v]) => [k, typeof v === 'string' ? v.slice(0, max) : v]));
+    }
+    if (tamanho(d) <= 1500) return d;
+    d = Object.fromEntries(Object.entries(d).filter(([, v]) => v === null || typeof v !== 'object'));
+    return tamanho(d) <= 1500 ? d : {};
+  }
+  const MAX_FILA_EVENTOS = 200;
+  const semTabelaEventos = (e) => e.code === '42P01' || e.code === 'PGRST205' || /could not find the table/i.test(e.message || '');
+  const eventoRecusado = (e) => ['23514', '23502', '22P02', '22023'].includes(e.code);
+  let enviandoEventos = null;
+  function voltarParaFila(lote) {
+    eventosFila = [...lote, ...eventosFila].slice(-MAX_FILA_EVENTOS);
+    if (!eventosTimer) eventosTimer = setTimeout(enviarEventos, 30000);
   }
   function enviarEventos() {
     clearTimeout(eventosTimer);
     eventosTimer = null;
+    if (enviandoEventos) return enviandoEventos;
     if (!eventosFila.length || !sb || !eventosLigados) return Promise.resolve();
     const lote = eventosFila;
     eventosFila = [];
-    return sb.from('eventos').insert(lote).then(({ error }) => { if (error) eventosLigados = false; }, () => {});
+    enviandoEventos = sb.from('eventos').insert(lote).then(async ({ error }) => {
+      if (!error) return;
+      if (semTabelaEventos(error)) { eventosLigados = false; return; }
+      // Um evento recusado derruba o lote inteiro: manda um por um e descarta só o que o banco recusar.
+      if (eventoRecusado(error)) {
+        const falharam = [];
+        for (const ev of lote) {
+          const r = await sb.from('eventos').insert(ev).then((x) => x.error, () => ({}));
+          if (r && !eventoRecusado(r)) falharam.push(ev);
+        }
+        if (falharam.length) voltarParaFila(falharam);
+        return;
+      }
+      voltarParaFila(lote); // internet caiu ou sessão vencida
+    }, () => voltarParaFila(lote)).finally(() => { enviandoEventos = null; });
+    return enviandoEventos;
   }
+  window.addEventListener('online', () => { if (usuario) enviarEventos(); });
   // Navegador e sistema, para cruzar erros e sessões perdidas com o aparelho.
   function infoAparelho() {
     const ua = navigator.userAgent;
@@ -2114,6 +2152,9 @@
       if (error) throw error;
     }
     perfil = { nome: linha.nome || '', email: usuario.email || linha.email || '', foto: linha.foto || '' };
+    // Perfil sem nome (o Google não mandou ao criar a conta, ou o nome foi apagado): usa o nome do Google.
+    const nomeGoogle = String((usuario.user_metadata || {}).full_name || (usuario.user_metadata || {}).name || '').trim().slice(0, 120);
+    if (!perfil.nome.trim() && nomeGoogle) { perfil.nome = nomeGoogle; salvarPerfil({ nome: nomeGoogle }); }
     const proprios = montarTreinos(linha.treinos);
     treinosDaConta = !!proprios;
     TREINOS = proprios || PLANO_PADRAO;
@@ -4241,6 +4282,8 @@
   function salvarNome() {
     clearTimeout(timerNome);
     const nome = $('p-nome').value.trim().slice(0, 120);
+    // Nome em branco não é salvo: o campo volta ao nome anterior.
+    if (!nome) { if (document.activeElement !== $('p-nome')) $('p-nome').value = perfil.nome; return; }
     if (nome === perfil.nome) return;
     perfil.nome = nome;
     salvarPerfil({ nome });
