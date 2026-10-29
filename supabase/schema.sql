@@ -24,7 +24,7 @@ create table if not exists public.checkins (
   id uuid primary key default gen_random_uuid(),
   usuario_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
   -- 'bike' aparece no app como Cardio.
-  tipo text not null check (tipo in ('t1', 't2', 't3', 't4', 't5', 'jiu', 'muay', 'surf', 'bike')),
+  tipo text not null check (tipo in ('t1', 't2', 't3', 't4', 't5', 't6', 'jiu', 'muay', 'surf', 'bike')),
   inicio timestamp not null,
   fim timestamp check (fim is null or fim >= inicio),
   sem_horario boolean not null default false,
@@ -45,7 +45,7 @@ create unique index if not exists checkins_um_aberto on public.checkins (usuario
 create table if not exists public.cargas (
   usuario_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
   data date not null,
-  treino text not null check (treino in ('t1', 't2', 't3', 't4', 't5')),
+  treino text not null check (treino in ('t1', 't2', 't3', 't4', 't5', 't6')),
   series jsonb not null default '{}' check (jsonb_typeof(series) = 'object'),
   primary key (usuario_id, data, treino)
 );
@@ -134,12 +134,12 @@ revoke update on public.perfis from authenticated;
 revoke insert, delete on public.perfis from authenticated, anon;
 grant insert (id, nome, email, foto, tema, dias_jiu) on public.perfis to authenticated;
 -- ---------- Treinos personalizados ----------
--- Cada pessoa pode montar até 5 treinos de musculação (t1 a t5). Bancos criados com só t1 a t3 recebem os novos.
+-- Cada pessoa pode montar até 6 treinos de musculação (t1 a t6). Bancos criados com menos recebem os novos.
 -- 'muay' = Muay Thai; 'surf' = Surf.
 alter table public.checkins drop constraint if exists checkins_tipo_check;
-alter table public.checkins add constraint checkins_tipo_check check (tipo in ('t1', 't2', 't3', 't4', 't5', 'jiu', 'muay', 'surf', 'bike'));
+alter table public.checkins add constraint checkins_tipo_check check (tipo in ('t1', 't2', 't3', 't4', 't5', 't6', 'jiu', 'muay', 'surf', 'bike'));
 alter table public.cargas drop constraint if exists cargas_treino_check;
-alter table public.cargas add constraint cargas_treino_check check (treino in ('t1', 't2', 't3', 't4', 't5'));
+alter table public.cargas add constraint cargas_treino_check check (treino in ('t1', 't2', 't3', 't4', 't5', 't6'));
 
 -- Treinos montados em "Meus treinos". Vazio (null) = o plano pronto que vem no app.
 -- ex.: { "1": { "nome": "Treino A", "subtitulo": "Peito", "exercicios": [{ "nome": "Agachamento", "dose": "3×10", "pse": 8 }] } }
@@ -155,7 +155,7 @@ as $$
     and pg_column_size(j) <= 30000
     and not exists (
       select 1 from jsonb_each(j) t
-      where t.key !~ '^[1-5]$'
+      where t.key !~ '^[1-6]$'
         or jsonb_typeof(t.value) <> 'object'
         or jsonb_typeof(t.value -> 'exercicios') is distinct from 'array'
         or jsonb_array_length(t.value -> 'exercicios') not between 1 and 15
