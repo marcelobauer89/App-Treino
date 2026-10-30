@@ -4749,6 +4749,9 @@
       mostrarEntrada('erro', 'Não foi possível carregar seus dados. Confira a internet e tente de novo.');
       return;
     }
+    // Um quadro com a última etapa antes de montar a tela (antes da presença, que precisa ligar junto com a tela).
+    mostrarCarga('Montando sua semana…');
+    await new Promise((ok) => requestAnimationFrame(() => ok()));
     // Conta o acesso (último acesso e quantidade, vistos só no Supabase). Sem a função no banco, segue normal.
     sb.rpc('registrar_acesso').then(() => {}, () => {});
     ligarPresenca();
@@ -4761,8 +4764,6 @@
     marcarSessao();
     guardarTemaLocal();
     aplicarTema();
-    mostrarCarga('Montando sua semana…');
-    await new Promise((ok) => requestAnimationFrame(() => ok()));
     esconderCarga();
     document.body.classList.remove('deslogado');
     $('tela-entrar').hidden = true;
