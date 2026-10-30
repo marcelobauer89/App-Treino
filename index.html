@@ -486,6 +486,43 @@
     .faixa-arte { animation: none; }
     .entrar-carga::after { animation: none; width: 100%; opacity: .5; }
   }
+  /* Carregando os dados de quem já entrou: o "molde" da tela Treino com brilho passando,
+     detalhes nas cores dos treinos e a etapa atual. */
+  .carga-app { padding-top: calc(env(safe-area-inset-top, 0px) + 20px); padding-bottom: 40px; }
+  .carga-etapa { display: flex; align-items: center; gap: 10px; margin: 0; color: var(--tinta-2); font-size: 14px; font-weight: 600; }
+  .carga-etapa::before {
+    content: ""; flex: none; width: 16px; height: 16px; border-radius: 50%;
+    border: 2.5px solid var(--tatame-suave); border-top-color: var(--tatame);
+  }
+  .esq { display: grid; gap: 16px; }
+  .esq-b { position: relative; overflow: hidden; background: var(--fio); border-radius: 8px; }
+  .esq-topo { display: grid; gap: 10px; padding: 28px 0 0; }
+  .esq-topo .d { width: 140px; height: 14px; }
+  .esq-topo .h { width: min(70%, 360px); height: clamp(48px, 13vw, 76px); border-radius: 12px; }
+  .esq-abas { display: flex; gap: 8px; overflow: hidden; }
+  .esq-abas i { flex: 1 0 64px; max-width: 120px; height: 40px; border-radius: 12px; border: 1px solid var(--fio); background: var(--papel); box-shadow: inset 0 -3px 0 var(--cor); }
+  .esq-abas i:first-child { background: color-mix(in srgb, var(--cor) 22%, var(--papel)); }
+  .esq-titulo { width: 110px; height: 24px; margin-top: 4px; }
+  .esq-ex { display: grid; grid-template-columns: 1fr 40px; gap: 10px 12px; align-items: center; padding: 16px; background: var(--papel); border: 1px solid var(--fio); border-left: 4px solid var(--cor); border-radius: 14px; }
+  .esq-ex .n { height: 16px; }
+  .esq-ex .s { grid-column: 1; width: 45%; height: 11px; }
+  .esq-ex .x { grid-row: 1 / span 2; grid-column: 2; height: 40px; border-radius: 10px; }
+  .esq-botao { height: 48px; border-radius: 10px; background: color-mix(in srgb, var(--tatame) 35%, var(--fio)); }
+  @media (prefers-reduced-motion: no-preference) {
+    .carga-etapa::before { animation: girar .8s linear infinite; }
+    .esq-b::after {
+      content: ""; position: absolute; inset: 0; transform: translateX(-100%);
+      background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--papel) 70%, transparent), transparent);
+      animation: brilho 1.4s ease-in-out infinite;
+    }
+    .esq-ex { animation: respira 1.6s ease-in-out infinite alternate; animation-delay: calc(var(--n) * -0.3s); }
+    @keyframes brilho { to { transform: translateX(100%); } }
+    @keyframes respira { from { border-left-color: color-mix(in srgb, var(--cor) 35%, var(--fio)); } }
+    @keyframes girar { to { transform: rotate(360deg); } }
+    /* Quando os dados chegam, os blocos da tela entram em cascata (só na primeira vez). */
+    body.entra .entra-item { animation: entrar .45s cubic-bezier(.2, .7, .2, 1) both; animation-delay: calc(var(--i, 0) * 55ms); }
+    @keyframes entrar { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+  }
   .ativo {
     position: fixed; left: 0; right: 0; z-index: 19;
     bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
@@ -1000,6 +1037,9 @@
     <p class="credito">Desenvolvido por <a href="https://www.linkedin.com/in/marcelo-bauer" target="_blank" rel="noopener">Marcelo Bauer</a></p>
   </div>
 </section>
+
+<!-- Enquanto os dados de quem já entrou chegam: o molde da tela Treino (montado pelo mostrarCarga). -->
+<section class="carga-app wrap" id="tela-carga" aria-label="Carregando" hidden></section>
 
 <div id="tela-treino">
   <header class="hoje">
@@ -4620,6 +4660,7 @@
 
   function mostrarEntrada(modo, msg = '') {
     document.body.classList.add('deslogado');
+    esconderCarga();
     $('tela-entrar').hidden = false;
     $('entrar-google').hidden = modo !== 'login';
     $('entrar-tentar').hidden = modo !== 'erro';
@@ -4637,6 +4678,52 @@
     }[modo];
   }
 
+  // Esqueleto da tela Treino enquanto os dados chegam; a etapa aparece em cima e é lida pelo leitor de tela.
+  const ESQ_CORES = ['musc', 'jiu', 'bike', 'muay', 'surf'];
+  function esqueletoHTML() {
+    const b = (cls = '') => `<span class="esq-b ${cls}"></span>`;
+    const cor = (n) => `--cor:var(--${ESQ_CORES[n % ESQ_CORES.length]})`;
+    const abas = ESQ_CORES.map((_, n) => `<i style="${cor(n)}"></i>`).join('');
+    const ex = (n) => `<div class="esq-ex" style="--n:${n};${cor(n)}">${b('n')}${b('s')}${b('x')}</div>`;
+    return `<div class="esq" aria-hidden="true">
+      <div class="esq-topo">${b('d')}${b('h')}</div>
+      <div class="esq-abas">${abas}</div>
+      ${b('esq-titulo')}
+      ${[0, 1, 2, 3].map(ex).join('')}
+      <div class="esq-botao"></div>
+    </div>`;
+  }
+  function mostrarCarga(etapa) {
+    const el = $('tela-carga');
+    if (el.hidden) {
+      el.innerHTML = `<p class="carga-etapa" role="status" id="carga-etapa"></p>${esqueletoHTML()}`;
+      el.setAttribute('aria-busy', 'true');
+      el.hidden = false;
+      $('tela-entrar').hidden = true;
+    }
+    $('carga-etapa').textContent = etapa;
+  }
+  function esconderCarga() {
+    const el = $('tela-carga');
+    el.hidden = true;
+    el.removeAttribute('aria-busy');
+    el.innerHTML = '';
+  }
+
+  // Primeira abertura: os blocos da tela visível entram um depois do outro (sem movimento, se o sistema pedir).
+  function entrarEmCascata() {
+    const tela = ['tela-treino', 'tela-dashboard', 'tela-voce'].map($).find((t) => !t.hidden);
+    if (!tela) return;
+    const blocos = [...tela.querySelectorAll(':scope > header, :scope > .controles, :scope > main > *, :scope > :not(header, .controles, main)')]
+      .filter((el) => el.offsetParent !== null).slice(0, 10);
+    blocos.forEach((el, i) => { el.classList.add('entra-item'); el.style.setProperty('--i', String(i)); });
+    document.body.classList.add('entra');
+    setTimeout(() => {
+      document.body.classList.remove('entra');
+      blocos.forEach((el) => { el.classList.remove('entra-item'); el.style.removeProperty('--i'); });
+    }, 600 + blocos.length * 55);
+  }
+
   function renderizarApp() {
     renderHoje();
     renderTudo();
@@ -4650,11 +4737,12 @@
   async function entrarNoApp(sessao) {
     usuario = sessao.user;
     const voltouDoGoogle = /[?&]code=/.test(location.search);
-    mostrarEntrada('carregando');
+    mostrarCarga('Buscando seus treinos…');
     // Limpa o código de retorno do login do Google da barra de endereço.
     if (/[?&]code=/.test(location.search)) history.replaceState(null, '', location.pathname + location.hash);
     try {
       await carregarDados();
+      mostrarCarga('Conferindo seu acesso…');
       if (!(await temAcesso())) return;
       await migrarDadosLocais();
     } catch (_) {
@@ -4673,11 +4761,15 @@
     marcarSessao();
     guardarTemaLocal();
     aplicarTema();
+    mostrarCarga('Montando sua semana…');
+    await new Promise((ok) => requestAnimationFrame(() => ok()));
+    esconderCarga();
     document.body.classList.remove('deslogado');
     $('tela-entrar').hidden = true;
     const esquecido = encerrarEsquecidos();
     abrirTreinoDoDia();
     renderizarApp();
+    entrarEmCascata();
     if (politica.disponivel && !politica.aceita) abrirPolitica();
     else mostrarNovidadeSeFaltar();
     if (esquecido) {
