@@ -58,6 +58,7 @@
     --bike: #1baf7a;
     --muay: #eda100;
     --surf: #c84aa4;
+    --cali: #7c5ce0;
     --selo-tinta: #0b0d10;
     --display: "Archivo", "Arial Narrow", system-ui, sans-serif;
     --texto: "Archivo", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -73,7 +74,7 @@
       --feito-suave: #12301f; --feito-tinta: #6ee7a0;
       --recorde: #fbbf24; --recorde-suave: #33270a; --recorde-tinta: #fcd34d;
       --faixa: #000000; --fita: #f2f4f7; --fita-vazia: #2c2f35; --erro: #ff6b6b; --sobre-erro: #0b0d10;
-      --musc: #3987e5; --jiu: #d95926; --bike: #199e70; --muay: #c98500; --surf: #c84aa4;
+      --musc: #3987e5; --jiu: #d95926; --bike: #199e70; --muay: #c98500; --surf: #c84aa4; --cali: #7c5ce0;
       color-scheme: dark;
     }
   }
@@ -83,7 +84,7 @@
     --feito-suave: #12301f; --feito-tinta: #6ee7a0;
     --recorde: #fbbf24; --recorde-suave: #33270a; --recorde-tinta: #fcd34d;
     --faixa: #000000; --fita: #f2f4f7; --fita-vazia: #2c2f35; --erro: #ff6b6b; --sobre-erro: #0b0d10;
-    --musc: #3987e5; --jiu: #d95926; --bike: #199e70; --muay: #c98500; --surf: #c84aa4;
+    --musc: #3987e5; --jiu: #d95926; --bike: #199e70; --muay: #c98500; --surf: #c84aa4; --cali: #7c5ce0;
     color-scheme: dark;
   }
 
@@ -312,6 +313,7 @@
   .selo.bike { background: var(--bike); }
   .selo.muay { background: var(--muay); }
   .selo.surf { background: var(--surf); }
+  .selo.cali { background: var(--cali); }
   .selo.grande { width: 30px; height: 30px; border-radius: 8px; font-size: 16px; }
 
   /* Navegação inferior e barra de treino em andamento */
@@ -611,6 +613,7 @@
   .seg i.on.bike { background: var(--bike); }
   .seg i.on.muay { background: var(--muay); }
   .seg i.on.surf { background: var(--surf); }
+  .seg i.on.cali { background: var(--cali); }
   .meta-valor, .barra-valor { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
   .barra { display: grid; grid-template-columns: 112px minmax(0, 1fr) 28px; gap: 12px; align-items: center; font-size: 15px; }
   .barra-trilho { height: 10px; border-radius: 5px; background: var(--gi); overflow: hidden; }
@@ -620,6 +623,7 @@
   .barra-trilho i.bike { background: var(--bike); }
   .barra-trilho i.muay { background: var(--muay); }
   .barra-trilho i.surf { background: var(--surf); }
+  .barra-trilho i.cali { background: var(--cali); }
 
   .cal { padding: 12px; background: var(--papel); border: 1px solid var(--fio); border-radius: 14px; }
   .cal-topo { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
@@ -1102,7 +1106,7 @@
         <li><span class="ponteira" data-nivel="1" aria-hidden="true"><i></i><i></i><i></i></span>Baixa ou secundária</li>
       </ul>
       <p>PSE é a percepção subjetiva de esforço; o 10 fica reservado ao tatame. Use a carga que respeite a técnica e a recuperação.</p>
-      <p>A semana se monta em Você: arraste os treinos, o jiu-jitsu, o muay thai, o surf e o cardio para os dias (até 2 por dia). O padrão é Treino 2 na segunda, Treino 1 na quarta, Treino 3 na sexta, jiu na terça e na quinta e cardio no sábado.</p>
+      <p>A semana se monta em Você: arraste os treinos, o jiu-jitsu, o muay thai, o surf, a calistenia e o cardio para os dias (até 2 por dia). O padrão é Treino 2 na segunda, Treino 1 na quarta, Treino 3 na sexta, jiu na terça e na quinta e cardio no sábado.</p>
       <p>Check-ins e cargas ficam salvos na sua conta e aparecem em qualquer aparelho em que você entrar.</p>
       <p>Adaptação prática do PDF enviado. Não substitui avaliação de um profissional de educação física ou nutrição, especialmente se houver dor ou lesão.</p>
     </footer>
@@ -1138,6 +1142,7 @@
         <li><span class="selo jiu" aria-hidden="true">J</span><span>Jiu-jitsu</span></li>
         <li><span class="selo muay" aria-hidden="true">M</span><span>Muay Thai</span></li>
         <li><span class="selo surf" aria-hidden="true">S</span><span>Surf</span></li>
+        <li><span class="selo cali" aria-hidden="true">K</span><span>Calistenia</span></li>
         <li><span class="selo bike" aria-hidden="true">C</span><span>Cardio</span></li>
       </ul>
     </div>
@@ -1983,7 +1988,7 @@
   } catch (_) {}
 
   // Semana do usuário: para cada dia (índice de Date.getDay(), 0 = domingo), até 2 atividades
-  // entre os treinos ('t1' a 't6'), 'jiu', 'muay', 'surf' e 'bike'. Dia vazio é descanso.
+  // entre os treinos ('t1' a 't6'), 'jiu', 'muay', 'surf', 'cali' e 'bike'. Dia vazio é descanso.
   const CURTOS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
   const NOMES_DIA = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
   const ORDEM_SEMANA = [1, 2, 3, 4, 5, 6, 0];
@@ -2006,7 +2011,7 @@
   function validarSemana(s) {
     if (!Array.isArray(s) || s.length !== 7) return null;
     return s.map((d) => (Array.isArray(d)
-      ? [...new Set(d.filter((t) => ehTreino(t) || t === 'jiu' || t === 'muay' || t === 'surf' || t === 'bike'))].slice(0, 2)
+      ? [...new Set(d.filter((t) => ehTreino(t) || t === 'jiu' || t === 'muay' || t === 'surf' || t === 'cali' || t === 'bike'))].slice(0, 2)
       : []));
   }
   function planoDoDia(i) {
@@ -2014,11 +2019,11 @@
     const tipoTreino = tipos.find(ehTreino);
     const treino = tipoTreino ? tipoTreino.slice(1) : undefined;
     const grupos = [...new Set(tipos.map((t) => (ehTreino(t) ? 'musc' : t)))];
-    const notaDe = (t) => (ehTreino(t) ? TREINOS[t.slice(1)].subtitulo || 'musculação' : t === 'jiu' ? 'aula de jiu' : t === 'muay' ? 'aula de muay thai' : t === 'surf' ? 'sessão de surf' : 'cardio leve');
+    const notaDe = (t) => (ehTreino(t) ? TREINOS[t.slice(1)].subtitulo || 'musculação' : t === 'jiu' ? 'aula de jiu' : t === 'muay' ? 'aula de muay thai' : t === 'surf' ? 'sessão de surf' : t === 'cali' ? 'calistenia' : 'cardio leve');
     let titulo = 'Descanso', nota = 'Recuperação';
     if (tipos.length === 1) {
       titulo = nomeAtividade(tipos[0]);
-      nota = tipos[0] === 'jiu' ? 'Prioridade técnica' : tipos[0] === 'muay' ? 'Aula de muay thai' : tipos[0] === 'surf' ? 'Sessão de surf' : tipos[0] === 'bike' ? '20–40 min, intensidade leve' : notaDe(tipos[0]);
+      nota = tipos[0] === 'jiu' ? 'Prioridade técnica' : tipos[0] === 'muay' ? 'Aula de muay thai' : tipos[0] === 'surf' ? 'Sessão de surf' : tipos[0] === 'cali' ? 'Treino de calistenia' : tipos[0] === 'bike' ? '20–40 min, intensidade leve' : notaDe(tipos[0]);
     } else if (tipos.length) {
       titulo = tipos.map(nomeAtividade).join(' + ');
       nota = tipos.map(notaDe).join(', ');
@@ -2032,6 +2037,7 @@
     jiu: { nome: 'Jiu-jitsu', selo: 'J', grupo: 'jiu' },
     muay: { nome: 'Muay Thai', selo: 'M', grupo: 'muay' },
     surf: { nome: 'Surf', selo: 'S', grupo: 'surf' },
+    cali: { nome: 'Calistenia', selo: 'K', grupo: 'cali' },
     // A chave 'bike' fica no banco (check-ins e semana já salvos); na tela o tipo se chama Cardio.
     bike: { nome: 'Cardio', selo: 'C', grupo: 'bike' },
   };
@@ -2040,10 +2046,10 @@
     for (let n = 1; n <= MAX_TREINOS; n++) {
       TIPOS[`t${n}`] = { nome: TREINOS[n] ? TREINOS[n].nome : `Treino ${n}`, selo: String(n), grupo: 'musc', treino: String(n) };
     }
-    ORDEM_TIPOS = [...Object.keys(TREINOS).map((n) => `t${n}`), 'jiu', 'muay', 'surf', 'bike'];
+    ORDEM_TIPOS = [...Object.keys(TREINOS).map((n) => `t${n}`), 'jiu', 'muay', 'surf', 'cali', 'bike'];
   }
   atualizarTipos();
-  const DURACAO_PADRAO = { musc: 60, jiu: 60, muay: 60, surf: 90, bike: 30 };
+  const DURACAO_PADRAO = { musc: 60, jiu: 60, muay: 60, surf: 90, cali: 60, bike: 30 };
 
   const FOCOS = [
     { id: 'todos', label: 'Todos' },
@@ -3350,6 +3356,7 @@
       linha('Jiu-jitsu', 'jiu', 'jiu', conta('jiu'), planejado('jiu')) +
       linha('Muay Thai', 'muay', 'muay', conta('muay'), planejado('muay')) +
       linha('Surf', 'surf', 'surf', conta('surf'), planejado('surf')) +
+      linha('Calistenia', 'cali', 'cali', conta('cali'), planejado('cali')) +
       linha('Cardio', 'bike', 'bike', conta('bike'), planejado('bike'));
   }
 
@@ -3463,7 +3470,7 @@
     const { ano, mes } = mesExibido;
     const prefixo = `${ano}-${pad(mes + 1)}`;
     const doMes = checkins.filter((c) => dataDe(c).startsWith(prefixo));
-    const tipos = [...new Set([...ORDEM_TIPOS, ...doMes.map((c) => c.tipo)])].sort((a, b) => [...TIPOS_MUSC, 'jiu', 'muay', 'surf', 'bike'].indexOf(a) - [...TIPOS_MUSC, 'jiu', 'muay', 'surf', 'bike'].indexOf(b));
+    const tipos = [...new Set([...ORDEM_TIPOS, ...doMes.map((c) => c.tipo)])].sort((a, b) => [...TIPOS_MUSC, 'jiu', 'muay', 'surf', 'cali', 'bike'].indexOf(a) - [...TIPOS_MUSC, 'jiu', 'muay', 'surf', 'cali', 'bike'].indexOf(b));
     const contagem = tipos.map((t) => [t, doMes.filter((c) => c.tipo === t).length]);
     const max = Math.max(1, ...contagem.map(([, n]) => n));
     $('tipos-titulo').textContent = `Por tipo em ${nomeMes(ano, mes)}`;
@@ -4223,7 +4230,7 @@
   });
   jornadaDialog.addEventListener('cancel', (e) => { e.preventDefault(); fecharJornadas('fechou'); });
 
-  // Semana sugerida: tira os treinos da semana de agora e põe os da jornada, sem mexer em jiu, muay, surf e cardio.
+  // Semana sugerida: tira os treinos da semana de agora e põe os da jornada, sem mexer em jiu, muay, surf, calistenia e cardio.
   function semanaDaJornada(j) {
     const s = config.semana.map((d) => d.filter((t) => !ehTreino(t)));
     for (const [dia, tipos] of Object.entries(j.semana)) {
@@ -4980,7 +4987,7 @@
   }
 
   // Esqueleto da tela Treino enquanto os dados chegam; a etapa aparece em cima e é lida pelo leitor de tela.
-  const ESQ_CORES = ['musc', 'jiu', 'bike', 'muay', 'surf'];
+  const ESQ_CORES = ['musc', 'jiu', 'bike', 'muay', 'surf', 'cali'];
   function esqueletoHTML() {
     const b = (cls = '') => `<span class="esq-b ${cls}"></span>`;
     const cor = (n) => `--cor:var(--${ESQ_CORES[n % ESQ_CORES.length]})`;

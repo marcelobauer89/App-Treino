@@ -23,17 +23,19 @@ import nodemailer from 'npm:nodemailer@6.9.16';
 
 export const TIPO = 'resumo_semanal';
 const FUSO = 'America/Sao_Paulo';
-// Selos e cores iguais aos do app (1 a 6 = treinos de musculação; J = jiu-jitsu; C = cardio; M = muay thai; S = surf).
+// Selos e cores iguais aos do app (1 a 6 = treinos de musculação; J = jiu-jitsu; C = cardio; M = muay thai; S = surf; K = calistenia).
 const TIPOS: Record<string, { nome: string; grupo: string; selo: string }> = {
   t1: { nome: 'Treino 1', grupo: 'musc', selo: '1' }, t2: { nome: 'Treino 2', grupo: 'musc', selo: '2' }, t3: { nome: 'Treino 3', grupo: 'musc', selo: '3' },
   t4: { nome: 'Treino 4', grupo: 'musc', selo: '4' }, t5: { nome: 'Treino 5', grupo: 'musc', selo: '5' }, t6: { nome: 'Treino 6', grupo: 'musc', selo: '6' },
   jiu: { nome: 'Jiu-jitsu', grupo: 'jiu', selo: 'J' }, bike: { nome: 'Cardio', grupo: 'bike', selo: 'C' },
   muay: { nome: 'Muay Thai', grupo: 'muay', selo: 'M' }, surf: { nome: 'Surf', grupo: 'surf', selo: 'S' },
+  cali: { nome: 'Calistenia', grupo: 'cali', selo: 'K' },
 };
-const GRUPOS: [string, string, string][] = [['musc', 'Musculação', '#2a78d6'], ['jiu', 'Jiu-jitsu', '#eb6834'], ['bike', 'Cardio', '#1baf7a'], ['muay', 'Muay Thai', '#eda100'], ['surf', 'Surf', '#c84aa4']];
-// Muay Thai e Surf só aparecem no e-mail de quem fez ou planejou; os outros continuam com 3 cartões.
-const gruposDe = (r: { porGrupo: Record<string, number>; muayNoPlano?: boolean; surfNoPlano?: boolean }) =>
-  GRUPOS.filter(([g]) => (g !== 'muay' || r.porGrupo.muay > 0 || r.muayNoPlano) && (g !== 'surf' || r.porGrupo.surf > 0 || r.surfNoPlano));
+const GRUPOS: [string, string, string][] = [['musc', 'Musculação', '#2a78d6'], ['jiu', 'Jiu-jitsu', '#eb6834'], ['bike', 'Cardio', '#1baf7a'], ['muay', 'Muay Thai', '#eda100'], ['surf', 'Surf', '#c84aa4'], ['cali', 'Calistenia', '#7c5ce0']];
+// Muay Thai, Surf e Calistenia só aparecem no e-mail de quem fez ou planejou; os outros continuam com 3 cartões.
+const gruposDe = (r: { porGrupo: Record<string, number>; muayNoPlano?: boolean; surfNoPlano?: boolean; caliNoPlano?: boolean }) =>
+  GRUPOS.filter(([g]) => (g !== 'muay' || r.porGrupo.muay > 0 || r.muayNoPlano) && (g !== 'surf' || r.porGrupo.surf > 0 || r.surfNoPlano)
+    && (g !== 'cali' || r.porGrupo.cali > 0 || r.caliNoPlano));
 const DIAS = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
 
 // ---------- Datas (dias como texto AAAA-MM-DD, no fuso de São Paulo) ----------
@@ -86,7 +88,7 @@ export function montarResumo(u: Perfil, checkins: Checkin[], recordes: Recorde[]
   const dia = (c: Checkin) => String(c.inicio).slice(0, 10);
   const daSemana = meus.filter((c) => dia(c) >= p.ini && dia(c) <= p.fim);
   const anterior = meus.filter((c) => dia(c) >= p.antIni && dia(c) <= p.antFim).length;
-  const porGrupo: Record<string, number> = { musc: 0, jiu: 0, bike: 0, muay: 0, surf: 0 };
+  const porGrupo: Record<string, number> = { musc: 0, jiu: 0, bike: 0, muay: 0, surf: 0, cali: 0 };
   daSemana.forEach((c) => { porGrupo[(TIPOS[c.tipo] || TIPOS.t1).grupo] += 1; });
   const dias = [...new Set(daSemana.map(dia))].sort();
   const planejadas = planejadasPorSemana(u);
@@ -107,6 +109,7 @@ export function montarResumo(u: Perfil, checkins: Checkin[], recordes: Recorde[]
     porGrupo,
     muayNoPlano: Array.isArray(u.semana) && (u.semana as unknown[][]).flat().includes('muay'),
     surfNoPlano: Array.isArray(u.semana) && (u.semana as unknown[][]).flat().includes('surf'),
+    caliNoPlano: Array.isArray(u.semana) && (u.semana as unknown[][]).flat().includes('cali'),
     dias,
     diasTexto: dias.map((d) => DIAS[diaDaSemana(d)]).join(', '),
     planejadas,

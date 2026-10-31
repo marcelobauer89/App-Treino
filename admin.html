@@ -25,7 +25,7 @@
     --recorde-suave: #fef3c7; --recorde-tinta: #92400e;
     --erro: #c62828; --sobre-erro: #ffffff;
     /* Tipos de treino (paleta categórica do app, validada para daltonismo) */
-    --musc: #2a78d6; --jiu: #eb6834; --bike: #1baf7a; --muay: #eda100; --surf: #c84aa4; --selo-tinta: #0b0d10;
+    --musc: #2a78d6; --jiu: #eb6834; --bike: #1baf7a; --muay: #eda100; --surf: #c84aa4; --cali: #7c5ce0; --selo-tinta: #0b0d10;
     /* Intensidade do mapa de atividade: um tom só, do claro ao escuro */
     --int-0: #eef1f5; --int-1: #bfd3f5; --int-2: #7aa5ea; --int-3: #2563eb; --int-4: #173f9e;
     --display: "Archivo", "Arial Narrow", system-ui, sans-serif;
@@ -37,7 +37,7 @@
       --gi: #0f1115; --papel: #171a20; --tinta: #f2f4f7; --tinta-2: #a3abb8; --fio: #2a2f38;
       --tatame: #3566d6; --tatame-forte: #2b57bf; --tatame-tinta: #8db0ff; --tatame-suave: #1b2740;
       --feito-suave: #12301f; --feito-tinta: #6ee7a0; --online: #22c55e; --online-anel: rgba(34, 197, 94, .45); --recorde-suave: #33270a; --recorde-tinta: #fcd34d; --erro: #ff6b6b; --sobre-erro: #0b0d10;
-      --musc: #3987e5; --jiu: #d95926; --bike: #199e70; --muay: #c98500; --surf: #c84aa4;
+      --musc: #3987e5; --jiu: #d95926; --bike: #199e70; --muay: #c98500; --surf: #c84aa4; --cali: #7c5ce0;
       --int-0: #1f242c; --int-1: #1e3561; --int-2: #2b57bf; --int-3: #5b8ef0; --int-4: #a9c4ff;
       color-scheme: dark;
     }
@@ -46,7 +46,7 @@
     --gi: #0f1115; --papel: #171a20; --tinta: #f2f4f7; --tinta-2: #a3abb8; --fio: #2a2f38;
     --tatame: #3566d6; --tatame-forte: #2b57bf; --tatame-tinta: #8db0ff; --tatame-suave: #1b2740;
     --feito-suave: #12301f; --feito-tinta: #6ee7a0; --online: #22c55e; --online-anel: rgba(34, 197, 94, .45); --recorde-suave: #33270a; --recorde-tinta: #fcd34d; --erro: #ff6b6b; --sobre-erro: #0b0d10;
-    --musc: #3987e5; --jiu: #d95926; --bike: #199e70; --muay: #c98500; --surf: #c84aa4;
+    --musc: #3987e5; --jiu: #d95926; --bike: #199e70; --muay: #c98500; --surf: #c84aa4; --cali: #7c5ce0;
     --int-0: #1f242c; --int-1: #1e3561; --int-2: #2b57bf; --int-3: #5b8ef0; --int-4: #a9c4ff;
     color-scheme: dark;
   }
@@ -428,6 +428,7 @@
   .selo.bike { background: var(--bike); }
   .selo.muay { background: var(--muay); }
   .selo.surf { background: var(--surf); }
+  .selo.cali { background: var(--cali); }
   .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
   .chips li { padding: 4px 10px; border-radius: 999px; background: var(--gi); font-size: 13px; }
   .linha-tempo { margin: 0; padding: 0; list-style: none; display: grid; }
@@ -593,6 +594,7 @@
           <li><i style="background:var(--bike)"></i>Cardio</li>
           <li><i style="background:var(--muay)"></i>Muay Thai</li>
           <li><i style="background:var(--surf)"></i>Surf</li>
+          <li><i style="background:var(--cali)"></i>Calistenia</li>
         </ul>
         <div class="grafico" id="g1"></div>
         <div class="tabela-rolagem" id="g1-tabela" hidden></div>
@@ -809,8 +811,9 @@
     t5: { nome: 'Treino 5', selo: '5', grupo: 'musc' }, t6: { nome: 'Treino 6', selo: '6', grupo: 'musc' }, jiu: { nome: 'Jiu-jitsu', selo: 'J', grupo: 'jiu' },
     bike: { nome: 'Cardio', selo: 'C', grupo: 'bike' }, muay: { nome: 'Muay Thai', selo: 'M', grupo: 'muay' },
     surf: { nome: 'Surf', selo: 'S', grupo: 'surf' },
+    cali: { nome: 'Calistenia', selo: 'K', grupo: 'cali' },
   };
-  const GRUPOS = [['musc', 'Musculação'], ['jiu', 'Jiu-jitsu'], ['bike', 'Cardio'], ['muay', 'Muay Thai'], ['surf', 'Surf']];
+  const GRUPOS = [['musc', 'Musculação'], ['jiu', 'Jiu-jitsu'], ['bike', 'Cardio'], ['muay', 'Muay Thai'], ['surf', 'Surf'], ['cali', 'Calistenia']];
   const CURTOS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
   const ORDEM_SEMANA = [1, 2, 3, 4, 5, 6, 0];
 
@@ -843,7 +846,7 @@
   let busca = '';
 
   // Esqueleto da Visão geral enquanto os dados chegam; a etapa aparece em cima e é lida pelo leitor de tela.
-  const ESQ_CORES = ['musc', 'jiu', 'bike', 'muay', 'surf'];
+  const ESQ_CORES = ['musc', 'jiu', 'bike', 'muay', 'surf', 'cali'];
   function esqueletoHTML() {
     const b = (cls = '') => `<span class="esq-b ${cls}"></span>`;
     const card = () => `<div class="esq-card">${b('t')}${b('v')}${b('c')}</div>`;
@@ -1177,7 +1180,7 @@
       tile('Usuários ativos', `${m.ativos}<small> de ${total}</small>`, { longo: rotuloPeriodo, curto: '', d: a && delta(m.ativos, a.ativos),
         info: `Quantas pessoas abriram o app ou fizeram check-in pelo menos uma vez no período. O número menor é o total de cadastrados. ${compara}` }),
       tile('Check-ins', fmtNum(m.checkins), { longo: rotuloPeriodo, curto: '', d: a && delta(m.checkins, a.checkins),
-        info: `Total de check-ins feitos no período, somando todos os usuários e tipos de treino (musculação, jiu-jitsu, cardio, muay thai e surf), inclusive os registrados depois. ${compara}` }),
+        info: `Total de check-ins feitos no período, somando todos os usuários e tipos de treino (musculação, jiu-jitsu, cardio, muay thai, surf e calistenia), inclusive os registrados depois. ${compara}` }),
       // Num dia só, "por semana" multiplicaria o dia por 7; com Hoje o card mostra os treinos por usuário.
       ehHoje
         ? tile('Treinos por usuário', fmtNum(m.treinosPorUsuario, 1), { longo: 'por usuário ativo, hoje', curto: 'por ativo', d: a && delta(um(m.treinosPorUsuario), um(a.treinosPorUsuario)),
@@ -1314,7 +1317,7 @@
     const noBalde = (d, h, b) => d >= b.ini && d <= b.fim && (!porHora || h === b.hora);
     const serie1 = lista.map((b) => {
       const cks = dados.checkins.filter((c) => noBalde(diaDeCheckin(c), horaDeCheckin(c), b));
-      const v = { musc: 0, jiu: 0, bike: 0, muay: 0, surf: 0 };
+      const v = { musc: 0, jiu: 0, bike: 0, muay: 0, surf: 0, cali: 0 };
       cks.forEach((c) => { v[TIPOS[c.tipo] ? TIPOS[c.tipo].grupo : 'musc'] += 1; });
       return { ...b, v, total: cks.length };
     });
@@ -1334,7 +1337,7 @@
     }
     $('g2-nota').textContent = `Ativo: abriu o app ou fez check-in ${unidade === 'hora' ? 'na hora' : unidade === 'semana' ? 'na semana' : 'no dia'}.`;
     const cadaUn = porHora ? 'cada hora de hoje' : `cada ${unidade} do período`;
-    $('info-g1').textContent = `Quantos check-ins foram feitos em ${cadaUn}, somando todos os usuários. Cada cor é um tipo de treino: musculação, jiu-jitsu, cardio, muay thai e surf. Passe o dedo ou o mouse numa barra para ver os números, ou toque em Ver tabela.${unidade === 'semana' ? ' Em períodos longos, cada barra soma uma semana, de segunda a domingo.' : ''}`;
+    $('info-g1').textContent = `Quantos check-ins foram feitos em ${cadaUn}, somando todos os usuários. Cada cor é um tipo de treino: musculação, jiu-jitsu, cardio, muay thai, surf e calistenia. Passe o dedo ou o mouse numa barra para ver os números, ou toque em Ver tabela.${unidade === 'semana' ? ' Em períodos longos, cada barra soma uma semana, de segunda a domingo.' : ''}`;
     $('info-g2').textContent = `Quantas pessoas diferentes usaram o app em ${cadaUn}: abriram o app ou fizeram check-in. Cada pessoa conta uma vez por barra, mesmo que use o app várias vezes.${porHora ? ' Os horários seguem o relógio do seu aparelho.' : ''}`;
     barras($('g1'), serie1, { empilhado: true, rotulo: 'check-ins' });
     barras($('g2'), serie2, { empilhado: false, rotulo: 'usuários ativos' });
