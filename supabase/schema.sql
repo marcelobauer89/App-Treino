@@ -174,6 +174,10 @@ alter table public.perfis add column if not exists novidade_oculta timestamptz;
 alter table public.perfis add column if not exists treinos_anterior jsonb
   check (treinos_anterior is null or (jsonb_typeof(treinos_anterior) = 'object' and pg_column_size(treinos_anterior) <= 40000));
 
+-- Jornada pronta escolhida pela pessoa (hipertrofia, forca, mobilidade, jiu). Vazia = nenhuma escolhida.
+-- Só identifica a jornada; os treinos continuam em perfis.treinos. Quem já usa o app fica com o que tem.
+alter table public.perfis add column if not exists jornada text check (jornada is null or char_length(jornada) <= 30);
+
 -- ---------- Privacidade (LGPD) ----------
 -- Versão da Política de Privacidade que a pessoa viu e aceitou (aviso no app quando muda).
 alter table public.perfis add column if not exists politica_versao text check (politica_versao is null or char_length(politica_versao) <= 20);
@@ -182,7 +186,7 @@ alter table public.perfis add column if not exists politica_versao text check (p
 alter table public.perfis add column if not exists consentimento_saude text check (consentimento_saude is null or consentimento_saude in ('sim', 'nao'));
 alter table public.perfis add column if not exists consentimento_saude_em timestamptz;
 
-grant update (id, nome, email, foto, tema, dias_jiu, semana, sem_peso, emails_resumo, treinos, novidade_treinos, novidade_oculta, treinos_anterior, politica_versao, consentimento_saude, consentimento_saude_em) on public.perfis to authenticated;
+grant update (id, nome, email, foto, tema, dias_jiu, semana, sem_peso, emails_resumo, treinos, novidade_treinos, novidade_oculta, treinos_anterior, jornada, politica_versao, consentimento_saude, consentimento_saude_em) on public.perfis to authenticated;
 
 -- A nota de recuperação (1 a 5) saiu do app: a coluna e as notas já salvas são apagadas (LGPD: não guardar dado sem uso).
 -- Rode depois de publicar a versão do app sem a recuperação; a anterior ainda envia esse campo.

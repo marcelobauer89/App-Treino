@@ -847,6 +847,26 @@
   .escolha-card span { font-size: 14px; color: var(--tinta-2); }
   .escolha-card:hover { border-color: var(--tatame); background: var(--tatame-suave); }
 
+  /* Jornadas prontas: cartões com o resumo, os treinos à mostra e a escolha. */
+  dialog.modal.jornadas-modal { width: min(640px, calc(100vw - 32px)); }
+  .jornadas { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+  .jornada { display: grid; gap: 6px; padding: 14px; border: 1.5px solid var(--fio); border-radius: 12px; background: var(--papel); }
+  .jornada.atual { border-color: var(--tatame); }
+  .jornada-topo { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .jornada-topo b { font-size: 17px; }
+  .jornada-tag { padding: 2px 8px; border-radius: 999px; background: var(--tatame-suave); color: var(--tatame-tinta); font-size: 12px; font-weight: 700; white-space: nowrap; }
+  .jornada p { margin: 0; font-size: 15px; }
+  .jornada .jornada-meta { font-size: 13px; color: var(--tinta-2); }
+  .jornada-acoes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+  .jornada-acoes .btn, .jornada-acoes .btn-sec { flex: 1 1 140px; min-height: 44px; }
+  .jornada-treinos { display: grid; gap: 12px; margin-top: 6px; padding-top: 10px; border-top: 1px solid var(--fio); }
+  .jornada-treinos h4 { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 0 0 4px; font-size: 15px; }
+  .jornada-treinos h4 small { font-weight: 500; color: var(--tinta-2); }
+  .jornada-treinos ol { margin: 0; padding-left: 22px; font-size: 14px; }
+  .jornada-treinos li small { color: var(--tinta-2); }
+  @media (max-width: 560px) {
+    dialog.modal.jornadas-modal { width: 100%; max-width: 100%; max-height: 100dvh; margin: auto 0 0; border-radius: 16px 16px 0 0; }
+  }
   dialog.modal.editor { width: min(640px, calc(100vw - 32px)); }
   /* Política de Privacidade aberta dentro do app, sem sair dele. */
   dialog.modal.politica-ver[open] { display: flex; flex-direction: column; width: min(760px, calc(100vw - 32px)); height: calc(100dvh - 32px); }
@@ -1212,6 +1232,7 @@
       <p class="nota-campo" id="meus-treinos-nota"></p>
       <ul class="meus-treinos" id="meus-treinos"></ul>
       <button class="btn" type="button" id="editar-treinos">Personalizar meus treinos</button>
+      <button class="btn-sec" type="button" id="trocar-jornada">Mudar meu objetivo</button>
       <div id="treinos-anterior"></div>
     </div>
   
@@ -1335,6 +1356,9 @@
 </dialog>
 <dialog class="modal" id="excluir-dialog" aria-labelledby="excluir-title">
   <div class="modal-body" id="excluir-body"></div>
+</dialog>
+<dialog class="modal jornadas-modal" id="jornada-dialog" aria-labelledby="jornada-title">
+  <div class="modal-body" id="jornada-body"></div>
 </dialog>
 <dialog class="modal editor" id="editor-dialog" aria-labelledby="editor-title">
   <div class="modal-body" id="editor-body"></div>
@@ -1754,6 +1778,139 @@
     .sort((a, b) => GRUPOS_EX.indexOf(a.grupo) - GRUPOS_EX.indexOf(b.grupo) || a.nome.localeCompare(b.nome, 'pt-BR'));
   const exDaBiblioteca = (nome) => BIBLIOTECA.find((ex) => ex.nome === nome);
 
+  // Jornadas prontas: a pessoa escolhe uma e recebe os treinos e uma semana sugerida (README → "Jornadas prontas").
+  // Exercícios por nome da biblioteca, com a dose e a PSE da jornada. semana: dia (Date.getDay()) → treinos.
+  // Seleção, ordem e textos próprios do OSS (não reproduzem nenhuma planilha de terceiros).
+  const exJ = (nome, dose, pse) => ({ nome, dose, pse });
+  const JORNADAS = [
+    {
+      id: 'jiu', nome: 'Jiu-jitsu (OSS)', resumo: 'Força que vai para o tatame.',
+      nivel: 'Intermediário', dias: 3, tempo: '50–60 min', equipamento: 'Academia',
+      treinos: PLANO_PADRAO, semana: { 1: ['t2'], 3: ['t1'], 5: ['t3'] },
+    },
+    {
+      id: 'hipertrofia', nome: 'Hipertrofia', resumo: 'Ganhar massa muscular com 4 treinos por semana.',
+      nivel: 'Intermediário', dias: 4, tempo: '55–65 min', equipamento: 'Academia (halteres, barra, cabos e máquinas)',
+      semana: { 1: ['t1'], 2: ['t2'], 4: ['t3'], 5: ['t4'] },
+      treinos: {
+        1: {
+          nome: 'Treino 1', subtitulo: 'Peito + costas',
+          objetivo: 'Ganhar massa no peito e nas costas, trabalhando os dois lados do tronco por igual para proteger os ombros e a postura.',
+          esperado: 'Sair com o tronco cheio e cansado, sem dor no ombro. Quando completar as repetições com folga, aumentar a carga do supino e da remada.',
+          impacto_jiu: 'Mais força para empurrar e puxar o oponente, com o tronco equilibrado para aguentar a pressão por cima.',
+          impacto_fisico: 'Peito mais cheio e costas mais largas, com melhora da postura.',
+          exercicios: [exJ('Mobilidade de ombros 180°', '2×10', 5), exJ('Supino reto', '4×8–10', 8), exJ('Remada curvada', '4×8–10', 8),
+            exJ('Supino inclinado', '3×10–12', 8), exJ('Puxada', '3×10–12', 8), exJ('Crucifixo', '3×12', 8),
+            exJ('Remada unilateral no cabo', '3×12 / lado', 8), exJ('Flexão de braços', '2×até perto da falha', 9)],
+        },
+        2: {
+          nome: 'Treino 2', subtitulo: 'Pernas (quadríceps)',
+          objetivo: 'Coxas mais fortes e volumosas, com joelhos estáveis.',
+          esperado: 'Pernas bem cansadas e queimando na extensora. Agachar com amplitude completa antes de aumentar a carga.',
+          impacto_jiu: 'Base mais firme para passar a guarda e levantar com o oponente, e joelhos mais protegidos nas torções.',
+          impacto_fisico: 'Coxas mais grossas e definidas e panturrilhas mais fortes.',
+          exercicios: [exJ('Mobilidade de quadril na cócoras', '2×8', 5), exJ('Agachamento', '4×8–10', 8), exJ('Agachamento búlgaro', '3×10 / lado', 8),
+            exJ('Cadeira extensora', '3×12–15', 8), exJ('Step up', '3×10 / lado', 7), exJ('Cadeira adutora', '3×15', 8),
+            exJ('Panturrilha', '4×12–15', 8), exJ('Prancha lateral', '3×30 s / lado', 7)],
+        },
+        3: {
+          nome: 'Treino 3', subtitulo: 'Ombros + braços',
+          objetivo: 'Ombros mais largos e braços maiores, com a parte de trás do ombro em dia para não desequilibrar.',
+          esperado: 'Pump forte nos braços. Na elevação lateral, priorizar o controle em vez da carga.',
+          impacto_jiu: 'Braços que aguentam segurar a pegada e ombros mais resistentes nas chaves e nos apoios.',
+          impacto_fisico: 'Ombros mais redondos e braços mais volumosos.',
+          exercicios: [exJ('Halo', '2×10', 5), exJ('Desenvolvimento', '4×8–10', 8), exJ('Elevação lateral', '3×12–15', 8),
+            exJ('Rosca bíceps', '3×10–12', 8), exJ('Tríceps testa', '3×10–12', 8), exJ('Face pull', '3×15', 7),
+            exJ('Rosca alternada no banco inclinado', '3×12', 8), exJ('Tríceps na corda', '3×12–15', 8), exJ('Encolhimento', '3×15', 8)],
+        },
+        4: {
+          nome: 'Treino 4', subtitulo: 'Pernas (glúteo e posterior)',
+          objetivo: 'Glúteos e posteriores de coxa fortes, que sustentam a lombar e dão potência ao quadril.',
+          esperado: 'Cansaço atrás das coxas e no glúteo, nunca na lombar. Coluna neutra no levantamento terra e no stiff.',
+          impacto_jiu: 'Quadril mais forte para raspar, fazer a ponte e escapar por baixo, com a lombar mais protegida.',
+          impacto_fisico: 'Glúteos mais firmes e posteriores de coxa mais fortes.',
+          exercicios: [exJ('Mobilidade de quadril', '2×8 / lado', 5), exJ('Deadlift', '4×6–8', 8), exJ('Elevação de quadril', '4×10', 8),
+            exJ('Stiff', '3×10', 8), exJ('Mesa flexora', '3×12', 8), exJ('Abdução de quadril no cabo', '3×15 / lado', 8),
+            exJ('Agachamento sumô', '3×12', 7), exJ('Dead bug', '3×10 / lado', 6)],
+        },
+      },
+    },
+    {
+      id: 'forca', nome: 'Força e potência', resumo: 'Mais forte e mais explosivo, com mobilidade junto.',
+      nivel: 'Intermediário a avançado', dias: 3, tempo: '50–60 min', equipamento: 'Academia (barra, halteres e barra fixa)',
+      semana: { 1: ['t1'], 3: ['t2'], 5: ['t3'] },
+      treinos: {
+        1: {
+          nome: 'Treino A', subtitulo: 'Corpo inteiro: agachar e empurrar',
+          objetivo: 'Força nas pernas e no empurrar, com explosão.',
+          esperado: 'Séries curtas e pesadas, com 2 a 3 minutos de descanso. Cada repetição rápida e limpa; pare a série se a velocidade cair muito.',
+          impacto_jiu: 'Explosão para entrar na queda, levantar na base e sair de posições ruins de uma vez.',
+          impacto_fisico: 'Mais força geral nas pernas e no tronco, com músculos mais densos.',
+          exercicios: [exJ('Windmill semiajoelhado', '2×6 / lado', 6), exJ('Dead bug', '2×10 / lado', 6), exJ('Salto', '3×5', 8),
+            exJ('Agachamento', '4×5', 8), exJ('Remada serrote', '3×8 / lado', 8), exJ('Supino reto', '4×5', 8),
+            exJ('Step up', '3×8 / lado', 8), exJ('Carregada farmer', '3×30 s', 8)],
+        },
+        2: {
+          nome: 'Treino B', subtitulo: 'Corpo inteiro: puxar e quadril',
+          objetivo: 'Força de puxada e de quadril, com potência no arranque.',
+          esperado: 'O clean é técnico: carga leve e boa execução antes de pesar. Barra fixa com o corpo controlado, sem balançar.',
+          impacto_jiu: 'Puxadas mais fortes para controlar e derrubar, e quadril potente para raspagens e levantadas.',
+          impacto_fisico: 'Costas e posteriores mais fortes, com mais potência no corpo todo.',
+          exercicios: [exJ('Alcance no pé semiajoelhado', '2×8 / lado', 5), exJ('Perdigueiro alternado', '2×10 / lado', 6), exJ('Hang power clean', '3×4', 8),
+            exJ('Deadlift', '4×5', 8), exJ('Barra fixa', '4×5–8', 8), exJ('Desenvolvimento', '3×6', 8),
+            exJ('Flexão nórdica', '3×5', 8), exJ('Flexão de pescoço', '2×12', 7)],
+        },
+        3: {
+          nome: 'Cardio', subtitulo: 'Intervalado curto e intermediário',
+          objetivo: 'Fôlego para aguentar mais tempo de esforço e recuperar mais rápido entre eles.',
+          esperado: 'Curto e intenso. Bike, remo, corrida ou corda. Pode ser feito depois do jiu, no lugar de um dia livre.',
+          impacto_jiu: 'Gás para o rola inteiro e recuperação mais rápida entre uma luta e outra.',
+          impacto_fisico: 'Coração e pulmões mais condicionados e mais gasto de energia.',
+          exercicios: [exJ('Cardio curto intervalado', '8×20 s forte / 40 s leve', 9), exJ('Cardio intermediário', '3×3 min / 1 min 30 s leve', 8),
+            exJ('Alongamento de posteriores', '2×30 s', 4)],
+        },
+      },
+    },
+    {
+      id: 'mobilidade', nome: 'Mobilidade e prevenção', resumo: 'Corpo solto, articulações protegidas e pegada de ferro.',
+      nivel: 'Todos os níveis', dias: 3, tempo: '20–30 min', equipamento: 'Pouco equipamento (halter ou kettlebell, elástico e barra fixa)',
+      semana: { 1: ['t1'], 3: ['t2'], 5: ['t3'] },
+      treinos: {
+        1: {
+          nome: 'Mobilidade', subtitulo: 'Ombros, coluna e quadril',
+          objetivo: 'Mais amplitude em ombros, coluna e quadril, para se mexer melhor no tatame e no dia a dia.',
+          esperado: 'Sair mais solto do que entrou. Movimentos lentos, sem forçar até doer.',
+          impacto_jiu: 'Guarda mais flexível, mais facilidade para girar e se encaixar e menos travas nas posições.',
+          impacto_fisico: 'Menos rigidez e dores, com uma postura melhor.',
+          exercicios: [exJ('Mobilidade de ombros 180°', '2×10', 5), exJ('Jefferson curl', '2×8 (leve)', 5), exJ('Mobilidade de quadril na cócoras', '2×8', 5),
+            exJ('Rolamento tocando os pés', '2×6', 5), exJ('Windmill semiajoelhado', '2×6 / lado', 6), exJ('Mobilidade de tronco na parede', '2×8 / lado', 5),
+            exJ('Alongamento de posterior com mobilidade escapular', '2×30 s', 4)],
+        },
+        2: {
+          nome: 'Anti-lesão', subtitulo: 'Ombros, joelhos e lombar',
+          objetivo: 'Reforçar os pontos que mais sofrem no jiu: ombros, joelhos, lombar e posterior de coxa.',
+          esperado: 'Um treino de controle, não de carga. Técnica perfeita vale mais que o peso.',
+          impacto_jiu: 'Ombros e joelhos mais preparados para chaves, quedas e torções.',
+          impacto_fisico: 'Articulações mais estáveis e menos risco de lesão.',
+          exercicios: [exJ('Face pull', '3×15', 6), exJ('Armbar com kettlebell', '2×5 / lado', 6), exJ('Ponte Copenhagen dinâmica', '2×8 / lado', 7),
+            exJ('Rotação de quadril ajoelhado', '2×8 / lado', 6), exJ('Flexão nórdica', '3×5', 8), exJ('Prancha lateral', '2×30 s / lado', 7),
+            exJ('Ponte invertida unilateral', '2×20 s / lado', 7), exJ('Carregada farmer', '3×30 s', 7)],
+        },
+        3: {
+          nome: 'Pegada', subtitulo: 'Dedos, punhos e antebraços',
+          objetivo: 'Dedos, punhos e antebraços que aguentam o rola inteiro segurando gola e manga.',
+          esperado: 'Antebraço queimando. Descansar 1 minuto entre as séries para manter a qualidade.',
+          impacto_jiu: 'Pegadas que não abrem no fim da luta e mais controle das mangas e golas.',
+          impacto_fisico: 'Antebraços mais fortes e punhos mais firmes.',
+          exercicios: [exJ('Mobilidade de punho', '2×15', 4), exJ('Suspensão na barra', '3×30–45 s', 8), exJ('Flexão de punho', '3×15', 8),
+            exJ('Extensão de punho', '3×15', 7), exJ('Remada inversa', '3×10', 8), exJ('Rotação de antebraço no cabo', '2×12 / lado', 7),
+            exJ('Carregada farmer', '3×40 s', 8), exJ('Pega anilha', '3×20 s', 8)],
+        },
+      },
+    },
+  ];
+  const jornadaPorId = (id) => JORNADAS.find((j) => j.id === id) || null;
+
   // Treinos da conta: os montados em "Meus treinos" (perfis.treinos) ou, sem eles, o plano pronto.
   // No banco vão só nome, dose e PSE de cada exercício; níveis, grupo e explicação vêm da biblioteca.
   const MAX_TREINOS = 6, MAX_EXERCICIOS = 15;
@@ -1765,8 +1922,10 @@
   const POLITICA_VERSAO = '2026-10-27';
   let politica = { disponivel: false, aceita: true, contaNova: false };
   let perfilLinha = null;
-  // Versão anterior dos treinos (perfis.treinos_anterior): { treinos, semana, em }. Serve para Desfazer e recuperar.
+  // Versão anterior dos treinos (perfis.treinos_anterior): { treinos, semana, em, jornada }. Serve para Desfazer e recuperar.
   let treinosAnterior = null;
+  // Jornada escolhida (perfis.jornada): mostra "Jornada X" em Meus treinos e se ela foi personalizada.
+  let jornada = null;
   const limpar = (t, max) => String(t ?? '').replace(/[<>"&]/g, '').trim().slice(0, max);
   function exercicioCompleto(e) {
     const base = exDaBiblioteca(e.nome) || { nome: limpar(e.nome, 80), grupo: '', H: 'baixa', M: 'baixa', F: 'baixa', E: 'baixa', why: '' };
@@ -1784,9 +1943,9 @@
         ? t.exercicios.filter((e) => e && e.nome).slice(0, MAX_EXERCICIOS).map(exercicioCompleto) : [];
       if (!exercicios.length) continue;
       treinos[n] = { nome: limpar(t.nome, 40) || `Treino ${n}`, subtitulo: limpar(t.subtitulo, 60), exercicios };
-      // O texto "Sobre o treino" do plano pronto só vale enquanto os exercícios forem os mesmos.
-      const p = PLANO_PADRAO[n];
-      if (p && nomesDos(p.exercicios) === nomesDos(exercicios)) {
+      // O texto "Sobre o treino" do plano pronto (ou de uma jornada) só vale enquanto os exercícios forem os mesmos.
+      const p = JORNADAS.map((j) => j.treinos[n]).find((x) => x && nomesDos(x.exercicios) === nomesDos(exercicios));
+      if (p) {
         const { objetivo, esperado, impacto_jiu, impacto_fisico } = p;
         Object.assign(treinos[n], { objetivo, esperado, impacto_jiu, impacto_fisico });
       }
@@ -2240,6 +2399,7 @@
     politica = { disponivel: 'politica_versao' in linha, aceita: linha.politica_versao === POLITICA_VERSAO, contaNova: !(c.data || []).length && !cargas.length };
     perfilLinha = linha;
     treinosAnterior = linha.treinos_anterior && linha.treinos_anterior.treinos ? linha.treinos_anterior : null;
+    jornada = jornadaPorId(linha.jornada) ? linha.jornada : null;
     novidade = { disponivel: true, vista: !!linha.novidade_oculta || ocultaNoAparelho, contaNova: !(c.data || []).length && !cargas.length };
     const semana = validarSemana(linha.semana);
     semanaDaConta = !!semana;
@@ -3638,7 +3798,7 @@
           <button class="ed-icone" type="button" data-ed-remover="${i}" aria-label="Tirar ${esc(ex.nome)} do treino">${ICON_X}</button>
           <div class="ed-ex-campos">
             <label>Séries<input type="text" value="${esc(ex.dose)}" maxlength="30" data-ed-dose="${i}" aria-label="${esc(ex.nome)}: séries e repetições"></label>
-            <label>PSE<select data-ed-pse="${i}" aria-label="${esc(ex.nome)}: PSE">${[5, 6, 7, 8, 9, 10].map((n) => `<option${n === ex.pse ? ' selected' : ''}>${n}</option>`).join('')}</select></label>
+            <label>PSE<select data-ed-pse="${i}" aria-label="${esc(ex.nome)}: PSE">${[4, 5, 6, 7, 8, 9, 10].map((n) => `<option${n === ex.pse ? ' selected' : ''}>${n}</option>`).join('')}</select></label>
           </div>
         </li>`).join('')}</ol>`
         : '<p class="ed-vazio">Nenhum exercício ainda. Toque em Adicionar exercício para escolher na biblioteca.</p>'}
@@ -3696,7 +3856,10 @@
     TREINOS = montarTreinos(valor) || PLANO_PADRAO;
     treinosDaConta = !!valor;
     atualizarTipos();
-    const campos = { treinos: valor, treinos_anterior: treinosAnterior };
+    // Treinos iguais aos de uma jornada voltam a ser ela; senão a jornada continua, agora personalizada.
+    const igual = JORNADAS.find(ehDaJornada);
+    if (igual) jornada = igual.id;
+    const campos = { treinos: valor, treinos_anterior: treinosAnterior, jornada };
     // Treino excluído sai da semana; treino novo entra pelo Minha semana.
     const semana = validarSemana(config.semana);
     const saiuDaSemana = JSON.stringify(semana) !== JSON.stringify(config.semana);
@@ -3720,14 +3883,20 @@
         : 'Treinos salvos.', 'Desfazer', () => restaurarAnterior('desfazer'));
   }
 
-  const fotoDosTreinos = () => ({ treinos: treinosParaSalvar(TREINOS), semana: copiaSemana(config.semana), em: new Date().toISOString() });
-  // Num banco sem a coluna treinos_anterior (schema.sql antigo), grava sem ela: salvar nunca trava por causa da cópia.
+  const fotoDosTreinos = () => ({ treinos: treinosParaSalvar(TREINOS), semana: copiaSemana(config.semana), em: new Date().toISOString(), jornada });
+  // Num banco sem as colunas treinos_anterior ou jornada (schema.sql antigo), grava sem elas: salvar nunca trava por causa delas.
   function salvarTreinosNoBanco(campos) {
     enviar(async () => {
-      const r = await sb.from('perfis').update(campos).eq('id', usuario.id);
-      if (!r.error || !/treinos_anterior/.test(r.error.message || '')) return r;
-      const { treinos_anterior: _, ...resto } = campos;
-      return sb.from('perfis').update(resto).eq('id', usuario.id);
+      let resto = campos;
+      for (;;) {
+        const r = await sb.from('perfis').update(resto).eq('id', usuario.id);
+        // Coluna que ainda não existe (citada no erro) ou sem permissão para gravá-la (42501, grant antigo): grava o resto.
+        const falta = r.error && (['treinos_anterior', 'jornada'].find((c) => c in resto && new RegExp(`\\b${c}\\b`).test(r.error.message || ''))
+          || (r.error.code === '42501' && 'jornada' in resto ? 'jornada' : null));
+        if (!falta) return r;
+        const { [falta]: _, ...sem } = resto;
+        resto = sem;
+      }
     });
   }
   // Volta para a versão anterior (treinos e semana). A versão de agora vira a anterior, então dá para desfazer de novo.
@@ -3738,12 +3907,13 @@
     const valor = mesmoQuePadrao(foto.treinos) ? null : montarTreinos(foto.treinos) && foto.treinos;
     TREINOS = montarTreinos(valor) || PLANO_PADRAO;
     treinosDaConta = !!valor;
+    jornada = jornadaPorId(foto.jornada) ? foto.jornada : null;
     atualizarTipos();
     config.semana = validarSemana(foto.semana) || validarSemana(config.semana);
     semanaDaConta = true;
     if (!TREINOS[estado.treino]) estado.treino = Object.keys(TREINOS)[0];
     salvar();
-    salvarTreinosNoBanco({ treinos: valor, semana: config.semana, treinos_anterior: treinosAnterior });
+    salvarTreinosNoBanco({ treinos: valor, semana: config.semana, treinos_anterior: treinosAnterior, jornada });
     registrarEvento('treinos_desfeitos', { origem });
     restaurarConfirmando = false;
     renderHoje();
@@ -3930,14 +4100,19 @@
 
   // Resumo dos treinos em Você.
   function renderMeusTreinos() {
-    $('meus-treinos-nota').textContent = treinosDaConta
-      ? 'Você está usando os treinos que montou. Mude exercícios, séries, PSE e a ordem quando quiser.'
-      : 'Você está usando o plano pronto. Monte os seus treinos com os exercícios da biblioteca.';
+    const j = jornadaAtual();
+    $('meus-treinos-nota').textContent = j
+      ? (ehDaJornada(j) ? `Seu objetivo é ${j.nome}. Mude exercícios, séries, PSE e a ordem quando quiser.`
+        : `Seu objetivo é ${j.nome}, com os treinos personalizados por você. Mude o que quiser ou mude o objetivo.`)
+      : treinosDaConta
+        ? 'Você está usando os treinos que montou. Mude exercícios, séries, PSE e a ordem quando quiser.'
+        : 'Você está usando o plano pronto. Monte os seus treinos com os exercícios da biblioteca.';
     $('meus-treinos').innerHTML = Object.entries(TREINOS).map(([id, t]) => `
       <li>${seloHTML(`t${id}`)}<span><b>${t.nome}</b> <small>${t.subtitulo ? `${t.subtitulo} · ` : ''}${qtdExercicios(t.exercicios.length)}</small></span></li>`).join('');
     renderTreinosAnterior();
   }
   $('editar-treinos').addEventListener('click', () => abrirEditor());
+  $('trocar-jornada').addEventListener('click', () => abrirJornadas('trocar'));
   let restaurarConfirmando = false;
   function renderTreinosAnterior() {
     const el = $('treinos-anterior');
@@ -3957,24 +4132,142 @@
     if (e.target.closest('[data-anterior-sim]')) restaurarAnterior('versao_anterior');
   });
 
+  // ---------- Jornadas prontas ----------
+  // Boas-vindas (conta nova com o plano pronto) e "Mudar meu objetivo" em Meus treinos. Escolher grava os treinos
+  // e a semana sugerida; a versão de antes fica em treinos_anterior (Desfazer). Treinos de quem já usa só mudam assim.
+  const jornadaDialog = $('jornada-dialog');
+  const jornadaAtual = () => jornadaPorId(jornada);
+  const ehDaJornada = (j) => JSON.stringify(treinosParaSalvar(TREINOS)) === JSON.stringify(treinosParaSalvar(j.treinos));
+  // jd: { modo: 'boas-vindas' | 'trocar', aberta: id da jornada com os treinos à mostra, confirmar: id }.
+  let jd = null;
+  function abrirJornadas(modo) {
+    jd = { modo, aberta: null, confirmar: null };
+    renderJornadas();
+    if (!jornadaDialog.open) jornadaDialog.showModal();
+    registrarEvento('jornadas_abertas', { origem: modo });
+  }
+  function renderJornadas(foco) {
+    const boasVindas = jd.modo === 'boas-vindas';
+    const atual = boasVindas ? null : jornadaAtual();
+    const cartao = (j) => {
+      const ids = Object.keys(j.treinos);
+      const aberta = jd.aberta === j.id;
+      return `
+      <li class="jornada${atual === j ? ' atual' : ''}">
+        <div class="jornada-topo"><b>${esc(j.nome)}</b>${atual === j ? `<span class="jornada-tag">${ehDaJornada(j) ? 'Atual' : 'Atual, personalizada'}</span>` : ''}</div>
+        <p>${esc(j.resumo)}</p>
+        <p class="jornada-meta">${esc(j.nivel)} · ${ids.length} treinos · ${j.dias} dias por semana · ${esc(j.tempo)} · ${esc(j.equipamento)}</p>
+        ${aberta ? `<div class="jornada-treinos" id="jornada-treinos-${j.id}">${ids.map((n) => `
+          <div><h4>${seloHTML(`t${n}`)}${esc(j.treinos[n].nome)}${j.treinos[n].subtitulo ? ` <small>${esc(j.treinos[n].subtitulo)}</small>` : ''}</h4>
+          <ol>${j.treinos[n].exercicios.map((e) => `<li>${esc(e.nome)} <small>${esc(e.dose)}</small></li>`).join('')}</ol></div>`).join('')}
+        </div>` : ''}
+        ${jd.confirmar === j.id ? `<div class="ed-confirma" role="alert">
+          <p>Mudar seu objetivo para ${esc(j.nome)}? Seus treinos e a semana de agora ficam guardados como versão anterior, e dá para desfazer.</p>
+          <div><button class="btn" type="button" data-jd-sim="${j.id}">Mudar objetivo</button><button class="btn-sec" type="button" data-jd-cancelar>Cancelar</button></div>
+        </div>` : `<div class="jornada-acoes">
+          <button class="btn-sec" type="button" data-jd-ver="${j.id}" aria-expanded="${aberta}"${aberta ? ` aria-controls="jornada-treinos-${j.id}"` : ''}>${aberta ? 'Esconder treinos' : 'Ver treinos'}</button>
+          ${atual === j && ehDaJornada(j) ? '' : `<button class="btn" type="button" data-jd-escolher="${j.id}">${atual === j ? 'Voltar ao original' : 'Escolher'}</button>`}
+        </div>`}
+      </li>`;
+    };
+    $('jornada-body').innerHTML = `
+      <div class="modal-head"><div>${boasVindas ? '<span class="novidade-selo">Boas-vindas</span>' : ''}<h3 id="jornada-title">${boasVindas ? 'Como você quer treinar?' : 'Mudar meu objetivo'}</h3></div>${BOTAO_FECHAR}</div>
+      <p class="resumo-enc">Escolha um objetivo e receba os treinos prontos. Depois dá para mudar exercícios, séries e dias em Você → Meus treinos.</p>
+      <ul class="jornadas">
+        ${JORNADAS.map(cartao).join('')}
+        <li class="jornada">
+          <div class="jornada-topo"><b>Montar do zero</b></div>
+          <p>Escolha entre ${BIBLIOTECA.length} exercícios e monte até ${MAX_TREINOS} treinos do seu jeito.</p>
+          <div class="jornada-acoes"><button class="btn-sec" type="button" data-jd-zero>Montar meus treinos</button></div>
+        </li>
+      </ul>
+      ${boasVindas ? OCULTAR_NOVIDADE : ''}`;
+    if (foco) { const el = $('jornada-body').querySelector(foco); if (el) el.focus(); }
+  }
+  function fecharJornadas(escolha) {
+    if (!jd) return;
+    if (jd.modo === 'boas-vindas') {
+      // Escolher uma jornada encerra as boas-vindas; fechar ou montar do zero segue a caixa "Não mostrar de novo".
+      const caixa = $('novidade-ocultar');
+      gravarNovidade(escolha, escolha === 'jornada' || !!(caixa && caixa.checked));
+    }
+    jd = null;
+    jornadaDialog.close();
+  }
+  jornadaDialog.addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (b && b.dataset.jdVer) {
+      jd.aberta = jd.aberta === b.dataset.jdVer ? null : b.dataset.jdVer;
+      jd.confirmar = null;
+      return renderJornadas(`[data-jd-ver="${b.dataset.jdVer}"]`);
+    }
+    if (b && b.dataset.jdEscolher) {
+      // Na troca, confirma antes; nas boas-vindas a conta ainda não tem nada para perder.
+      if (jd.modo === 'trocar') { jd.confirmar = b.dataset.jdEscolher; return renderJornadas(`[data-jd-sim="${b.dataset.jdEscolher}"]`); }
+      const modo = jd.modo;
+      fecharJornadas('jornada');
+      return aplicarJornada(b.dataset.jdEscolher, modo);
+    }
+    if (b && b.dataset.jdSim) { const modo = jd.modo; fecharJornadas('jornada'); return aplicarJornada(b.dataset.jdSim, modo); }
+    if (b && 'jdCancelar' in b.dataset) {
+      const id = jd.confirmar;
+      jd.confirmar = null;
+      return renderJornadas(`[data-jd-escolher="${id}"]`);
+    }
+    if (b && 'jdZero' in b.dataset) { fecharJornadas('montar'); return abrirEditor({ doZero: true }); }
+    if (e.target === jornadaDialog || e.target.closest('[data-fechar]')) fecharJornadas('fechou');
+  });
+  jornadaDialog.addEventListener('cancel', (e) => { e.preventDefault(); fecharJornadas('fechou'); });
+
+  // Semana sugerida: tira os treinos da semana de agora e põe os da jornada, sem mexer em jiu, muay, surf e cardio.
+  function semanaDaJornada(j) {
+    const s = config.semana.map((d) => d.filter((t) => !ehTreino(t)));
+    for (const [dia, tipos] of Object.entries(j.semana)) {
+      for (const t of tipos) if (s[dia].length < 2) s[dia].push(t);
+    }
+    return validarSemana(s);
+  }
+  function aplicarJornada(id, origem) {
+    const j = jornadaPorId(id);
+    if (!j) return;
+    treinosAnterior = fotoDosTreinos();
+    const valor = mesmoQuePadrao(j.treinos) ? null : treinosParaSalvar(j.treinos);
+    TREINOS = montarTreinos(valor) || PLANO_PADRAO;
+    treinosDaConta = !!valor;
+    jornada = j.id;
+    atualizarTipos();
+    config.semana = semanaDaJornada(j);
+    semanaDaConta = true;
+    const deHoje = planoDoDia(new Date().getDay()).treino;
+    estado.treino = deHoje && TREINOS[deHoje] ? deHoje : Object.keys(TREINOS)[0];
+    salvar();
+    salvarTreinosNoBanco({ treinos: valor, semana: config.semana, treinos_anterior: treinosAnterior, jornada });
+    registrarEvento('jornada_escolhida', { jornada: j.id, origem, conta_nova: novidade.contaNova });
+    restaurarConfirmando = false;
+    renderHoje();
+    renderTudo();
+    atualizarCheckinUI();
+    if (telaAtual() === 'voce') renderConfig();
+    toastAcao(`Objetivo ${j.nome} escolhido. Os treinos já estão na sua semana.`, 'Desfazer', () => restaurarAnterior('desfazer'));
+  }
+
   // ---------- Aviso da novidade (até marcar "não mostrar mais") ----------
   const novidadeDialog = $('novidade-dialog');
-  function abrirNovidade() {
-    const comVideo = BIBLIOTECA.filter((ex) => VIDEOS[ex.nome]).length;
-    const item = (txt) => `<li>${ICON_CHECK}<span>${txt}</span></li>`;
-    const ocultar = `
+  const OCULTAR_NOVIDADE = `
       <label class="novidade-ocultar">
         <input type="checkbox" id="novidade-ocultar">
         <span>Não mostrar esta mensagem de novo</span>
       </label>`;
-    // Conta nova que já montou os treinos vê a versão "Baita atualização!".
-    $('novidade-body').innerHTML = (novidade.contaNova && !treinosDaConta ? `
-      <div class="modal-head"><div><span class="novidade-selo">Boas-vindas</span><h3 id="novidade-title">Como você quer treinar?</h3></div>${BOTAO_FECHAR}</div>
-      <p class="resumo-enc">Escolha como começar. Dá para mudar quando quiser em Você → Meus treinos.</p>
-      <div class="escolha-cards">
-        <button class="escolha-card" type="button" data-novidade="montar"><b>Montar meus treinos</b><span>Escolha entre ${BIBLIOTECA.length} exercícios${comVideo ? ` (${comVideo} com vídeo)` : ''} e monte até ${MAX_TREINOS} treinos.</span></button>
-        <button class="escolha-card" type="button" data-novidade="manter"><b>Usar o plano pronto</b><span>3 treinos: costas e bíceps; peito, tríceps e ombro; e pernas.</span></button>
-      </div>` : `
+  function abrirNovidade() {
+    const comVideo = BIBLIOTECA.filter((ex) => VIDEOS[ex.nome]).length;
+    const item = (txt) => `<li>${ICON_CHECK}<span>${txt}</span></li>`;
+    // Conta nova com o plano pronto escolhe uma jornada; quem já montou os treinos vê a versão "Baita atualização!".
+    if (novidade.contaNova && !treinosDaConta) {
+      abrirJornadas('boas-vindas');
+      registrarEvento('novidade_treinos', { escolha: 'viu', conta_nova: novidade.contaNova });
+      return;
+    }
+    $('novidade-body').innerHTML = (`
       <div class="modal-head"><div><span class="novidade-selo">Novidade</span><h3 id="novidade-title">Baita atualização!</h3></div>${BOTAO_FECHAR}</div>
       <p class="resumo-enc">Agora você pode montar os seus próprios treinos.</p>
       <ul class="novidade-lista">
@@ -3986,7 +4279,7 @@
       <div class="novidade-acoes">
         <button class="modal-done" type="button" data-novidade="personalizar">Personalizar meus treinos</button>
         <button class="btn-sec" type="button" data-novidade="manter">Manter meu treino atual</button>
-      </div>`) + ocultar;
+      </div>`) + OCULTAR_NOVIDADE;
     novidadeDialog.showModal();
     registrarEvento('novidade_treinos', { escolha: 'viu', conta_nova: novidade.contaNova });
   }
@@ -3998,8 +4291,13 @@
   // Sem a caixa marcada, o aviso volta na próxima vez que o app abrir.
   // Gravação silenciosa: num banco sem as colunas novas, o aviso continua funcionando pelo navegador.
   function responderNovidade(escolha) {
+    gravarNovidade(escolha, $('novidade-ocultar').checked);
+    novidadeDialog.close();
+    if (escolha === 'personalizar') abrirEditor();
+    else if (escolha === 'montar') abrirEditor({ doZero: true });
+  }
+  function gravarNovidade(escolha, ocultou) {
     const agora = new Date().toISOString();
-    const ocultou = $('novidade-ocultar').checked;
     if (ocultou) {
       novidade.vista = true;
       try { localStorage.setItem(chaveNovidade(), agora); } catch (_) {}
@@ -4007,9 +4305,6 @@
     sb.from('perfis').update(ocultou ? { novidade_treinos: agora, novidade_oculta: agora } : { novidade_treinos: agora })
       .eq('id', usuario.id).then(() => {}, () => {});
     registrarEvento('novidade_treinos', { escolha, ocultou, conta_nova: novidade.contaNova });
-    novidadeDialog.close();
-    if (escolha === 'personalizar') abrirEditor();
-    else if (escolha === 'montar') abrirEditor({ doZero: true });
   }
   novidadeDialog.addEventListener('click', (e) => {
     const b = e.target.closest('[data-novidade]');
@@ -4022,7 +4317,9 @@
   // Valores mostrados à direita de cada linha da lista de Você.
   function renderMenuVoce() {
     const n = Object.keys(TREINOS).length;
-    $('valor-treinos').textContent = treinosDaConta ? `${n} ${n === 1 ? 'treino' : 'treinos'}` : 'Plano pronto';
+    const j = jornadaAtual();
+    $('valor-treinos').textContent = j ? (ehDaJornada(j) ? j.nome : `${j.nome} (personalizada)`)
+      : treinosDaConta ? `${n} ${n === 1 ? 'treino' : 'treinos'}` : 'Plano pronto';
     const ativ = config.semana.flat().length;
     const descanso = config.semana.filter((d) => !d.length).length;
     $('valor-semana').textContent = `${ativ} ${ativ === 1 ? 'atividade' : 'atividades'}${descanso ? '' : ', sem descanso'}`;

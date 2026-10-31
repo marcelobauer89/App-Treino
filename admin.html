@@ -621,6 +621,16 @@
         <p class="info-txt" id="info-treinos" role="note" hidden>Check-ins do período por tipo de treino, somando todos os usuários, do mais feito para o menos feito. A porcentagem é a parte de cada tipo no total de check-ins, e "pessoas" conta quem fez aquele treino pelo menos uma vez. Em Musculação, aparece também quantos check-ins teve cada treino (Treino 1, Treino 2…).</p>
         <ol class="ranking-treinos" id="treinos-lista" aria-label="Check-ins por tipo de treino"></ol>
       </section>
+      <section class="bloco cartao" aria-labelledby="jornadas-titulo">
+        <div class="bloco-topo">
+          <div class="titulo-info">
+            <h2 id="jornadas-titulo">Objetivos escolhidos</h2>
+            <button class="info" type="button" data-info="info-jornadas" aria-expanded="false" aria-controls="info-jornadas" aria-label="Como funciona: objetivos escolhidos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button>
+          </div>
+        </div>
+        <p class="info-txt" id="info-jornadas" role="note" hidden>Quantas pessoas escolheram cada objetivo (com os treinos prontos) no período, nas boas-vindas ou em Mudar meu objetivo. Quem escolheu mais de uma vez conta só na última escolha. "Na troca" mostra quantas vieram de Mudar meu objetivo, em Meus treinos.</p>
+        <ol class="ranking-treinos" id="jornadas-lista" aria-label="Pessoas por objetivo escolhido"></ol>
+      </section>
     </div>
     <div class="graficos listas-geral">
       <section class="bloco cartao" aria-labelledby="sumiu-titulo">
@@ -1113,6 +1123,7 @@
     renderGraficos(j, ativosMap);
     renderListasGeral(j);
     renderTreinos(j);
+    renderJornadas(j);
     renderUsuarios(j, ativosMap);
     renderSaude(j);
     renderEmails(j);
@@ -1245,6 +1256,30 @@
           <span class="rt-sub">${sub}</span>
         </li>`;
     }).join('');
+  }
+
+  // Jornadas prontas escolhidas no período: a última escolha de cada pessoa, da mais escolhida para a menos.
+  const NOMES_JORNADA = { jiu: 'Jiu-jitsu (OSS)', hipertrofia: 'Hipertrofia', forca: 'Força e potência', mobilidade: 'Mobilidade e prevenção' };
+  const CORES_JORNADA = { jiu: 'jiu', hipertrofia: 'musc', forca: 'muay', mobilidade: 'bike' };
+  function renderJornadas(j) {
+    const ultima = new Map();
+    dados.eventos.filter((e) => e.tipo === 'jornada_escolhida' && dentro(diaDeInstante(e.criado_em), j))
+      .sort((a, b) => (a.criado_em < b.criado_em ? -1 : 1))
+      .forEach((e) => ultima.set(e.usuario_id, e.dados || {}));
+    const lista = $('jornadas-lista');
+    if (!ultima.size) { lista.innerHTML = '<p class="vazio">Ninguém escolheu um objetivo no período.</p>'; return; }
+    const escolhas = [...ultima.values()];
+    const linhas = Object.keys(NOMES_JORNADA).map((id) => {
+      const minhas = escolhas.filter((d) => d.jornada === id);
+      return { id, n: minhas.length, troca: minhas.filter((d) => d.origem === 'trocar').length };
+    }).sort((a, b) => b.n - a.n);
+    const maior = linhas[0].n;
+    lista.innerHTML = linhas.map((x) => `<li class="${x.n ? '' : 'zerado'}">
+        <span class="rt-nome"><i style="background:var(--${CORES_JORNADA[x.id]})" aria-hidden="true"></i>${NOMES_JORNADA[x.id]}</span>
+        <span class="rt-trilho" aria-hidden="true">${x.n ? `<span class="rt-barra" style="width:${x.n / maior * 100}%;background:var(--${CORES_JORNADA[x.id]})"></span>` : ''}</span>
+        <span class="rt-num">${fmtNum(x.n)}<small>${Math.round(x.n / escolhas.length * 100)}%</small></span>
+        <span class="rt-sub">${x.n ? `${x.n} ${x.n === 1 ? 'pessoa' : 'pessoas'}${x.troca ? ` · ${x.troca} na troca` : ''}` : 'ninguém'}</span>
+      </li>`).join('');
   }
 
   // Agrupa por dia; períodos longos (mais de 60 dias) por semana, começando na segunda.
@@ -1718,6 +1753,8 @@
     acesso_pedido: () => 'Pediu acesso ao app',
     novidade_treinos: (d) => ({ viu: 'Viu o aviso dos treinos personalizados', personalizar: 'Quis personalizar os treinos', montar: 'Escolheu montar os treinos', manter: 'Manteve o treino atual', fechou: 'Fechou o aviso dos treinos personalizados' }[d.escolha] || 'Respondeu ao aviso dos treinos') + (d.ocultou ? ' e pediu para não mostrar mais' : ''),
     editor_treinos: () => 'Abriu Meus treinos',
+    jornadas_abertas: (d) => (d.origem === 'boas-vindas' ? 'Viu os objetivos nas boas-vindas' : 'Abriu Mudar meu objetivo'),
+    jornada_escolhida: (d) => `Escolheu o objetivo ${NOMES_JORNADA[d.jornada] || d.jornada}`,
     treinos_desfeitos: (d) => (d.origem === 'desfazer' ? 'Desfez a alteração dos treinos' : 'Restaurou a versão anterior dos treinos'),
     treinos_salvos: (d) => (d.plano_pronto ? 'Voltou ao plano pronto' : `Salvou ${d.treinos} ${d.treinos === 1 ? 'treino' : 'treinos'} personalizados`),
     resumo_email: (d) => (d.ativo ? 'Ligou o resumo semanal por e-mail' : 'Desligou o resumo semanal por e-mail'),
