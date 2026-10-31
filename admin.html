@@ -342,6 +342,7 @@
   .quem { display: flex; align-items: center; gap: 10px; min-width: 0; }
   .quem button { border: 0; background: transparent; padding: 0; text-align: left; display: grid; min-width: 0; }
   .quem b { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tag-videos { display: inline-block; margin-left: 6px; padding: 0 7px; border-radius: 999px; background: var(--tatame-suave); color: var(--tatame-tinta); font-size: 11.5px; font-weight: 700; vertical-align: 1px; }
   .quem small { color: var(--tinta-2); font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .resumo-cel, .chev { display: none; }
   .avatar {
@@ -1464,7 +1465,7 @@
     $('usuarios-corpo').innerHTML = linhas.length ? linhas.map((l) => `
       <tr data-usuario="${l.u.id}">
         <td><div class="quem"><span class="avatar${online.has(l.u.id) ? ' on' : ''}" aria-hidden="true">${esc(iniciais(l.u.nome, l.u.email))}</span>
-          <button type="button" data-abrir="${l.u.id}"><b>${esc(l.u.nome || 'Sem nome')}</b><span class="sr on-sr"${online.has(l.u.id) ? '' : ' hidden'}>, on-line agora</span><small>${esc(l.u.email)}</small>
+          <button type="button" data-abrir="${l.u.id}"><b>${esc(l.u.nome || 'Sem nome')}${l.u.videos_liberados ? ' <span class="tag-videos">Vídeos</span>' : ''}</b><span class="sr on-sr"${online.has(l.u.id) ? '' : ' hidden'}>, on-line agora</span><small>${esc(l.u.email)}</small>
             <span class="resumo-cel">${l.ultimo ? relativo(l.ultimo) : 'sem uso'} · ${fmtNum(l.checkins)} check-in${l.checkins === 1 ? '' : 's'} · ${pctAder(l.aderencia)} do plano</span></button>
           <span class="chev" aria-hidden="true">${ICON.chev}</span></div></td>
         <td data-rotulo="Situação" class="cel-situacao"><span class="situacao ${l.sit.chave}">${l.sit.icone}${l.sit.rotulo}</span></td>
@@ -1866,6 +1867,16 @@
         </div>
         <p class="excluir-erro" id="det-acesso-erro" role="alert" hidden></p>
       </section>` : ''}
+      ${typeof u.videos_liberados === 'boolean' ? `<section class="det-sec" aria-labelledby="det-videos-t">
+        <h3 id="det-videos-t">Vídeos dos exercícios</h3>
+        <div class="det-acesso">
+          <span class="nota" style="flex:1 1 200px">${u.videos_liberados ? 'Liberados: vê o vídeo da execução nos exercícios que têm vídeo.' : 'Não liberados: os exercícios aparecem sem vídeo.'}</span>
+          ${u.videos_liberados
+            ? `<button class="btn-peq sec" type="button" data-videos="${u.id}" data-liberar-videos="nao">Tirar vídeos</button>`
+            : `<button class="btn-peq prim" type="button" data-videos="${u.id}" data-liberar-videos="sim">Liberar vídeos</button>`}
+        </div>
+        <p class="excluir-erro" id="det-videos-erro" role="alert" hidden></p>
+      </section>` : ''}
       <section class="det-sec" aria-labelledby="det-tempo">
         <h3 id="det-tempo">Atividade recente</h3>
         <div id="det-atividade"></div>
@@ -2185,7 +2196,7 @@
     if ($('detalhe').open && detalheId === alvo) abrirDetalhe(alvo);
   }
   document.addEventListener('click', async (e) => {
-    const b = e.target.closest('[data-liberar], [data-recusar], [data-bloquear], [data-copiar-convite], [data-cancelar-convite], [data-excluir-convite], [data-abrir-usuario], #conv-copiar');
+    const b = e.target.closest('[data-videos], [data-liberar], [data-recusar], [data-bloquear], [data-copiar-convite], [data-cancelar-convite], [data-excluir-convite], [data-abrir-usuario], #conv-copiar');
     if (!b) return;
     if (b.dataset.excluirConvite) return abrirExcluirConvite(b.dataset.excluirConvite);
     if (b.dataset.abrirUsuario) return abrirDetalhe(b.dataset.abrirUsuario);
@@ -2198,6 +2209,22 @@
       toast('Convite cancelado.');
       const cv = await sb.rpc('admin_convites');
       if (!cv.error) { dados.convites = cv.data || []; renderConvites(); }
+      return;
+    }
+    if (b.dataset.videos) {
+      const alvo = b.dataset.videos, liberar = b.dataset.liberarVideos === 'sim';
+      b.disabled = true;
+      const { error } = await sb.rpc('admin_liberar_videos', { alvo, liberar });
+      if (error) {
+        b.disabled = false;
+        const el = $('det-videos-erro');
+        el.textContent = /admin_liberar_videos|function/.test(error.message) ? 'Para liberar vídeos, rode de novo o supabase/schema.sql no Supabase.' : error.message;
+        el.hidden = false;
+        return;
+      }
+      toast(liberar ? `Vídeos liberados para ${nome(alvo)}.` : `${nome(alvo)} não vê mais os vídeos.`);
+      await carregar();
+      if ($('detalhe').open && detalheId === alvo) abrirDetalhe(alvo);
       return;
     }
     if (b.dataset.liberar) return acaoAcesso('admin_liberar_usuario', b.dataset.liberar, `${nome(b.dataset.liberar)} pode usar o app.`);

@@ -144,7 +144,7 @@ Quando uma versão nova do app precisar de mudanças no banco, rode de novo o `s
 
 Cada pessoa pode montar até 6 treinos (t1 a t6), com até 15 exercícios cada, em **Você → Meus treinos**:
 - **Biblioteca:** 136 exercícios, sem repetição. O grupo Core aparece como "Core e abdômen", e buscar "abdominal", "abdômen" ou "barriga" mostra o grupo inteiro. São os 22 do plano pronto mais os das fichas de treino em PDF. Variações do mesmo movimento com outro equipamento (halter ou barra) entram uma vez só; os outros nomes delas (`VARIACOES`) servem para a busca.
-- **Vídeos dos exercícios:** saíram do app. A lista com os vídeos de cada exercício (nome → id do YouTube) está guardada em `docs/videos-exercicios.json`. Para voltar a mostrar, copie o objeto `videos` desse arquivo para a constante `VIDEOS` do `index.html`: os exercícios com vídeo voltam a ter o carrossel com a execução.
+- **Vídeos dos exercícios:** só para quem o administrador libera (veja "Vídeos liberados por usuário").
 - **O que a pessoa ajusta:** nome e foco de cada treino, séries/repetições e PSE. A ordem dos exercícios muda arrastando a alça ⠿ de cada cartão (no teclado, setas para cima e para baixo na alça); o botão flutuante "Adicionar exercício" abre a biblioteca.
 - **No banco:** a coluna `perfis.treinos` guarda só nome, séries e PSE de cada exercício. Os níveis, o grupo e a explicação vêm da biblioteca no `index.html`, pelo nome.
 - **Quem já usa o app:** continua no plano pronto (coluna vazia) até salvar outra coisa. Ao abrir o app, aparece o aviso **"Baita atualização!"**, com "Personalizar meus treinos" ou "Manter meu treino atual". Ele volta a cada abertura (inclusive ao voltar para o app depois de 30 min em segundo plano) até a pessoa marcar **"Não mostrar esta mensagem de novo"**.
@@ -170,6 +170,16 @@ Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 a t6 nos check-i
 - **No banco:** a coluna `perfis.jornada` guarda só o id da jornada. Sem ela (schema antigo), escolher funciona do mesmo jeito, sem o rótulo.
 - **Monitoramento:** os eventos `jornadas_abertas` e `jornada_escolhida` alimentam o card "Objetivos escolhidos".
 - **De onde veio:** as jornadas foram montadas com seleção, ordem, doses e textos próprios, usando planilhas de treino só como referência de método. Ao criar uma jornada nova, não copie a sequência nem os textos de nenhuma planilha.
+
+## Vídeos liberados por usuário
+
+- **Como liberar:** no monitoramento, abra a ficha da pessoa na aba **Usuários** e toque em **Liberar vídeos** (ou **Tirar vídeos**). Quem está liberado aparece com a etiqueta "Vídeos" na tabela.
+- **O que muda no app:** a pessoa liberada vê o vídeo da execução nos exercícios que têm vídeo (deslizando o cartão). Sem liberação, que é o padrão, os exercícios aparecem sem vídeo.
+- **Onde ficam os vídeos:** só no banco, na tabela `videos_exercicios` (exercício → id do vídeo no YouTube). Ninguém lê essa tabela pela API: o app recebe a lista pela função `meus_videos()`, que só devolve os vídeos para a própria pessoa liberada (coluna `perfis.videos_liberados`, que só o administrador muda, pela função `admin_liberar_videos`). A lista não fica no código nem no repositório.
+- **Como ligar (uma vez por projeto):**
+  1. Rode o `supabase/schema.sql`.
+  2. Rode a carga dos vídeos (um SQL com `insert into public.videos_exercicios ...`). Esse arquivo não fica no repositório: peça a ele a quem mantém o app.
+- **Adicionar ou trocar um vídeo:** no SQL Editor, `insert into public.videos_exercicios (exercicio, video_id) values ('Nome do exercício', 'idDoYouTube') on conflict (exercicio) do update set video_id = excluded.video_id;`. O nome tem que ser igual ao da biblioteca.
 
 ## Convites (acesso só para convidados)
 

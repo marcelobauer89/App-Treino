@@ -2062,7 +2062,7 @@
   const GRAUS = { alta: 3, media: 2, baixa: 1 };
 
   // Vídeos de execução (YouTube): nome do exercício → id do vídeo. Exercícios sem entrada aqui não mostram vídeo.
-  // Os vídeos saíram do app; a lista fica guardada em docs/videos-exercicios.json para voltar quando quiser.
+  // A lista fica no banco (videos_exercicios) e chega pelo meus_videos() só para quem o administrador liberou.
   const VIDEOS = {};
 
   // ---------- Datas ----------
@@ -2362,16 +2362,20 @@
   }
 
   async function carregarDados() {
-    const [p, c, k] = await Promise.all([
+    const [p, c, k, v] = await Promise.all([
       sb.from('perfis').select('*').eq('id', usuario.id).maybeSingle(),
       sb.from('checkins').select('*').order('inicio'),
       sb.from('cargas').select('*').order('data'),
+      // Vídeos dos exercícios: só vêm para quem o administrador liberou. Sem a função (schema antigo), sem vídeos.
+      sb.rpc('meus_videos').then((r) => r, () => ({ error: true })),
     ]);
     if (p.error || c.error) throw p.error || c.error;
     // Fotos nos check-ins: liga quando a coluna checkins.foto existe (o schema.sql cria junto o bucket).
     fotosLigadas = (c.data || []).length ? 'foto' in c.data[0] : !(await sb.from('checkins').select('foto').limit(1)).error;
     // Sem a tabela cargas (schema.sql antigo) o app abre do mesmo jeito; o aviso aparece ao salvar um peso.
     cargas = k.error ? [] : (k.data || []).map((r) => ({ data: String(r.data).slice(0, 10), treino: r.treino, series: r.series || {} }));
+    for (const nome of Object.keys(VIDEOS)) delete VIDEOS[nome];
+    if (!v.error) (v.data || []).forEach((r) => { if (r && r.exercicio && /^[\w-]{11}$/.test(r.video_id || '')) VIDEOS[r.exercicio] = r.video_id; });
     let linha = p.data;
     if (!linha) {
       // Conta criada antes do schema: cria o perfil com os dados do Google.
