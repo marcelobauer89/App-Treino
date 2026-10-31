@@ -24,7 +24,7 @@ create table if not exists public.checkins (
   id uuid primary key default gen_random_uuid(),
   usuario_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
   -- 'bike' aparece no app como Cardio.
-  tipo text not null check (tipo in ('t1', 't2', 't3', 't4', 't5', 't6', 'jiu', 'muay', 'surf', 'bike')),
+  tipo text not null check (tipo in ('t1', 't2', 't3', 't4', 't5', 't6', 'jiu', 'muay', 'surf', 'cali', 'bike')),
   inicio timestamp not null,
   fim timestamp check (fim is null or fim >= inicio),
   sem_horario boolean not null default false,
@@ -135,9 +135,9 @@ revoke insert, delete on public.perfis from authenticated, anon;
 grant insert (id, nome, email, foto, tema, dias_jiu) on public.perfis to authenticated;
 -- ---------- Treinos personalizados ----------
 -- Cada pessoa pode montar até 6 treinos de musculação (t1 a t6). Bancos criados com menos recebem os novos.
--- 'muay' = Muay Thai; 'surf' = Surf.
+-- 'muay' = Muay Thai; 'surf' = Surf; 'cali' = Calistenia.
 alter table public.checkins drop constraint if exists checkins_tipo_check;
-alter table public.checkins add constraint checkins_tipo_check check (tipo in ('t1', 't2', 't3', 't4', 't5', 't6', 'jiu', 'muay', 'surf', 'bike'));
+alter table public.checkins add constraint checkins_tipo_check check (tipo in ('t1', 't2', 't3', 't4', 't5', 't6', 'jiu', 'muay', 'surf', 'cali', 'bike'));
 alter table public.cargas drop constraint if exists cargas_treino_check;
 alter table public.cargas add constraint cargas_treino_check check (treino in ('t1', 't2', 't3', 't4', 't5', 't6'));
 

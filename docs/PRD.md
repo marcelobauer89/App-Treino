@@ -10,9 +10,9 @@ O App Bauer transforma o plano de 6 semanas "Jiu-Jitsu + Hipertrofia" (hoje um P
 
 **Solução.** Um app que:
 
-- Mostra a atividade do dia (treinos de musculação, jiu-jitsu, muay thai, surf, cardio ou descanso) com base na semana que o próprio usuário monta.
+- Mostra a atividade do dia (treinos de musculação, jiu-jitsu, muay thai, surf, calistenia, cardio ou descanso) com base na semana que o próprio usuário monta.
 - Registra a carga de cada série por exercício, pré-preenchida com a da última vez.
-- Faz check-in de cada treino (musculação, jiu-jitsu, muay thai, surf ou cardio) por um botão fixo, quantas vezes for preciso no mesmo dia.
+- Faz check-in de cada treino (musculação, jiu-jitsu, muay thai, surf, calistenia ou cardio) por um botão fixo, quantas vezes for preciso no mesmo dia.
 - Mostra um Dashboard com calendário de check-ins, os treinos feitos em cada um e a semana comparada ao plano.
 - Aplica as regras do plano automaticamente: fase da semana, passada em 3×16 nas semanas 5–6, avisos de conflito na semana.
 - Acompanha peso médio semanal, % de gordura e proteína.
@@ -88,7 +88,7 @@ O MVP cobre um grupo de amigos convidados, cada um com conta e dados próprios, 
 - Filtro dos exercícios por foco e explicação de cada treino ("Sobre o treino").
 - Vídeo de referência por exercício: saiu do app aberto em 28/10/2026; desde 31/10/2026 aparece só para quem o administrador libera (RF-60). A lista (80 vídeos) fica só no banco.
 - Progressão automática por fase (semanas 1–2, 3–4, 5–6).
-- Check-in de treino para musculação (Treinos 1 a 6), jiu-jitsu, muay thai, surf e cardio, com observação opcional; vários check-ins no mesmo dia.
+- Check-in de treino para musculação (Treinos 1 a 6), jiu-jitsu, muay thai, surf, calistenia e cardio, com observação opcional; vários check-ins no mesmo dia.
 - Dashboard com calendário de check-ins: visão do mês com os dias treinados e detalhe de cada check-in com os treinos e exercícios feitos.
 - Registro de peso diário e % de gordura opcional; média semanal calculada.
 - Registro simples de proteína diária.
@@ -129,7 +129,7 @@ São 58 requisitos em 11 grupos; os marcados P0 bloqueiam o lançamento do MVP. 
 | RF-37 | Registrar o último acesso e a quantidade de acessos de cada usuário (1 acesso a cada 30 min no máximo, pela hora do servidor), visíveis só para o administrador no Supabase | P2 | Feito |
 | **Onboarding e configuração** |  |  |  |
 | RF-06 | Usuário informa peso atual, % de gordura, alvo próprio e data de início do bloco | P0 | Pendente |
-| RF-07 | Em Você → Minha semana, o usuário monta a semana arrastando os treinos (até 6), Jiu-jitsu, Muay Thai, Surf e Cardio para qualquer dia (domingo incluso), até 2 por dia, ou pelo botão + de cada dia; a terceira atividade toma o lugar da mais antiga; soltar fora tira do dia; "Voltar à semana padrão"; a agenda, o topo da tela Treino e as metas do Dashboard se ajustam na hora | P0 | Feito |
+| RF-07 | Em Você → Minha semana, o usuário monta a semana arrastando os treinos (até 6), Jiu-jitsu, Muay Thai, Surf, Calistenia e Cardio para qualquer dia (domingo incluso), até 2 por dia, ou pelo botão + de cada dia; a terceira atividade toma o lugar da mais antiga; soltar fora tira do dia; "Voltar à semana padrão"; a agenda, o topo da tela Treino e as metas do Dashboard se ajustam na hora | P0 | Feito |
 | RF-31 | Tela Você com dados pessoais: nome, e-mail da conta Google e foto, recortada e reduzida no aparelho e exibida na barra inferior; nome e foto são salvos automaticamente, sem botão de salvar (o nome após uma pausa na digitação, ao sair do campo ou com Enter; nome em branco não é salvo e, se o perfil estiver sem nome, o app usa o nome da conta Google); ao escolher a foto aparece "Foto salva com sucesso." ou, ao trocar, "Foto alterada com sucesso." | P1 | Feito |
 | RF-32 | Tema do app: automático (segue o celular), claro ou escuro, aplicado antes da primeira pintura | P1 | Feito |
 | **Agenda e treino do dia** |  |  |  |
@@ -169,6 +169,7 @@ São 58 requisitos em 11 grupos; os marcados P0 bloqueiam o lançamento do MVP. 
 | RF-60 | Vídeos liberados por usuário: no monitoramento, na ficha do usuário (aba Usuários), "Liberar vídeos" / "Tirar vídeos" (função `admin_liberar_videos`); a tabela mostra a etiqueta "Vídeos" em quem está liberado. O app recebe os vídeos pela função `meus_videos()`, que só devolve a lista para a própria pessoa liberada; a tabela `videos_exercicios` não é lida pela API e a lista não fica no código nem no repositório. Sem liberação (padrão), os exercícios aparecem sem vídeo | P1 | Feito |
 | RF-51 | Muay Thai como tipo de check-in (selo M, amarelo, 60 min por padrão) e atividade da Minha semana: marca o dia como feito, conta em "Esta semana", no calendário, nas barras do mês, no painel de monitoramento e no resumo por e-mail (cartão só para quem fez ou planejou muay thai) | P1 | Feito |
 | RF-57 | Surf como tipo de check-in (selo S, magenta, 90 min por padrão), entre Muay Thai e Cardio. Não entra na semana padrão: aparece na Minha semana só se a pessoa colocar, como as outras atividades. Conta em "Esta semana" (como extra quando não está no plano), no calendário, nas barras do mês, no painel de monitoramento e no resumo por e-mail (cartão só para quem surfou ou planejou surf) | P1 | Feito |
+| RF-61 | Calistenia como tipo de check-in (selo K, roxo, 60 min por padrão), entre Surf e Cardio. Não entra na semana padrão: aparece na Minha semana só se a pessoa colocar, como as outras atividades; conta em "Esta semana", no calendário, nas barras do mês, no monitoramento (gráfico, legenda e "Treinos mais feitos") e no resumo por e-mail (cartão só para quem fez ou planejou). O roxo passou no validador de paleta no claro e no escuro; a letra K garante a leitura sem cor | P1 | Feito na dev |
 | RF-58 | Foto opcional no check-in (novo ou editar): "Adicionar foto" abre a câmera ou a galeria; a foto é reduzida no aparelho (até 1280 px, JPEG) e guardada no Supabase Storage (bucket privado `fotos-checkin`). Só quem postou vê a foto: prévia no formulário (Trocar, Remover), miniatura no detalhe do check-in no Dashboard (ícone de câmera na linha) e tela cheia ao tocar; o painel nunca mostra fotos. Remover, excluir o check-in ou a conta apaga o arquivo; se o envio falhar, o check-in fica salvo com aviso | P2 | Feito |
 | RF-52 | Tela Você em lista, como os Ajustes do celular: cartão do perfil (foto, nome, e-mail) que abre Dados pessoais; grupos com ícone, nome, valor atual e seta (Meus treinos, Minha semana; Aparência, Notificações, Privacidade; Sair da conta em vermelho). Cada opção abre a própria tela (#voce/…) com "‹ Você" para voltar; o voltar do navegador também funciona | P1 | Feito |
 | RF-53 | Excluir conta: em Você, "Excluir conta" abre uma confirmação amigável que lista o que se perde (check-ins, pesos e recordes, treinos e semana, foto e preferências, resumo por e-mail), avisa que não dá para desfazer, sugere sair ou desligar o resumo para quem só quer um tempo e exige marcar "Entendi" antes do botão vermelho. No monitoramento, cada usuário tem uma lixeira que abre a mesma confirmação, com o nome da pessoa; o administrador não exclui a própria conta nem a de outro administrador. Tudo é apagado em cascata pelo banco (funções `excluir_conta()` e `admin_excluir_usuario()`) | P1 | Feito |
@@ -177,7 +178,7 @@ São 58 requisitos em 11 grupos; os marcados P0 bloqueiam o lançamento do MVP. 
 | RF-55 | Observações dos check-ins (podem revelar saúde) só com consentimento, sem perguntar no check-in: em Você → Privacidade, "Registrar observações nos check-ins" vem desligado; ligar é consentir e faz o campo Observação (opcional) aparecer no check-in e no encerrar. Desligar não pede confirmação: retira o consentimento e apaga as observações já registradas. A nota de recuperação (1–5) foi removida e as notas salvas, apagadas | P0 | Feito |
 | RF-56 | Baixar meus dados: Você → Privacidade gera `oss-meus-dados-AAAA-MM-DD.json` com perfil (sem a foto), preferências, consentimentos, treinos, semana, check-ins, cargas, registro de uso e e-mails enviados (função `meus_dados_extras()`) | P1 | Feito |
 | **Dashboard e calendário** |  |  |  |
-| RF-27 | Calendário mensal no Dashboard: cada dia mostra selos por tipo (1 a 6 para musculação, J para jiu-jitsu, M para muay thai, S para surf, C para cardio); com mais de dois check-ins mostra o primeiro e "+N"; navegação entre meses até o mês atual | P0 | Feito |
+| RF-27 | Calendário mensal no Dashboard: cada dia mostra selos por tipo (1 a 6 para musculação, J para jiu-jitsu, M para muay thai, S para surf, K para calistenia, C para cardio); com mais de dois check-ins mostra o primeiro e "+N"; navegação entre meses até o mês atual | P0 | Feito |
 | RF-28 | Ao tocar num dia, listar os check-ins daquele dia em ordem de horário, com tipo, horário e duração; dia sem check-in orienta tocar em "Fazer check-in", que já usa o dia selecionado | P0 | Feito |
 | RF-29 | Ao abrir um check-in de musculação, mostrar a observação e cada exercício do treino com as cargas do dia por série; exercícios sem carga aparecem como "sem registro", e os marcados como Sem peso como "feito (sem peso)" ou "sem peso"; em check-ins encerrados, tocar num exercício abre o painel para corrigir os pesos (ou o "feito" sem peso) daquele dia | P0 | Feito |
 | RF-34 | Números do Dashboard: check-ins no total, check-ins, horas treinadas e dias com treino no mês | P1 | Feito |
@@ -202,9 +203,9 @@ O plano pronto é um modelo único, compartilhado por todos os usuários e guard
 | Treino-modelo | código (1, 2 ou 3, no plano pronto; 1 a 6 nos treinos da conta), nome, subtítulo, objetivo, o que esperar, impacto no jiu-jitsu, impacto no físico, lista ordenada de exercícios |
 | Exercício (biblioteca) | nome (único, sem diferenciar maiúsculas e acentos), outros nomes (como aparecem nas fichas, para a busca), grupo, dose (séries × reps/tempo/por lado), PSE-alvo, graus H/F/E/M (Alta/Média/Baixa), justificativa, vídeo (hoje desligado), é principal (sim/não). Fica no código (`index.html`), não no banco |
 | Ajuste por fase | exercício, fase, nova dose (ex.: Passada 3×16 na fase 3) |
-| Sessão | inscrição, data, tipo (Treino 1 a 6, jiu-jitsu, muay thai, surf, cardio, descanso), semana, status (planejada, feita, pulada, movida) |
+| Sessão | inscrição, data, tipo (Treino 1 a 6, jiu-jitsu, muay thai, surf, calistenia, cardio, descanso), semana, status (planejada, feita, pulada, movida) |
 | Treinos da conta | usuário, até 6 treinos (nome, foco, exercícios com dose e PSE); vazio = plano pronto; última resposta ao aviso da novidade e quando pediu para não mostrar mais |
-| Check-in | usuário, tipo (Treino 1 a 6, jiu-jitsu, muay thai, surf, cardio), início, fim (vazio enquanto aberto), sem horário (sim/não), observação (opcional, só com consentimento), foto (opcional: caminho do arquivo no bucket privado `fotos-checkin`), retroativo (sim/não) |
+| Check-in | usuário, tipo (Treino 1 a 6, jiu-jitsu, muay thai, surf, calistenia, cardio), início, fim (vazio enquanto aberto), sem horário (sim/não), observação (opcional, só com consentimento), foto (opcional: caminho do arquivo no bucket privado `fotos-checkin`), retroativo (sim/não) |
 | Cargas do dia | usuário, data, treino (1 a 5), cargas por exercício e série (kg) ou marcação de feito para exercícios sem peso |
 | Medida corporal | usuário, data, peso (kg), % de gordura (opcional) |
 | Proteína | usuário, data, gramas |
@@ -301,7 +302,7 @@ Todas as regras vêm do plano original; o app as aplica sem que o usuário preci
 13. **Vários check-ins por dia:** não há limite de check-ins por dia, mas check-ins do mesmo dia não podem se sobrepor no horário. Só um check-in pode ficar aberto por vez.
 14. **Check-in esquecido:** um check-in que ficou aberto há mais de 3 horas gera aviso na barra "em andamento"; na próxima abertura do app, ele é encerrado na hora da última série registrada (ou 1 hora após o início) e o usuário é avisado. Vale para check-ins abertos em versões anteriores, já que o formulário atual registra o check-in encerrado.
 15. **Check-in retroativo e edição:** a data não pode ser no futuro e a duração vai de 1 a 600 min; check-ins de datas passadas ficam marcados como retroativos. As mesmas regras valem ao editar (a sobreposição ignora o próprio check-in), e um check-in "sem horário" passa a ter horário ao ser editado. Os pesos ficam no dia e no treino: mudar a data ou o tipo de um check-in não leva os pesos junto.
-16. **Duração padrão:** 60 min para musculação, jiu-jitsu e muay thai, 30 min para cardio.
+16. **Duração padrão:** 60 min para musculação, jiu-jitsu, muay thai e calistenia, 90 min para surf, 30 min para cardio.
 17. **Exclusão:** excluir um check-in pede confirmação; os pesos registrados na ficha continuam salvos.
 18. **Pesos:** salvar um peso grava as cargas do dia daquele treino e não abre check-in nem temporizador. Editar um peso de hoje mantém as outras séries já registradas.
 19. **Acessos:** cada abertura do app já logado atualiza o último acesso; a quantidade só sobe se o acesso anterior foi há mais de 30 min. A hora é a do servidor, e o usuário não consegue alterar esses campos.
@@ -395,6 +396,7 @@ Pendências e cuidados:
    - Política de Privacidade, observações só com consentimento, sem nota de recuperação, e baixar meus dados (LGPD);
    - resumo semanal por e-mail;
    - surf como atividade e foto opcional no check-in;
+   - calistenia como atividade;
    - e-mail aos administradores a cada pedido de acesso;
    - ambiente de testes separado, com cópia anonimizada da produção;
    - card "Treinos mais feitos" no monitoramento;
