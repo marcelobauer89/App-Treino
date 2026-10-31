@@ -177,6 +177,8 @@ alter table public.perfis add column if not exists treinos_anterior jsonb
 -- Jornada pronta escolhida pela pessoa (hipertrofia, forca, mobilidade, jiu). Vazia = nenhuma escolhida.
 -- Só identifica a jornada; os treinos continuam em perfis.treinos. Quem já usa o app fica com o que tem.
 alter table public.perfis add column if not exists jornada text check (jornada is null or char_length(jornada) <= 30);
+-- Vídeos dos exercícios liberados pelo administrador (Monitoramento → Usuários). Só o admin muda (fora do grant update).
+alter table public.perfis add column if not exists videos_liberados boolean not null default false;
 
 -- ---------- Privacidade (LGPD) ----------
 -- Versão da Política de Privacidade que a pessoa viu e aceitou (aviso no app quando muda).
@@ -245,7 +247,8 @@ create function public.admin_usuarios()
 returns table (
   id uuid, nome text, email text, cadastro timestamptz, ultimo_acesso timestamptz, acessos integer,
   semana jsonb, dias_jiu smallint[], sem_peso text[], emails_resumo boolean,
-  liberado boolean, acesso_pedido_em timestamptz, liberado_como text, liberado_em timestamptz
+  liberado boolean, acesso_pedido_em timestamptz, liberado_como text, liberado_em timestamptz,
+  videos_liberados boolean
 )
 language plpgsql
 stable
@@ -259,7 +262,7 @@ begin
     select p.id,
       coalesce(nullif(trim(p.nome), ''), u.raw_user_meta_data ->> 'full_name', u.raw_user_meta_data ->> 'name', '')::text,
       p.email, u.created_at, p.ultimo_acesso, p.acessos, p.semana, p.dias_jiu, p.sem_peso, p.emails_resumo,
-      p.liberado, p.acesso_pedido_em, p.liberado_como, p.liberado_em
+      p.liberado, p.acesso_pedido_em, p.liberado_como, p.liberado_em, p.videos_liberados
     from public.perfis p join auth.users u on u.id = p.id
     order by 2;
 end;
@@ -634,6 +637,44 @@ revoke execute on function public.usar_convite(text), public.pedir_acesso(), pub
 grant execute on function public.usar_convite(text), public.pedir_acesso(), public.admin_criar_convite(text), public.admin_convites(),
   public.admin_cancelar_convite(text), public.admin_excluir_convite(text), public.admin_liberar_usuario(uuid), public.admin_bloquear_usuario(uuid), public.admin_recusar_pedido(uuid)
   to authenticated;
+
+-- ---------- Vídeos dos exercícios (só para quem o administrador liberar) ----------
+-- A lista (exercício → id do vídeo no YouTube) fica só no banco; ninguém lê a tabela pela API.
+-- A carga dos vídeos é feita uma vez pelo SQL Editor (não fica no repositório).
+create table if not exists public.videos_exercicios (
+  exercicio text primary key check (char_length(exercicio) between 1 and 80),
+  video_id text not null check (video_id ~ '^[A-Za-z0-9_-]{11}$')
+);
+alter table public.videos_exercicios enable row level security;
+revoke all on public.videos_exercicios from anon, authenticated;
+
+-- Os vídeos para o app: devolve a lista só se a própria pessoa estiver com os vídeos liberados.
+create or replace function public.meus_videos()
+returns table (exercicio text, video_id text)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select v.exercicio, v.video_id from public.videos_exercicios v
+  where exists (select 1 from public.perfis p where p.id = (select auth.uid()) and p.videos_liberados);
+$$;
+
+-- Liberar ou tirar os vídeos de um usuário (só administradores).
+create or replace function public.admin_liberar_videos(alvo uuid, liberar boolean)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if not public.eh_admin() then raise exception 'Acesso restrito a administradores.'; end if;
+  update public.perfis set videos_liberados = coalesce(liberar, false) where id = alvo;
+  if not found then raise exception 'Usuário não encontrado.'; end if;
+end;
+$$;
+revoke execute on function public.meus_videos(), public.admin_liberar_videos(uuid, boolean) from public, anon;
+grant execute on function public.meus_videos(), public.admin_liberar_videos(uuid, boolean) to authenticated;
 
 -- ---------- Baixar meus dados (LGPD, direito de acesso) ----------
 -- O registro de uso e os e-mails enviados não são lidos pela API; esta função devolve só os da própria pessoa.
