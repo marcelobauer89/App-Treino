@@ -1232,7 +1232,7 @@
       <p class="nota-campo" id="meus-treinos-nota"></p>
       <ul class="meus-treinos" id="meus-treinos"></ul>
       <button class="btn" type="button" id="editar-treinos">Personalizar meus treinos</button>
-      <button class="btn-sec" type="button" id="trocar-jornada">Trocar de jornada</button>
+      <button class="btn-sec" type="button" id="trocar-jornada">Mudar meu objetivo</button>
       <div id="treinos-anterior"></div>
     </div>
   
@@ -4102,8 +4102,8 @@
   function renderMeusTreinos() {
     const j = jornadaAtual();
     $('meus-treinos-nota').textContent = j
-      ? (ehDaJornada(j) ? `Você está na jornada ${j.nome}. Mude exercícios, séries, PSE e a ordem quando quiser.`
-        : `Você está na jornada ${j.nome}, personalizada por você. Mude o que quiser ou troque de jornada.`)
+      ? (ehDaJornada(j) ? `Seu objetivo é ${j.nome}. Mude exercícios, séries, PSE e a ordem quando quiser.`
+        : `Seu objetivo é ${j.nome}, com os treinos personalizados por você. Mude o que quiser ou mude o objetivo.`)
       : treinosDaConta
         ? 'Você está usando os treinos que montou. Mude exercícios, séries, PSE e a ordem quando quiser.'
         : 'Você está usando o plano pronto. Monte os seus treinos com os exercícios da biblioteca.';
@@ -4133,7 +4133,7 @@
   });
 
   // ---------- Jornadas prontas ----------
-  // Boas-vindas (conta nova com o plano pronto) e "Trocar de jornada" em Meus treinos. Escolher grava os treinos
+  // Boas-vindas (conta nova com o plano pronto) e "Mudar meu objetivo" em Meus treinos. Escolher grava os treinos
   // e a semana sugerida; a versão de antes fica em treinos_anterior (Desfazer). Treinos de quem já usa só mudam assim.
   const jornadaDialog = $('jornada-dialog');
   const jornadaAtual = () => jornadaPorId(jornada);
@@ -4162,8 +4162,8 @@
           <ol>${j.treinos[n].exercicios.map((e) => `<li>${esc(e.nome)} <small>${esc(e.dose)}</small></li>`).join('')}</ol></div>`).join('')}
         </div>` : ''}
         ${jd.confirmar === j.id ? `<div class="ed-confirma" role="alert">
-          <p>Trocar para a jornada ${esc(j.nome)}? Seus treinos e a semana de agora ficam guardados como versão anterior, e dá para desfazer.</p>
-          <div><button class="btn" type="button" data-jd-sim="${j.id}">Trocar de jornada</button><button class="btn-sec" type="button" data-jd-cancelar>Cancelar</button></div>
+          <p>Mudar seu objetivo para ${esc(j.nome)}? Seus treinos e a semana de agora ficam guardados como versão anterior, e dá para desfazer.</p>
+          <div><button class="btn" type="button" data-jd-sim="${j.id}">Mudar objetivo</button><button class="btn-sec" type="button" data-jd-cancelar>Cancelar</button></div>
         </div>` : `<div class="jornada-acoes">
           <button class="btn-sec" type="button" data-jd-ver="${j.id}" aria-expanded="${aberta}"${aberta ? ` aria-controls="jornada-treinos-${j.id}"` : ''}>${aberta ? 'Esconder treinos' : 'Ver treinos'}</button>
           ${atual === j && ehDaJornada(j) ? '' : `<button class="btn" type="button" data-jd-escolher="${j.id}">${atual === j ? 'Voltar ao original' : 'Escolher'}</button>`}
@@ -4171,8 +4171,8 @@
       </li>`;
     };
     $('jornada-body').innerHTML = `
-      <div class="modal-head"><div>${boasVindas ? '<span class="novidade-selo">Boas-vindas</span>' : ''}<h3 id="jornada-title">${boasVindas ? 'Como você quer treinar?' : 'Trocar de jornada'}</h3></div>${BOTAO_FECHAR}</div>
-      <p class="resumo-enc">Escolha uma jornada pronta. Depois dá para mudar exercícios, séries e dias em Você → Meus treinos.</p>
+      <div class="modal-head"><div>${boasVindas ? '<span class="novidade-selo">Boas-vindas</span>' : ''}<h3 id="jornada-title">${boasVindas ? 'Como você quer treinar?' : 'Mudar meu objetivo'}</h3></div>${BOTAO_FECHAR}</div>
+      <p class="resumo-enc">Escolha um objetivo e receba os treinos prontos. Depois dá para mudar exercícios, séries e dias em Você → Meus treinos.</p>
       <ul class="jornadas">
         ${JORNADAS.map(cartao).join('')}
         <li class="jornada">
@@ -4248,7 +4248,7 @@
     renderTudo();
     atualizarCheckinUI();
     if (telaAtual() === 'voce') renderConfig();
-    toastAcao(`Jornada ${j.nome} escolhida. Os treinos já estão na sua semana.`, 'Desfazer', () => restaurarAnterior('desfazer'));
+    toastAcao(`Objetivo ${j.nome} escolhido. Os treinos já estão na sua semana.`, 'Desfazer', () => restaurarAnterior('desfazer'));
   }
 
   // ---------- Aviso da novidade (até marcar "não mostrar mais") ----------
