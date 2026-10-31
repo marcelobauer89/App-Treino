@@ -165,10 +165,10 @@ Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 a t6 nos check-i
   - Mobilidade e prevenção: Mobilidade, Anti-lesão e Pegada.
 - **Exercícios:** todos são da biblioteca, por nome. Cada treino tem o próprio "Sobre o treino", que só aparece enquanto os exercícios forem os mesmos da jornada.
 - **Conta nova:** escolhe nas boas-vindas. Escolher grava os treinos (`perfis.treinos`), a semana sugerida (mantendo jiu, muay, surf e cardio) e a jornada (`perfis.jornada`), e encerra as boas-vindas.
-- **Quem já usa:** "Trocar de jornada", em Você → Meus treinos, sempre com confirmação. A versão de antes vai para `treinos_anterior`, e o "Desfazer" volta a ela. **Nenhum treino de quem já usa muda sozinho.**
+- **Quem já usa:** "Mudar meu objetivo", em Você → Meus treinos, sempre com confirmação. A versão de antes vai para `treinos_anterior`, e o "Desfazer" volta a ela. **Nenhum treino de quem já usa muda sozinho.**
 - **Personalizar:** depois de escolher, tudo continua editável. Meus treinos mostra "Jornada X" ou "X (personalizada)".
 - **No banco:** a coluna `perfis.jornada` guarda só o id da jornada. Sem ela (schema antigo), escolher funciona do mesmo jeito, sem o rótulo.
-- **Monitoramento:** os eventos `jornadas_abertas` e `jornada_escolhida` alimentam o card "Jornadas escolhidas".
+- **Monitoramento:** os eventos `jornadas_abertas` e `jornada_escolhida` alimentam o card "Objetivos escolhidos".
 - **De onde veio:** as jornadas foram montadas com seleção, ordem, doses e textos próprios, usando planilhas de treino só como referência de método. Ao criar uma jornada nova, não copie a sequência nem os textos de nenhuma planilha.
 
 ## Convites (acesso só para convidados)
