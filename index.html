@@ -3890,7 +3890,9 @@
       let resto = campos;
       for (;;) {
         const r = await sb.from('perfis').update(resto).eq('id', usuario.id);
-        const falta = r.error && ['treinos_anterior', 'jornada'].find((c) => c in resto && new RegExp(`\\b${c}\\b`).test(r.error.message || ''));
+        // Coluna que ainda não existe (citada no erro) ou sem permissão para gravá-la (42501, grant antigo): grava o resto.
+        const falta = r.error && (['treinos_anterior', 'jornada'].find((c) => c in resto && new RegExp(`\\b${c}\\b`).test(r.error.message || ''))
+          || (r.error.code === '42501' && 'jornada' in resto ? 'jornada' : null));
         if (!falta) return r;
         const { [falta]: _, ...sem } = resto;
         resto = sem;
