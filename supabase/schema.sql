@@ -174,6 +174,10 @@ alter table public.perfis add column if not exists novidade_oculta timestamptz;
 alter table public.perfis add column if not exists treinos_anterior jsonb
   check (treinos_anterior is null or (jsonb_typeof(treinos_anterior) = 'object' and pg_column_size(treinos_anterior) <= 40000));
 
+-- Jornada pronta escolhida pela pessoa (hipertrofia, forca, mobilidade, jiu). Vazia = nenhuma escolhida.
+-- Só identifica a jornada; os treinos continuam em perfis.treinos. Quem já usa o app fica com o que tem.
+alter table public.perfis add column if not exists jornada text check (jornada is null or char_length(jornada) <= 30);
+
 -- ---------- Privacidade (LGPD) ----------
 -- Versão da Política de Privacidade que a pessoa viu e aceitou (aviso no app quando muda).
 alter table public.perfis add column if not exists politica_versao text check (politica_versao is null or char_length(politica_versao) <= 20);
