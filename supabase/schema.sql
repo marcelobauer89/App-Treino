@@ -110,6 +110,12 @@ alter table public.perfis add column if not exists acessos integer not null defa
 -- Resumo semanal por e-mail (função "resumo-semanal"): a pessoa pode desligar em Você ou pelo link do e-mail.
 alter table public.perfis add column if not exists emails_resumo boolean not null default true;
 
+-- Estilo das cores escolhido em Você → Aparência: 'padrao' (o tema claro/escuro de sempre) ou um estilo neon,
+-- sempre escuro. Bancos criados antes desta coluna a recebem ao rodar o arquivo de novo.
+alter table public.perfis add column if not exists estilo text not null default 'padrao';
+alter table public.perfis drop constraint if exists perfis_estilo_check;
+alter table public.perfis add constraint perfis_estilo_check check (estilo in ('padrao', 'neon', 'brasa', 'cyber'));
+
 -- O app chama ao abrir. Usa a hora do servidor e só soma 1 se o acesso anterior foi há mais de
 -- 30 min, para recarregar a página não inflar o número.
 create or replace function public.registrar_acesso()
@@ -188,7 +194,7 @@ alter table public.perfis add column if not exists politica_versao text check (p
 alter table public.perfis add column if not exists consentimento_saude text check (consentimento_saude is null or consentimento_saude in ('sim', 'nao'));
 alter table public.perfis add column if not exists consentimento_saude_em timestamptz;
 
-grant update (id, nome, email, foto, tema, dias_jiu, semana, sem_peso, emails_resumo, treinos, novidade_treinos, novidade_oculta, treinos_anterior, jornada, politica_versao, consentimento_saude, consentimento_saude_em) on public.perfis to authenticated;
+grant update (id, nome, email, foto, tema, estilo, dias_jiu, semana, sem_peso, emails_resumo, treinos, novidade_treinos, novidade_oculta, treinos_anterior, jornada, politica_versao, consentimento_saude, consentimento_saude_em) on public.perfis to authenticated;
 
 -- A nota de recuperação (1 a 5) saiu do app: a coluna e as notas já salvas são apagadas (LGPD: não guardar dado sem uso).
 -- Rode depois de publicar a versão do app sem a recuperação; a anterior ainda envia esse campo.
