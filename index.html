@@ -1027,6 +1027,111 @@
   .priv-baixar b { font-size: 15px; }
   .priv-baixar small { font-size: 13px; color: var(--tinta-2); }
   .entrar-privacidade a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+
+  /* Estilos neon (Você → Aparência). Só cores, sombras e brilho: o layout é o mesmo do estilo Padrão.
+     São sempre escuros, qualquer que seja o tema. Sem data-estilo, vale o Padrão acima. */
+  html:root[data-estilo] {
+    --tinta: #f4f6fb; --faixa: #000000; --fita: #f2f4f7; --fita-vazia: #2c2f35;
+    --erro: #ff6b6b; --sobre-erro: #0b0d10; --feito-suave: #12301f; --feito-tinta: #6ee7a0;
+    --recorde: #fbbf24; --recorde-suave: #33270a; --recorde-tinta: #fcd34d; --selo-tinta: #07080c;
+    --muay: #ffc23d; --surf: #ff5cc8; --cali: #a78bff;
+    --sombra: 0 14px 34px rgba(0, 0, 0, .55), 0 2px 6px rgba(0, 0, 0, .4), inset 0 1px 0 rgba(255, 255, 255, .05);
+    color-scheme: dark;
+  }
+  html:root[data-estilo="neon"] {
+    --gi: #06080f; --papel: #0e1322; --fio: #1c2440; --tinta-2: #9aa6c4;
+    --tatame: #2f6bff; --tatame-forte: #1f55e0; --tatame-tinta: #6ea0ff; --tatame-suave: #14204a; --sobre-tatame: #ffffff;
+    --checkin: #19d46e; --checkin-forte: #12b85d; --sobre-checkin: #03140a;
+    --musc: #4d9bff; --jiu: #ff6a2b; --bike: #1fe0a0;
+    --brilho: rgba(64, 128, 255, .45); --brilho-checkin: rgba(25, 212, 110, .55);
+    --borda-neon: rgba(110, 160, 255, .16); --numero: #ffffff; --dia-tem: #141b33; --halo: #142458;
+  }
+  html:root[data-estilo="brasa"] {
+    --gi: #0b0706; --papel: #171010; --fio: #2e1d1a; --tinta-2: #c0a69f;
+    --tatame: #ff5a1f; --tatame-forte: #e64a12; --tatame-tinta: #ff8a5c; --tatame-suave: #3a1a10; --sobre-tatame: #140602;
+    --checkin: #ff2e88; --checkin-forte: #e61e75; --sobre-checkin: #ffffff;
+    --musc: #4da3ff; --jiu: #ff6a2b; --bike: #2ee6a6;
+    --brilho: rgba(255, 90, 31, .45); --brilho-checkin: rgba(255, 46, 136, .55);
+    --borda-neon: rgba(255, 138, 92, .16); --numero: #ffd7c4; --dia-tem: #24150f; --halo: #4a170a;
+  }
+  html:root[data-estilo="cyber"] {
+    --gi: #04090b; --papel: #0b1518; --fio: #173036; --tinta-2: #93b3b8;
+    --tatame: #00d9ff; --tatame-forte: #00bde0; --tatame-tinta: #5ce8ff; --tatame-suave: #08303a; --sobre-tatame: #001318;
+    --checkin: #b6ff3b; --checkin-forte: #9be620; --sobre-checkin: #0d1600;
+    --musc: #3ea8ff; --jiu: #ff7a3d; --bike: #b6ff3b;
+    --brilho: rgba(0, 217, 255, .45); --brilho-checkin: rgba(182, 255, 59, .5);
+    --borda-neon: rgba(92, 232, 255, .16); --numero: #e9fdff; --dia-tem: #0f2328; --halo: #063a46;
+  }
+  html[data-estilo] body { background: radial-gradient(120% 60% at 50% -10%, var(--halo) 0%, var(--gi) 55%) fixed var(--gi); }
+  html[data-estilo] .controles { background: transparent; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+  html[data-estilo] .atividade, html[data-estilo] .dash-topo h1, html[data-estilo] .voce-topo h1 {
+    text-shadow: 0 0 22px var(--brilho), 0 0 2px rgba(255, 255, 255, .6);
+  }
+  html[data-estilo] :is(.treinos, .exercicios > li, .dias, .numeros, .metas, .barras, .cal, .cks, .cartao, .voce-grupo, .voce-perfil, dialog.modal) {
+    box-shadow: var(--sombra); border-color: var(--borda-neon);
+  }
+  html[data-estilo] :is(.treino-btn[aria-selected="true"], .chip[aria-pressed="true"], .btn, .tag-hoje, .opcao input:checked + span) {
+    box-shadow: 0 0 0 1px var(--tatame-tinta), 0 0 18px var(--brilho), 0 0 42px var(--brilho);
+  }
+  html[data-estilo] :is(.btn-sec, .cal-nav:not(:disabled)) { box-shadow: 0 0 12px var(--brilho), inset 0 0 10px var(--brilho); }
+  html[data-estilo] .fab {
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, .25), 0 0 22px var(--brilho-checkin), 0 0 54px var(--brilho-checkin), 0 10px 28px rgba(0, 0, 0, .6);
+  }
+  html[data-estilo] .nav {
+    background: color-mix(in srgb, var(--gi) 82%, transparent); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, .5);
+  }
+  html[data-estilo] .nav button[aria-current="page"] { text-shadow: 0 0 10px var(--brilho); }
+  html[data-estilo] .nav button[aria-current="page"] svg { filter: drop-shadow(0 0 6px var(--tatame-tinta)); }
+  html[data-estilo] .ex-num { color: var(--tatame-tinta); text-shadow: 0 0 10px var(--brilho); }
+  html[data-estilo] .pse { border-color: var(--tatame-tinta); color: var(--tatame-tinta); box-shadow: 0 0 10px var(--brilho); }
+  html[data-estilo] :is(.ponteira[data-nivel="3"] i, .ponteira[data-nivel="2"] i:nth-child(-n+2), .ponteira[data-nivel="1"] i:first-child) {
+    background: var(--tatame-tinta); box-shadow: 0 0 6px var(--tatame-tinta);
+  }
+  html[data-estilo] .dia.hoje { box-shadow: inset 3px 0 0 var(--tatame-tinta), inset 0 0 24px var(--brilho); }
+  html[data-estilo] .tag-feito { text-shadow: 0 0 8px var(--brilho); }
+  html[data-estilo] .numeros dd { color: var(--numero); text-shadow: 0 0 16px var(--brilho); }
+  html[data-estilo] .cal-dia.tem { background: var(--dia-tem); box-shadow: inset 0 0 0 1px var(--borda-neon); }
+  html[data-estilo] .cal-dia.hoje { border-color: var(--tatame-tinta); box-shadow: 0 0 14px var(--brilho), inset 0 0 10px var(--brilho); }
+  html[data-estilo] .cal-dia[aria-pressed="true"] { box-shadow: 0 0 16px var(--brilho); }
+  html[data-estilo] :is(.seg i.on, .barra-trilho i) { box-shadow: 0 0 8px currentColor; }
+  html[data-estilo] :is(.seg i.on.musc, .barra-trilho i.musc) { color: var(--musc); }
+  html[data-estilo] :is(.seg i.on.jiu, .barra-trilho i.jiu) { color: var(--jiu); }
+  html[data-estilo] :is(.seg i.on.bike, .barra-trilho i.bike) { color: var(--bike); }
+  html[data-estilo] :is(.seg i.on.muay, .barra-trilho i.muay) { color: var(--muay); }
+  html[data-estilo] :is(.seg i.on.surf, .barra-trilho i.surf) { color: var(--surf); }
+  html[data-estilo] :is(.seg i.on.cali, .barra-trilho i.cali) { color: var(--cali); }
+  html[data-estilo] .selo.musc { box-shadow: 0 0 8px var(--musc); }
+  html[data-estilo] .selo.jiu { box-shadow: 0 0 8px var(--jiu); }
+  html[data-estilo] .selo.bike { box-shadow: 0 0 8px var(--bike); }
+  html[data-estilo] .selo.muay { box-shadow: 0 0 8px var(--muay); }
+  html[data-estilo] .selo.surf { box-shadow: 0 0 8px var(--surf); }
+  html[data-estilo] .selo.cali { box-shadow: 0 0 8px var(--cali); }
+
+  /* Escolha do estilo: uma amostra de cada (fundo, destaque e check-in) */
+  .estilos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .estilo-op { position: relative; }
+  .estilo-op input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+  .estilo-op > span {
+    display: grid; gap: 8px; height: 100%; padding: 8px 8px 10px; border: 1.5px solid var(--fio); border-radius: 12px;
+    background: var(--papel); font-size: 15px; font-weight: 700;
+  }
+  .estilo-op small { display: block; margin-top: -6px; font-size: 12.5px; font-weight: 500; color: var(--tinta-2); }
+  .estilo-op input:checked + span { border-color: var(--tatame-tinta); box-shadow: 0 0 0 1px var(--tatame-tinta); }
+  .estilo-op input:focus-visible + span { outline: 2px solid var(--tatame-tinta); outline-offset: 2px; }
+  .amostra {
+    display: flex; align-items: flex-end; gap: 6px; height: 54px; padding: 8px; border-radius: 8px;
+    background: var(--a-fundo); box-shadow: inset 0 0 0 1px rgba(127, 127, 127, .25);
+  }
+  .amostra i { height: 14px; border-radius: 7px; }
+  .amostra i:first-child { flex: 1; background: var(--a-cor); box-shadow: 0 0 10px var(--a-cor); }
+  .amostra i:last-child { width: 26px; background: var(--a-ck); box-shadow: 0 0 10px var(--a-ck); }
+  .amostra.padrao { --a-fundo: linear-gradient(90deg, #f3f4f6 50%, #0f1115 50%); --a-cor: #2563eb; --a-ck: #16a34a; }
+  .amostra.padrao i { box-shadow: none; }
+  .amostra.neon { --a-fundo: radial-gradient(120% 120% at 50% 0%, #142458, #06080f 70%); --a-cor: #2f6bff; --a-ck: #19d46e; }
+  .amostra.brasa { --a-fundo: radial-gradient(120% 120% at 50% 0%, #4a170a, #0b0706 70%); --a-cor: #ff5a1f; --a-ck: #ff2e88; }
+  .amostra.cyber { --a-fundo: radial-gradient(120% 120% at 50% 0%, #063a46, #04090b 70%); --a-cor: #00d9ff; --a-ck: #b6ff3b; }
+  html[data-estilo] #opcoes-tema { opacity: .5; }
 </style>
 </head>
 <body class="deslogado">
@@ -1222,6 +1327,18 @@
           <label class="opcao"><input type="radio" name="tema" value="auto"><span>Automático</span></label>
           <label class="opcao"><input type="radio" name="tema" value="claro"><span>Claro</span></label>
           <label class="opcao"><input type="radio" name="tema" value="escuro"><span>Escuro</span></label>
+        </div>
+        <p class="nota-campo" id="tema-nota-estilo" hidden>Os estilos neon são sempre escuros. O tema volta a valer no estilo Padrão.</p>
+      </fieldset>
+    </div>
+    <div class="cartao">
+      <fieldset class="campo">
+        <legend class="nota-campo">Estilo das cores. O layout continua o mesmo.</legend>
+        <div class="estilos" id="opcoes-estilo">
+          <label class="estilo-op"><input type="radio" name="estilo" value="padrao"><span><span class="amostra padrao" aria-hidden="true"><i></i><i></i></span>Padrão<small>Claro ou escuro, azul</small></span></label>
+          <label class="estilo-op"><input type="radio" name="estilo" value="neon"><span><span class="amostra neon" aria-hidden="true"><i></i><i></i></span>Neon Tatame<small>Azul elétrico</small></span></label>
+          <label class="estilo-op"><input type="radio" name="estilo" value="brasa"><span><span class="amostra brasa" aria-hidden="true"><i></i><i></i></span>Brasa<small>Laranja e rosa</small></span></label>
+          <label class="estilo-op"><input type="radio" name="estilo" value="cyber"><span><span class="amostra cyber" aria-hidden="true"><i></i><i></i></span>Cyber<small>Ciano e verde-limão</small></span></label>
         </div>
       </fieldset>
     </div>
@@ -1968,7 +2085,7 @@
     try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return v && typeof v === 'object' ? v : {}; } catch (_) { return {}; }
   };
   // semPeso: exercícios que o usuário faz só com o corpo (o painel não pede carga).
-  let config = { tema: 'auto', semana: [[], ['t2'], ['jiu'], ['t1'], ['jiu'], ['t3'], ['bike']], semPeso: new Set(), resumoEmail: true };
+  let config = { tema: 'auto', estilo: 'padrao', semana: [[], ['t2'], ['jiu'], ['t1'], ['jiu'], ['t3'], ['bike']], semPeso: new Set(), resumoEmail: true };
   // A conta já tem a semana salva (coluna perfis.semana)? Senão, ela vem dos antigos dias de jiu.
   let semanaDaConta = false;
   // Aviso "Baita atualização" dos treinos personalizados: aparece a cada abertura do app até a pessoa marcar
@@ -1981,11 +2098,18 @@
   let escondidoEm = null;
   let perfil = { nome: '', email: '', foto: '' };
   // Só uma cópia do tema fica no navegador, para aplicá-lo antes da primeira pintura.
-  const guardarTemaLocal = () => { try { localStorage.setItem('bauer-tema', config.tema); } catch (_) {} };
+  const ESTILOS = ['padrao', 'neon', 'brasa', 'cyber'];
+  const guardarTemaLocal = () => {
+    try { localStorage.setItem('bauer-tema', config.tema); localStorage.setItem('bauer-estilo', config.estilo); } catch (_) {}
+  };
   try {
     const t = localStorage.getItem('bauer-tema');
     if (['auto', 'claro', 'escuro'].includes(t)) config.tema = t;
+    const e = localStorage.getItem('bauer-estilo');
+    if (ESTILOS.includes(e)) config.estilo = e;
   } catch (_) {}
+  // Sem a coluna perfis.estilo (schema.sql antigo), o estilo fica só neste aparelho.
+  let estiloNaConta = false;
 
   // Semana do usuário: para cada dia (índice de Date.getDay(), 0 = domingo), até 2 atividades
   // entre os treinos ('t1' a 't6'), 'jiu', 'muay', 'surf', 'cali' e 'bike'. Dia vazio é descanso.
@@ -2173,6 +2297,7 @@
     const msg = (erro && erro.message) || '';
     registrarErro('salvar', msg);
     if (/semana/.test(msg)) toast('Para salvar a semana, rode de novo o supabase/schema.sql no Supabase (veja o README).');
+    else if (/estilo/.test(msg)) toast('Para salvar o estilo na conta, rode de novo o supabase/schema.sql no Supabase (veja o README).');
     else if (/emails_resumo/.test(msg)) toast('Para salvar essa opção, rode de novo o supabase/schema.sql no Supabase (veja o README).');
     else if (/sem_peso/.test(msg)) toast('Para salvar essa opção, rode de novo o supabase/schema.sql no Supabase (veja o README).');
     else if (/treinos/.test(msg)) toast('Para salvar seus treinos, rode de novo o supabase/schema.sql no Supabase (veja o README).');
@@ -2411,10 +2536,12 @@
     treinosAnterior = linha.treinos_anterior && linha.treinos_anterior.treinos ? linha.treinos_anterior : null;
     jornada = jornadaPorId(linha.jornada) ? linha.jornada : null;
     novidade = { disponivel: true, vista: !!linha.novidade_oculta || ocultaNoAparelho, contaNova: !(c.data || []).length && !cargas.length };
+    estiloNaConta = 'estilo' in linha;
     const semana = validarSemana(linha.semana);
     semanaDaConta = !!semana;
     config = {
       tema: linha.tema || 'auto',
+      estilo: 'estilo' in linha ? (ESTILOS.includes(linha.estilo) ? linha.estilo : 'padrao') : config.estilo,
       semana: semana || validarSemana(semanaDeDiasJiu((linha.dias_jiu || [2, 4]).map(Number))),
       semPeso: new Set(Array.isArray(linha.sem_peso) ? linha.sem_peso : []),
       resumoEmail: linha.emails_resumo !== false,
@@ -3493,6 +3620,7 @@
   // ---------- Render: Você ----------
   const ICON_PESSOA = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>';
   const CORES_TEMA = { claro: '#f3f4f6', escuro: '#0f1115' };
+  const CORES_ESTILO = { neon: '#06080f', brasa: '#0b0706', cyber: '#04090b' };
 
   function aplicarTema() {
     const raiz = document.documentElement;
@@ -3503,6 +3631,11 @@
     const fixa = CORES_TEMA[config.tema];
     metaClaro.content = fixa || CORES_TEMA.claro;
     metaEscuro.content = fixa || CORES_TEMA.escuro;
+    // Estilos neon: sempre escuros, por cima do tema (o Padrão não marca nada e segue o tema).
+    if (CORES_ESTILO[config.estilo]) {
+      raiz.dataset.estilo = config.estilo;
+      metaClaro.content = metaEscuro.content = CORES_ESTILO[config.estilo];
+    } else delete raiz.dataset.estilo;
   }
 
   function iniciais(nome) {
@@ -4325,6 +4458,7 @@
   novidadeDialog.addEventListener('cancel', (e) => { e.preventDefault(); responderNovidade('fechou'); });
 
   const NOMES_TEMA = { auto: 'Automático', claro: 'Claro', escuro: 'Escuro' };
+  const NOMES_ESTILO = { padrao: 'Padrão', neon: 'Neon Tatame', brasa: 'Brasa', cyber: 'Cyber' };
   // Valores mostrados à direita de cada linha da lista de Você.
   function renderMenuVoce() {
     const n = Object.keys(TREINOS).length;
@@ -4334,7 +4468,7 @@
     const ativ = config.semana.flat().length;
     const descanso = config.semana.filter((d) => !d.length).length;
     $('valor-semana').textContent = `${ativ} ${ativ === 1 ? 'atividade' : 'atividades'}${descanso ? '' : ', sem descanso'}`;
-    $('valor-aparencia').textContent = NOMES_TEMA[config.tema] || 'Automático';
+    $('valor-aparencia').textContent = config.estilo !== 'padrao' ? NOMES_ESTILO[config.estilo] : NOMES_TEMA[config.tema] || 'Automático';
     $('valor-notificacoes').textContent = config.resumoEmail ? 'Resumo ligado' : 'Desligadas';
   }
   // Abrir uma opção pela lista: "‹ Você" volta pelo histórico (o botão voltar do celular também funciona).
@@ -4351,6 +4485,8 @@
     renderMenuVoce();
     renderPrivacidade();
     document.querySelectorAll('input[name="tema"]').forEach((r) => { r.checked = r.value === config.tema; });
+    document.querySelectorAll('input[name="estilo"]').forEach((r) => { r.checked = r.value === config.estilo; });
+    $('tema-nota-estilo').hidden = config.estilo === 'padrao';
     $('resumo-email').checked = config.resumoEmail;
     renderMeusTreinos();
     renderSemanaConfig();
@@ -4689,6 +4825,16 @@
       registrarEvento('tema', { tema: config.tema });
       guardarTemaLocal();
       aplicarTema();
+      renderMenuVoce();
+    }
+    if (e.target.name === 'estilo' && ESTILOS.includes(e.target.value)) {
+      config.estilo = e.target.value;
+      if (estiloNaConta) salvarPerfil({ estilo: config.estilo });
+      registrarEvento('estilo', { estilo: config.estilo });
+      guardarTemaLocal();
+      aplicarTema();
+      renderMenuVoce();
+      $('tema-nota-estilo').hidden = config.estilo === 'padrao';
     }
   });
 
@@ -4859,7 +5005,7 @@
       gerado_em: new Date().toISOString(),
       app: 'OSS · App Treino',
       politica_versao: POLITICA_VERSAO,
-      perfil: { ...semFoto, nome: perfil.nome, email: perfil.email, tem_foto: !!perfil.foto, tema: config.tema, semana: config.semana,
+      perfil: { ...semFoto, nome: perfil.nome, email: perfil.email, tem_foto: !!perfil.foto, tema: config.tema, estilo: config.estilo, semana: config.semana,
         sem_peso: [...config.semPeso], emails_resumo: config.resumoEmail, consentimento_saude: config.saude, treinos: treinosDaConta ? treinosParaSalvar(TREINOS) : 'plano pronto' },
       checkins: checkins.map((c) => ({ ...c })),
       cargas: cargas.map((c) => ({ ...c })),
