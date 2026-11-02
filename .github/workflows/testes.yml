@@ -1,0 +1,76 @@
+# Testes automáticos a cada PR para a dev ou a main (tests/README.md).
+# Três partes, ao mesmo tempo: app e painel no navegador, schema.sql e regras de acesso num Postgres
+# de verdade, e o resumo semanal por e-mail. O resultado aparece no PR (verde ou vermelho).
+name: Testes
+
+on:
+  pull_request:
+    branches: [dev, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: testes-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  app:
+    name: App e painel
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Playwright e Chromium
+        working-directory: tests
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Rodar os testes
+        run: node tests/rodar.cjs --paralelo 4
+      - name: Guardar as capturas de tela (se falhar)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: capturas-de-tela
+          path: tests/saida
+          retention-days: 7
+
+  banco:
+    name: Banco (schema.sql e regras de acesso)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: teste
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: teste
+    steps:
+      - uses: actions/checkout@v4
+      - name: Aplicar o schema.sql duas vezes e conferir as regras de acesso
+        run: tests/sql/rodar.sh
+
+  email:
+    name: Resumo semanal por e-mail
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Rodar os testes da Edge Function
+        working-directory: tests
+        run: npm run edge

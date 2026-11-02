@@ -15,6 +15,12 @@ cd tests && npm run edge             # resumo semanal por e-mail (Edge Function)
 
 Cada teste sobe o próprio servidor numa porta diferente (`PORTA_TESTE`), então vários rodam juntos. No fim aparece o resumo (✅/❌) e, para cada teste que falhou, o que falhou. As capturas de tela vão para `tests/saida/` (fora do Git).
 
+## No GitHub (a cada PR)
+
+O workflow `.github/workflows/testes.yml` roda tudo sozinho a cada PR para a `dev` ou a `main`, em três partes ao mesmo tempo: **App e painel**, **Banco** e **Resumo semanal por e-mail**. O resultado aparece no PR, verde ou vermelho, e em **Actions → Testes** dá para acompanhar ao vivo. Se a parte do app falhar, as capturas de tela ficam no resumo da execução (*capturas-de-tela*). Também dá para rodar à mão em **Actions → Testes → Run workflow**.
+
+Para o banco no computador: `tests/sql/rodar.sh` (com `PGHOST`, `PGPORT`, `PGUSER` e `PGPASSWORD` de um Postgres 16).
+
 ## O que tem aqui
 
 - `e2e/testNN.cjs`: cada arquivo testa uma área (o comentário da primeira linha diz qual), em claro e escuro e em celular e computador quando importa.
@@ -23,6 +29,7 @@ Cada teste sobe o próprio servidor numa porta diferente (`PORTA_TESTE`), então
 - `apoio/videos-exemplo.json`: ids de vídeo **inventados**. A lista real fica só no banco (`videos_exercicios`) e nunca entra aqui.
 - `apoio/plano-padrao.txt`: cópia do plano pronto, para garantir que ele não muda sem querer.
 - `edge/`: testes do resumo semanal (`supabase/functions/resumo-semanal/index.ts`), sem servidor e sem enviar e-mail.
+- `sql/`: aplica o `supabase/schema.sql` duas vezes num Postgres comum (com o mínimo do Supabase em `supabase-falso.sql`) e confere as regras de acesso como o app usa o banco (`verificacoes.sql`): o que cada pessoa pode salvar, o que só o administrador faz, a lista de vídeos fechada e os tipos de check-in aceitos.
 
 ## Regras
 
