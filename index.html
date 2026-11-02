@@ -1062,6 +1062,44 @@
     --brilho: rgba(0, 217, 255, .45); --brilho-checkin: rgba(182, 255, 59, .5);
     --borda-neon: rgba(92, 232, 255, .16); --numero: #e9fdff; --dia-tem: #0f2328; --halo: #063a46;
   }
+  html:root[data-estilo="ultra"] {
+    --gi: #0a0512; --papel: #150b22; --fio: #2c1a44; --tinta-2: #b9a6d0;
+    --tatame: #c026d3; --tatame-forte: #a21caf; --tatame-tinta: #e879f9; --tatame-suave: #3b0f48; --sobre-tatame: #ffffff;
+    --checkin: #c026d3; --checkin-forte: #a21caf; --sobre-checkin: #ffffff;
+    --musc: #60a5fa; --jiu: #ff7a3d; --bike: #34e3b0;
+    --brilho: rgba(217, 70, 239, .45); --brilho-checkin: rgba(217, 70, 239, .55);
+    --borda-neon: rgba(232, 121, 249, .18); --numero: #f5d0fe; --dia-tem: #221034; --halo: #3d0d5c;
+    --degrade: linear-gradient(90deg, #d946ef, #9333ea);
+  }
+  /* Ultravioleta: botões e seleções em degradê de magenta para violeta, linhas finas de luz */
+  html[data-estilo="ultra"] :is(.btn, .treino-btn[aria-selected="true"], .chip[aria-pressed="true"], .tag-hoje, .opcao input:checked + span, .fab) {
+    background: var(--degrade); border-color: transparent;
+  }
+  html[data-estilo="ultra"] .fab:hover, html[data-estilo="ultra"] .btn:hover { filter: brightness(1.1); }
+  html[data-estilo="ultra"] :is(.atividade, .dash-topo h1, .voce-topo h1) {
+    background: linear-gradient(90deg, #ffffff 30%, #f0abfc); -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  html:root[data-estilo="gelo"] {
+    --gi: #08111c; --papel: rgba(28, 44, 66, .55); --fio: rgba(170, 200, 230, .16); --tinta-2: #a9b8c9;
+    --tatame: #cfe0ee; --tatame-forte: #b8cfe2; --tatame-tinta: #b9d3ea; --tatame-suave: rgba(185, 211, 234, .14); --sobre-tatame: #0b1624;
+    --checkin: #d6e6f2; --checkin-forte: #bfd4e6; --sobre-checkin: #0b1624;
+    --musc: #7fb2ff; --jiu: #ff9a6b; --bike: #6fe0bf;
+    --brilho: rgba(190, 215, 240, .18); --brilho-checkin: rgba(214, 230, 242, .3);
+    --borda-neon: rgba(200, 225, 250, .18); --numero: #ffffff; --dia-tem: rgba(185, 211, 234, .1); --halo: #1d3a5c;
+  }
+  /* Gelo: vidro fosco, com cartões translúcidos, borda clara e botões claros em pílula */
+  html[data-estilo="gelo"] body { background: radial-gradient(90% 50% at 85% 0%, #23466e 0%, transparent 60%), radial-gradient(80% 40% at 0% 35%, #13283f 0%, transparent 70%) fixed, var(--gi); }
+  html[data-estilo="gelo"] :is(.treinos, .exercicios > li, .dias, .numeros, .metas, .barras, .cal, .cks, .cartao, .voce-grupo, .voce-perfil, .chip) {
+    -webkit-backdrop-filter: blur(18px) saturate(1.3); backdrop-filter: blur(18px) saturate(1.3);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, .45), inset 0 1px 0 rgba(255, 255, 255, .1);
+  }
+  html[data-estilo="gelo"] .numeros div { background: transparent; }
+  html[data-estilo="gelo"] :is(.btn, .fab) { border-radius: 999px; }
+  html[data-estilo="gelo"] :is(.btn, .treino-btn[aria-selected="true"], .chip[aria-pressed="true"], .fab, .opcao input:checked + span) {
+    background: linear-gradient(180deg, #e3eef7, #b9d0e3);
+  }
+  html[data-estilo="gelo"] :is(.atividade, .dash-topo h1, .voce-topo h1) { text-shadow: none; }
+  html[data-estilo="gelo"] dialog.modal { background: #122033; }
   html[data-estilo] body { background: radial-gradient(120% 60% at 50% -10%, var(--halo) 0%, var(--gi) 55%) fixed var(--gi); }
   html[data-estilo] .controles { background: transparent; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
   html[data-estilo] .atividade, html[data-estilo] .dash-topo h1, html[data-estilo] .voce-topo h1 {
@@ -1131,6 +1169,10 @@
   .amostra.neon { --a-fundo: radial-gradient(120% 120% at 50% 0%, #142458, #06080f 70%); --a-cor: #2f6bff; --a-ck: #19d46e; }
   .amostra.brasa { --a-fundo: radial-gradient(120% 120% at 50% 0%, #4a170a, #0b0706 70%); --a-cor: #ff5a1f; --a-ck: #ff2e88; }
   .amostra.cyber { --a-fundo: radial-gradient(120% 120% at 50% 0%, #063a46, #04090b 70%); --a-cor: #00d9ff; --a-ck: #b6ff3b; }
+  .amostra.ultra { --a-fundo: radial-gradient(120% 120% at 50% 0%, #3d0d5c, #0a0512 70%); --a-cor: #d946ef; --a-ck: #9333ea; }
+  .amostra.ultra i:first-child { background: linear-gradient(90deg, #d946ef, #9333ea); }
+  .amostra.gelo { --a-fundo: radial-gradient(120% 120% at 80% 0%, #23466e, #08111c 70%); --a-cor: #cfe0ee; --a-ck: #8fb3d1; }
+  .amostra.gelo i { box-shadow: none; }
   html[data-estilo] #opcoes-tema { opacity: .5; }
 </style>
 </head>
@@ -1328,7 +1370,7 @@
           <label class="opcao"><input type="radio" name="tema" value="claro"><span>Claro</span></label>
           <label class="opcao"><input type="radio" name="tema" value="escuro"><span>Escuro</span></label>
         </div>
-        <p class="nota-campo" id="tema-nota-estilo" hidden>Os estilos neon são sempre escuros. O tema volta a valer no estilo Padrão.</p>
+        <p class="nota-campo" id="tema-nota-estilo" hidden>Os estilos além do Padrão são sempre escuros. O tema volta a valer no estilo Padrão.</p>
       </fieldset>
     </div>
     <div class="cartao">
@@ -1339,6 +1381,8 @@
           <label class="estilo-op"><input type="radio" name="estilo" value="neon"><span><span class="amostra neon" aria-hidden="true"><i></i><i></i></span>Neon Tatame<small>Azul elétrico</small></span></label>
           <label class="estilo-op"><input type="radio" name="estilo" value="brasa"><span><span class="amostra brasa" aria-hidden="true"><i></i><i></i></span>Brasa<small>Laranja e rosa</small></span></label>
           <label class="estilo-op"><input type="radio" name="estilo" value="cyber"><span><span class="amostra cyber" aria-hidden="true"><i></i><i></i></span>Cyber<small>Ciano e verde-limão</small></span></label>
+          <label class="estilo-op"><input type="radio" name="estilo" value="ultra"><span><span class="amostra ultra" aria-hidden="true"><i></i><i></i></span>Ultravioleta<small>Magenta e violeta</small></span></label>
+          <label class="estilo-op"><input type="radio" name="estilo" value="gelo"><span><span class="amostra gelo" aria-hidden="true"><i></i><i></i></span>Gelo<small>Vidro fosco, azul-gelo</small></span></label>
         </div>
       </fieldset>
     </div>
@@ -2098,7 +2142,7 @@
   let escondidoEm = null;
   let perfil = { nome: '', email: '', foto: '' };
   // Só uma cópia do tema fica no navegador, para aplicá-lo antes da primeira pintura.
-  const ESTILOS = ['padrao', 'neon', 'brasa', 'cyber'];
+  const ESTILOS = ['padrao', 'neon', 'brasa', 'cyber', 'ultra', 'gelo'];
   const guardarTemaLocal = () => {
     try { localStorage.setItem('bauer-tema', config.tema); localStorage.setItem('bauer-estilo', config.estilo); } catch (_) {}
   };
@@ -3620,7 +3664,7 @@
   // ---------- Render: Você ----------
   const ICON_PESSOA = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>';
   const CORES_TEMA = { claro: '#f3f4f6', escuro: '#0f1115' };
-  const CORES_ESTILO = { neon: '#06080f', brasa: '#0b0706', cyber: '#04090b' };
+  const CORES_ESTILO = { neon: '#06080f', brasa: '#0b0706', cyber: '#04090b', ultra: '#0a0512', gelo: '#08111c' };
 
   function aplicarTema() {
     const raiz = document.documentElement;
@@ -4458,7 +4502,7 @@
   novidadeDialog.addEventListener('cancel', (e) => { e.preventDefault(); responderNovidade('fechou'); });
 
   const NOMES_TEMA = { auto: 'Automático', claro: 'Claro', escuro: 'Escuro' };
-  const NOMES_ESTILO = { padrao: 'Padrão', neon: 'Neon Tatame', brasa: 'Brasa', cyber: 'Cyber' };
+  const NOMES_ESTILO = { padrao: 'Padrão', neon: 'Neon Tatame', brasa: 'Brasa', cyber: 'Cyber', ultra: 'Ultravioleta', gelo: 'Gelo' };
   // Valores mostrados à direita de cada linha da lista de Você.
   function renderMenuVoce() {
     const n = Object.keys(TREINOS).length;
