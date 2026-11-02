@@ -110,11 +110,11 @@ alter table public.perfis add column if not exists acessos integer not null defa
 -- Resumo semanal por e-mail (função "resumo-semanal"): a pessoa pode desligar em Você ou pelo link do e-mail.
 alter table public.perfis add column if not exists emails_resumo boolean not null default true;
 
--- Estilo das cores escolhido em Você → Aparência: 'padrao' (o tema claro/escuro de sempre) ou um dos outros estilos (neon, brasa, cyber, ultra, gelo, violeta, miami),
+-- Estilo das cores escolhido em Você → Aparência: 'padrao' (o tema claro/escuro de sempre) ou um dos outros estilos (neon, brasa, cyber, ultra, gelo, violeta, miami, terror),
 -- sempre escuro. Bancos criados antes desta coluna a recebem ao rodar o arquivo de novo.
 alter table public.perfis add column if not exists estilo text not null default 'padrao';
 alter table public.perfis drop constraint if exists perfis_estilo_check;
-alter table public.perfis add constraint perfis_estilo_check check (estilo in ('padrao', 'neon', 'brasa', 'cyber', 'ultra', 'gelo', 'violeta', 'miami'));
+alter table public.perfis add constraint perfis_estilo_check check (estilo in ('padrao', 'neon', 'brasa', 'cyber', 'ultra', 'gelo', 'violeta', 'miami', 'terror'));
 
 -- O app chama ao abrir. Usa a hora do servidor e só soma 1 se o acesso anterior foi há mais de
 -- 30 min, para recarregar a página não inflar o número.
