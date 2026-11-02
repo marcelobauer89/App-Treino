@@ -5,7 +5,7 @@
 O dono do repositório não quer abrir nem aceitar PRs pelo GitHub. Ao terminar uma mudança:
 
 1. Faça o commit na branch de trabalho (`claude/...`, criada a partir da `dev`) e o push.
-2. Abra o PR para a **`dev`** e faça o merge você mesmo (método `merge`), sem pedir confirmação. O `/dev/` é publicado sozinho em 1 a 2 minutos.
+2. Abra o PR para a **`dev`** e, com os testes do GitHub verdes, faça o merge você mesmo (método `merge`), sem pedir confirmação. O `/dev/` é publicado sozinho em 1 a 2 minutos.
 3. **Produção:** quando o dono pedir para subir para produção ("manda pra prod", "pode publicar"), abra o PR de `dev` para `main` e faça o merge na hora, também sem pedir confirmação.
 
 Regras:
@@ -32,6 +32,7 @@ Se o conector do Notion não estiver disponível na sessão, avise na resposta q
 
 Os testes ficam em `tests/` (ver `tests/README.md`) e rodam em paralelo com `node tests/rodar.cjs`.
 
-- Antes de cada PR para a `dev`: rodar os testes (todos, ou os da área mexida mais os que podem ser afetados) e só abrir o PR com tudo verde.
+- Antes de cada PR para a `dev`: rodar os testes da área mexida (e os que podem ser afetados) e só abrir o PR com eles verdes.
+- Cada PR para a `dev` ou a `main` roda os testes no GitHub (workflow **Testes**: app e painel, banco e e-mail). Fazer o merge só com os três verdes; se algum ficar vermelho, corrigir antes. Mudança no `supabase/schema.sql` precisa passar também no `tests/sql/rodar.sh`.
 - Teste novo de cada mudança vai para `tests/e2e/`, só com dados de exemplo (nunca nomes, e-mails ou ids de vídeo reais).
 - Ao acompanhar os testes, mandar uma mensagem no início e uma no fim com o resumo, não uma por teste (a não ser que o dono peça).
