@@ -1135,6 +1135,27 @@
     --borda-neon: rgba(255, 140, 198, .2); --numero: #ffd56b; --dia-tem: #2f1749; --halo: #6b2275;
     --sombra: 0 0 0 3px #0b0414, 0 14px 30px rgba(0, 0, 0, .55);
   }
+  html:root[data-estilo="lua_de_sangue"] {
+    --gi: #070a10; --papel: #0e131c; --fio: #232b38; --tinta-2: #a7b0bf;
+    --tatame: #b91c1c; --tatame-forte: #991b1b; --tatame-tinta: #f87171; --tatame-suave: #2a0d10; --sobre-tatame: #ffffff;
+    --checkin: #b91c1c; --checkin-forte: #991b1b; --sobre-checkin: #ffffff;
+    --musc: #6b9bd8; --jiu: #e0703a; --bike: #3fae8a;
+    --brilho: rgba(220, 38, 38, .35); --brilho-checkin: rgba(220, 38, 38, .5);
+    --borda-neon: rgba(226, 232, 240, .45); --numero: #f1f5f9; --dia-tem: #151b26; --halo: #1c2638;
+    --sombra: 0 16px 36px rgba(0, 0, 0, .7), inset 0 1px 0 rgba(255, 255, 255, .06);
+  }
+  /* Lua de Sangue: noite com névoa azulada, cartões escuros com moldura clara (como capas de jogo) e vermelho-sangue */
+  html:root[data-estilo="lua_de_sangue"] body {
+    background: radial-gradient(70% 35% at 80% 0%, #2a3a55 0%, transparent 70%), radial-gradient(90% 40% at 10% 30%, rgba(90, 110, 140, .18) 0%, transparent 70%),
+      linear-gradient(180deg, #121a28 0%, #070a10 55%) fixed, #070a10;
+  }
+  html:root[data-estilo="lua_de_sangue"] :is(.atividade, .dash-topo h1, .voce-topo h1) {
+    color: #f1f5f9; text-shadow: 0 2px 0 #000, 0 0 18px rgba(220, 38, 38, .35);
+  }
+  html:root[data-estilo="lua_de_sangue"] :is(.btn, .treino-btn[aria-selected="true"], .chip[aria-pressed="true"], .tag-hoje, .opcao input:checked + span, .fab) {
+    background: linear-gradient(180deg, #c62828, #8b1414);
+  }
+  html:root[data-estilo="lua_de_sangue"] .fab { box-shadow: 0 0 0 1px rgba(255, 255, 255, .35), 0 0 26px rgba(220, 38, 38, .45), 0 10px 28px rgba(0, 0, 0, .7); }
   /* Miami: pôr do sol (rosa, laranja e roxo), painéis com moldura escura e títulos em degradê */
   html:root[data-estilo="miami"] body { background: linear-gradient(180deg, #5a1f6e 0%, #2a0f3f 28%, #140a24 60%) fixed, var(--gi); }
   html:root[data-estilo="miami"] :is(.btn, .treino-btn[aria-selected="true"], .chip[aria-pressed="true"], .tag-hoje, .opcao input:checked + span) {
@@ -1228,6 +1249,8 @@
   .amostra.violeta { --a-fundo: linear-gradient(160deg, #6d28d9, #3b0f8c); --a-cor: #ffffff; --a-ck: #22d3ee; }
   .amostra.violeta i:first-child { box-shadow: 0 3px 0 rgba(46, 16, 101, .5); }
   .amostra.miami { --a-fundo: linear-gradient(180deg, #6b2275, #140a24); --a-cor: #ff4fa3; --a-ck: #2ee6d6; }
+  .amostra.lua_de_sangue { --a-fundo: linear-gradient(180deg, #2a3a55, #070a10); --a-cor: #b91c1c; --a-ck: #e2e8f0; }
+  .amostra.lua_de_sangue i:last-child { box-shadow: none; }
   .amostra.miami i:first-child { background: linear-gradient(90deg, #ff4fa3, #ff9a3c); }
   html[data-estilo] #opcoes-tema { opacity: .5; }
 </style>
@@ -1441,6 +1464,7 @@
           <label class="estilo-op"><input type="radio" name="estilo" value="gelo"><span><span class="amostra gelo" aria-hidden="true"><i></i><i></i></span>Gelo<small>Vidro fosco, azul-gelo</small></span></label>
           <label class="estilo-op"><input type="radio" name="estilo" value="violeta"><span><span class="amostra violeta" aria-hidden="true"><i></i><i></i></span>Violeta<small>Roxo vivo, cartões brancos</small></span></label>
           <label class="estilo-op"><input type="radio" name="estilo" value="miami"><span><span class="amostra miami" aria-hidden="true"><i></i><i></i></span>Miami<small>Pôr do sol, rosa e laranja</small></span></label>
+          <label class="estilo-op"><input type="radio" name="estilo" value="lua_de_sangue"><span><span class="amostra lua_de_sangue" aria-hidden="true"><i></i><i></i></span>Lua de Sangue<small>Noite, névoa e vermelho</small></span></label>
         </div>
       </fieldset>
     </div>
@@ -2200,7 +2224,7 @@
   let escondidoEm = null;
   let perfil = { nome: '', email: '', foto: '' };
   // Só uma cópia do tema fica no navegador, para aplicá-lo antes da primeira pintura.
-  const ESTILOS = ['padrao', 'neon', 'brasa', 'cyber', 'ultra', 'gelo', 'violeta', 'miami'];
+  const ESTILOS = ['padrao', 'neon', 'brasa', 'cyber', 'ultra', 'gelo', 'violeta', 'miami', 'lua_de_sangue'];
   const guardarTemaLocal = () => {
     try { localStorage.setItem('bauer-tema', config.tema); localStorage.setItem('bauer-estilo', config.estilo); } catch (_) {}
   };
@@ -3722,7 +3746,7 @@
   // ---------- Render: Você ----------
   const ICON_PESSOA = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>';
   const CORES_TEMA = { claro: '#f3f4f6', escuro: '#0f1115' };
-  const CORES_ESTILO = { neon: '#06080f', brasa: '#0b0706', cyber: '#04090b', ultra: '#0a0512', gelo: '#08111c', violeta: '#4c1d95', miami: '#140a24' };
+  const CORES_ESTILO = { neon: '#06080f', brasa: '#0b0706', cyber: '#04090b', ultra: '#0a0512', gelo: '#08111c', violeta: '#4c1d95', miami: '#140a24', lua_de_sangue: '#070a10' };
 
   function aplicarTema() {
     const raiz = document.documentElement;
@@ -4560,7 +4584,7 @@
   novidadeDialog.addEventListener('cancel', (e) => { e.preventDefault(); responderNovidade('fechou'); });
 
   const NOMES_TEMA = { auto: 'Automático', claro: 'Claro', escuro: 'Escuro' };
-  const NOMES_ESTILO = { padrao: 'Padrão', neon: 'Neon Tatame', brasa: 'Brasa', cyber: 'Cyber', ultra: 'Ultravioleta', gelo: 'Gelo', violeta: 'Violeta', miami: 'Miami' };
+  const NOMES_ESTILO = { padrao: 'Padrão', neon: 'Neon Tatame', brasa: 'Brasa', cyber: 'Cyber', ultra: 'Ultravioleta', gelo: 'Gelo', violeta: 'Violeta', miami: 'Miami', lua_de_sangue: 'Lua de Sangue' };
   // Valores mostrados à direita de cada linha da lista de Você.
   function renderMenuVoce() {
     const n = Object.keys(TREINOS).length;
