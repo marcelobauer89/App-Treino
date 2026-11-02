@@ -12,6 +12,8 @@
     var temaSalvo = localStorage.getItem('bauer-tema');
     if (temaSalvo === 'claro') document.documentElement.dataset.theme = 'light';
     if (temaSalvo === 'escuro') document.documentElement.dataset.theme = 'dark';
+    var estiloSalvo = localStorage.getItem('bauer-estilo');
+    if (estiloSalvo && estiloSalvo !== 'padrao' && /^[a-z_]+$/.test(estiloSalvo)) document.documentElement.dataset.estilo = estiloSalvo;
   } catch (_) {}
 </script>
 <link rel="stylesheet" href="fonts/archivo.css">
@@ -528,6 +530,107 @@
   .btn-peq.sec { border: 1.5px solid var(--fio); background: var(--papel); color: var(--tinta); }
   .situacao.bloqueado { background: color-mix(in srgb, var(--erro) 12%, var(--papel)); color: var(--erro); }
   .det-acesso { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+  /* Estilo das cores escolhido no app (Você → Aparência), o mesmo da conta do administrador.
+     Os tokens são os do index.html; aqui só se aplicam às peças do monitoramento. Sem data-estilo, vale o Padrão. */
+  html:root[data-estilo] {
+    --tinta: #f4f6fb; --faixa: #000000; --fita: #f2f4f7; --fita-vazia: #2c2f35;
+    --erro: #ff6b6b; --sobre-erro: #0b0d10; --feito-suave: #12301f; --feito-tinta: #6ee7a0;
+    --recorde: #fbbf24; --recorde-suave: #33270a; --recorde-tinta: #fcd34d; --selo-tinta: #07080c;
+    --muay: #ffc23d; --surf: #ff5cc8; --cali: #a78bff;
+    --sombra: 0 14px 34px rgba(0, 0, 0, .55), 0 2px 6px rgba(0, 0, 0, .4), inset 0 1px 0 rgba(255, 255, 255, .05);
+    color-scheme: dark;
+  }
+  html:root[data-estilo="neon"] {
+    --gi: #06080f; --papel: #0e1322; --fio: #1c2440; --tinta-2: #9aa6c4;
+    --tatame: #2f6bff; --tatame-forte: #1f55e0; --tatame-tinta: #6ea0ff; --tatame-suave: #14204a; --sobre-tatame: #ffffff;
+    --checkin: #19d46e; --checkin-forte: #12b85d; --sobre-checkin: #03140a;
+    --musc: #4d9bff; --jiu: #ff6a2b; --bike: #1fe0a0;
+    --brilho: rgba(64, 128, 255, .45); --brilho-checkin: rgba(25, 212, 110, .55);
+    --borda-neon: rgba(110, 160, 255, .16); --numero: #ffffff; --dia-tem: #141b33; --halo: #142458;
+  }
+  html:root[data-estilo="brasa"] {
+    --gi: #0b0706; --papel: #171010; --fio: #2e1d1a; --tinta-2: #c0a69f;
+    --tatame: #ff5a1f; --tatame-forte: #e64a12; --tatame-tinta: #ff8a5c; --tatame-suave: #3a1a10; --sobre-tatame: #140602;
+    --checkin: #ff2e88; --checkin-forte: #e61e75; --sobre-checkin: #ffffff;
+    --musc: #4da3ff; --jiu: #ff6a2b; --bike: #2ee6a6;
+    --brilho: rgba(255, 90, 31, .45); --brilho-checkin: rgba(255, 46, 136, .55);
+    --borda-neon: rgba(255, 138, 92, .16); --numero: #ffd7c4; --dia-tem: #24150f; --halo: #4a170a;
+  }
+  html:root[data-estilo="cyber"] {
+    --gi: #04090b; --papel: #0b1518; --fio: #173036; --tinta-2: #93b3b8;
+    --tatame: #00d9ff; --tatame-forte: #00bde0; --tatame-tinta: #5ce8ff; --tatame-suave: #08303a; --sobre-tatame: #001318;
+    --checkin: #b6ff3b; --checkin-forte: #9be620; --sobre-checkin: #0d1600;
+    --musc: #3ea8ff; --jiu: #ff7a3d; --bike: #b6ff3b;
+    --brilho: rgba(0, 217, 255, .45); --brilho-checkin: rgba(182, 255, 59, .5);
+    --borda-neon: rgba(92, 232, 255, .16); --numero: #e9fdff; --dia-tem: #0f2328; --halo: #063a46;
+  }
+  html:root[data-estilo="ultra"] {
+    --gi: #0a0512; --papel: #150b22; --fio: #2c1a44; --tinta-2: #b9a6d0;
+    --tatame: #c026d3; --tatame-forte: #a21caf; --tatame-tinta: #e879f9; --tatame-suave: #3b0f48; --sobre-tatame: #ffffff;
+    --checkin: #c026d3; --checkin-forte: #a21caf; --sobre-checkin: #ffffff;
+    --musc: #60a5fa; --jiu: #ff7a3d; --bike: #34e3b0;
+    --brilho: rgba(217, 70, 239, .45); --brilho-checkin: rgba(217, 70, 239, .55);
+    --borda-neon: rgba(232, 121, 249, .18); --numero: #f5d0fe; --dia-tem: #221034; --halo: #3d0d5c;
+    --degrade: linear-gradient(90deg, #d946ef, #9333ea);
+  }
+  html:root[data-estilo="gelo"] {
+    --gi: #08111c; --papel: rgba(28, 44, 66, .55); --fio: rgba(170, 200, 230, .16); --tinta-2: #a9b8c9;
+    --tatame: #cfe0ee; --tatame-forte: #b8cfe2; --tatame-tinta: #b9d3ea; --tatame-suave: rgba(185, 211, 234, .14); --sobre-tatame: #0b1624;
+    --checkin: #d6e6f2; --checkin-forte: #bfd4e6; --sobre-checkin: #0b1624;
+    --musc: #7fb2ff; --jiu: #ff9a6b; --bike: #6fe0bf;
+    --brilho: rgba(190, 215, 240, .18); --brilho-checkin: rgba(214, 230, 242, .3);
+    --borda-neon: rgba(200, 225, 250, .18); --numero: #ffffff; --dia-tem: rgba(185, 211, 234, .1); --halo: #1d3a5c;
+  }
+  html:root[data-estilo="violeta"] {
+    --gi: #4c1d95; --papel: #3b1585; --fio: rgba(255, 255, 255, .2); --tinta-2: #e4dcff;
+    --tatame: #22d3ee; --tatame-forte: #06b6d4; --tatame-tinta: #67e8f9; --tatame-suave: rgba(103, 232, 249, .14); --sobre-tatame: #082f49;
+    --musc: #60a5fa; --jiu: #fb923c; --bike: #34d399;
+    --brilho: rgba(103, 232, 249, .35); --borda-neon: rgba(255, 255, 255, .35); --halo: #7c3aed;
+    --sombra: 0 6px 0 rgba(30, 8, 80, .55), 0 18px 32px rgba(20, 0, 60, .45);
+  }
+  html:root[data-estilo="miami"] {
+    --gi: #140a24; --papel: #24123a; --fio: #3d2358; --tinta-2: #d9bfe8;
+    --tatame: #ff4fa3; --tatame-forte: #f0388f; --tatame-tinta: #ff8cc6; --tatame-suave: #45163f; --sobre-tatame: #1a0010;
+    --checkin: #2ee6d6; --checkin-forte: #1fcfc0; --sobre-checkin: #04201d;
+    --musc: #5aa9ff; --jiu: #ff9a3c; --bike: #2ee6d6;
+    --brilho: rgba(255, 79, 163, .45); --brilho-checkin: rgba(46, 230, 214, .5);
+    --borda-neon: rgba(255, 140, 198, .2); --numero: #ffd56b; --dia-tem: #2f1749; --halo: #6b2275;
+    --sombra: 0 0 0 3px #0b0414, 0 14px 30px rgba(0, 0, 0, .55);
+  }
+  html:root[data-estilo="lua_de_sangue"] {
+    --gi: #070a10; --papel: #0e131c; --fio: #232b38; --tinta-2: #a7b0bf;
+    --tatame: #b91c1c; --tatame-forte: #991b1b; --tatame-tinta: #f87171; --tatame-suave: #2a0d10; --sobre-tatame: #ffffff;
+    --checkin: #b91c1c; --checkin-forte: #991b1b; --sobre-checkin: #ffffff;
+    --musc: #6b9bd8; --jiu: #e0703a; --bike: #3fae8a;
+    --brilho: rgba(220, 38, 38, .35); --brilho-checkin: rgba(220, 38, 38, .5);
+    --borda-neon: rgba(226, 232, 240, .45); --numero: #f1f5f9; --dia-tem: #151b26; --halo: #1c2638;
+    --sombra: 0 16px 36px rgba(0, 0, 0, .7), inset 0 1px 0 rgba(255, 255, 255, .06);
+  }
+  html:root[data-estilo] {
+    --online: #22c55e; --online-anel: rgba(34, 197, 94, .45);
+    --int-0: var(--fio); --int-1: color-mix(in srgb, var(--tatame) 30%, var(--papel)); --int-2: color-mix(in srgb, var(--tatame) 60%, var(--papel));
+    --int-3: var(--tatame); --int-4: var(--tatame-tinta);
+  }
+  html[data-estilo] body { background: radial-gradient(120% 60% at 50% -10%, var(--halo) 0%, var(--gi) 55%) fixed var(--gi); }
+  html:root[data-estilo="violeta"] body { background: radial-gradient(120% 70% at 100% 0%, #7c3aed 0%, transparent 60%), linear-gradient(160deg, #5b21b6, #3b0f8c) fixed, #4c1d95; }
+  html:root[data-estilo="gelo"] body { background: radial-gradient(90% 50% at 85% 0%, #23466e 0%, transparent 60%), radial-gradient(80% 40% at 0% 35%, #13283f 0%, transparent 70%) fixed, var(--gi); }
+  html:root[data-estilo="lua_de_sangue"] body {
+    background: radial-gradient(70% 35% at 80% 0%, #2a3a55 0%, transparent 70%), radial-gradient(90% 40% at 10% 30%, rgba(90, 110, 140, .18) 0%, transparent 70%),
+      linear-gradient(180deg, #121a28 0%, #070a10 55%) fixed, #070a10;
+  }
+  html:root[data-estilo="miami"] body { background: linear-gradient(180deg, #5a1f6e 0%, #2a0f3f 28%, #140a24 60%) fixed, var(--gi); }
+  html[data-estilo] :is(.cartao, .kpi, .periodo, .esq-card) { box-shadow: var(--sombra); border-color: var(--borda-neon); }
+  html[data-estilo] h1 { text-shadow: 0 0 22px var(--brilho), 0 0 2px rgba(255, 255, 255, .5); }
+  html[data-estilo] :is(.btn, .periodo button[aria-pressed="true"]) { box-shadow: 0 0 0 1px var(--tatame-tinta), 0 0 14px var(--brilho); }
+  html[data-estilo] .btn-sec { box-shadow: 0 0 10px var(--brilho), inset 0 0 8px var(--brilho); }
+  html[data-estilo] .abas [role="tab"][aria-selected="true"] { text-shadow: 0 0 10px var(--brilho); }
+  html[data-estilo] .kpi .valor { color: var(--numero); text-shadow: 0 0 14px var(--brilho); }
+  html:root[data-estilo="gelo"] :is(.cartao, .kpi, .periodo) { -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
+  html:root[data-estilo="ultra"] :is(.btn, .periodo button[aria-pressed="true"]) { background: linear-gradient(90deg, #d946ef, #9333ea); }
+  html:root[data-estilo="miami"] :is(.btn, .periodo button[aria-pressed="true"]) { background: linear-gradient(90deg, #ff4fa3, #ff9a3c); }
+  html:root[data-estilo="miami"] h1 { background: linear-gradient(90deg, #ffd56b, #ff4fa3 55%, #b26bff); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: none; }
+  html:root[data-estilo="lua_de_sangue"] :is(.btn, .periodo button[aria-pressed="true"]) { background: linear-gradient(180deg, #c62828, #8b1414); }
 </style>
 </head>
 <body>
@@ -902,7 +1005,20 @@
         <p><b>Acesso restrito.</b> A conta ${esc(session.user.email)} não é administradora.</p>
         <button class="btn-sec" type="button" id="sair">Entrar com outra conta</button>`);
     }
+    aplicarEstiloDaConta();
     await carregar();
+  }
+  // O estilo das cores da conta (escolhido no app). A cópia do navegador já foi aplicada no início;
+  // aqui vale o que está salvo na conta, para o monitoramento abrir igual em outro aparelho.
+  async function aplicarEstiloDaConta() {
+    try {
+      const { data, error } = await sb.from('perfis').select('estilo').eq('id', meuId).maybeSingle();
+      if (error || !data || typeof data.estilo !== 'string') return;
+      const e = data.estilo;
+      if (e !== 'padrao' && /^[a-z_]+$/.test(e)) document.documentElement.dataset.estilo = e;
+      else delete document.documentElement.dataset.estilo;
+      try { localStorage.setItem('bauer-estilo', e); } catch (_) {}
+    } catch (_) {}
   }
   const botaoTentar = () => '<button class="btn-sec" type="button" id="tentar">Tentar de novo</button>';
 
