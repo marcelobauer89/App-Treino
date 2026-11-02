@@ -56,10 +56,10 @@ jobs:
       - name: Montar o site
         run: |
           mkdir _site
-          rsync -a --exclude .git --exclude .github producao/ _site/
+          rsync -a --exclude .git --exclude .github --exclude tests producao/ _site/
           if [ -d desenvolvimento ]; then
             mkdir _site/dev
-            rsync -a --exclude .git --exclude .github desenvolvimento/ _site/dev/
+            rsync -a --exclude .git --exclude .github --exclude tests desenvolvimento/ _site/dev/
           fi
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
