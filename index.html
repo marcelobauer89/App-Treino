@@ -1072,11 +1072,11 @@
     --degrade: linear-gradient(90deg, #d946ef, #9333ea);
   }
   /* Ultravioleta: botões e seleções em degradê de magenta para violeta, linhas finas de luz */
-  html[data-estilo="ultra"] :is(.btn, .treino-btn[aria-selected="true"], .chip[aria-pressed="true"], .tag-hoje, .opcao input:checked + span, .fab) {
+  html:root[data-estilo="ultra"] :is(.btn, .treino-btn[aria-selected="true"], .chip[aria-pressed="true"], .tag-hoje, .opcao input:checked + span, .fab) {
     background: var(--degrade); border-color: transparent;
   }
-  html[data-estilo="ultra"] .fab:hover, html[data-estilo="ultra"] .btn:hover { filter: brightness(1.1); }
-  html[data-estilo="ultra"] :is(.atividade, .dash-topo h1, .voce-topo h1) {
+  html:root[data-estilo="ultra"] .fab:hover, html:root[data-estilo="ultra"] .btn:hover { filter: brightness(1.1); }
+  html:root[data-estilo="ultra"] :is(.atividade, .dash-topo h1, .voce-topo h1) {
     background: linear-gradient(90deg, #ffffff 30%, #f0abfc); -webkit-background-clip: text; background-clip: text; color: transparent;
   }
   html:root[data-estilo="gelo"] {
@@ -1088,19 +1088,71 @@
     --borda-neon: rgba(200, 225, 250, .18); --numero: #ffffff; --dia-tem: rgba(185, 211, 234, .1); --halo: #1d3a5c;
   }
   /* Gelo: vidro fosco, com cartões translúcidos, borda clara e botões claros em pílula */
-  html[data-estilo="gelo"] body { background: radial-gradient(90% 50% at 85% 0%, #23466e 0%, transparent 60%), radial-gradient(80% 40% at 0% 35%, #13283f 0%, transparent 70%) fixed, var(--gi); }
-  html[data-estilo="gelo"] :is(.treinos, .exercicios > li, .dias, .numeros, .metas, .barras, .cal, .cks, .cartao, .voce-grupo, .voce-perfil, .chip) {
+  html:root[data-estilo="gelo"] body { background: radial-gradient(90% 50% at 85% 0%, #23466e 0%, transparent 60%), radial-gradient(80% 40% at 0% 35%, #13283f 0%, transparent 70%) fixed, var(--gi); }
+  html:root[data-estilo="gelo"] :is(.treinos, .exercicios > li, .dias, .numeros, .metas, .barras, .cal, .cks, .cartao, .voce-grupo, .voce-perfil) {
     -webkit-backdrop-filter: blur(18px) saturate(1.3); backdrop-filter: blur(18px) saturate(1.3);
     box-shadow: 0 18px 40px rgba(0, 0, 0, .45), inset 0 1px 0 rgba(255, 255, 255, .1);
   }
-  html[data-estilo="gelo"] .numeros div { background: transparent; }
-  html[data-estilo="gelo"] :is(.btn, .fab) { border-radius: 999px; }
-  html[data-estilo="gelo"] :is(.btn, .treino-btn[aria-selected="true"], .chip[aria-pressed="true"], .fab, .opcao input:checked + span) {
+  html:root[data-estilo="gelo"] .numeros div { background: transparent; }
+  html:root[data-estilo="gelo"] :is(.btn, .fab) { border-radius: 999px; }
+  html:root[data-estilo="gelo"] :is(.btn, .treino-btn[aria-selected="true"], .chip[aria-pressed="true"], .fab, .opcao input:checked + span) {
     background: linear-gradient(180deg, #e3eef7, #b9d0e3);
   }
-  html[data-estilo="gelo"] :is(.atividade, .dash-topo h1, .voce-topo h1) { text-shadow: none; }
-  html[data-estilo="gelo"] dialog.modal { background: #122033; }
+  html:root[data-estilo="gelo"] :is(.atividade, .dash-topo h1, .voce-topo h1) { text-shadow: none; }
+  html:root[data-estilo="gelo"] dialog.modal { background: #122033; }
+  /* Violeta: fundo roxo vivo e superfícies brancas com sombra em bloco (efeito 3D). As cores de texto
+     padrão são as das superfícies brancas (escuras); o que fica direto sobre o roxo ganha texto claro. */
+  html:root[data-estilo="violeta"] {
+    --gi: #f1ecff; --papel: #ffffff; --fio: #e6e0f2; --tinta: #1e1036; --tinta-2: #554668;
+    --tatame: #6d28d9; --tatame-forte: #5b21b6; --tatame-tinta: #6d28d9; --tatame-suave: #ede9fe; --sobre-tatame: #ffffff;
+    --checkin: #22d3ee; --checkin-forte: #06b6d4; --sobre-checkin: #082f49;
+    --musc: #2563eb; --jiu: #c2410c; --bike: #047857; --muay: #a16207; --surf: #be185d; --cali: #6d28d9;
+    --selo-tinta: #ffffff;
+    --erro: #c62828; --sobre-erro: #ffffff; --feito-suave: #e7f8ee; --feito-tinta: #166534;
+    --recorde: #b45309; --recorde-suave: #fef3c7; --recorde-tinta: #92400e; --fita: #1e1036; --fita-vazia: #ddd6ee;
+    --brilho: rgba(109, 40, 217, .25); --brilho-checkin: rgba(34, 211, 238, .5);
+    --borda-neon: rgba(255, 255, 255, .5); --numero: #2e1065; --dia-tem: #f1ecff; --halo: #7c3aed;
+    --sombra: 0 6px 0 rgba(46, 16, 101, .45), 0 18px 32px rgba(20, 0, 60, .45);
+    color-scheme: light;
+  }
+  html:root[data-estilo="violeta"] body { background: radial-gradient(120% 70% at 100% 0%, #7c3aed 0%, transparent 60%), linear-gradient(160deg, #5b21b6, #3b0f8c) fixed, #4c1d95; }
+  html:root[data-estilo="violeta"] :is(header.hoje, .ficha-topo, .bloco-topo, .sobre, .semana > h2.secao, .semana-nota, main > footer, .dash-topo, .voce-topo, .nav, .entrar-corpo, .carga-app) {
+    --tinta: #ffffff; --tinta-2: #ece6ff; --fio: rgba(255, 255, 255, .28); --tatame-tinta: #a5f3fc; --brilho: rgba(165, 243, 252, .35);
+    --fita: #ffffff; --fita-vazia: rgba(255, 255, 255, .3);
+    color: var(--tinta);
+  }
+  html:root[data-estilo="violeta"] .selo[class] { box-shadow: none; }
+  html:root[data-estilo="violeta"] .chip { box-shadow: 0 4px 0 rgba(46, 16, 101, .4); }
+  html:root[data-estilo="violeta"] :is(.atividade, .dash-topo h1, .voce-topo h1) { text-shadow: 0 4px 0 rgba(46, 16, 101, .5); }
+  html:root[data-estilo="violeta"] .nav { background: color-mix(in srgb, #3b0f8c 85%, transparent); }
+  html:root[data-estilo="violeta"] .toast { background: #1e1036; color: #ffffff; }
+  html:root[data-estilo="miami"] {
+    --gi: #140a24; --papel: #24123a; --fio: #3d2358; --tinta-2: #d9bfe8;
+    --tatame: #ff4fa3; --tatame-forte: #f0388f; --tatame-tinta: #ff8cc6; --tatame-suave: #45163f; --sobre-tatame: #1a0010;
+    --checkin: #2ee6d6; --checkin-forte: #1fcfc0; --sobre-checkin: #04201d;
+    --musc: #5aa9ff; --jiu: #ff9a3c; --bike: #2ee6d6;
+    --brilho: rgba(255, 79, 163, .45); --brilho-checkin: rgba(46, 230, 214, .5);
+    --borda-neon: rgba(255, 140, 198, .2); --numero: #ffd56b; --dia-tem: #2f1749; --halo: #6b2275;
+    --sombra: 0 0 0 3px #0b0414, 0 14px 30px rgba(0, 0, 0, .55);
+  }
+  /* Miami: pôr do sol (rosa, laranja e roxo), painéis com moldura escura e títulos em degradê */
+  html:root[data-estilo="miami"] body { background: linear-gradient(180deg, #5a1f6e 0%, #2a0f3f 28%, #140a24 60%) fixed, var(--gi); }
+  html:root[data-estilo="miami"] :is(.btn, .treino-btn[aria-selected="true"], .chip[aria-pressed="true"], .tag-hoje, .opcao input:checked + span) {
+    background: linear-gradient(90deg, #ff4fa3, #ff9a3c); border-color: transparent;
+  }
+  html:root[data-estilo="miami"] .btn:hover { filter: brightness(1.08); }
+  html:root[data-estilo="miami"] :is(.atividade, .dash-topo h1, .voce-topo h1) {
+    background: linear-gradient(90deg, #ffd56b, #ff4fa3 55%, #b26bff); -webkit-background-clip: text; background-clip: text; color: transparent;
+    text-shadow: none; filter: drop-shadow(0 0 12px rgba(255, 79, 163, .45));
+  }
   html[data-estilo] body { background: radial-gradient(120% 60% at 50% -10%, var(--halo) 0%, var(--gi) 55%) fixed var(--gi); }
+  /* A fileira de filtros rola para o lado e cortava o brilho do filtro ativo num retângulo: mais folga em volta,
+     compensada na margem, para o brilho caber sem mudar a posição dos filtros. */
+  html[data-estilo] .chips { margin: -4px -16px -12px; padding: 14px 16px; scroll-padding-inline: 16px; }
+  /* Dentro das fileiras que rolam, o brilho precisa caber na folga (14 px), senão aparece cortado em retângulo. */
+  html:root[data-estilo] .chip[aria-pressed="true"] { box-shadow: 0 0 0 1px var(--tatame-tinta), 0 0 12px var(--brilho); }
+  html:root[data-estilo="gelo"] .chip { -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
+  html:root[data-estilo] .treinos.muitos .treino-btn[aria-selected="true"] { box-shadow: inset 0 0 0 1px var(--tatame-tinta), inset 0 0 14px rgba(255, 255, 255, .18); }
   html[data-estilo] .controles { background: transparent; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
   html[data-estilo] .atividade, html[data-estilo] .dash-topo h1, html[data-estilo] .voce-topo h1 {
     text-shadow: 0 0 22px var(--brilho), 0 0 2px rgba(255, 255, 255, .6);
@@ -1173,6 +1225,10 @@
   .amostra.ultra i:first-child { background: linear-gradient(90deg, #d946ef, #9333ea); }
   .amostra.gelo { --a-fundo: radial-gradient(120% 120% at 80% 0%, #23466e, #08111c 70%); --a-cor: #cfe0ee; --a-ck: #8fb3d1; }
   .amostra.gelo i { box-shadow: none; }
+  .amostra.violeta { --a-fundo: linear-gradient(160deg, #6d28d9, #3b0f8c); --a-cor: #ffffff; --a-ck: #22d3ee; }
+  .amostra.violeta i:first-child { box-shadow: 0 3px 0 rgba(46, 16, 101, .5); }
+  .amostra.miami { --a-fundo: linear-gradient(180deg, #6b2275, #140a24); --a-cor: #ff4fa3; --a-ck: #2ee6d6; }
+  .amostra.miami i:first-child { background: linear-gradient(90deg, #ff4fa3, #ff9a3c); }
   html[data-estilo] #opcoes-tema { opacity: .5; }
 </style>
 </head>
@@ -1383,6 +1439,8 @@
           <label class="estilo-op"><input type="radio" name="estilo" value="cyber"><span><span class="amostra cyber" aria-hidden="true"><i></i><i></i></span>Cyber<small>Ciano e verde-limão</small></span></label>
           <label class="estilo-op"><input type="radio" name="estilo" value="ultra"><span><span class="amostra ultra" aria-hidden="true"><i></i><i></i></span>Ultravioleta<small>Magenta e violeta</small></span></label>
           <label class="estilo-op"><input type="radio" name="estilo" value="gelo"><span><span class="amostra gelo" aria-hidden="true"><i></i><i></i></span>Gelo<small>Vidro fosco, azul-gelo</small></span></label>
+          <label class="estilo-op"><input type="radio" name="estilo" value="violeta"><span><span class="amostra violeta" aria-hidden="true"><i></i><i></i></span>Violeta<small>Roxo vivo, cartões brancos</small></span></label>
+          <label class="estilo-op"><input type="radio" name="estilo" value="miami"><span><span class="amostra miami" aria-hidden="true"><i></i><i></i></span>Miami<small>Pôr do sol, rosa e laranja</small></span></label>
         </div>
       </fieldset>
     </div>
@@ -2142,7 +2200,7 @@
   let escondidoEm = null;
   let perfil = { nome: '', email: '', foto: '' };
   // Só uma cópia do tema fica no navegador, para aplicá-lo antes da primeira pintura.
-  const ESTILOS = ['padrao', 'neon', 'brasa', 'cyber', 'ultra', 'gelo'];
+  const ESTILOS = ['padrao', 'neon', 'brasa', 'cyber', 'ultra', 'gelo', 'violeta', 'miami'];
   const guardarTemaLocal = () => {
     try { localStorage.setItem('bauer-tema', config.tema); localStorage.setItem('bauer-estilo', config.estilo); } catch (_) {}
   };
@@ -3664,7 +3722,7 @@
   // ---------- Render: Você ----------
   const ICON_PESSOA = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>';
   const CORES_TEMA = { claro: '#f3f4f6', escuro: '#0f1115' };
-  const CORES_ESTILO = { neon: '#06080f', brasa: '#0b0706', cyber: '#04090b', ultra: '#0a0512', gelo: '#08111c' };
+  const CORES_ESTILO = { neon: '#06080f', brasa: '#0b0706', cyber: '#04090b', ultra: '#0a0512', gelo: '#08111c', violeta: '#4c1d95', miami: '#140a24' };
 
   function aplicarTema() {
     const raiz = document.documentElement;
@@ -4502,7 +4560,7 @@
   novidadeDialog.addEventListener('cancel', (e) => { e.preventDefault(); responderNovidade('fechou'); });
 
   const NOMES_TEMA = { auto: 'Automático', claro: 'Claro', escuro: 'Escuro' };
-  const NOMES_ESTILO = { padrao: 'Padrão', neon: 'Neon Tatame', brasa: 'Brasa', cyber: 'Cyber', ultra: 'Ultravioleta', gelo: 'Gelo' };
+  const NOMES_ESTILO = { padrao: 'Padrão', neon: 'Neon Tatame', brasa: 'Brasa', cyber: 'Cyber', ultra: 'Ultravioleta', gelo: 'Gelo', violeta: 'Violeta', miami: 'Miami' };
   // Valores mostrados à direita de cada linha da lista de Você.
   function renderMenuVoce() {
     const n = Object.keys(TREINOS).length;
