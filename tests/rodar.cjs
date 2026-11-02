@@ -2,7 +2,7 @@
 // Roda os testes do app e do painel (tests/e2e) em paralelo, cada um numa porta própria.
 //   node tests/rodar.cjs                  → todos
 //   node tests/rodar.cjs test36 test63    → só esses (aceita parte do nome)
-//   node tests/rodar.cjs --paralelo 2     → quantos ao mesmo tempo (padrão: metade dos núcleos, de 2 a 6)
+//   node tests/rodar.cjs --paralelo 2     → quantos ao mesmo tempo (padrão: um por núcleo, de 2 a 6)
 // No fim, mostra o resumo e sai com erro se algum falhou. As capturas de tela ficam em tests/saida (fora do Git).
 const { spawn } = require('child_process');
 const fs = require('fs');
@@ -13,10 +13,13 @@ const PASTA = path.join(__dirname, 'e2e');
 const SAIDA = path.join(__dirname, 'saida');
 const args = process.argv.slice(2);
 const iPar = args.indexOf('--paralelo');
-const paralelo = iPar >= 0 ? Math.max(1, Number(args[iPar + 1]) || 1) : Math.min(6, Math.max(2, Math.floor(os.cpus().length / 2)));
+const paralelo = iPar >= 0 ? Math.max(1, Number(args[iPar + 1]) || 1) : Math.min(6, Math.max(2, os.cpus().length));
 const filtros = args.filter((a, i) => !a.startsWith('--') && (iPar < 0 || i !== iPar + 1));
 const todos = fs.readdirSync(PASTA).filter((f) => /^test\d+\.cjs$/.test(f)).sort();
-const fila = filtros.length ? todos.filter((f) => filtros.some((x) => f.includes(x))) : todos;
+// Os mais demorados começam primeiro, para os curtos rodarem ao lado deles.
+const LONGOS = ['test33.cjs', 'test36.cjs'];
+const fila = (filtros.length ? todos.filter((f) => filtros.some((x) => f.includes(x))) : todos)
+  .sort((a, b) => (LONGOS.includes(b) - LONGOS.includes(a)) || a.localeCompare(b));
 if (!fila.length) { console.error('Nenhum teste encontrado com esse nome.'); process.exit(2); }
 fs.mkdirSync(SAIDA, { recursive: true });
 

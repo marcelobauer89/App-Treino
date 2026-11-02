@@ -9,7 +9,7 @@ Precisa de Node 22 e do Playwright com o Chromium (`npm install` nesta pasta e `
 ```bash
 node tests/rodar.cjs                 # todos, em paralelo
 node tests/rodar.cjs test36 test63   # só alguns (aceita parte do nome)
-node tests/rodar.cjs --paralelo 2    # quantos ao mesmo tempo (padrão: metade dos núcleos, de 2 a 6)
+node tests/rodar.cjs --paralelo 2    # quantos ao mesmo tempo (padrão: um por núcleo, de 2 a 6)
 cd tests && npm run edge             # resumo semanal por e-mail (Edge Function)
 ```
 
