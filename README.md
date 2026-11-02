@@ -362,6 +362,10 @@ python3 -m http.server 8000
 
 Abra `http://localhost:8000/`. No computador, o app usa o projeto de **testes** (o endereço precisa estar em **Redirect URLs** dele, passo 3 de [Como montar](#como-montar-uma-vez)).
 
+### Testes automáticos
+
+Os testes do app, do painel e do resumo por e-mail ficam em `tests/` e rodam em paralelo com `node tests/rodar.cjs` (detalhes em [tests/README.md](tests/README.md)). Eles usam um Supabase falso: não mexem nos bancos de dev nem de produção.
+
 ## Como os dados ficam guardados
 
 - **perfis:** nome, e-mail e foto (vindos do Google no primeiro login), os treinos montados em **Você → Meus treinos** (coluna `treinos`; vazia = o plano pronto do app), a jornada pronta escolhida (`jornada`), a última resposta ao aviso da novidade (`novidade_treinos`) e se pediu para não mostrar mais (`novidade_oculta`), tema, se quer receber o resumo semanal (`emails_resumo`), os exercícios marcados como **Sem peso** (coluna `sem_peso`) e a semana montada em **Você → Minha semana** (coluna `semana`: o que fazer em cada dia, até 2 atividades). Contas sem semana salva usam a padrão, montada com os antigos dias de jiu-jitsu (`dias_jiu`).

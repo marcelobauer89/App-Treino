@@ -27,3 +27,11 @@ Toda vez que fizer o merge de `dev` para `main`:
 5. Na resposta, diga quais itens foram atualizados ou criados, com o link da tabela.
 
 Se o conector do Notion não estiver disponível na sessão, avise na resposta que o backlog não foi atualizado e liste o que precisaria mudar.
+
+## Testes
+
+Os testes ficam em `tests/` (ver `tests/README.md`) e rodam em paralelo com `node tests/rodar.cjs`.
+
+- Antes de cada PR para a `dev`: rodar os testes (todos, ou os da área mexida mais os que podem ser afetados) e só abrir o PR com tudo verde.
+- Teste novo de cada mudança vai para `tests/e2e/`, só com dados de exemplo (nunca nomes, e-mails ou ids de vídeo reais).
+- Ao acompanhar os testes, mandar uma mensagem no início e uma no fim com o resumo, não uma por teste (a não ser que o dono peça).

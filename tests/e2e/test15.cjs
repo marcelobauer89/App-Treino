@@ -1,0 +1,32 @@
+const { chromium } = require('playwright');
+const H = require('../apoio/harness.cjs');
+let fails = 0;
+const ok = (c, l, x = '') => { if (!c) fails++; console.log(`${c ? 'PASS' : 'FAIL'} ${l}${x ? ' — ' + x : ''}`); };
+(async () => {
+  const srv = await H.servidor();
+  const b = await chromium.launch();
+  const p = await H.novaPagina(b);
+  await p.clock.install({ time: new Date('2026-10-21T10:00:00') });
+  await p.clock.setFixedTime(new Date('2026-10-18T09:00:00')); // domingo: ficha no Treino 1 (7 vídeos)
+  await p.goto(H.PAGINA); await H.prontos(p); await p.waitForTimeout(300);
+  const visiveis = () => p.locator('.ex-dica:visible').count();
+  ok(await visiveis() === 7, 'hint shown on every video card before the first swipe', `${await visiveis()}`);
+  ok(await p.locator('.ex-pontos:visible').count() === 7, 'dots shown');
+  await p.locator('.ex').nth(3).locator('.ex-slides').evaluate((s) => s.scrollTo({ left: s.clientWidth }));
+  await p.waitForTimeout(400);
+  ok(await visiveis() === 0 && await p.locator('.ex-pontos:visible').count() === 7, 'after the first swipe, hints hidden on all cards, dots stay');
+  await p.reload(); await H.prontos(p); await p.waitForTimeout(300);
+  ok(await p.evaluate(() => document.documentElement.classList.contains('ja-deslizou')) && await visiveis() === 0, 'still hidden after reload');
+  const q = await H.novaPagina(b);
+  await q.clock.setFixedTime(new Date('2026-10-18T09:00:00'));
+  await q.goto(H.PAGINA); await H.prontos(q); await q.waitForTimeout(300);
+  ok(await q.locator('.ex-dica:visible').count() === 7, 'new browser still shows the hint');
+  const card = p.locator('.ex').nth(3);
+  await card.locator('.ex-slides').evaluate((s) => s.scrollTo({ left: 0 }));
+  await p.waitForTimeout(300);
+  await card.locator('.ex-nav').scrollIntoViewIfNeeded();
+  await card.screenshot({ path: 'd-sem-dica.png' });
+  console.log('errors:', [...p.errs, ...q.errs]);
+  console.log(fails ? `${fails} FAILED` : 'ALL PASSED');
+  await b.close(); srv.close();
+})();
