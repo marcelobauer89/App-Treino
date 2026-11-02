@@ -292,7 +292,7 @@ begin
     select c.id, c.usuario_id, c.tipo, c.inicio, c.fim, c.sem_horario, c.retroativo
     from public.checkins c
     where desde is null or c.inicio >= desde
-    order by c.inicio;
+    order by c.inicio, c.id;
 end;
 $$;
 
@@ -309,7 +309,8 @@ begin
     select e.usuario_id, e.tipo, e.dados, e.criado_em
     from public.eventos e
     where desde is null or e.criado_em >= desde
-    order by e.criado_em;
+    -- O id desempata: o painel busca em páginas de 1.000 e a ordem precisa ser a mesma em todas.
+    order by e.criado_em, e.id;
 end;
 $$;
 

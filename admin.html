@@ -1022,12 +1022,28 @@
   }
   const botaoTentar = () => '<button class="btn-sec" type="button" id="tentar">Tentar de novo</button>';
 
+  // O Supabase devolve no máximo 1.000 linhas por chamada: busca em páginas até a lista acabar,
+  // senão os eventos e check-ins mais novos ficam de fora quando o banco passa disso.
+  const POR_PAGINA = 1000;
+  async function todas(nome, args) {
+    const linhas = [];
+    for (let de = 0; ; de += POR_PAGINA) {
+      const r = await sb.rpc(nome, args).range(de, de + POR_PAGINA - 1);
+      if (r.error) return r;
+      const pagina = r.data || [];
+      // Funções que devolvem um valor só (não uma lista) chegam como estão.
+      if (!Array.isArray(r.data)) return r;
+      linhas.push(...pagina);
+      if (pagina.length < POR_PAGINA) return { data: linhas, error: null };
+    }
+  }
+
   async function carregar() {
     const primeira = !dados;
     if (primeira) mostrarCarregando('Buscando usuários, check-ins e e-mails…');
     $('atualizar').disabled = true;
     $('atualizar').classList.add('girando');
-    const [u, c, e, em, cv] = await Promise.all([sb.rpc('admin_usuarios'), sb.rpc('admin_checkins'), sb.rpc('admin_eventos'), sb.rpc('admin_emails'), sb.rpc('admin_convites')]);
+    const [u, c, e, em, cv] = await Promise.all(['admin_usuarios', 'admin_checkins', 'admin_eventos', 'admin_emails', 'admin_convites'].map((nome) => todas(nome)));
     $('atualizar').disabled = false;
     $('atualizar').classList.remove('girando');
     if (u.error || c.error || e.error) {
