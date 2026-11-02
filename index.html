@@ -1144,7 +1144,7 @@
     --borda-neon: rgba(226, 232, 240, .45); --numero: #f1f5f9; --dia-tem: #151b26; --halo: #1c2638;
     --sombra: 0 16px 36px rgba(0, 0, 0, .7), inset 0 1px 0 rgba(255, 255, 255, .06);
   }
-  /* Terror: noite com névoa azulada, cartões escuros com moldura clara (como capas de jogo) e vermelho-sangue */
+  /* Lua de Sangue: noite com névoa azulada, cartões escuros com moldura clara (como capas de jogo) e vermelho-sangue */
   html:root[data-estilo="terror"] body {
     background: radial-gradient(70% 35% at 80% 0%, #2a3a55 0%, transparent 70%), radial-gradient(90% 40% at 10% 30%, rgba(90, 110, 140, .18) 0%, transparent 70%),
       linear-gradient(180deg, #121a28 0%, #070a10 55%) fixed, #070a10;
@@ -1464,7 +1464,7 @@
           <label class="estilo-op"><input type="radio" name="estilo" value="gelo"><span><span class="amostra gelo" aria-hidden="true"><i></i><i></i></span>Gelo<small>Vidro fosco, azul-gelo</small></span></label>
           <label class="estilo-op"><input type="radio" name="estilo" value="violeta"><span><span class="amostra violeta" aria-hidden="true"><i></i><i></i></span>Violeta<small>Roxo vivo, cartões brancos</small></span></label>
           <label class="estilo-op"><input type="radio" name="estilo" value="miami"><span><span class="amostra miami" aria-hidden="true"><i></i><i></i></span>Miami<small>Pôr do sol, rosa e laranja</small></span></label>
-          <label class="estilo-op"><input type="radio" name="estilo" value="terror"><span><span class="amostra terror" aria-hidden="true"><i></i><i></i></span>Terror<small>Noite, névoa e vermelho-sangue</small></span></label>
+          <label class="estilo-op"><input type="radio" name="estilo" value="terror"><span><span class="amostra terror" aria-hidden="true"><i></i><i></i></span>Lua de Sangue<small>Noite, névoa e vermelho</small></span></label>
         </div>
       </fieldset>
     </div>
@@ -4584,7 +4584,7 @@
   novidadeDialog.addEventListener('cancel', (e) => { e.preventDefault(); responderNovidade('fechou'); });
 
   const NOMES_TEMA = { auto: 'Automático', claro: 'Claro', escuro: 'Escuro' };
-  const NOMES_ESTILO = { padrao: 'Padrão', neon: 'Neon Tatame', brasa: 'Brasa', cyber: 'Cyber', ultra: 'Ultravioleta', gelo: 'Gelo', violeta: 'Violeta', miami: 'Miami', terror: 'Terror' };
+  const NOMES_ESTILO = { padrao: 'Padrão', neon: 'Neon Tatame', brasa: 'Brasa', cyber: 'Cyber', ultra: 'Ultravioleta', gelo: 'Gelo', violeta: 'Violeta', miami: 'Miami', terror: 'Lua de Sangue' };
   // Valores mostrados à direita de cada linha da lista de Você.
   function renderMenuVoce() {
     const n = Object.keys(TREINOS).length;
