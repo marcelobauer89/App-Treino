@@ -295,7 +295,7 @@ async function abrir(b, extra = {}, op = {}) {
   ok((await p.locator('#jornada-body .jornada').count()) === 5, 'jornadas prontas e montar do zero');
   ok(!(await p.locator('#novidade-ocultar').count()) && !(await p.locator('#jornada-body [data-fechar]').count()), 'boas-vindas sem caixa e sem X');
   await p.waitForTimeout(400); await p.screenshot({ path: SHOT('pt-nova-light') });
-  await p.click('[data-jd-zero]');
+  await H.escolherBV(p, 'zero');
   ok(await p.locator('#ed-busca').isVisible(), 'montar abre direto a biblioteca');
   await p.locator('.ed-fixo [data-ed-vista="treino"]').click();
   await salvar(p);
@@ -316,7 +316,7 @@ async function abrir(b, extra = {}, op = {}) {
 
   p = await abrir(b, { checkins: [], cargas: [] });
   await p.click('[data-jd-comecar]');
-  await p.click('[data-jd-escolher="jiu"]'); await H.gravacoes(p);
+  await H.escolherBV(p, 'jiu'); await H.gravacoes(p);
   ok((await H.banco(p)).perfis[0].treinos == null && (await p.locator('.treino-btn').count()) === 3, 'conta nova com o plano pronto');
   await p.context().close();
 

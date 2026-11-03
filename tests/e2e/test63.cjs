@@ -66,7 +66,7 @@ const abrir = (b, extra, op = {}) => H.novaPagina(b, { viewport: op.viewport || 
       ok(await p.evaluate(() => document.activeElement && document.activeElement.dataset.jdVer === 'hipertrofia'), `${tag}: foco fica no botão`);
       await p.locator('#jornada-treinos-hipertrofia').scrollIntoViewIfNeeded();
       await p.screenshot({ path: `${S}/jornadas-ver-${scheme}-${width}.png` });
-      await p.click('[data-jd-escolher="hipertrofia"]'); await H.gravacoes(p);
+      await H.escolherBV(p, 'hipertrofia'); await H.gravacoes(p);
       db = await H.banco(p);
       const per = db.perfis[0];
       ok(!(await p.locator('#jornada-dialog[open]').count()) && per.jornada === 'hipertrofia' && Object.keys(per.treinos).join() === '1,2,3,4', `${tag}: escolheu Hipertrofia, 4 treinos gravados`, JSON.stringify(per.jornada));
@@ -122,14 +122,14 @@ const abrir = (b, extra, op = {}) => H.novaPagina(b, { viewport: op.viewport || 
   await p.reload(); await H.prontos(p); await p.waitForTimeout(300);
   ok(await p.locator('#jornada-dialog[open]').count() === 1, 'a escolha volta na próxima abertura');
   await p.click('[data-jd-comecar]');
-  await p.click('[data-jd-zero]');
+  await H.escolherBV(p, 'zero');
   ok(await p.locator('#ed-busca').isVisible(), 'Montar do zero abre a biblioteca');
   await p.context().close();
 
   // 6. Banco sem a coluna jornada: escolher funciona e grava os treinos.
   p = await abrir(b, { perfis: [NOVA], checkins: [], cargas: [], semColunas: ['jornada'] });
   await p.click('[data-jd-comecar]');
-  await p.click('[data-jd-escolher="forca"]'); await H.gravacoes(p);
+  await H.escolherBV(p, 'forca'); await H.gravacoes(p);
   db = await H.banco(p);
   ok(Object.keys(db.perfis[0].treinos).length === 3 && !('jornada' in db.perfis[0]) && db.log.includes('update:perfis'), 'sem a coluna jornada: treinos gravados mesmo assim');
   ok(!p.errs.length, 'sem a coluna: sem erros', p.errs.join(' | '));
@@ -138,7 +138,7 @@ const abrir = (b, extra, op = {}) => H.novaPagina(b, { viewport: op.viewport || 
   // 7. Coluna criada sem a permissão de gravar (grant antigo): os treinos são gravados mesmo assim, sem aviso de erro.
   p = await abrir(b, { perfis: [{ ...NOVA, jornada: null }], checkins: [], cargas: [], semPermissao: ['jornada'] });
   await p.click('[data-jd-comecar]');
-  await p.click('[data-jd-escolher="hipertrofia"]'); await H.gravacoes(p); await p.waitForTimeout(300);
+  await H.escolherBV(p, 'hipertrofia'); await H.gravacoes(p); await p.waitForTimeout(300);
   db = await H.banco(p);
   ok(Object.keys(db.perfis[0].treinos || {}).join() === '1,2,3,4' && !db.perfis[0].jornada, 'sem permissão na coluna jornada: treinos gravados mesmo assim', JSON.stringify(db.perfis[0].treinos && Object.keys(db.perfis[0].treinos)));
   ok(!/Não foi possível salvar/.test(await p.locator('#toast').innerText().catch(() => '')) && (await p.locator('.treino-btn').count()) === 4, 'sem permissão: sem aviso de erro e com os 4 treinos');
