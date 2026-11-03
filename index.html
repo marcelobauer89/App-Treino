@@ -579,6 +579,45 @@
   body.deslogado .fab { display: none !important; }
   @media (prefers-reduced-motion: reduce) { .fab, .fab-txt { transition: none; } }
 
+  /* Temporizador de descanso: botão redondo no canto direito, logo acima do de check-in, e a janela do contador. */
+  .fab-descanso {
+    position: fixed; z-index: 18; right: max(16px, env(safe-area-inset-right, 0px));
+    bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + 84px);
+    display: grid; place-items: center; width: 56px; height: 56px; padding: 0; border: 0; border-radius: 50%;
+    background: conic-gradient(var(--tatame) calc(var(--p, 0) * 1turn), var(--fio) 0); color: var(--tatame-tinta);
+    box-shadow: 0 8px 24px rgba(16, 19, 24, .28), 0 2px 6px rgba(16, 19, 24, .18);
+  }
+  .fab-descanso::before { content: ""; position: absolute; inset: 4px; border-radius: 50%; background: var(--papel); }
+  .fab-descanso > * { position: relative; }
+  .fab-descanso svg { width: 26px; height: 26px; }
+  .fab-descanso.rodando svg { display: none; }
+  .fab-descanso-tempo { font-family: var(--display); font-stretch: 80%; font-weight: 800; font-size: 17px; font-variant-numeric: tabular-nums; color: var(--tinta); }
+  .fab-descanso.acabou { background: var(--feito-tinta); color: var(--feito-tinta); }
+  .fab-descanso:focus-visible { outline: 3px solid var(--tatame-tinta); outline-offset: 3px; }
+  body.com-ativo .fab-descanso { bottom: calc(var(--nav-h) + var(--ativo-h) + env(safe-area-inset-bottom, 0px) + 84px); }
+  /* Com os dois botões empilhados: mais folga no fim da tela e o aviso (toast) acima deles. */
+  body.com-descanso { --fab-espaco: 148px; }
+  body.com-descanso .toast { bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + 152px); }
+  body.com-descanso.com-ativo .toast { bottom: calc(var(--nav-h) + var(--ativo-h) + env(safe-area-inset-bottom, 0px) + 152px); }
+  body.deslogado .fab-descanso { display: none !important; }
+  @media (prefers-reduced-motion: no-preference) {
+    .fab-descanso.acabou { animation: descanso-pulso 1s ease-in-out 3; }
+    @keyframes descanso-pulso { 50% { transform: scale(1.08); } }
+  }
+  .temp-opcoes { display: grid; gap: 10px; margin-top: 12px; }
+  .temp-opcoes[hidden] { display: none; }
+  .temp-rotulo { margin: 0; font-size: 15px; font-weight: 700; }
+  .temp-tempos { flex-wrap: wrap; margin: 0; overflow: visible; }
+  .desc-contador {
+    margin: 4px 0 0; text-align: center; font-family: var(--display); font-stretch: 75%; font-weight: 850;
+    font-size: clamp(64px, 22vw, 96px); line-height: 1; font-variant-numeric: tabular-nums;
+  }
+  .desc-contador.acabou { color: var(--feito-tinta); }
+  .desc-status { margin: 0; text-align: center; color: var(--tinta-2); font-size: 15px; }
+  .desc-status.acabou { color: var(--feito-tinta); font-weight: 700; }
+  .desc-acoes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .desc-acoes .btn-sec { min-height: 48px; }
+
   /* Dashboard */
   .dash-topo { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 24px 0 16px; }
   .dash-topo h1 {
@@ -1390,6 +1429,7 @@
     </ul>
     <ul class="voce-grupo" aria-label="Configurações">
       <li><button class="voce-linha" type="button" data-voce="aparencia"><svg class="voce-ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.7-.9 1.4-1.9l-.3-.8c-.4-1.2.5-2.3 1.7-2.3H17a4 4 0 0 0 4-4c0-5-4-9-9-9Z"/><circle cx="7.5" cy="11.5" r="1.2"/><circle cx="10.5" cy="7.5" r="1.2"/><circle cx="15" cy="7.8" r="1.2"/></svg><span class="voce-rotulo">Aparência</span><span class="voce-valor" id="valor-aparencia"></span><svg class="voce-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button></li>
+      <li><button class="voce-linha" type="button" data-voce="temporizador"><svg class="voce-ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9.5 2.5h5M12 2.5V5"/></svg><span class="voce-rotulo">Temporizador</span><span class="voce-valor" id="valor-temporizador"></span><svg class="voce-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button></li>
       <li><button class="voce-linha" type="button" data-voce="notificacoes"><svg class="voce-ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8"/><path d="M10.3 20a2 2 0 0 0 3.4 0"/></svg><span class="voce-rotulo">Notificações</span><span class="voce-valor" id="valor-notificacoes"></span><svg class="voce-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button></li>
       <li><button class="voce-linha" type="button" data-voce="privacidade"><svg class="voce-ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span class="voce-rotulo">Privacidade</span><svg class="voce-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button></li>
     </ul>
@@ -1494,6 +1534,31 @@
   
   </section>
 
+  <section class="voce-pagina" data-pagina="temporizador" aria-labelledby="pag-temporizador-titulo" hidden>
+    <div class="voce-topo">
+      <button class="voce-voltar" type="button" data-voltar><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Você</button>
+      <h1 id="pag-temporizador-titulo">Temporizador</h1>
+    </div>
+    <div class="cartao">
+      <label class="sem-peso-linha">
+        <span><b>Temporizador de descanso</b><small>Botão no canto da tela Treino para cronometrar o intervalo entre as séries</small></span>
+        <input type="checkbox" role="switch" id="temp-ativo">
+      </label>
+      <div class="temp-opcoes" id="temp-opcoes">
+        <p class="temp-rotulo" id="temp-padrao-rotulo">Descanso padrão</p>
+        <div class="chips temp-tempos" role="group" aria-labelledby="temp-padrao-rotulo" id="temp-tempos"></div>
+        <label class="sem-peso-linha">
+          <span><b>Tocar som ao terminar</b><small>Um bipe curto, no volume do aparelho</small></span>
+          <input type="checkbox" role="switch" id="temp-som">
+        </label>
+        <label class="sem-peso-linha">
+          <span><b>Vibrar ao terminar</b><small>No iPhone o navegador não vibra: o aviso fica na tela</small></span>
+          <input type="checkbox" role="switch" id="temp-vibrar">
+        </label>
+      </div>
+    </div>
+  </section>
+
   <section class="voce-pagina" data-pagina="notificacoes" aria-labelledby="pag-notificacoes-titulo" hidden>
     <div class="voce-topo">
       <button class="voce-voltar" type="button" data-voltar><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Você</button>
@@ -1550,6 +1615,15 @@
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="m7.8 12.3 2.8 2.8 5.6-5.8"/></svg>
   <span class="fab-txt">Fazer check-in</span>
 </button>
+
+<!-- Temporizador de descanso: só na tela Treino, para quem ligou em Você → Temporizador. -->
+<button class="fab-descanso" id="fab-descanso" type="button" aria-label="Temporizador de descanso" hidden>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9.5 2.5h5M12 2.5V5"/></svg>
+  <span class="fab-descanso-tempo" id="fab-descanso-tempo" hidden></span>
+</button>
+<dialog class="modal" id="descanso-dialog" aria-labelledby="descanso-title">
+  <div class="modal-body" id="descanso-body"></div>
+</dialog>
 
 <nav class="nav" aria-label="Telas">
   <button type="button" data-tela="treino">
@@ -2200,11 +2274,33 @@
   const mesmoQuePadrao = (treinos) => JSON.stringify(treinosParaSalvar(treinos)) === JSON.stringify(treinosParaSalvar(PLANO_PADRAO));
 
   // ---------- Perfil e configurações (vêm do Supabase depois do login) ----------
+  // Temporizador de descanso (perfis.temporizador): ligado por padrão; a pessoa pode desligar em Você → Temporizador.
+  const TEMPOS_DESCANSO = [30, 45, 60, 90, 120, 180];
+  const TEMP_PADRAO = { ativo: true, segundos: 90, vibrar: true, som: true };
+  function lerTemporizador(v) {
+    if (!v || typeof v !== 'object') return { ...TEMP_PADRAO };
+    const seg = Number(v.segundos);
+    return { ativo: v.ativo !== false, segundos: TEMPOS_DESCANSO.includes(seg) ? seg : TEMP_PADRAO.segundos, vibrar: v.vibrar !== false, som: v.som !== false };
+  }
+  const CHAVE_DESCANSO = 'bauer-descanso';
+  // desc: { fim (ms) e total (s) enquanto roda; acabou quando terminou; escolhido = tempo marcado na janela }
+  let desc = { fim: null, total: 0, acabou: false, escolhido: null };
+  let relogioDescanso = null;
+  let acabouTimer = null;
+  try {
+    const salvo = JSON.parse(sessionStorage.getItem(CHAVE_DESCANSO) || 'null');
+    if (salvo && salvo.fim > Date.now() && salvo.total > 0) desc = { ...desc, fim: salvo.fim, total: salvo.total };
+  } catch (_) {}
+  const restante = () => (desc.fim ? Math.max(0, Math.ceil((desc.fim - Date.now()) / 1000)) : 0);
+  const guardarDescanso = () => {
+    try { if (desc.fim) sessionStorage.setItem(CHAVE_DESCANSO, JSON.stringify({ fim: desc.fim, total: desc.total })); else sessionStorage.removeItem(CHAVE_DESCANSO); } catch (_) {}
+  };
+
   const lerJSON = (k) => {
     try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return v && typeof v === 'object' ? v : {}; } catch (_) { return {}; }
   };
   // semPeso: exercícios que o usuário faz só com o corpo (o painel não pede carga).
-  let config = { tema: 'auto', estilo: 'padrao', semana: [[], ['t2'], ['jiu'], ['t1'], ['jiu'], ['t3'], ['bike']], semPeso: new Set(), resumoEmail: true };
+  let config = { tema: 'auto', estilo: 'padrao', semana: [[], ['t2'], ['jiu'], ['t1'], ['jiu'], ['t3'], ['bike']], semPeso: new Set(), resumoEmail: true, temporizador: { ...TEMP_PADRAO } };
   // A conta já tem a semana salva (coluna perfis.semana)? Senão, ela vem dos antigos dias de jiu.
   let semanaDaConta = false;
   // Aviso "Baita atualização" dos treinos personalizados: aparece a cada abertura do app até a pessoa marcar
@@ -2663,6 +2759,7 @@
       semana: semana || validarSemana(semanaDeDiasJiu((linha.dias_jiu || [2, 4]).map(Number))),
       semPeso: new Set(Array.isArray(linha.sem_peso) ? linha.sem_peso : []),
       resumoEmail: linha.emails_resumo !== false,
+      temporizador: lerTemporizador(linha.temporizador),
       // Sem a coluna (schema.sql antigo), os campos aparecem como antes.
       saude: 'consentimento_saude' in linha ? linha.consentimento_saude || null : 'sim',
     };
@@ -4588,6 +4685,7 @@
     $('valor-semana').textContent = `${ativ} ${ativ === 1 ? 'atividade' : 'atividades'}${descanso ? '' : ', sem descanso'}`;
     $('valor-aparencia').textContent = config.estilo !== 'padrao' ? NOMES_ESTILO[config.estilo] : NOMES_TEMA[config.tema] || 'Automático';
     $('valor-notificacoes').textContent = config.resumoEmail ? 'Resumo ligado' : 'Desligadas';
+    $('valor-temporizador').textContent = config.temporizador.ativo ? fmtSegundos(config.temporizador.segundos) : 'Desligado';
   }
   // Abrir uma opção pela lista: "‹ Você" volta pelo histórico (o botão voltar do celular também funciona).
   let abriuPelaLista = false;
@@ -4606,6 +4704,7 @@
     document.querySelectorAll('input[name="estilo"]').forEach((r) => { r.checked = r.value === config.estilo; });
     $('tema-nota-estilo').hidden = config.estilo === 'padrao';
     $('resumo-email').checked = config.resumoEmail;
+    renderTemporizadorConfig();
     renderMeusTreinos();
     renderSemanaConfig();
   }
@@ -4646,7 +4745,7 @@
   // ---------- Telas ----------
   const TELAS = ['treino', 'dashboard', 'voce'];
   // Você tem uma lista de opções (#voce) e uma tela para cada uma (#voce/semana, #voce/aparencia…).
-  const PAGINAS_VOCE = ['dados', 'aparencia', 'treinos', 'semana', 'notificacoes', 'privacidade'];
+  const PAGINAS_VOCE = ['dados', 'aparencia', 'treinos', 'semana', 'temporizador', 'notificacoes', 'privacidade'];
   const telaAtual = () => {
     const t = location.hash.slice(1).split('/')[0];
     return TELAS.includes(t) ? t : 'treino';
@@ -4675,6 +4774,7 @@
     }
     $('fab-checkin').hidden = t === 'voce';
     $('fab-checkin').classList.remove('encolhido');
+    renderFabDescanso();
     registrarEvento('tela', pag ? { tela: t, pagina: pag } : { tela: t });
     marcarPresenca();
   }
@@ -4955,6 +5055,197 @@
       $('tema-nota-estilo').hidden = config.estilo === 'padrao';
     }
   });
+
+  // ---------- Temporizador de descanso ----------
+  // O tempo vale pela hora de término (não atrasa com o app em segundo plano) e sobrevive a um recarregar (sessionStorage).
+  function fmtSegundos(seg) { return seg < 60 ? `${seg} s` : `${Math.floor(seg / 60)} min${seg % 60 ? ` ${seg % 60}` : ''}`; }
+  function fmtRelogio(seg) { return `${Math.floor(seg / 60)}:${String(seg % 60).padStart(2, '0')}`; }
+  function salvarTemporizador() {
+    const valor = { ...config.temporizador };
+    // Sem a coluna ou sem a permissão (schema.sql antigo), a escolha vale só nesta sessão, sem aviso de erro.
+    enviar(async () => {
+      const r = await sb.from('perfis').update({ temporizador: valor }).eq('id', usuario.id);
+      if (r.error && (r.error.code === '42501' || /temporizador/.test(r.error.message || ''))) return { error: null };
+      return r;
+    });
+  }
+  function renderTemporizadorConfig() {
+    const t = config.temporizador;
+    $('temp-ativo').checked = t.ativo;
+    $('temp-opcoes').hidden = !t.ativo;
+    $('temp-vibrar').checked = t.vibrar;
+    $('temp-som').checked = t.som;
+    $('temp-tempos').innerHTML = TEMPOS_DESCANSO.map((seg) =>
+      `<button class="chip" type="button" data-temp-padrao="${seg}" aria-pressed="${seg === t.segundos}">${fmtSegundos(seg)}</button>`).join('');
+  }
+  $('temp-ativo').addEventListener('change', (e) => {
+    config.temporizador.ativo = e.target.checked;
+    if (!config.temporizador.ativo) pararDescanso(false);
+    salvarTemporizador();
+    registrarEvento('temporizador', { ativo: config.temporizador.ativo });
+    renderTemporizadorConfig(); renderMenuVoce(); renderFabDescanso();
+    toast(config.temporizador.ativo ? 'Temporizador ligado: o botão aparece na tela Treino.' : 'Temporizador desligado.');
+  });
+  $('temp-vibrar').addEventListener('change', (e) => { config.temporizador.vibrar = e.target.checked; salvarTemporizador(); });
+  $('temp-som').addEventListener('change', (e) => {
+    config.temporizador.som = e.target.checked;
+    salvarTemporizador();
+    if (e.target.checked) { liberarSom(); tocarSom(); }
+  });
+
+  // Som do fim do descanso: três bipes gerados na hora (Web Audio), sem arquivo de áudio.
+  // O navegador só deixa tocar depois de um toque da pessoa: o áudio é liberado ao iniciar o descanso.
+  let audioDescanso = null;
+  function liberarSom() {
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      if (!audioDescanso) audioDescanso = new AC();
+      if (audioDescanso.state === 'suspended') audioDescanso.resume();
+    } catch (_) {}
+  }
+  function tocarSom() {
+    if (!audioDescanso) return;
+    try {
+      if (audioDescanso.state === 'suspended') audioDescanso.resume();
+      const t0 = audioDescanso.currentTime + 0.05;
+      [0, 0.28, 0.56].forEach((d, i) => {
+        const osc = audioDescanso.createOscillator();
+        const vol = audioDescanso.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = i === 2 ? 1320 : 880;
+        vol.gain.setValueAtTime(0.0001, t0 + d);
+        vol.gain.exponentialRampToValueAtTime(0.5, t0 + d + 0.02);
+        vol.gain.exponentialRampToValueAtTime(0.0001, t0 + d + (i === 2 ? 0.45 : 0.2));
+        osc.connect(vol).connect(audioDescanso.destination);
+        osc.start(t0 + d); osc.stop(t0 + d + 0.5);
+      });
+    } catch (_) {}
+  }
+  $('temp-tempos').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-temp-padrao]');
+    if (!b) return;
+    config.temporizador.segundos = Number(b.dataset.tempPadrao);
+    salvarTemporizador();
+    renderTemporizadorConfig(); renderMenuVoce();
+  });
+
+  function renderFabDescanso() {
+    const fab = $('fab-descanso');
+    fab.hidden = !(usuario && config.temporizador.ativo && telaAtual() === 'treino');
+    document.body.classList.toggle('com-descanso', !fab.hidden);
+    const rodando = !!desc.fim;
+    fab.classList.toggle('rodando', rodando);
+    $('fab-descanso-tempo').hidden = !rodando;
+    if (rodando) {
+      const r = restante();
+      $('fab-descanso-tempo').textContent = fmtRelogio(r);
+      fab.style.setProperty('--p', String(desc.total ? (desc.total - r) / desc.total : 0));
+      fab.setAttribute('aria-label', `Temporizador de descanso: faltam ${fmtRelogio(r)}`);
+    } else {
+      fab.style.removeProperty('--p');
+      fab.setAttribute('aria-label', 'Temporizador de descanso');
+    }
+  }
+
+  const descansoDialog = $('descanso-dialog');
+  function renderDescanso() {
+    const escolhido = desc.escolhido || config.temporizador.segundos;
+    let corpo;
+    if (desc.fim) {
+      corpo = `
+        <p class="desc-contador" id="desc-contador" role="timer" aria-live="off">${fmtRelogio(restante())}</p>
+        <p class="desc-status">Descansando: ${fmtSegundos(desc.total)}</p>
+        <div class="desc-acoes">
+          <button class="btn-sec" type="button" data-desc-ajuste="-15">−15 s</button>
+          <button class="btn-sec" type="button" data-desc-ajuste="15">+15 s</button>
+          <button class="btn-sec" type="button" data-desc-pular>Pular</button>
+        </div>
+        <button class="modal-done" type="button" data-fechar>Fechar (continua contando)</button>`;
+    } else {
+      corpo = `
+        ${desc.acabou ? '<p class="desc-contador acabou">0:00</p><p class="desc-status acabou">Bora para a próxima série!</p>' : ''}
+        <p class="temp-rotulo" id="desc-tempo-rotulo">Tempo de descanso</p>
+        <div class="chips temp-tempos" role="group" aria-labelledby="desc-tempo-rotulo">
+          ${TEMPOS_DESCANSO.map((seg) => `<button class="chip" type="button" data-desc-tempo="${seg}" aria-pressed="${seg === escolhido}">${fmtSegundos(seg)}</button>`).join('')}
+        </div>
+        <button class="modal-done" type="button" data-desc-iniciar>${desc.acabou ? 'Novo descanso' : 'Iniciar descanso'}</button>`;
+    }
+    $('descanso-body').innerHTML = `
+      <div class="modal-head"><div><h3 id="descanso-title">Descanso</h3></div>${BOTAO_FECHAR}</div>
+      ${corpo}
+      <p class="sr-only" id="desc-anuncio" aria-live="assertive"></p>`;
+  }
+  function tickDescanso() {
+    if (!desc.fim) return;
+    if (restante() <= 0) return terminarDescanso();
+    renderFabDescanso();
+    const c = $('desc-contador');
+    if (c && descansoDialog.open) c.textContent = fmtRelogio(restante());
+  }
+  function iniciarDescanso(seg) {
+    if (config.temporizador.som) liberarSom();
+    desc = { fim: Date.now() + seg * 1000, total: seg, acabou: false, escolhido: seg };
+    guardarDescanso();
+    clearInterval(relogioDescanso);
+    relogioDescanso = setInterval(tickDescanso, 250);
+    $('fab-descanso').classList.remove('acabou');
+    registrarEvento('descanso', { acao: 'iniciado', segundos: seg });
+    renderFabDescanso();
+    if (descansoDialog.open) renderDescanso();
+  }
+  function pararDescanso(registrar) {
+    if (registrar && desc.fim) registrarEvento('descanso', { acao: 'pulado', segundos: desc.total, faltavam: restante() });
+    clearInterval(relogioDescanso); relogioDescanso = null;
+    desc = { ...desc, fim: null, acabou: false };
+    guardarDescanso();
+    renderFabDescanso();
+  }
+  function terminarDescanso() {
+    const total = desc.total;
+    clearInterval(relogioDescanso); relogioDescanso = null;
+    desc = { ...desc, fim: null, acabou: true };
+    guardarDescanso();
+    if (config.temporizador.som) tocarSom();
+    if (config.temporizador.vibrar && navigator.vibrate) { try { navigator.vibrate([250, 120, 250]); } catch (_) {} }
+    registrarEvento('descanso', { acao: 'completo', segundos: total });
+    const fab = $('fab-descanso');
+    fab.classList.add('acabou');
+    clearTimeout(acabouTimer);
+    acabouTimer = setTimeout(() => fab.classList.remove('acabou'), 4000);
+    renderFabDescanso();
+    if (descansoDialog.open) renderDescanso();
+    const anuncio = $('desc-anuncio');
+    if (anuncio) anuncio.textContent = 'Descanso terminado. Bora para a próxima série!';
+    else toast('Descanso terminado. Bora para a próxima série!');
+  }
+  $('fab-descanso').addEventListener('click', () => {
+    if (config.temporizador.som) liberarSom();
+    // Parado: começa no padrão; depois de um descanso, "Novo descanso" repete o mesmo tempo.
+    if (!desc.fim && !desc.acabou) desc.escolhido = null;
+    renderDescanso();
+    if (!descansoDialog.open) descansoDialog.showModal();
+  });
+  descansoDialog.addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (e.target === descansoDialog || (b && 'fechar' in b.dataset)) {
+      if (!desc.fim) desc.acabou = false;
+      return descansoDialog.close();
+    }
+    if (!b) return;
+    if (b.dataset.descTempo) { desc.escolhido = Number(b.dataset.descTempo); return renderDescanso(); }
+    if ('descIniciar' in b.dataset) return iniciarDescanso(desc.escolhido || config.temporizador.segundos);
+    if (b.dataset.descAjuste && desc.fim) {
+      desc.fim = Math.max(Date.now() + 1000, desc.fim + Number(b.dataset.descAjuste) * 1000);
+      desc.total = Math.max(1, desc.total + Number(b.dataset.descAjuste));
+      guardarDescanso(); tickDescanso();
+      return renderDescanso();
+    }
+    if ('descPular' in b.dataset) { pararDescanso(true); return renderDescanso(); }
+  });
+  // Ao voltar para o app, o contador mostra o tempo certo (ou o fim, se já passou).
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') tickDescanso(); });
+  if (desc.fim) relogioDescanso = setInterval(tickDescanso, 250);
 
   $('resumo-email').addEventListener('change', (e) => {
     config.resumoEmail = e.target.checked;

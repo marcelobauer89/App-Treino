@@ -1908,6 +1908,8 @@
     editor_treinos: () => 'Abriu Meus treinos',
     jornadas_abertas: (d) => (d.origem === 'boas-vindas' ? 'Viu os objetivos nas boas-vindas' : 'Abriu Mudar meu objetivo'),
     jornada_escolhida: (d) => `Escolheu o objetivo ${NOMES_JORNADA[d.jornada] || d.jornada}`,
+    temporizador: (d) => (d.ativo ? 'Ligou o temporizador de descanso' : 'Desligou o temporizador de descanso'),
+    descanso: (d) => `${{ iniciado: 'Iniciou', pulado: 'Pulou', completo: 'Completou' }[d.acao] || 'Usou'} um descanso de ${d.segundos} s`,
     treinos_desfeitos: (d) => (d.origem === 'desfazer' ? 'Desfez a alteração dos treinos' : 'Restaurou a versão anterior dos treinos'),
     treinos_salvos: (d) => (d.plano_pronto ? 'Voltou ao plano pronto' : `Salvou ${d.treinos} ${d.treinos === 1 ? 'treino' : 'treinos'} personalizados`),
     resumo_email: (d) => (d.ativo ? 'Ligou o resumo semanal por e-mail' : 'Desligou o resumo semanal por e-mail'),
