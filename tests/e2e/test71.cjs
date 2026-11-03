@@ -38,6 +38,12 @@ const perfil = async (p) => (await H.banco(p)).perfis.find((x) => x.id === 'u1')
     await p.click('[data-jd-comecar]'); await p.waitForTimeout(100);
     ok((await titulo(p)) === 'Seus dados' && (await passo(p)) === 'Etapa 2 de 3', `${tag}: Começar leva a "Seus dados"`, await titulo(p));
     ok(/administrador vê/.test(await p.innerText('#jornada-body')) && await p.isVisible('#jornada-body a[href="privacidade.html"]'), `${tag}: mostra o aviso e o link da política`);
+    {
+      // Topo: título à esquerda e a etapa à direita, na mesma linha. Rodapé: Voltar à esquerda e o botão à direita, na mesma linha.
+      const [t, e, v, bt] = await Promise.all(['#jornada-title', '.bv-etapa', '.bv-rodape [data-jd-voltar]', '[data-jd-entendi]'].map((sel) => p.locator(sel).boundingBox()));
+      ok(t && e && e.x > t.x + t.width && Math.abs((e.y + e.height) - (t.y + t.height)) < 14, `${tag}: etapa na linha do título, à direita`);
+      ok(v && bt && v.x < bt.x && Math.abs((v.y + v.height / 2) - (bt.y + bt.height / 2)) < 4, `${tag}: Voltar à esquerda na linha do botão`);
+    }
     await p.locator('#jornada-dialog .modal-body').screenshot({ path: `${H.SAIDA}/boas-vindas-2-${tag}.png` });
     await p.click('[data-jd-voltar]'); await p.waitForTimeout(100);
     ok((await titulo(p)) === 'Bem-vindo ao OSS', `${tag}: Voltar volta ao passo 1`);
@@ -50,13 +56,14 @@ const perfil = async (p) => (await H.banco(p)).perfis.find((x) => x.id === 'u1')
     const cartoes = await p.locator('.jornada .jornada-topo b').allInnerTexts();
     ok(cartoes.includes('Jiu Jitsu') && cartoes.includes('Montar do zero') && !cartoes.some((c) => /\(OSS\)|Jiu-jitsu/i.test(c)), `${tag}: "Jiu Jitsu" e "Montar do zero" na lista`, cartoes.join(' | '));
     await p.locator('#jornada-dialog .modal-body').screenshot({ path: `${H.SAIDA}/boas-vindas-3-${tag}.png` });
-    // Cabeçalho fixo: rolando a lista, etapa, Voltar e título continuam no topo da janela.
+    // Cabeçalho e rodapé fixos: rolando a lista, título e etapa ficam no topo e o Voltar embaixo, à esquerda.
     await p.locator('#jornada-dialog').evaluate((d) => { d.scrollTop = 700; }); await p.waitForTimeout(100);
-    const [cab, dlg] = await Promise.all([p.locator('.bv-cabeca').boundingBox(), p.locator('#jornada-dialog').boundingBox()]);
-    ok(cab && dlg && Math.abs(cab.y - dlg.y) <= 2 && await p.isVisible('.bv-cabeca [data-jd-voltar]'), `${tag}: cabeçalho fixo ao rolar`, `${cab && cab.y} / ${dlg && dlg.y}`);
+    const [cab, rod, dlg] = await Promise.all(['.bv-cabeca', '.bv-rodape', '#jornada-dialog'].map((sel) => p.locator(sel).boundingBox()));
+    ok(cab && dlg && Math.abs(cab.y - dlg.y) <= 2, `${tag}: cabeçalho fixo ao rolar`, `${cab && cab.y} / ${dlg && dlg.y}`);
+    ok(rod && dlg && Math.abs((rod.y + rod.height) - (dlg.y + dlg.height)) <= 2 && await p.isVisible('.bv-rodape [data-jd-voltar]'), `${tag}: rodapé fixo com o Voltar`);
     await p.screenshot({ path: `${H.SAIDA}/boas-vindas-3-rolado-${tag}.png` });
     await p.locator('#jornada-dialog').evaluate((d) => { d.scrollTop = 0; });
-    ok((await p.locator('.bv-rodape [data-jd-voltar]').count()) === 0, `${tag}: Voltar só no cabeçalho`);
+    ok((await p.locator('.bv-cabeca [data-jd-voltar]').count()) === 0, `${tag}: Voltar só embaixo`);
     await p.click('[data-jd-voltar]'); await p.waitForTimeout(100);
     ok((await titulo(p)) === 'Seus dados' && /Continuar/.test(await p.innerText('[data-jd-entendi]')), `${tag}: Voltar do objetivo mostra "Seus dados" com Continuar`);
     await p.click('[data-jd-entendi]'); await p.waitForTimeout(100);

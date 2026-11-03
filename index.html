@@ -877,15 +877,18 @@
   .novidade-acoes { display: grid; gap: 8px; }
   /* Boas-vindas em etapas: cabeçalho fixo ao rolar (etapa e Voltar, etiqueta e título); botão principal à direita. */
   .bv-cabeca {
-    position: sticky; top: 0; z-index: 2; display: grid; justify-items: start; gap: 4px;
-    margin: -20px -16px 0; padding: 20px 16px 12px; background: var(--papel); border-bottom: 1px solid var(--fio);
+    position: sticky; top: 0; z-index: 2; display: grid; justify-items: start; gap: 12px;
+    margin: -20px -16px 0; padding: 20px 16px 14px; background: var(--papel); border-bottom: 1px solid var(--fio);
   }
-  .bv-cabeca h3 { margin: 10px 0 0; font-family: var(--display); font-stretch: 80%; font-weight: 800; font-size: 26px; line-height: 1.1; }
-  .bv-linha { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 44px; margin-top: -8px; }
-  .bv-etapa { font-size: 14px; font-weight: 700; color: var(--tinta-2); }
-  .bv-rodape { display: flex; justify-content: flex-end; margin-top: 8px; }
-  .bv-rodape .modal-done { width: auto; min-width: 160px; margin: 0; padding: 0 28px; }
-  .bv-voltar { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; padding: 0 0 0 8px; border: 0; background: none; color: var(--tatame-tinta); font: inherit; font-weight: 700; cursor: pointer; }
+  .bv-titulo { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; width: 100%; }
+  .bv-titulo h3 { margin: 0; font-family: var(--display); font-stretch: 80%; font-weight: 800; font-size: 26px; line-height: 1.1; }
+  .bv-etapa { flex: 0 0 auto; font-size: 14px; font-weight: 700; color: var(--tinta-2); white-space: nowrap; }
+  .bv-rodape {
+    position: sticky; bottom: 0; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    margin: 0 -16px -20px; padding: 12px 16px calc(16px + env(safe-area-inset-bottom, 0px)); background: var(--papel); border-top: 1px solid var(--fio);
+  }
+  .bv-rodape .modal-done { width: auto; min-width: 160px; margin: 0 0 0 auto; padding: 0 28px; }
+  .bv-voltar { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; padding: 0 8px 0 0; border: 0; background: none; color: var(--tatame-tinta); font: inherit; font-weight: 700; cursor: pointer; }
   .bv-voltar:focus-visible { outline: 3px solid var(--tatame-tinta); outline-offset: 2px; border-radius: 6px; }
   #jornada-title:focus { outline: none; }
   .jornadas-modal .priv-link { margin-top: 12px; }
@@ -4543,18 +4546,20 @@
     const passos = passosBV();
     return `<span class="bv-etapa">Etapa ${passos.indexOf(jd.passo) + 1} de ${passos.length}</span>`;
   }
-  // Cabeçalho das boas-vindas, fixo ao rolar: "Etapa X de N" à esquerda e Voltar à direita (sempre no mesmo lugar),
-  // a etiqueta e o título.
+  // Cabeçalho das boas-vindas, fixo ao rolar: a etiqueta e, abaixo, o título com "Etapa X de N" à direita.
   function cabecaBV(selo, titulo) {
+    return `
+      <div class="bv-cabeca">
+        <span class="novidade-selo">${selo}</span>
+        <div class="bv-titulo"><h3 id="jornada-title" tabindex="-1">${titulo}</h3>${etapaBV()}</div>
+      </div>`;
+  }
+  // Rodapé fixo ao rolar: Voltar à esquerda e o botão principal à direita (na etapa do objetivo, só o Voltar).
+  function rodapeBV(botao = '') {
     const passos = passosBV();
     const anterior = passos[passos.indexOf(jd.passo) - 1];
     const voltar = anterior ? `<button class="bv-voltar" type="button" data-jd-voltar="${anterior}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Voltar</button>` : '';
-    return `
-      <div class="bv-cabeca">
-        <div class="bv-linha">${etapaBV()}${voltar}</div>
-        <span class="novidade-selo">${selo}</span>
-        <h3 id="jornada-title" tabindex="-1">${titulo}</h3>
-      </div>`;
+    return `<div class="bv-rodape">${voltar}${botao}</div>`;
   }
   function renderPassoBV() {
     const item = (txt) => `<li>${ICON_CHECK}<span>${txt}</span></li>`;
@@ -4569,7 +4574,7 @@
         ${item('<b>Temporizador de descanso</b> entre as séries')}
         ${item('<b>Você</b>: treinos, semana, aparência e privacidade do seu jeito')}
       </ul>
-      <div class="bv-rodape"><button class="modal-done" type="button" data-jd-comecar>Começar</button></div>`;
+      ${rodapeBV('<button class="modal-done" type="button" data-jd-comecar>Começar</button>')}`;
     }
     if (jd.passo === 'dados') {
       return `
@@ -4577,7 +4582,7 @@
       <p class="resumo-enc">Antes de escolher seus treinos, veja como cuidamos dos seus dados.</p>
       ${itensPolitica(false)}
       <a class="btn-sec priv-link" href="privacidade.html" target="_blank" rel="noopener">Ler a política completa</a>
-      <div class="bv-rodape"><button class="modal-done" type="button" data-jd-entendi>${politica.aceita ? 'Continuar' : 'Entendi'}</button></div>`;
+      ${rodapeBV(`<button class="modal-done" type="button" data-jd-entendi>${politica.aceita ? 'Continuar' : 'Entendi'}</button>`)}`;
     }
     return null;
   }
@@ -4621,7 +4626,7 @@
           <div class="jornada-acoes"><button class="btn-sec" type="button" data-jd-zero>Montar meus treinos</button></div>
         </li>
       </ul>
-`;
+      ${boasVindas ? rodapeBV() : ''}`;
     if (foco) { const el = $('jornada-body').querySelector(foco); if (el) el.focus(); }
   }
   function fecharJornadas(escolha) {
