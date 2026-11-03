@@ -26,6 +26,7 @@ const perfil = async (p) => (await H.banco(p)).perfis.find((x) => x.id === 'u1')
     const corpo = await p.innerText('#jornada-body');
     ok(['Treino do dia', 'Check-in', 'Dashboard', 'Temporizador de descanso', 'Você'].every((x) => corpo.includes(x)), `${tag}: explica o app`);
     ok(!(await p.locator('#jornada-body [data-fechar]').count()) && !(await p.locator('#novidade-ocultar').count()), `${tag}: sem X e sem "Não mostrar de novo"`);
+    ok(!(await p.locator('.bv-passos').count()) && (await p.locator('.bv-etapa').count()) === 1, `${tag}: a etapa aparece num lugar só (sem pontinhos)`);
     await p.locator('#jornada-dialog .modal-body').screenshot({ path: `${H.SAIDA}/boas-vindas-1-${tag}.png` });
     await p.keyboard.press('Escape'); await p.waitForTimeout(100);
     await p.mouse.click(5, 5); await p.waitForTimeout(100);
@@ -115,7 +116,7 @@ const perfil = async (p) => (await H.banco(p)).perfis.find((x) => x.id === 'u1')
   ok(!(await p.isVisible('#jornada-dialog')), 'quem já usa: sem boas-vindas');
   await H.voce(p, 'treinos');
   await p.click('#trocar-jornada'); await p.waitForTimeout(150);
-  ok((await titulo(p)) === 'Mudar meu objetivo' && (await p.locator('#jornada-body [data-fechar]').count()) === 1 && !(await p.locator('.bv-passos').count()), 'Mudar meu objetivo: com X e sem passos');
+  ok((await titulo(p)) === 'Mudar meu objetivo' && (await p.locator('#jornada-body [data-fechar]').count()) === 1 && !(await p.locator('.bv-etapa').count()), 'Mudar meu objetivo: com X e sem passos');
   await p.click('#jornada-body [data-fechar]'); await p.waitForTimeout(150);
   ok(!(await p.isVisible('#jornada-dialog')), 'Mudar meu objetivo fecha no X');
   await p.context().close();
