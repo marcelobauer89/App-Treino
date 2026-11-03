@@ -877,6 +877,9 @@
   .novidade-acoes { display: grid; gap: 8px; }
   /* Boas-vindas em passos: pontinhos do passo, Voltar e o botão principal no rodapé. */
   .bv-passos { display: flex; gap: 6px; align-items: center; margin: 0; }
+  .bv-selos { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
+  .bv-selos .novidade-selo { margin: 0; }
+  .bv-etapa { font-size: 14px; font-weight: 700; color: var(--tinta-2); }
   .bv-passos i { width: 8px; height: 8px; border-radius: 50%; background: var(--fio); }
   .bv-passos i.atual { width: 22px; border-radius: 4px; background: var(--tatame); }
   .bv-rodape { display: flex; align-items: center; gap: 12px; margin-top: 18px; }
@@ -4533,10 +4536,15 @@
     if (passo === 'objetivo') registrarEvento('jornadas_abertas', { origem: jd.modo });
     $('jornada-title').focus();
   }
+  // "Etapa X de N" visível no topo (ao lado da etiqueta) e os pontinhos no rodapé.
+  function etapaBV() {
+    const passos = passosBV();
+    return `<span class="bv-etapa">Etapa ${passos.indexOf(jd.passo) + 1} de ${passos.length}</span>`;
+  }
   function pontosBV() {
     const passos = passosBV();
     const i = passos.indexOf(jd.passo);
-    return `<p class="bv-passos"><span class="sr-only">Passo ${i + 1} de ${passos.length}</span>${passos.map((_, k) => `<i aria-hidden="true"${k === i ? ' class="atual"' : ''}></i>`).join('')}</p>`;
+    return `<p class="bv-passos" aria-hidden="true">${passos.map((_, k) => `<i${k === i ? ' class="atual"' : ''}></i>`).join('')}</p>`;
   }
   function renderPassoBV() {
     const passos = passosBV();
@@ -4545,7 +4553,7 @@
     const item = (txt) => `<li>${ICON_CHECK}<span>${txt}</span></li>`;
     if (jd.passo === 'bemvindo') {
       return `
-      <div class="modal-head"><div><span class="novidade-selo">Boas-vindas</span><h3 id="jornada-title" tabindex="-1">Bem-vindo ao OSS</h3></div></div>
+      <div class="modal-head"><div><div class="bv-selos"><span class="novidade-selo">Boas-vindas</span>${etapaBV()}</div><h3 id="jornada-title" tabindex="-1">Bem-vindo ao OSS</h3></div></div>
       <p class="resumo-enc">Seu treino de Jiu Jitsu e academia num lugar só.</p>
       <ul class="novidade-lista">
         ${item('<b>Treino do dia</b>: a ficha de hoje, com as cargas de cada série')}
@@ -4558,7 +4566,7 @@
     }
     if (jd.passo === 'dados') {
       return `
-      <div class="modal-head"><div><span class="novidade-selo">Privacidade</span><h3 id="jornada-title" tabindex="-1">Seus dados</h3></div></div>
+      <div class="modal-head"><div><div class="bv-selos"><span class="novidade-selo">Privacidade</span>${etapaBV()}</div><h3 id="jornada-title" tabindex="-1">Seus dados</h3></div></div>
       <p class="resumo-enc">Antes de escolher seus treinos, veja como cuidamos dos seus dados.</p>
       ${itensPolitica(false)}
       <a class="btn-sec priv-link" href="privacidade.html" target="_blank" rel="noopener">Ler a política completa</a>
@@ -4595,7 +4603,7 @@
       </li>`;
     };
     $('jornada-body').innerHTML = `
-      <div class="modal-head"><div>${boasVindas ? '<span class="novidade-selo">Boas-vindas</span>' : ''}<h3 id="jornada-title" tabindex="-1">${boasVindas ? 'Qual é o seu objetivo?' : 'Mudar meu objetivo'}</h3></div>${boasVindas ? '' : BOTAO_FECHAR}</div>
+      <div class="modal-head"><div>${boasVindas ? `<div class="bv-selos"><span class="novidade-selo">Boas-vindas</span>${etapaBV()}</div>` : ''}<h3 id="jornada-title" tabindex="-1">${boasVindas ? 'Qual é o seu objetivo?' : 'Mudar meu objetivo'}</h3></div>${boasVindas ? '' : BOTAO_FECHAR}</div>
       ${boasVindas ? `<div class="bv-topo">${renderPassoVoltar()}${pontosBV()}</div>` : ''}
       <p class="resumo-enc">Escolha um objetivo e receba os treinos prontos${boasVindas ? ', ou monte os seus do zero' : ''}. Depois dá para mudar exercícios, séries e dias em Você → Meus treinos.</p>
       <ul class="jornadas">

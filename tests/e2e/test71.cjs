@@ -9,7 +9,7 @@ const NOVA = (extra = {}) => ({ id: 'u1', nome: 'Ana', email: 'ana@exemplo.com',
 const abrir = (b, extra, op = {}) => H.novaPagina(b, { viewport: op.viewport || { width: 390, height: 844 }, scheme: op.scheme, extra })
   .then(async (p) => { await p.goto(H.PAGINA); await H.prontos(p); await p.waitForTimeout(300); return p; });
 const titulo = (p) => p.locator('#jornada-title').innerText().then((t) => t.trim());
-const passo = (p) => p.locator('.bv-passos .sr-only').innerText().then((t) => t.trim()).catch(() => '');
+const passo = (p) => p.locator('.bv-etapa').innerText().then((t) => t.trim()).catch(() => '');
 const perfil = async (p) => (await H.banco(p)).perfis.find((x) => x.id === 'u1');
 
 (async () => {
@@ -22,7 +22,7 @@ const perfil = async (p) => (await H.banco(p)).perfis.find((x) => x.id === 'u1')
 
     // Passo 1: o app. A janela separada da política não aparece; nada é gravado.
     ok(await p.isVisible('#jornada-dialog') && !(await p.isVisible('#politica-dialog')), `${tag}: abre as boas-vindas (sem a janela da política)`);
-    ok((await titulo(p)) === 'Bem-vindo ao OSS' && (await passo(p)) === 'Passo 1 de 3', `${tag}: passo 1 de 3`, `${await titulo(p)} / ${await passo(p)}`);
+    ok((await titulo(p)) === 'Bem-vindo ao OSS' && (await passo(p)) === 'Etapa 1 de 3', `${tag}: passo 1 de 3`, `${await titulo(p)} / ${await passo(p)}`);
     const corpo = await p.innerText('#jornada-body');
     ok(['Treino do dia', 'Check-in', 'Dashboard', 'Temporizador de descanso', 'Você'].every((x) => corpo.includes(x)), `${tag}: explica o app`);
     ok(!(await p.locator('#jornada-body [data-fechar]').count()) && !(await p.locator('#novidade-ocultar').count()), `${tag}: sem X e sem "Não mostrar de novo"`);
@@ -35,7 +35,7 @@ const perfil = async (p) => (await H.banco(p)).perfis.find((x) => x.id === 'u1')
 
     // Passo 2: seus dados.
     await p.click('[data-jd-comecar]'); await p.waitForTimeout(100);
-    ok((await titulo(p)) === 'Seus dados' && (await passo(p)) === 'Passo 2 de 3', `${tag}: Começar leva a "Seus dados"`, await titulo(p));
+    ok((await titulo(p)) === 'Seus dados' && (await passo(p)) === 'Etapa 2 de 3', `${tag}: Começar leva a "Seus dados"`, await titulo(p));
     ok(/administrador vê/.test(await p.innerText('#jornada-body')) && await p.isVisible('#jornada-body a[href="privacidade.html"]'), `${tag}: mostra o aviso e o link da política`);
     await p.locator('#jornada-dialog .modal-body').screenshot({ path: `${H.SAIDA}/boas-vindas-2-${tag}.png` });
     await p.click('[data-jd-voltar]'); await p.waitForTimeout(100);
@@ -45,7 +45,7 @@ const perfil = async (p) => (await H.banco(p)).perfis.find((x) => x.id === 'u1')
     ok((await perfil(p)).politica_versao, `${tag}: Entendi grava a política`);
 
     // Passo 3: objetivo.
-    ok((await titulo(p)) === 'Qual é o seu objetivo?' && (await passo(p)) === 'Passo 3 de 3', `${tag}: Entendi leva ao objetivo`, await titulo(p));
+    ok((await titulo(p)) === 'Qual é o seu objetivo?' && (await passo(p)) === 'Etapa 3 de 3', `${tag}: Entendi leva ao objetivo`, await titulo(p));
     const cartoes = await p.locator('.jornada .jornada-topo b').allInnerTexts();
     ok(cartoes.includes('Jiu Jitsu') && cartoes.includes('Montar do zero') && !cartoes.some((c) => /OSS|Jiu Jitsu/.test(c)), `${tag}: "Jiu Jitsu" e "Montar do zero" na lista`, cartoes.join(' | '));
     await p.locator('#jornada-dialog .modal-body').screenshot({ path: `${H.SAIDA}/boas-vindas-3-${tag}.png` });
@@ -76,7 +76,7 @@ const perfil = async (p) => (await H.banco(p)).perfis.find((x) => x.id === 'u1')
 
   // Política já aceita: só 2 passos (o app → objetivo).
   p = await abrir(b, { perfis: [NOVA({ politica_versao: '2026-10-27' })] });
-  ok((await passo(p)) === 'Passo 1 de 2', 'política já aceita: 2 passos', await passo(p));
+  ok((await passo(p)) === 'Etapa 1 de 2', 'política já aceita: 2 passos', await passo(p));
   await p.click('[data-jd-comecar]'); await p.waitForTimeout(100);
   ok((await titulo(p)) === 'Qual é o seu objetivo?', 'política já aceita: Começar vai direto ao objetivo');
   await p.context().close();
@@ -89,7 +89,7 @@ const perfil = async (p) => (await H.banco(p)).perfis.find((x) => x.id === 'u1')
     if (d && d.perfis) { d.perfis.forEach((x) => { delete x.politica_versao; }); localStorage.setItem('mock-supabase', JSON.stringify(d)); }
   });
   await p.goto(H.PAGINA); await H.prontos(p); await p.waitForTimeout(300);
-  ok((await passo(p)) === 'Passo 1 de 2' && !p.errs.length, 'sem a coluna da política: 2 passos, sem erro', `${await passo(p)} ${p.errs.join(' | ')}`);
+  ok((await passo(p)) === 'Etapa 1 de 2' && !p.errs.length, 'sem a coluna da política: 2 passos, sem erro', `${await passo(p)} ${p.errs.join(' | ')}`);
   await p.context().close();
 
   // Montar do zero: sair do editor sem salvar volta ao objetivo; salvar encerra as boas-vindas.
