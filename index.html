@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f3f4f6" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0f1115" media="(prefers-color-scheme: dark)">
-<title>Bauer • Jiu-Jitsu + Hipertrofia</title>
+<title>Bauer • Jiu Jitsu + Hipertrofia</title>
 <script src="ambiente.js"></script>
 <script>
   // Aplica o tema escolhido antes da primeira pintura, para a tela não piscar.
@@ -875,6 +875,17 @@
   .novidade-lista li { display: flex; gap: 10px; align-items: flex-start; font-size: 15px; }
   .novidade-lista svg { flex: 0 0 auto; margin-top: 3px; color: var(--checkin); }
   .novidade-acoes { display: grid; gap: 8px; }
+  /* Boas-vindas em etapas: "Etapa X de N" no topo; Voltar e o botão principal no rodapé. */
+  .bv-selos { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
+  .bv-selos .novidade-selo { margin: 0; }
+  .bv-etapa { font-size: 14px; font-weight: 700; color: var(--tinta-2); }
+  .bv-rodape { display: flex; align-items: center; gap: 12px; margin-top: 18px; }
+  .bv-rodape .modal-done { flex: 1; width: auto; margin: 0; }
+  .bv-topo { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: -4px 0 8px; }
+  .bv-voltar { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; padding: 0 8px 0 0; border: 0; background: none; color: var(--tatame-tinta); font: inherit; font-weight: 700; cursor: pointer; }
+  .bv-voltar:focus-visible { outline: 3px solid var(--tatame-tinta); outline-offset: 2px; border-radius: 6px; }
+  #jornada-title:focus { outline: none; }
+  .jornadas-modal .priv-link { margin-top: 12px; }
   .novidade-ocultar { justify-self: start; display: inline-flex; align-items: center; gap: 10px; min-height: 44px; font-size: 15px; color: var(--tinta-2); cursor: pointer; }
   .novidade-ocultar input { flex: 0 0 auto; width: 22px; height: 22px; margin: 0; accent-color: var(--tatame); cursor: pointer; }
   .escolha-cards { display: grid; gap: 8px; }
@@ -1365,7 +1376,7 @@
         <li><span class="ponteira" data-nivel="1" aria-hidden="true"><i></i><i></i><i></i></span>Baixa ou secundária</li>
       </ul>
       <p>PSE é a percepção subjetiva de esforço; o 10 fica reservado ao tatame. Use a carga que respeite a técnica e a recuperação.</p>
-      <p>A semana se monta em Você: arraste os treinos, o jiu-jitsu, o muay thai, o surf e o cardio para os dias (até 2 por dia). O padrão é Treino 2 na segunda, Treino 1 na quarta, Treino 3 na sexta, jiu na terça e na quinta e cardio no sábado.</p>
+      <p>A semana se monta em Você: arraste os treinos, o Jiu Jitsu, o muay thai, o surf e o cardio para os dias (até 2 por dia). O padrão é Treino 2 na segunda, Treino 1 na quarta, Treino 3 na sexta, jiu na terça e na quinta e cardio no sábado.</p>
       <p>Check-ins e cargas ficam salvos na sua conta e aparecem em qualquer aparelho em que você entrar.</p>
       <p>Adaptação prática do PDF enviado. Não substitui avaliação de um profissional de educação física ou nutrição, especialmente se houver dor ou lesão.</p>
     </footer>
@@ -1398,7 +1409,7 @@
       <div class="cal-grade" id="cal-grade"></div>
       <ul class="legenda-cal" aria-label="Legenda do calendário">
         <li><span class="selo musc" aria-hidden="true">1</span><span class="selo musc" aria-hidden="true">2</span><span class="selo musc" aria-hidden="true">3</span><span>Musculação</span></li>
-        <li><span class="selo jiu" aria-hidden="true">J</span><span>Jiu-jitsu</span></li>
+        <li><span class="selo jiu" aria-hidden="true">J</span><span>Jiu Jitsu</span></li>
         <li><span class="selo muay" aria-hidden="true">M</span><span>Muay Thai</span></li>
         <li><span class="selo surf" aria-hidden="true">S</span><span>Surf</span></li>
         <li><span class="selo bike" aria-hidden="true">C</span><span>Cardio</span></li>
@@ -2099,7 +2110,7 @@
   const exJ = (nome, dose, pse) => ({ nome, dose, pse });
   const JORNADAS = [
     {
-      id: 'jiu', nome: 'Jiu-jitsu (OSS)', resumo: 'Força que vai para o tatame.',
+      id: 'jiu', nome: 'Jiu Jitsu', resumo: 'Força que vai para o tatame.',
       nivel: 'Intermediário', dias: 3, tempo: '50–60 min', equipamento: 'Academia',
       treinos: PLANO_PADRAO, semana: { 1: ['t2'], 3: ['t1'], 5: ['t3'] },
     },
@@ -2373,7 +2384,7 @@
   // Tipos de check-in. Musculação usa uma cor só; o número no selo diz qual treino foi.
   // t1 a t6 existem sempre, para os check-ins de um treino que foi excluído continuarem com nome.
   const TIPOS = {
-    jiu: { nome: 'Jiu-jitsu', selo: 'J', grupo: 'jiu' },
+    jiu: { nome: 'Jiu Jitsu', selo: 'J', grupo: 'jiu' },
     muay: { nome: 'Muay Thai', selo: 'M', grupo: 'muay' },
     surf: { nome: 'Surf', selo: 'S', grupo: 'surf' },
     // A chave 'bike' fica no banco (check-ins e semana já salvos); na tela o tipo se chama Cardio.
@@ -3450,7 +3461,7 @@
           <div><h3>Objetivo</h3><p>${t.objetivo}</p></div>
           <div><h3>O que esperar</h3><p>${t.esperado}</p></div>
           <div><h3>Impacto</h3>
-            <p><b>No jiu-jitsu:</b> ${t.impacto_jiu}</p>
+            <p><b>No Jiu Jitsu:</b> ${t.impacto_jiu}</p>
             <p><b>No físico:</b> ${t.impacto_fisico}</p>
           </div>
         </div>
@@ -3696,7 +3707,7 @@
     const planejado = (g) => config.semana.flat().filter((t) => (ehTreino(t) ? 'musc' : t) === g).length;
     $('metas').innerHTML =
       linha('Musculação', 't1', 'musc', conta('musc'), planejado('musc')) +
-      linha('Jiu-jitsu', 'jiu', 'jiu', conta('jiu'), planejado('jiu')) +
+      linha('Jiu Jitsu', 'jiu', 'jiu', conta('jiu'), planejado('jiu')) +
       linha('Muay Thai', 'muay', 'muay', conta('muay'), planejado('muay')) +
       linha('Surf', 'surf', 'surf', conta('surf'), planejado('surf')) +
       linha('Cardio', 'bike', 'bike', conta('bike'), planejado('bike'));
@@ -4094,10 +4105,10 @@
   const edMudou = () => JSON.stringify(treinosParaSalvar(ed.treinos)) !== JSON.stringify(treinosParaSalvar(TREINOS));
   const altas = (ex) => DIMS.filter(({ k }) => ex[k] === 'alta').map(({ label }) => label.toLowerCase());
 
-  function abrirEditor({ doZero = false } = {}) {
+  function abrirEditor({ doZero = false, daBoasVindas = false } = {}) {
     const treinos = doZero ? { 1: { nome: 'Treino 1', subtitulo: '', exercicios: [] } } : copiaTreinos(TREINOS);
     const sel = doZero ? '1' : (treinos[estado.treino] ? estado.treino : Object.keys(treinos)[0]);
-    ed = { treinos, sel, vista: doZero ? 'escolher' : 'treino', busca: '', grupo: 'todos', confirmar: null, erro: '', doZero };
+    ed = { treinos, sel, vista: doZero ? 'escolher' : 'treino', busca: '', grupo: 'todos', confirmar: null, erro: '', doZero, daBoasVindas };
     edFabEncolhido = false;
     renderEditor();
     if (!editorDialog.open) editorDialog.showModal();
@@ -4230,6 +4241,7 @@
     registrarEvento('treinos_salvos', {
       treinos: Object.keys(TREINOS).length, exercicios: Object.values(TREINOS).reduce((n, t) => n + t.exercicios.length, 0), plano_pronto: !valor,
     });
+    if (ed.daBoasVindas) gravarNovidade('montar', true);
     ed = null;
     editorDialog.close();
     renderHoje();
@@ -4284,8 +4296,11 @@
 
   function fecharEditor() {
     if (ed && ed.confirmar !== 'sair' && edMudou()) { ed.confirmar = 'sair'; ed.vista = 'treino'; renderEditor(); editorDialog.querySelector('[data-ed-sair-sim]').focus(); return; }
+    // Veio de "Montar do zero" nas boas-vindas e saiu sem salvar: volta para a escolha do objetivo.
+    const voltarBV = ed && ed.daBoasVindas;
     ed = null;
     editorDialog.close();
+    if (voltarBV) abrirJornadas('boas-vindas', 'objetivo');
   }
 
   editorDialog.addEventListener('cancel', (e) => {
@@ -4435,7 +4450,7 @@
       Object.assign(ed, { treinos: copiaTreinos(PLANO_PADRAO), sel: '1', confirmar: null, erro: '' });
       return renderEditor();
     }
-    if (alvo('[data-ed-sair-sim]')) { ed = null; return editorDialog.close(); }
+    if (alvo('[data-ed-sair-sim]')) { ed.confirmar = 'sair'; return fecharEditor(); }
     if (alvo('[data-ed-cancelar]')) { ed.confirmar = null; return renderEditor(); }
     if (alvo('[data-ed-salvar]')) return salvarEditor();
   });
@@ -4497,16 +4512,66 @@
   const jornadaDialog = $('jornada-dialog');
   const jornadaAtual = () => jornadaPorId(jornada);
   const ehDaJornada = (j) => JSON.stringify(treinosParaSalvar(TREINOS)) === JSON.stringify(treinosParaSalvar(j.treinos));
-  // jd: { modo: 'boas-vindas' | 'trocar', aberta: id da jornada com os treinos à mostra, confirmar: id }.
+  // jd: { modo: 'boas-vindas' | 'trocar', aberta: id da jornada com os treinos à mostra, confirmar: id,
+  //       passo e comDados (só nas boas-vindas) }.
+  // Boas-vindas da conta nova, sem fechar: 'bemvindo' (o que o app faz; não grava nada) → 'dados' (privacidade, só se
+  // a política ainda não foi aceita) → 'objetivo'. A privacidade vem antes de qualquer escolha ser gravada (LGPD).
   let jd = null;
-  function abrirJornadas(modo) {
-    jd = { modo, aberta: null, confirmar: null };
+  const passosBV = () => ['bemvindo', ...(jd.comDados ? ['dados'] : []), 'objetivo'];
+  function abrirJornadas(modo, passo) {
+    const boasVindas = modo === 'boas-vindas';
+    jd = { modo, aberta: null, confirmar: null, passo: boasVindas ? passo || 'bemvindo' : null, comDados: boasVindas && politica.disponivel && !politica.aceita };
     renderJornadas();
     if (!jornadaDialog.open) jornadaDialog.showModal();
-    registrarEvento('jornadas_abertas', { origem: modo });
+    if (!boasVindas || jd.passo === 'objetivo') registrarEvento('jornadas_abertas', { origem: modo });
+    if (boasVindas) { const t = $('jornada-title'); if (t) t.focus(); }
+  }
+  function irParaPasso(passo) {
+    jd.passo = passo;
+    jd.aberta = null;
+    renderJornadas();
+    if (passo === 'objetivo') registrarEvento('jornadas_abertas', { origem: jd.modo });
+    $('jornada-title').focus();
+  }
+  // "Etapa X de N" no topo, ao lado da etiqueta (só ali, para não repetir a etapa em dois lugares).
+  function etapaBV() {
+    const passos = passosBV();
+    return `<span class="bv-etapa">Etapa ${passos.indexOf(jd.passo) + 1} de ${passos.length}</span>`;
+  }
+  function renderPassoBV() {
+    const passos = passosBV();
+    const anterior = passos[passos.indexOf(jd.passo) - 1];
+    const voltar = anterior ? `<button class="bv-voltar" type="button" data-jd-voltar="${anterior}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Voltar</button>` : '';
+    const item = (txt) => `<li>${ICON_CHECK}<span>${txt}</span></li>`;
+    if (jd.passo === 'bemvindo') {
+      return `
+      <div class="modal-head"><div><div class="bv-selos"><span class="novidade-selo">Boas-vindas</span>${etapaBV()}</div><h3 id="jornada-title" tabindex="-1">Bem-vindo ao OSS</h3></div></div>
+      <p class="resumo-enc">Seu treino de Jiu Jitsu e academia num lugar só.</p>
+      <ul class="novidade-lista">
+        ${item('<b>Treino do dia</b>: a ficha de hoje, com as cargas de cada série')}
+        ${item('<b>Check-in</b> de cada treino: musculação, Jiu Jitsu, muay thai, surf e cardio')}
+        ${item('<b>Dashboard</b> com o calendário e o histórico dos seus treinos')}
+        ${item('<b>Temporizador de descanso</b> entre as séries')}
+        ${item('<b>Você</b>: treinos, semana, aparência e privacidade do seu jeito')}
+      </ul>
+      <div class="bv-rodape"><button class="modal-done" type="button" data-jd-comecar>Começar</button></div>`;
+    }
+    if (jd.passo === 'dados') {
+      return `
+      <div class="modal-head"><div><div class="bv-selos"><span class="novidade-selo">Privacidade</span>${etapaBV()}</div><h3 id="jornada-title" tabindex="-1">Seus dados</h3></div></div>
+      <p class="resumo-enc">Antes de escolher seus treinos, veja como cuidamos dos seus dados.</p>
+      ${itensPolitica(false)}
+      <a class="btn-sec priv-link" href="privacidade.html" target="_blank" rel="noopener">Ler a política completa</a>
+      <div class="bv-rodape">${voltar}<button class="modal-done" type="button" data-jd-entendi>${politica.aceita ? 'Continuar' : 'Entendi'}</button></div>`;
+    }
+    return null;
   }
   function renderJornadas(foco) {
     const boasVindas = jd.modo === 'boas-vindas';
+    if (boasVindas && jd.passo !== 'objetivo') {
+      $('jornada-body').innerHTML = renderPassoBV();
+      return;
+    }
     const atual = boasVindas ? null : jornadaAtual();
     const cartao = (j) => {
       const ids = Object.keys(j.treinos);
@@ -4530,8 +4595,9 @@
       </li>`;
     };
     $('jornada-body').innerHTML = `
-      <div class="modal-head"><div>${boasVindas ? '<span class="novidade-selo">Boas-vindas</span>' : ''}<h3 id="jornada-title">${boasVindas ? 'Como você quer treinar?' : 'Mudar meu objetivo'}</h3></div>${BOTAO_FECHAR}</div>
-      <p class="resumo-enc">Escolha um objetivo e receba os treinos prontos. Depois dá para mudar exercícios, séries e dias em Você → Meus treinos.</p>
+      <div class="modal-head"><div>${boasVindas ? `<div class="bv-selos"><span class="novidade-selo">Boas-vindas</span>${etapaBV()}</div>` : ''}<h3 id="jornada-title" tabindex="-1">${boasVindas ? 'Qual é o seu objetivo?' : 'Mudar meu objetivo'}</h3></div>${boasVindas ? '' : BOTAO_FECHAR}</div>
+      ${boasVindas ? `<div class="bv-topo">${renderPassoVoltar()}</div>` : ''}
+      <p class="resumo-enc">Escolha um objetivo e receba os treinos prontos${boasVindas ? ', ou monte os seus do zero' : ''}. Depois dá para mudar exercícios, séries e dias em Você → Meus treinos.</p>
       <ul class="jornadas">
         ${JORNADAS.map(cartao).join('')}
         <li class="jornada">
@@ -4540,21 +4606,26 @@
           <div class="jornada-acoes"><button class="btn-sec" type="button" data-jd-zero>Montar meus treinos</button></div>
         </li>
       </ul>
-      ${boasVindas ? OCULTAR_NOVIDADE : ''}`;
+`;
     if (foco) { const el = $('jornada-body').querySelector(foco); if (el) el.focus(); }
+  }
+  function renderPassoVoltar() {
+    const passos = passosBV();
+    const anterior = passos[passos.indexOf(jd.passo) - 1];
+    return `<button class="bv-voltar" type="button" data-jd-voltar="${anterior}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Voltar</button>`;
   }
   function fecharJornadas(escolha) {
     if (!jd) return;
-    if (jd.modo === 'boas-vindas') {
-      // Escolher uma jornada encerra as boas-vindas; fechar ou montar do zero segue a caixa "Não mostrar de novo".
-      const caixa = $('novidade-ocultar');
-      gravarNovidade(escolha, escolha === 'jornada' || !!(caixa && caixa.checked));
-    }
+    // Nas boas-vindas, escolher um objetivo encerra a apresentação (montar do zero só encerra ao salvar os treinos).
+    if (jd.modo === 'boas-vindas' && escolha === 'jornada') gravarNovidade('jornada', true);
     jd = null;
     jornadaDialog.close();
   }
   jornadaDialog.addEventListener('click', (e) => {
     const b = e.target.closest('button');
+    if (b && 'jdComecar' in b.dataset) return irParaPasso(passosBV()[1]);
+    if (b && 'jdEntendi' in b.dataset) { registrarAceitePolitica(); return irParaPasso('objetivo'); }
+    if (b && b.dataset.jdVoltar) return irParaPasso(b.dataset.jdVoltar);
     if (b && b.dataset.jdVer) {
       jd.aberta = jd.aberta === b.dataset.jdVer ? null : b.dataset.jdVer;
       jd.confirmar = null;
@@ -4573,10 +4644,16 @@
       jd.confirmar = null;
       return renderJornadas(`[data-jd-escolher="${id}"]`);
     }
-    if (b && 'jdZero' in b.dataset) { fecharJornadas('montar'); return abrirEditor({ doZero: true }); }
+    if (b && 'jdZero' in b.dataset) {
+      const daBoasVindas = jd.modo === 'boas-vindas';
+      fecharJornadas('montar');
+      return abrirEditor({ doZero: true, daBoasVindas });
+    }
+    // As boas-vindas não fecham sem uma escolha (sem X, sem Esc e sem tocar fora).
+    if (jd && jd.modo === 'boas-vindas') return;
     if (e.target === jornadaDialog || e.target.closest('[data-fechar]')) fecharJornadas('fechou');
   });
-  jornadaDialog.addEventListener('cancel', (e) => { e.preventDefault(); fecharJornadas('fechou'); });
+  jornadaDialog.addEventListener('cancel', (e) => { e.preventDefault(); if (jd && jd.modo !== 'boas-vindas') fecharJornadas('fechou'); });
 
   // Semana sugerida: tira os treinos da semana de agora e põe os da jornada, sem mexer em jiu, muay, surf e cardio.
   function semanaDaJornada(j) {
@@ -4621,11 +4698,7 @@
     const comVideo = BIBLIOTECA.filter((ex) => VIDEOS[ex.nome]).length;
     const item = (txt) => `<li>${ICON_CHECK}<span>${txt}</span></li>`;
     // Conta nova com o plano pronto escolhe uma jornada; quem já montou os treinos vê a versão "Baita atualização!".
-    if (novidade.contaNova && !treinosDaConta) {
-      abrirJornadas('boas-vindas');
-      registrarEvento('novidade_treinos', { escolha: 'viu', conta_nova: novidade.contaNova });
-      return;
-    }
+    if (novidade.contaNova && !treinosDaConta) return abrirJornadas('boas-vindas');
     $('novidade-body').innerHTML = (`
       <div class="modal-head"><div><span class="novidade-selo">Novidade</span><h3 id="novidade-title">Baita atualização!</h3></div>${BOTAO_FECHAR}</div>
       <p class="resumo-enc">Agora você pode montar os seus próprios treinos.</p>
@@ -4644,6 +4717,7 @@
   }
   // Aparece a cada abertura do app enquanto a pessoa não marcar "Não mostrar esta mensagem de novo"
   // (sem outra janela aberta por cima).
+  const vaiVerBoasVindas = () => novidade.disponivel && !novidade.vista && novidade.contaNova && !treinosDaConta;
   function mostrarNovidadeSeFaltar() {
     if (novidade.disponivel && !novidade.vista && !document.querySelector('dialog[open]')) abrirNovidade();
   }
@@ -5376,27 +5450,36 @@
 
   // ---------- Privacidade (LGPD) ----------
   const politicaDialog = $('politica-dialog');
+  // Itens do aviso de privacidade: na janela própria (política nova) e no passo "Seus dados" das boas-vindas.
+  function itensPolitica(novidadeFoto) {
+    return `
+      <ul class="novidade-lista">
+        <li>${ICON_CHECK}<span>Guardamos seus treinos, check-ins e pesos para o app funcionar, só enquanto sua conta existir.</span></li>
+        ${novidadeFoto ? `<li>${ICON_CHECK}<span>Agora dá para anexar uma foto ao check-in, se quiser. Ela fica guardada de forma privada: só você vê; o administrador não.</span></li>` : ''}
+        <li>${ICON_CHECK}<span>O administrador vê quem está com o app aberto, em que tela, e o histórico de uso. Não vê pesos, cargas nem observações.</span></li>
+        <li>${ICON_CHECK}<span>Observações nos check-ins ficam desligadas até você ligar em Você → Privacidade.</span></li>
+        <li>${ICON_CHECK}<span>Em Você → Privacidade você baixa seus dados, e em Você dá para excluir a conta.</span></li>
+      </ul>`;
+  }
   function abrirPolitica() {
     $('politica-body').innerHTML = `
       <div class="modal-head"><div><span class="novidade-selo">Privacidade</span><h3 id="politica-title">${politica.contaNova ? 'Antes de começar' : 'Atualizamos nossa Política de Privacidade'}</h3></div></div>
       <p class="resumo-enc">${politica.contaNova ? 'Veja como cuidamos dos seus dados.' : 'Veja o que mudou.'}</p>
-      <ul class="novidade-lista">
-        <li>${ICON_CHECK}<span>Guardamos seus treinos, check-ins e pesos para o app funcionar, só enquanto sua conta existir.</span></li>
-        ${politica.contaNova ? '' : `<li>${ICON_CHECK}<span>Agora dá para anexar uma foto ao check-in, se quiser. Ela fica guardada de forma privada: só você vê; o administrador não.</span></li>`}
-        <li>${ICON_CHECK}<span>O administrador vê quem está com o app aberto, em que tela, e o histórico de uso. Não vê pesos, cargas nem observações.</span></li>
-        <li>${ICON_CHECK}<span>Observações nos check-ins ficam desligadas até você ligar em Você → Privacidade.</span></li>
-        <li>${ICON_CHECK}<span>Em Você → Privacidade você baixa seus dados, e em Você dá para excluir a conta.</span></li>
-      </ul>
+      ${itensPolitica(!politica.contaNova)}
       <div class="novidade-acoes">
         <button class="modal-done" type="button" data-politica-ok>Entendi</button>
         <a class="btn-sec priv-link" href="privacidade.html" target="_blank" rel="noopener">Ler a política completa</a>
       </div>`;
     politicaDialog.showModal();
   }
-  function aceitarPolitica() {
+  function registrarAceitePolitica() {
+    if (politica.aceita) return;
     politica.aceita = true;
     salvarPerfil({ politica_versao: POLITICA_VERSAO });
     registrarEvento('politica_aceita', { versao: POLITICA_VERSAO });
+  }
+  function aceitarPolitica() {
+    registrarAceitePolitica();
     politicaDialog.close();
     mostrarNovidadeSeFaltar();
   }
@@ -5679,7 +5762,9 @@
     abrirTreinoDoDia();
     renderizarApp();
     entrarEmCascata();
-    if (politica.disponivel && !politica.aceita) abrirPolitica();
+    // Conta nova: boas-vindas em passos (o app → seus dados → objetivo); a privacidade vem antes de gravar a escolha.
+    if (vaiVerBoasVindas()) mostrarNovidadeSeFaltar();
+    else if (politica.disponivel && !politica.aceita) abrirPolitica();
     else mostrarNovidadeSeFaltar();
     if (esquecido) {
       toast(`O check-in do ${TIPOS[esquecido.tipo].nome} ficou aberto e foi encerrado às ${horaDe(esquecido.fim)}.`);

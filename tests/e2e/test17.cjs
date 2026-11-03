@@ -48,7 +48,7 @@ const doDia = (p, i, t) => p.locator(`#dias-cfg .dia-cfg[data-dia="${i}"] [data-
   ok((await dias(p))[0] === 't2+jiu', 'jiu dropped on Monday', (await dias(p))[0]);
   let db = await H.banco(p);
   ok(JSON.stringify(db.perfis[0].semana) === JSON.stringify([[], ['t2', 'jiu'], ['jiu'], ['t1'], ['jiu'], ['t3'], ['bike']]), 'semana saved to DB', JSON.stringify(db.perfis[0].semana));
-  ok((await txt(p, '#avisos-semana')).includes('Na segunda você terá Treino 2 e Jiu-jitsu'), 'same-day warning', await txt(p, '#avisos-semana'));
+  ok((await txt(p, '#avisos-semana')).includes('Na segunda você terá Treino 2 e Jiu Jitsu'), 'same-day warning', await txt(p, '#avisos-semana'));
   ok(!(await p.isDisabled('#semana-padrao')), 'reset enabled');
   ok(!(await txt(p, '#toast')).includes('Arraste'), 'no tap hint after a drag');
 
@@ -102,11 +102,11 @@ const doDia = (p, i, t) => p.locator(`#dias-cfg .dia-cfg[data-dia="${i}"] [data-
   await irPara(p, 'treino');
   ok((await txt(p, '#atividade')) === 'Treino 1', 'hero = Monday plan', await txt(p, '#atividade'));
   const st = await semanaTela(p);
-  ok(st[0] === 'Treino 1' && st[2] === 'Descanso' && st[5] === 'Cardio + Jiu-jitsu' && st[6] === 'Treino 2', 'Semana list follows config', st.join(' | '));
+  ok(st[0] === 'Treino 1' && st[2] === 'Descanso' && st[5] === 'Cardio + Jiu Jitsu' && st[6] === 'Treino 2', 'Semana list follows config', st.join(' | '));
   ok(await p.isHidden('#semana-nota'), 'default-week note hidden');
   await irPara(p, 'dashboard');
   const metas = await txt(p, '#metas');
-  ok(metas.includes('Musculação 0 de 3') && metas.includes('Jiu-jitsu 0 de 3') && metas.includes('Cardio 0 de 1'), 'metas follow config', metas);
+  ok(metas.includes('Musculação 0 de 3') && metas.includes('Jiu Jitsu 0 de 3') && metas.includes('Cardio 0 de 1'), 'metas follow config', metas);
 
   // recarregar mantém, e o treino do dia abre conforme a semana da conta
   await p.evaluate(() => localStorage.removeItem('bauer-treino-v2'));

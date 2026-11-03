@@ -57,7 +57,8 @@ const abrir = (b, extra, op = {}) => H.novaPagina(b, { viewport: op.viewport || 
     for (const width of [390, 1280]) {
       p = await abrir(b, { perfis: [NOVA], checkins: [], cargas: [] }, { scheme, viewport: { width, height: 844 } });
       const tag = `${scheme} ${width}`;
-      ok((await txt(p, '#jornada-title')) === 'Como você quer treinar?' && (await p.locator('#jornada-body > .jornadas > .jornada').count()) === 5, `${tag}: conta nova vê 4 jornadas + montar do zero`);
+      await p.click('[data-jd-comecar]'); await p.waitForTimeout(100);
+      ok((await txt(p, '#jornada-title')) === 'Qual é o seu objetivo?' && (await p.locator('#jornada-body > .jornadas > .jornada').count()) === 5, `${tag}: conta nova vê 4 jornadas + montar do zero`);
       ok(!(await p.evaluate(() => document.documentElement.scrollWidth > innerWidth)), `${tag}: sem rolagem lateral`);
       await p.screenshot({ path: `${S}/jornadas-${scheme}-${width}.png` });
       await p.click('[data-jd-ver="hipertrofia"]');
@@ -113,18 +114,21 @@ const abrir = (b, extra, op = {}) => H.novaPagina(b, { viewport: op.viewport || 
   ok(!p.errs.length, 'troca: sem erros', p.errs.join(' | '));
   await p.context().close();
 
-  // 5. Conta nova: Montar do zero segue o fluxo de antes; fechar sem escolher deixa a escolha para a próxima vez.
+  // 5. Conta nova: as boas-vindas não fecham sem escolher; sair do app sem escolher deixa a escolha para a próxima vez.
   p = await abrir(b, { perfis: [NOVA], checkins: [], cargas: [] });
-  await p.click('#jornada-body [data-fechar]'); await H.gravacoes(p);
-  ok(!(await H.banco(p)).perfis[0].novidade_oculta && (await H.banco(p)).perfis[0].treinos == null, 'fechar sem escolher: nada muda');
+  await p.keyboard.press('Escape'); await H.gravacoes(p);
+  ok(await p.locator('#jornada-dialog[open]').count() === 1, 'Esc não fecha as boas-vindas');
+  ok(!(await H.banco(p)).perfis[0].novidade_oculta && (await H.banco(p)).perfis[0].treinos == null, 'sem escolher: nada muda');
   await p.reload(); await H.prontos(p); await p.waitForTimeout(300);
   ok(await p.locator('#jornada-dialog[open]').count() === 1, 'a escolha volta na próxima abertura');
+  await p.click('[data-jd-comecar]');
   await p.click('[data-jd-zero]');
   ok(await p.locator('#ed-busca').isVisible(), 'Montar do zero abre a biblioteca');
   await p.context().close();
 
   // 6. Banco sem a coluna jornada: escolher funciona e grava os treinos.
   p = await abrir(b, { perfis: [NOVA], checkins: [], cargas: [], semColunas: ['jornada'] });
+  await p.click('[data-jd-comecar]');
   await p.click('[data-jd-escolher="forca"]'); await H.gravacoes(p);
   db = await H.banco(p);
   ok(Object.keys(db.perfis[0].treinos).length === 3 && !('jornada' in db.perfis[0]) && db.log.includes('update:perfis'), 'sem a coluna jornada: treinos gravados mesmo assim');
@@ -133,6 +137,7 @@ const abrir = (b, extra, op = {}) => H.novaPagina(b, { viewport: op.viewport || 
 
   // 7. Coluna criada sem a permissão de gravar (grant antigo): os treinos são gravados mesmo assim, sem aviso de erro.
   p = await abrir(b, { perfis: [{ ...NOVA, jornada: null }], checkins: [], cargas: [], semPermissao: ['jornada'] });
+  await p.click('[data-jd-comecar]');
   await p.click('[data-jd-escolher="hipertrofia"]'); await H.gravacoes(p); await p.waitForTimeout(300);
   db = await H.banco(p);
   ok(Object.keys(db.perfis[0].treinos || {}).join() === '1,2,3,4' && !db.perfis[0].jornada, 'sem permissão na coluna jornada: treinos gravados mesmo assim', JSON.stringify(db.perfis[0].treinos && Object.keys(db.perfis[0].treinos)));

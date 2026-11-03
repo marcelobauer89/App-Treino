@@ -77,9 +77,14 @@ async function abrir(b, perfil, op = {}) {
     ok(!p.reqs.some((u) => /fonts\.(googleapis|gstatic)\.com/.test(u)) && p.reqs.some((u) => /\/fonts\/archivo-latin\.woff2$/.test(u)), `${scheme}: fonte carregada do próprio app, sem o Google`, p.reqs.filter((u) => /font|woff|css/.test(u)).join(' '));
     ok(!p.errs.length, `${scheme}: sem erros`, p.errs.join(' | '));
     await p.context().close();
-    // Conta nova: "Antes de começar" e depois a escolha de treinos
+    // Conta nova: a privacidade vem dentro das boas-vindas ("Seus dados"), antes da escolha dos treinos.
     p = await abrir(b, { politica_versao: null, consentimento_saude: null, novidade_oculta: null }, { scheme, extra: { checkins: [], cargas: [] } });
-    ok(/Antes de começar/.test(await txt(p, '#politica-title')), `${scheme}: conta nova vê "Antes de começar"`);
+    await p.click('[data-jd-comecar]'); await p.waitForTimeout(100);
+    ok(/Seus dados/.test(await txt(p, '#jornada-title')) && /administrador vê/.test(await txt(p, '#jornada-body')) && !(await p.isVisible('#politica-dialog')), `${scheme}: conta nova vê "Seus dados" nas boas-vindas`);
+    await p.context().close();
+    // Conta nova que já escolheu os treinos (sem boas-vindas) e não aceitou a política: "Antes de começar".
+    p = await abrir(b, { politica_versao: null, consentimento_saude: null, novidade_oculta: '2026-10-01T00:00:00Z' }, { scheme, extra: { checkins: [], cargas: [] } });
+    ok(/Antes de começar/.test(await txt(p, '#politica-title')), `${scheme}: sem boas-vindas, a janela "Antes de começar"`);
     await p.context().close();
     // Tela de entrada com link
     p = await H.novaPagina(b, { scheme, logado: false });
@@ -113,7 +118,7 @@ async function abrir(b, perfil, op = {}) {
     a.reqs = []; a.on('request', (r) => a.reqs.push(r.url()));
     await a.goto(ADMIN); await a.waitForSelector('#painel:not([hidden])'); await a.waitForTimeout(300);
     await a.click('#tab-usuarios'); await a.click('#usuarios-corpo tr[data-usuario="u1"] [data-abrir]'); await a.waitForTimeout(300);
-    ok(/Check-in de Jiu-jitsu/.test(await txt(a, '#det-atividade')) && !/recupera/i.test(await txt(a, '#det-atividade')), 'painel: atividade sem a recuperação');
+    ok(/Check-in de Jiu Jitsu/.test(await txt(a, '#det-atividade')) && !/recupera/i.test(await txt(a, '#det-atividade')), 'painel: atividade sem a recuperação');
     ok(!a.reqs.some((u) => /fonts\.g/.test(u)), 'painel: sem fonte do Google');
     ok(!a.errs.length, 'painel: sem erros', a.errs.join(' | '));
     await a.context().close();

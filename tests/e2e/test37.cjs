@@ -17,7 +17,7 @@ const ADMIN = H.PAGINA.replace('index.html', 'admin.html');
     // Check-in
     await p.click('#fab-checkin');
     const opcoes = await p.locator('#form-body .opcao').allInnerTexts();
-    ok(opcoes.map((t) => t.replace(/\s+/g, '')).join('|').includes('JJiu-jitsu|MMuayThai|SSurf|CCardio'), `${scheme}: Muay Thai no check-in, entre jiu e cardio`, opcoes.join('|'));
+    ok(opcoes.map((t) => t.replace(/\s+/g, '')).join('|').includes('JJiuJitsu|MMuayThai|SSurf|CCardio'), `${scheme}: Muay Thai no check-in, entre jiu e cardio`, opcoes.join('|'));
     await p.check('input[name="f-tipo"][value="muay"]', { force: true });
     ok((await p.inputValue('#f-dur')) === '60', `${scheme}: duração padrão 60 min`);
     await p.waitForTimeout(300); await p.screenshot({ path: `${H.SAIDA}/muay-form-${scheme}.png` });

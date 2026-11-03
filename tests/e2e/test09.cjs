@@ -37,7 +37,7 @@ const txt = async (p, s) => ((await p.locator(s).first().innerText()) || '').rep
   const perfil = db.perfis[0];
   ok(perfil.tema === 'escuro' && perfil.dias_jiu.join() === '1,3' && perfil.nome === 'Bauer', 'local settings migrated to profile');
   ok(await p.evaluate(() => document.documentElement.dataset.theme) === 'dark' && await p.evaluate(() => localStorage.getItem('bauer-tema')) === 'escuro', 'theme applied and cached');
-  ok((await txt(p, '#atividade')) === 'Treino 1 + Jiu-jitsu', 'jiu days from profile drive the plan', await txt(p, '#atividade'));
+  ok((await txt(p, '#atividade')) === 'Treino 1 + Jiu Jitsu', 'jiu days from profile drive the plan', await txt(p, '#atividade'));
 
   // 3. Gravações chegam ao banco
   await p.locator('.ex').nth(3).locator('.log-btn').click();

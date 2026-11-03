@@ -1,6 +1,6 @@
 # App-Treino
 
-App web (celular primeiro) do plano de 6 semanas **Jiu-Jitsu + Hipertrofia**: treino do dia, registro de cargas, check-ins, calendário e dashboard. O app inteiro está em `index.html` e os dados ficam no **Supabase**, com login pela conta **Google**.
+App web (celular primeiro) do plano de 6 semanas **Jiu Jitsu + Hipertrofia**: treino do dia, registro de cargas, check-ins, calendário e dashboard. O app inteiro está em `index.html` e os dados ficam no **Supabase**, com login pela conta **Google**.
 
 - `index.html`: o app (HTML, CSS e JavaScript, sem build).
 - `admin.html`: o monitoramento, só para administradores.
@@ -165,12 +165,17 @@ Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 a t6 nos check-i
 ### Jornadas prontas
 
 - **O que são:** conjuntos de treinos prontos com uma semana sugerida, na constante `JORNADAS` do `index.html`:
-  - Jiu-jitsu (OSS): o plano pronto de sempre;
+  - Jiu Jitsu: o plano pronto de sempre;
   - Hipertrofia: 4 treinos;
   - Força e potência: A, B e Cardio;
   - Mobilidade e prevenção: Mobilidade, Anti-lesão e Pegada.
 - **Exercícios:** todos são da biblioteca, por nome. Cada treino tem o próprio "Sobre o treino", que só aparece enquanto os exercícios forem os mesmos da jornada.
-- **Conta nova:** escolhe nas boas-vindas. Escolher grava os treinos (`perfis.treinos`), a semana sugerida (mantendo jiu, muay, surf e cardio) e a jornada (`perfis.jornada`), e encerra as boas-vindas.
+- **Conta nova:** passa pelas boas-vindas em passos, que não fecham sem uma escolha:
+  1. **Bem-vindo ao OSS:** o que o app faz (não grava nada);
+  2. **Seus dados:** o aviso de privacidade, com Entendi (só se a política ainda não foi aceita; vem antes de qualquer escolha ser gravada);
+  3. **Qual é o seu objetivo?:** os objetivos prontos ou Montar do zero (sair do editor sem salvar volta para a escolha).
+
+  Escolher grava os treinos (`perfis.treinos`), a semana sugerida (mantendo jiu, muay, surf e cardio) e a jornada (`perfis.jornada`), e encerra as boas-vindas.
 - **Quem já usa:** "Mudar meu objetivo", em Você → Meus treinos, sempre com confirmação. A versão de antes vai para `treinos_anterior`, e o "Desfazer" volta a ela. **Nenhum treino de quem já usa muda sozinho.**
 - **Personalizar:** depois de escolher, tudo continua editável. Meus treinos mostra "Jornada X" ou "X (personalizada)".
 - **No banco:** a coluna `perfis.jornada` guarda só o id da jornada. Sem ela (schema antigo), escolher funciona do mesmo jeito, sem o rótulo.
@@ -275,7 +280,7 @@ Em https://marcelobauer89.github.io/App-Treino/mundo.html (ou pelo botão **Mund
 | --- | --- |
 | Entrou | Surge no Portão OSS |
 | Tela Treino, exercício concluído, recorde ou vídeo | Academia (levanta a barra; recorde mostra "RECORDE!") |
-| Check-in de jiu-jitsu ou muay thai | Tatame |
+| Check-in de Jiu Jitsu ou muay thai | Tatame |
 | Check-in de cardio | Pista |
 | Tela Dashboard | Torre |
 | Tela Você ou semana alterada | Casa |
@@ -374,7 +379,7 @@ Os testes do app, do painel e do resumo por e-mail ficam em `tests/` e rodam em 
 
 ## Como os dados ficam guardados
 
-- **perfis:** nome, e-mail e foto (vindos do Google no primeiro login), os treinos montados em **Você → Meus treinos** (coluna `treinos`; vazia = o plano pronto do app), a jornada pronta escolhida (`jornada`), a última resposta ao aviso da novidade (`novidade_treinos`) e se pediu para não mostrar mais (`novidade_oculta`), tema, se quer receber o resumo semanal (`emails_resumo`), os exercícios marcados como **Sem peso** (coluna `sem_peso`) e a semana montada em **Você → Minha semana** (coluna `semana`: o que fazer em cada dia, até 2 atividades). Contas sem semana salva usam a padrão, montada com os antigos dias de jiu-jitsu (`dias_jiu`).
+- **perfis:** nome, e-mail e foto (vindos do Google no primeiro login), os treinos montados em **Você → Meus treinos** (coluna `treinos`; vazia = o plano pronto do app), a jornada pronta escolhida (`jornada`), a última resposta ao aviso da novidade (`novidade_treinos`) e se pediu para não mostrar mais (`novidade_oculta`), tema, se quer receber o resumo semanal (`emails_resumo`), os exercícios marcados como **Sem peso** (coluna `sem_peso`) e a semana montada em **Você → Minha semana** (coluna `semana`: o que fazer em cada dia, até 2 atividades). Contas sem semana salva usam a padrão, montada com os antigos dias de Jiu Jitsu (`dias_jiu`).
 - **checkins:** cada check-in de treino, com horário e observação (opcional) (check-ins de versões anteriores também guardavam as cargas).
 - **cargas:** os pesos registrados na ficha, por dia e treino. Salvar um peso não abre check-in.
 - **eventos:** uso do app (telas, recursos, erros), para o dashboard de monitoramento.
