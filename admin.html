@@ -330,6 +330,10 @@
     min-height: 44px; width: min(320px, 100%); padding: 0 12px; border: 1px solid var(--fio); border-radius: 10px;
     background: var(--papel);
   }
+  /* "Só quem fez check-in no período": caixinha com área de toque de 44 px e a contagem do que sobrou. */
+  .so-checkin { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 4px; font-size: 14px; color: var(--tinta); cursor: pointer; }
+  .so-checkin input { width: 20px; height: 20px; margin: 0; accent-color: var(--tatame); cursor: pointer; }
+  .u-contagem { margin: 0 0 8px; font-size: 13px; color: var(--tinta-2); }
   .usuarios { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
   .usuarios th { text-align: left; color: var(--tinta-2); font-weight: 600; font-size: 13px; padding: 0; border-bottom: 1px solid var(--fio); white-space: nowrap; }
   .usuarios th button {
@@ -774,6 +778,7 @@
               <option value="acessos">Acessos</option>
             </select>
           </label>
+          <label class="so-checkin"><input type="checkbox" id="so-checkin"> Só quem fez check-in no período</label>
           <input class="busca" id="busca" type="search" placeholder="Buscar por nome ou e-mail" aria-label="Buscar usuário">
           <button class="btn-sec" type="button" id="csv">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0-4-4m4 4 4-4M5 21h14"/></svg>
@@ -781,6 +786,7 @@
           </button>
         </div>
       </div>
+      <p class="u-contagem" id="u-contagem" aria-live="polite"></p>
       <div class="cartao">
         <table class="usuarios" id="usuarios">
           <thead>
@@ -944,6 +950,9 @@
   let periodo = '30';
   let ordem = { col: 'ultimo', dir: -1 };
   let busca = '';
+  // Filtro da aba Usuários, lembrado neste aparelho.
+  let soCheckin = false;
+  try { soCheckin = localStorage.getItem('bauer-admin-so-checkin') === '1'; } catch (_) {}
 
   // Esqueleto da Visão geral enquanto os dados chegam; a etapa aparece em cima e é lida pelo leitor de tela.
   const ESQ_CORES = ['musc', 'jiu', 'bike', 'muay', 'surf'];
@@ -1580,7 +1589,13 @@
   }
   function renderUsuarios(j, ativosMap) {
     const q = busca.trim().toLowerCase();
-    let linhas = linhasUsuarios(j, ativosMap).filter((l) => !q || `${l.u.nome} ${l.u.email}`.toLowerCase().includes(q));
+    const todas = linhasUsuarios(j, ativosMap);
+    // "Só quem fez check-in no período": o mesmo número da coluna Check-ins, no período escolhido.
+    const acha = (l) => !q || `${l.u.nome} ${l.u.email}`.toLowerCase().includes(q);
+    const achados = todas.filter(acha);
+    let linhas = soCheckin ? achados.filter((l) => l.checkins > 0) : achados;
+    $('u-contagem').textContent = linhas.length === todas.length ? `${fmtNum(todas.length)} ${todas.length === 1 ? 'usuário' : 'usuários'}`
+      : `${fmtNum(linhas.length)} de ${fmtNum(todas.length)} usuários`;
     const chave = {
       nome: (l) => (l.u.nome || l.u.email || '').toLowerCase(), situacao: (l) => l.sit.ordem, ultimo: (l) => l.ultimo || '',
       acessos: (l) => l.acessos, checkins: (l) => l.checkins, aderencia: (l) => (l.aderencia === null ? -1 : l.aderencia), treino: (l) => l.ultimoTreino || '',
@@ -1609,7 +1624,7 @@
         <td class="cel-excluir">${l.u.id === meuId
           ? `<button class="excluir-btn" type="button" disabled title="Esta é a sua conta: para excluí-la, use o app (Você → Excluir conta)" aria-label="Não é possível excluir a sua própria conta por aqui">${ICON.lixeira}</button>`
           : `<button class="excluir-btn" type="button" data-excluir="${l.u.id}" aria-label="Excluir a conta de ${esc(l.u.nome || l.u.email)}" title="Excluir conta">${ICON.lixeira}</button>`}</td>
-      </tr>`).join('') : `<tr><td colspan="8" class="nenhum">${q ? 'Nenhum usuário encontrado.' : 'Nenhum usuário cadastrado.'}</td></tr>`;
+      </tr>`).join('') : `<tr><td colspan="8" class="nenhum">${achados.length ? 'Ninguém fez check-in no período.' : q ? 'Nenhum usuário encontrado.' : 'Nenhum usuário cadastrado.'}</td></tr>`;
   }
   let linhasAtuais = [];
 
@@ -2366,6 +2381,12 @@
   });
 
   $('busca').addEventListener('input', (e) => { busca = e.target.value; if (dados) renderUsuarios(janela(periodo), diasAtivos()); });
+  $('so-checkin').checked = soCheckin;
+  $('so-checkin').addEventListener('change', (e) => {
+    soCheckin = e.target.checked;
+    try { localStorage.setItem('bauer-admin-so-checkin', soCheckin ? '1' : ''); } catch (_) {}
+    if (dados) renderUsuarios(janela(periodo), diasAtivos());
+  });
   $('ordenar-cel').addEventListener('change', (e) => {
     const col = e.target.value;
     ordem = { col, dir: col === 'nome' ? 1 : -1 };
