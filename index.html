@@ -579,10 +579,10 @@
   body.deslogado .fab { display: none !important; }
   @media (prefers-reduced-motion: reduce) { .fab, .fab-txt { transition: none; } }
 
-  /* Temporizador de descanso: botão redondo no canto esquerdo (o de check-in fica à direita) e a janela do contador. */
+  /* Temporizador de descanso: botão redondo no canto direito, logo acima do de check-in, e a janela do contador. */
   .fab-descanso {
-    position: fixed; z-index: 18; left: max(16px, env(safe-area-inset-left, 0px));
-    bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + 16px);
+    position: fixed; z-index: 18; right: max(16px, env(safe-area-inset-right, 0px));
+    bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + 84px);
     display: grid; place-items: center; width: 56px; height: 56px; padding: 0; border: 0; border-radius: 50%;
     background: conic-gradient(var(--tatame) calc(var(--p, 0) * 1turn), var(--fio) 0); color: var(--tatame-tinta);
     box-shadow: 0 8px 24px rgba(16, 19, 24, .28), 0 2px 6px rgba(16, 19, 24, .18);
@@ -594,7 +594,11 @@
   .fab-descanso-tempo { font-family: var(--display); font-stretch: 80%; font-weight: 800; font-size: 17px; font-variant-numeric: tabular-nums; color: var(--tinta); }
   .fab-descanso.acabou { background: var(--feito-tinta); color: var(--feito-tinta); }
   .fab-descanso:focus-visible { outline: 3px solid var(--tatame-tinta); outline-offset: 3px; }
-  body.com-ativo .fab-descanso { bottom: calc(var(--nav-h) + var(--ativo-h) + env(safe-area-inset-bottom, 0px) + 16px); }
+  body.com-ativo .fab-descanso { bottom: calc(var(--nav-h) + var(--ativo-h) + env(safe-area-inset-bottom, 0px) + 84px); }
+  /* Com os dois botões empilhados: mais folga no fim da tela e o aviso (toast) acima deles. */
+  body.com-descanso { --fab-espaco: 148px; }
+  body.com-descanso .toast { bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + 152px); }
+  body.com-descanso.com-ativo .toast { bottom: calc(var(--nav-h) + var(--ativo-h) + env(safe-area-inset-bottom, 0px) + 152px); }
   body.deslogado .fab-descanso { display: none !important; }
   @media (prefers-reduced-motion: no-preference) {
     .fab-descanso.acabou { animation: descanso-pulso 1s ease-in-out 3; }
@@ -1544,6 +1548,10 @@
         <p class="temp-rotulo" id="temp-padrao-rotulo">Descanso padrão</p>
         <div class="chips temp-tempos" role="group" aria-labelledby="temp-padrao-rotulo" id="temp-tempos"></div>
         <label class="sem-peso-linha">
+          <span><b>Tocar som ao terminar</b><small>Um bipe curto, no volume do aparelho</small></span>
+          <input type="checkbox" role="switch" id="temp-som">
+        </label>
+        <label class="sem-peso-linha">
           <span><b>Vibrar ao terminar</b><small>No iPhone o navegador não vibra: o aviso fica na tela</small></span>
           <input type="checkbox" role="switch" id="temp-vibrar">
         </label>
@@ -2268,11 +2276,11 @@
   // ---------- Perfil e configurações (vêm do Supabase depois do login) ----------
   // Temporizador de descanso (perfis.temporizador): desligado até a pessoa ligar em Você → Temporizador.
   const TEMPOS_DESCANSO = [30, 45, 60, 90, 120, 180];
-  const TEMP_PADRAO = { ativo: false, segundos: 90, vibrar: true };
+  const TEMP_PADRAO = { ativo: false, segundos: 90, vibrar: true, som: true };
   function lerTemporizador(v) {
     if (!v || typeof v !== 'object') return { ...TEMP_PADRAO };
     const seg = Number(v.segundos);
-    return { ativo: v.ativo === true, segundos: TEMPOS_DESCANSO.includes(seg) ? seg : TEMP_PADRAO.segundos, vibrar: v.vibrar !== false };
+    return { ativo: v.ativo === true, segundos: TEMPOS_DESCANSO.includes(seg) ? seg : TEMP_PADRAO.segundos, vibrar: v.vibrar !== false, som: v.som !== false };
   }
   const CHAVE_DESCANSO = 'bauer-descanso';
   // desc: { fim (ms) e total (s) enquanto roda; acabou quando terminou; escolhido = tempo marcado na janela }
@@ -5066,6 +5074,7 @@
     $('temp-ativo').checked = t.ativo;
     $('temp-opcoes').hidden = !t.ativo;
     $('temp-vibrar').checked = t.vibrar;
+    $('temp-som').checked = t.som;
     $('temp-tempos').innerHTML = TEMPOS_DESCANSO.map((seg) =>
       `<button class="chip" type="button" data-temp-padrao="${seg}" aria-pressed="${seg === t.segundos}">${fmtSegundos(seg)}</button>`).join('');
   }
@@ -5078,6 +5087,41 @@
     toast(config.temporizador.ativo ? 'Temporizador ligado: o botão aparece na tela Treino.' : 'Temporizador desligado.');
   });
   $('temp-vibrar').addEventListener('change', (e) => { config.temporizador.vibrar = e.target.checked; salvarTemporizador(); });
+  $('temp-som').addEventListener('change', (e) => {
+    config.temporizador.som = e.target.checked;
+    salvarTemporizador();
+    if (e.target.checked) { liberarSom(); tocarSom(); }
+  });
+
+  // Som do fim do descanso: três bipes gerados na hora (Web Audio), sem arquivo de áudio.
+  // O navegador só deixa tocar depois de um toque da pessoa: o áudio é liberado ao iniciar o descanso.
+  let audioDescanso = null;
+  function liberarSom() {
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      if (!audioDescanso) audioDescanso = new AC();
+      if (audioDescanso.state === 'suspended') audioDescanso.resume();
+    } catch (_) {}
+  }
+  function tocarSom() {
+    if (!audioDescanso) return;
+    try {
+      if (audioDescanso.state === 'suspended') audioDescanso.resume();
+      const t0 = audioDescanso.currentTime + 0.05;
+      [0, 0.28, 0.56].forEach((d, i) => {
+        const osc = audioDescanso.createOscillator();
+        const vol = audioDescanso.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = i === 2 ? 1320 : 880;
+        vol.gain.setValueAtTime(0.0001, t0 + d);
+        vol.gain.exponentialRampToValueAtTime(0.5, t0 + d + 0.02);
+        vol.gain.exponentialRampToValueAtTime(0.0001, t0 + d + (i === 2 ? 0.45 : 0.2));
+        osc.connect(vol).connect(audioDescanso.destination);
+        osc.start(t0 + d); osc.stop(t0 + d + 0.5);
+      });
+    } catch (_) {}
+  }
   $('temp-tempos').addEventListener('click', (e) => {
     const b = e.target.closest('[data-temp-padrao]');
     if (!b) return;
@@ -5089,6 +5133,7 @@
   function renderFabDescanso() {
     const fab = $('fab-descanso');
     fab.hidden = !(usuario && config.temporizador.ativo && telaAtual() === 'treino');
+    document.body.classList.toggle('com-descanso', !fab.hidden);
     const rodando = !!desc.fim;
     fab.classList.toggle('rodando', rodando);
     $('fab-descanso-tempo').hidden = !rodando;
@@ -5139,6 +5184,7 @@
     if (c && descansoDialog.open) c.textContent = fmtRelogio(restante());
   }
   function iniciarDescanso(seg) {
+    if (config.temporizador.som) liberarSom();
     desc = { fim: Date.now() + seg * 1000, total: seg, acabou: false, escolhido: seg };
     guardarDescanso();
     clearInterval(relogioDescanso);
@@ -5160,6 +5206,7 @@
     clearInterval(relogioDescanso); relogioDescanso = null;
     desc = { ...desc, fim: null, acabou: true };
     guardarDescanso();
+    if (config.temporizador.som) tocarSom();
     if (config.temporizador.vibrar && navigator.vibrate) { try { navigator.vibrate([250, 120, 250]); } catch (_) {} }
     registrarEvento('descanso', { acao: 'completo', segundos: total });
     const fab = $('fab-descanso');
@@ -5173,6 +5220,7 @@
     else toast('Descanso terminado. Bora para a próxima série!');
   }
   $('fab-descanso').addEventListener('click', () => {
+    if (config.temporizador.som) liberarSom();
     // Parado: começa no padrão; depois de um descanso, "Novo descanso" repete o mesmo tempo.
     if (!desc.fim && !desc.acabou) desc.escolhido = null;
     renderDescanso();
