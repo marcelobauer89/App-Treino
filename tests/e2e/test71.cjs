@@ -47,7 +47,7 @@ const perfil = async (p) => (await H.banco(p)).perfis.find((x) => x.id === 'u1')
     // Passo 3: objetivo.
     ok((await titulo(p)) === 'Qual é o seu objetivo?' && (await passo(p)) === 'Etapa 3 de 3', `${tag}: Entendi leva ao objetivo`, await titulo(p));
     const cartoes = await p.locator('.jornada .jornada-topo b').allInnerTexts();
-    ok(cartoes.includes('Jiu Jitsu') && cartoes.includes('Montar do zero') && !cartoes.some((c) => /OSS|Jiu Jitsu/.test(c)), `${tag}: "Jiu Jitsu" e "Montar do zero" na lista`, cartoes.join(' | '));
+    ok(cartoes.includes('Jiu Jitsu') && cartoes.includes('Montar do zero') && !cartoes.some((c) => /\(OSS\)|Jiu-jitsu/i.test(c)), `${tag}: "Jiu Jitsu" e "Montar do zero" na lista`, cartoes.join(' | '));
     await p.locator('#jornada-dialog .modal-body').screenshot({ path: `${H.SAIDA}/boas-vindas-3-${tag}.png` });
     await p.click('[data-jd-voltar]'); await p.waitForTimeout(100);
     ok((await titulo(p)) === 'Seus dados' && /Continuar/.test(await p.innerText('[data-jd-entendi]')), `${tag}: Voltar do objetivo mostra "Seus dados" com Continuar`);
