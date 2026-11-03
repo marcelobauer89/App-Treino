@@ -5093,34 +5093,79 @@
     if (e.target.checked) { liberarSom(); tocarSom(); }
   });
 
-  // Som do fim do descanso: três bipes gerados na hora (Web Audio), sem arquivo de áudio.
-  // O navegador só deixa tocar depois de um toque da pessoa: o áudio é liberado ao iniciar o descanso.
-  let audioDescanso = null;
+  // Som do fim do descanso: três bipes num áudio WAV gerado pelo app (sem arquivo no site).
+  // Tocado como mídia (<audio>), ele toca mesmo com o iPhone no silencioso, o que o som gerado na hora (Web Audio) não faz.
+  // O navegador só deixa tocar depois de um toque da pessoa: no toque que inicia o descanso, o mesmo elemento toca um
+  // trecho mudo, e assim fica liberado para tocar os bipes sozinho no fim. Web Audio fica de reserva.
+  let audioDescanso = null; // Web Audio (reserva)
+  let audioEl = null;
+  let somBipe = null;
+  let somMudo = null;
+  function wav(duracao, amostra) {
+    const taxa = 8000; const n = Math.round(taxa * duracao);
+    const buf = new ArrayBuffer(44 + n * 2); const v = new DataView(buf);
+    const txt = (o, t) => { for (let i = 0; i < t.length; i++) v.setUint8(o + i, t.charCodeAt(i)); };
+    txt(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); txt(8, 'WAVE'); txt(12, 'fmt ');
+    v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+    v.setUint32(24, taxa, true); v.setUint32(28, taxa * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+    txt(36, 'data'); v.setUint32(40, n * 2, true);
+    for (let i = 0; i < n; i++) v.setInt16(44 + i * 2, Math.max(-1, Math.min(1, amostra(i / taxa))) * 32767, true);
+    return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
+  }
+  const BIPES = [[0, 0.2, 880], [0.28, 0.2, 880], [0.56, 0.45, 1320]];
+  function amostraBipe(t) {
+    for (const [ini, dur, freq] of BIPES) {
+      if (t >= ini && t < ini + dur) {
+        const x = t - ini;
+        const env = Math.min(1, x / 0.01) * Math.min(1, (dur - x) / 0.05);
+        return 0.6 * env * Math.sin(2 * Math.PI * freq * x);
+      }
+    }
+    return 0;
+  }
   function liberarSom() {
+    // iOS 17 ou mais: o som do app é "reprodução" (não respeita a chave de silencioso nem é cortado pela música).
+    try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (_) {}
+    try {
+      if (!audioEl) {
+        audioEl = new Audio(); audioEl.preload = 'auto';
+        somBipe = wav(1.05, amostraBipe); somMudo = wav(0.1, () => 0);
+      }
+      audioEl.dataset.som = 'mudo'; audioEl.src = somMudo;
+      const r = audioEl.play(); if (r && r.catch) r.catch(() => {});
+    } catch (_) {}
     try {
       const AC = window.AudioContext || window.webkitAudioContext;
       if (!AC) return;
       if (!audioDescanso) audioDescanso = new AC();
-      if (audioDescanso.state === 'suspended') audioDescanso.resume();
+      if (audioDescanso.state !== 'running') audioDescanso.resume();
     } catch (_) {}
   }
-  function tocarSom() {
+  function tocarBipesWebAudio() {
     if (!audioDescanso) return;
     try {
-      if (audioDescanso.state === 'suspended') audioDescanso.resume();
+      if (audioDescanso.state !== 'running') audioDescanso.resume();
       const t0 = audioDescanso.currentTime + 0.05;
-      [0, 0.28, 0.56].forEach((d, i) => {
+      BIPES.forEach(([d, dur, freq]) => {
         const osc = audioDescanso.createOscillator();
         const vol = audioDescanso.createGain();
         osc.type = 'sine';
-        osc.frequency.value = i === 2 ? 1320 : 880;
+        osc.frequency.value = freq;
         vol.gain.setValueAtTime(0.0001, t0 + d);
         vol.gain.exponentialRampToValueAtTime(0.5, t0 + d + 0.02);
-        vol.gain.exponentialRampToValueAtTime(0.0001, t0 + d + (i === 2 ? 0.45 : 0.2));
+        vol.gain.exponentialRampToValueAtTime(0.0001, t0 + d + dur);
         osc.connect(vol).connect(audioDescanso.destination);
-        osc.start(t0 + d); osc.stop(t0 + d + 0.5);
+        osc.start(t0 + d); osc.stop(t0 + d + dur + 0.05);
       });
     } catch (_) {}
+  }
+  function tocarSom() {
+    if (!audioEl) return tocarBipesWebAudio();
+    try {
+      audioEl.dataset.som = 'bipe'; audioEl.src = somBipe; audioEl.currentTime = 0;
+      const r = audioEl.play();
+      if (r && r.catch) r.catch(() => tocarBipesWebAudio());
+    } catch (_) { tocarBipesWebAudio(); }
   }
   $('temp-tempos').addEventListener('click', (e) => {
     const b = e.target.closest('[data-temp-padrao]');
