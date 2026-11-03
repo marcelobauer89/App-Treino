@@ -1,18 +1,18 @@
-## PRD — App Bauer: Jiu-Jitsu + Hipertrofia
+## PRD — App Bauer: Jiu Jitsu + Hipertrofia
 
 2026-11-03 · @Bauer
 
 ### Visão geral
 
-O App Bauer transforma o plano de 6 semanas "Jiu-Jitsu + Hipertrofia" (hoje um PDF de 15 páginas) numa aplicação web responsiva, usada no navegador do celular, que diz o que treinar hoje, registra cargas e acompanha o peso rumo ao alvo. A primeira versão é compartilhada com um grupo fechado de amigos, cada um com sua conta, seus dados e seus alvos.
+O App Bauer transforma o plano de 6 semanas "Jiu Jitsu + Hipertrofia" (hoje um PDF de 15 páginas) numa aplicação web responsiva, usada no navegador do celular, que diz o que treinar hoje, registra cargas e acompanha o peso rumo ao alvo. A primeira versão é compartilhada com um grupo fechado de amigos, cada um com sua conta, seus dados e seus alvos.
 
-**Problema.** O PDF repete as mesmas tabelas em 12 páginas, não registra cargas, não reorganiza a semana quando surge uma aula extra de jiu-jitsu e deixa o controle de progresso numa tabela em branco para preencher à mão.
+**Problema.** O PDF repete as mesmas tabelas em 12 páginas, não registra cargas, não reorganiza a semana quando surge uma aula extra de Jiu Jitsu e deixa o controle de progresso numa tabela em branco para preencher à mão.
 
 **Solução.** Um app que:
 
-- Mostra a atividade do dia (treinos de musculação, jiu-jitsu, muay thai, surf, cardio ou descanso) com base na semana que o próprio usuário monta.
+- Mostra a atividade do dia (treinos de musculação, Jiu Jitsu, muay thai, surf, cardio ou descanso) com base na semana que o próprio usuário monta.
 - Registra a carga de cada série por exercício, pré-preenchida com a da última vez.
-- Faz check-in de cada treino (musculação, jiu-jitsu, muay thai, surf ou cardio) por um botão fixo, quantas vezes for preciso no mesmo dia.
+- Faz check-in de cada treino (musculação, Jiu Jitsu, muay thai, surf ou cardio) por um botão fixo, quantas vezes for preciso no mesmo dia.
 - Mostra um Dashboard com calendário de check-ins, os treinos feitos em cada um e a semana comparada ao plano.
 - Aplica as regras do plano automaticamente: fase da semana, passada em 3×16 nas semanas 5–6, avisos de conflito na semana.
 - Acompanha peso médio semanal, % de gordura e proteína.
@@ -35,16 +35,16 @@ Ainda não existem: modo offline, onboarding com peso e alvo, semana/fase do blo
 
 ### Público-alvo e persona
 
-O MVP atende um grupo fechado: o Bauer, criador do plano e administrador do grupo, e amigos convidados por ele que treinam jiu-jitsu e musculação. A abertura ao público fica para uma versão futura.
+O MVP atende um grupo fechado: o Bauer, criador do plano e administrador do grupo, e amigos convidados por ele que treinam Jiu Jitsu e musculação. A abertura ao público fica para uma versão futura.
 
-**Persona: Bauer, praticante de jiu-jitsu em recomposição corporal**
+**Persona: Bauer, praticante de Jiu Jitsu em recomposição corporal**
 
 | Atributo | Valor |
 | --- | --- |
 | Peso atual | 76 kg |
 | Gordura corporal | 13,8% |
 | Primeiro alvo | 74 kg (73 kg só se desempenho e recuperação estiverem bons) |
-| Rotina | 3× musculação + 2× jiu-jitsu por semana; cardio leve opcional |
+| Rotina | 3× musculação + 2× Jiu Jitsu por semana; cardio leve opcional |
 | Dieta | Não conta calorias; referência de 140–165 g de proteína/dia |
 | Onde usa | Navegador do celular, na academia, entre séries, muitas vezes com uma mão só |
 
@@ -54,7 +54,7 @@ O MVP atende um grupo fechado: o Bauer, criador do plano e administrador do grup
 
 **Persona secundária: amigo convidado**
 
-Pratica jiu-jitsu, tem peso e alvo próprios e recebe o link do app do Bauer. Quer seguir o mesmo plano sem montar nada, ver os próprios números e ter a segurança de que seus dados de corpo não ficam visíveis para o grupo sem sua permissão.
+Pratica Jiu Jitsu, tem peso e alvo próprios e recebe o link do app do Bauer. Quer seguir o mesmo plano sem montar nada, ver os próprios números e ter a segurança de que seus dados de corpo não ficam visíveis para o grupo sem sua permissão.
 
 ### Objetivos e métricas de sucesso
 
@@ -63,7 +63,7 @@ O MVP é bem-sucedido se os usuários concluírem o bloco de 6 semanas registran
 | Métrica | Meta | Como medir |
 | --- | --- | --- |
 | Aderência à musculação | ≥ 90% das 18 sessões previstas | Check-ins de musculação ÷ sessões planejadas |
-| Aderência ao jiu-jitsu | ≥ 10 de 12 aulas | Check-ins de jiu-jitsu |
+| Aderência ao Jiu Jitsu | ≥ 10 de 12 aulas | Check-ins de Jiu Jitsu |
 | Registro de cargas | ≥ 95% dos exercícios principais com carga registrada | Agachamento, deadlift, supino no chão, desenvolvimento, puxada, remada inversa, passada |
 | Peso médio semanal | Alvo individual (Bauer: 76 → 74 kg, ~0,3 kg/semana) | Média das pesagens da semana |
 | Força preservada | Carga dos exercícios principais igual ou maior que na semana 1 | Comparação semana 1 × semana 6 |
@@ -88,7 +88,7 @@ O MVP cobre um grupo de amigos convidados, cada um com conta e dados próprios, 
 - Filtro dos exercícios por foco e explicação de cada treino ("Sobre o treino").
 - Vídeo de referência por exercício: saiu do app aberto em 28/10/2026; desde 31/10/2026 aparece só para quem o administrador libera (RF-60). A lista (80 vídeos) fica só no banco.
 - Progressão automática por fase (semanas 1–2, 3–4, 5–6).
-- Check-in de treino para musculação (Treinos 1 a 6), jiu-jitsu, muay thai, surf e cardio, com observação opcional; vários check-ins no mesmo dia.
+- Check-in de treino para musculação (Treinos 1 a 6), Jiu Jitsu, muay thai, surf e cardio, com observação opcional; vários check-ins no mesmo dia.
 - Dashboard com calendário de check-ins: visão do mês com os dias treinados e detalhe de cada check-in com os treinos e exercícios feitos.
 - Registro de peso diário e % de gordura opcional; média semanal calculada.
 - Registro simples de proteína diária.
@@ -129,13 +129,13 @@ São 58 requisitos em 11 grupos; os marcados P0 bloqueiam o lançamento do MVP. 
 | RF-37 | Registrar o último acesso e a quantidade de acessos de cada usuário (1 acesso a cada 30 min no máximo, pela hora do servidor), visíveis só para o administrador no Supabase | P2 | Feito |
 | **Onboarding e configuração** |  |  |  |
 | RF-06 | Usuário informa peso atual, % de gordura, alvo próprio e data de início do bloco | P0 | Pendente |
-| RF-07 | Em Você → Minha semana, o usuário monta a semana arrastando os treinos (até 6), Jiu-jitsu, Muay Thai, Surf e Cardio para qualquer dia (domingo incluso), até 2 por dia, ou pelo botão + de cada dia; a terceira atividade toma o lugar da mais antiga; soltar fora tira do dia; "Voltar à semana padrão"; a agenda, o topo da tela Treino e as metas do Dashboard se ajustam na hora | P0 | Feito |
+| RF-07 | Em Você → Minha semana, o usuário monta a semana arrastando os treinos (até 6), Jiu Jitsu, Muay Thai, Surf e Cardio para qualquer dia (domingo incluso), até 2 por dia, ou pelo botão + de cada dia; a terceira atividade toma o lugar da mais antiga; soltar fora tira do dia; "Voltar à semana padrão"; a agenda, o topo da tela Treino e as metas do Dashboard se ajustam na hora | P0 | Feito |
 | RF-31 | Tela Você com dados pessoais: nome, e-mail da conta Google e foto, recortada e reduzida no aparelho e exibida na barra inferior; nome e foto são salvos automaticamente, sem botão de salvar (o nome após uma pausa na digitação, ao sair do campo ou com Enter; nome em branco não é salvo e, se o perfil estiver sem nome, o app usa o nome da conta Google); ao escolher a foto aparece "Foto salva com sucesso." ou, ao trocar, "Foto alterada com sucesso." | P1 | Feito |
 | RF-32 | Tema do app: automático (segue o celular), claro ou escuro, aplicado antes da primeira pintura | P1 | Feito |
 | RF-62 | Estilo das cores em Você → Aparência, com amostra de cada opção: Padrão (o visual de sempre, que segue o tema; é o padrão de toda conta), Neon Tatame, Brasa, Cyber, Ultravioleta, Gelo, Violeta, Miami e Lua de Sangue. Os estilos mudam só cores, sombras e brilho, sem mexer no layout, e são sempre escuros (o tema fica esmaecido, com aviso). Salvo em `perfis.estilo` e numa cópia no aparelho para aplicar antes da primeira pintura; sem a coluna, fica só no aparelho. O monitoramento mostra "Mudou o estilo" e abre no mesmo estilo da conta do administrador (no Violeta, com cartões roxos em vez de brancos) | P2 | Feito |
 | **Agenda e treino do dia** |  |  |  |
 | RF-08 | Tela Treino mostra data, hora e atividade do dia; mostra também semana atual (1–6) e fase | P0 | Parcial: falta semana e fase |
-| RF-09 | Semana padrão: segunda Treino 2, terça e quinta jiu-jitsu, quarta Treino 1, sexta Treino 3 (pernas), sábado cardio, domingo descanso; a ficha abre no treino do dia na primeira visita de cada dia | P0 | Feito |
+| RF-09 | Semana padrão: segunda Treino 2, terça e quinta Jiu Jitsu, quarta Treino 1, sexta Treino 3 (pernas), sábado cardio, domingo descanso; a ficha abre no treino do dia na primeira visita de cada dia | P0 | Feito |
 | RF-10 | Aula extra de jiu na sexta: Treino 3 vai para sábado ou é marcado como pulado | P0 | Parcial: o usuário move as atividades em Minha semana; sem ajuste automático |
 | RF-11 | Usuário pode reagendar qualquer sessão dentro da semana | P1 | Parcial: edita a semana-tipo em Minha semana, não uma semana específica |
 | **Execução do treino** |  |  |  |
@@ -146,10 +146,10 @@ São 58 requisitos em 11 grupos; os marcados P0 bloqueiam o lançamento do MVP. 
 | RF-14 | Pré-preenche a carga com a do último dia em que o exercício teve peso e mostra "Última vez: …" | P0 | Feito |
 | RF-15 | Vídeo de execução no próprio cartão: deslizando para o lado aparece o vídeo, que toca sem som e em repetição; dica de deslizar some depois do primeiro uso. Só para quem o administrador liberou (RF-60) | P1 | Feito para usuários liberados: a lista com 80 vídeos fica só no banco (`videos_exercicios`) |
 | RF-16 | Temporizador de descanso entre séries, configurado em Você → Temporizador (ligado por padrão, dá para desligar; salvo em `perfis.temporizador`, com descanso padrão de 30 s a 3 min, "Tocar som ao terminar" e "Vibrar ao terminar"). Ligado, aparece um botão flutuante na tela Treino (canto direito, logo acima do "Fazer check-in") que abre a janela do descanso: escolher o tempo e iniciar, contador grande com −15 s, +15 s e Pular, e "Fechar" deixa rodando com o tempo e um anel de progresso no botão. No fim, toca três bipes, vibra (se possível; o iPhone não vibra) e avisa na tela ("Bora para a próxima série!"). Conta pela hora de término (não atrasa em segundo plano) e continua depois de recarregar. No monitoramento, os eventos "Ligou/Desligou o temporizador" e "Iniciou/Pulou/Completou um descanso" | P1 | Feito: iniciado pelo botão flutuante (não ao concluir a série) |
-| RF-17 | Exibe "Sobre o treino" (objetivo, o que esperar, impacto no jiu-jitsu e no físico) e o motivo de cada exercício | P2 | Feito |
+| RF-17 | Exibe "Sobre o treino" (objetivo, o que esperar, impacto no Jiu Jitsu e no físico) e o motivo de cada exercício | P2 | Feito |
 | RF-33 | Filtro da ficha por foco (Hipertrofia, Força, Explosão, Mobilidade), mostrando só os exercícios de alta contribuição | P2 | Feito |
-| **Jiu-jitsu e cardio** |  |  |  |
-| RF-18 | Check-in de aula de jiu-jitsu com duração (a nota de recuperação 1–5 foi removida em 26/10/2026) | P0 | Feito |
+| **Jiu Jitsu e cardio** |  |  |  |
+| RF-18 | Check-in de aula de Jiu Jitsu com duração (a nota de recuperação 1–5 foi removida em 26/10/2026) | P0 | Feito |
 | RF-19 | Registro de cardio (20–40 min, intensidade leve/moderada) | P1 | Parcial: check-in com duração, sem intensidade |
 | **Corpo e nutrição** |  |  |  |
 | RF-20 | Registro de peso diário; média semanal e tendência calculadas | P0 | Pendente |
@@ -161,12 +161,12 @@ São 58 requisitos em 11 grupos; os marcados P0 bloqueiam o lançamento do MVP. 
 | **Check-in de treino** |  |  |  |
 | RF-38 | Botão fixo "Fazer check-in" (verde, canto inferior direito, nas telas Treino e Dashboard) é o único botão para registrar check-in: vira um círculo ao rolar para baixo e volta a mostrar o texto ao rolar para cima; abre o formulário já com o treino da aba aberta (no Dashboard, o tipo planejado do dia selecionado no calendário); fica acima da barra "em andamento" quando ela aparece | P0 | Feito |
 | RF-25 | Check-in de musculação pelo formulário (tipo, data, início, duração e, para quem ligou em Privacidade, observação). Terminar um exercício (registrar pesos) não abre check-in. Check-ins abertos de versões anteriores aparecem numa barra "em andamento" com "Encerrar", que mostra quantos exercícios foram feitos no dia e, para quem ligou, a observação | P0 | Feito |
-| RF-26 | Permitir mais de um check-in no mesmo dia (ex.: musculação de manhã e jiu-jitsu à noite), cada um com horário, tipo e duração próprios | P0 | Feito |
+| RF-26 | Permitir mais de um check-in no mesmo dia (ex.: musculação de manhã e Jiu Jitsu à noite), cada um com horário, tipo e duração próprios | P0 | Feito |
 | RF-30 | Check-in rápido, extra ou retroativo (tipo, data até hoje, início, duração de 1 a 600 min, observação opcional); excluir check-in com confirmação; editar check-in encerrado pelo Dashboard ("Editar check-in" abre o mesmo formulário preenchido) | P1 | Feito |
 | **Treinos personalizados** |  |  |  |
 | RF-49 | Em Você → Meus treinos, cada pessoa monta até 6 treinos (até 15 exercícios cada) com os exercícios de uma biblioteca de 136, sem repetição (plano pronto + fichas em PDF: Prime, anti-lesão, mobilidade, pegada, hipertrofia e cardio; mais 10 abdominais clássicos: Prancha, Prancha lateral, Abdominal supra, infra, bicicleta e na polia, Roda abdominal, Elevação de pernas na barra, Dead bug e Hollow hold). Busca por nome sem diferenciar acentos, também pelos outros nomes do exercício nas fichas (ex.: "elevação de quadril na cadeira" acha a Elevação pélvica unilateral; o item mostra "Também: …"), filtro por grupo (Mobilidade, Core e abdômen, Explosivos, Pernas, Costas, Peito, Ombros, Braços, Pescoço e Cardio); buscar "abdominal", "abdômen", "abdome" ou "barriga" mostra o grupo Core e abdômen inteiro; ajusta nome, foco, séries e PSE (campos com o mesmo formato) e muda a ordem arrastando a alça de cada exercício (mouse, dedo ou setas do teclado); botão flutuante "+ Adicionar exercício", que encolhe ao rolar como o de check-in; excluir treino pede confirmação e o tira da semana; "Voltar ao plano pronto"; sair com mudanças pede confirmação; ao salvar, "Desfazer" por 8 s e "Restaurar versão anterior" (treinos e semana guardados em `perfis.treinos_anterior`) | P0 | Feito |
 | RF-50 | Aviso "Baita atualização!" para quem já usa (Personalizar ou Manter o treino atual) e escolha inicial para conta nova (jornadas prontas, RF-59). Aparece a cada abertura do app (e ao voltar depois de 30 min em segundo plano, sem abrir por cima de outra janela) até a pessoa marcar "Não mostrar esta mensagem de novo"; a última resposta e o "não mostrar mais" ficam salvos na conta | P0 | Feito |
-| RF-59 | Objetivos com treinos prontos (jornadas): a conta nova escolhe, nas boas-vindas, entre Jiu-jitsu (OSS, o plano pronto de sempre), Hipertrofia (4 treinos), Força e potência (A, B e Cardio) e Mobilidade e prevenção (Mobilidade, Anti-lesão e Pegada), ou Montar do zero. Cada cartão mostra resumo, nível, treinos, dias, tempo e equipamento, e "Ver treinos" lista os exercícios. Escolher grava os treinos e a semana sugerida, mantendo os dias de jiu, muay, surf e cardio. Quem já usa vê "Mudar meu objetivo" em Você → Meus treinos, com confirmação; a versão de antes fica em `treinos_anterior` (Desfazer). Depois de escolher, tudo continua editável, e Meus treinos mostra "Seu objetivo é X" (ou "com os treinos personalizados por você"). Os treinos de quem já usa o app nunca mudam sozinhos. Seleção, ordem, doses e textos próprios do OSS. No monitoramento, o card "Objetivos escolhidos" | P1 | Feito |
+| RF-59 | Objetivos com treinos prontos (jornadas): a conta nova passa por boas-vindas em passos, sem poder fechar sem escolher: 1) "Bem-vindo ao OSS", que explica o app (treino do dia, check-in, Dashboard, temporizador e Você) e não grava nada; 2) "Seus dados", o aviso de privacidade com "Entendi" (só se a política ainda não foi aceita; vem antes de qualquer escolha ser gravada, por transparência da LGPD); 3) "Qual é o seu objetivo?", com Voltar. Nele a pessoa escolhe entre Jiu Jitsu (o plano pronto de sempre), Hipertrofia (4 treinos), Força e potência (A, B e Cardio) e Mobilidade e prevenção (Mobilidade, Anti-lesão e Pegada), ou Montar do zero (sair do editor sem salvar volta para a escolha; salvar encerra as boas-vindas). Cada cartão mostra resumo, nível, treinos, dias, tempo e equipamento, e "Ver treinos" lista os exercícios. Escolher grava os treinos e a semana sugerida, mantendo os dias de jiu, muay, surf e cardio. Quem já usa vê "Mudar meu objetivo" em Você → Meus treinos, com confirmação; a versão de antes fica em `treinos_anterior` (Desfazer). Depois de escolher, tudo continua editável, e Meus treinos mostra "Seu objetivo é X" (ou "com os treinos personalizados por você"). Os treinos de quem já usa o app nunca mudam sozinhos. Seleção, ordem, doses e textos próprios do OSS. No monitoramento, o card "Objetivos escolhidos" | P1 | Feito |
 | RF-60 | Vídeos liberados por usuário: no monitoramento, na ficha do usuário (aba Usuários), "Liberar vídeos" / "Tirar vídeos" (função `admin_liberar_videos`); a tabela mostra a etiqueta "Vídeos" em quem está liberado. O app recebe os vídeos pela função `meus_videos()`, que só devolve a lista para a própria pessoa liberada; a tabela `videos_exercicios` não é lida pela API e a lista não fica no código nem no repositório. Sem liberação (padrão), os exercícios aparecem sem vídeo | P1 | Feito |
 | RF-51 | Muay Thai como tipo de check-in (selo M, amarelo, 60 min por padrão) e atividade da Minha semana: marca o dia como feito, conta em "Esta semana", no calendário, nas barras do mês, no painel de monitoramento e no resumo por e-mail (cartão só para quem fez ou planejou muay thai) | P1 | Feito |
 | RF-57 | Surf como tipo de check-in (selo S, magenta, 90 min por padrão), entre Muay Thai e Cardio. Não entra na semana padrão: aparece na Minha semana só se a pessoa colocar, como as outras atividades. Conta em "Esta semana" (como extra quando não está no plano), no calendário, nas barras do mês, no painel de monitoramento e no resumo por e-mail (cartão só para quem surfou ou planejou surf) | P1 | Feito |
@@ -178,11 +178,11 @@ São 58 requisitos em 11 grupos; os marcados P0 bloqueiam o lançamento do MVP. 
 | RF-55 | Observações dos check-ins (podem revelar saúde) só com consentimento, sem perguntar no check-in: em Você → Privacidade, "Registrar observações nos check-ins" vem desligado; ligar é consentir e faz o campo Observação (opcional) aparecer no check-in e no encerrar. Desligar não pede confirmação: retira o consentimento e apaga as observações já registradas. A nota de recuperação (1–5) foi removida e as notas salvas, apagadas | P0 | Feito |
 | RF-56 | Baixar meus dados: Você → Privacidade gera `oss-meus-dados-AAAA-MM-DD.json` com perfil (sem a foto), preferências, consentimentos, treinos, semana, check-ins, cargas, registro de uso e e-mails enviados (função `meus_dados_extras()`) | P1 | Feito |
 | **Dashboard e calendário** |  |  |  |
-| RF-27 | Calendário mensal no Dashboard: cada dia mostra selos por tipo (1 a 6 para musculação, J para jiu-jitsu, M para muay thai, S para surf, C para cardio); com mais de dois check-ins mostra o primeiro e "+N"; navegação entre meses até o mês atual | P0 | Feito |
+| RF-27 | Calendário mensal no Dashboard: cada dia mostra selos por tipo (1 a 6 para musculação, J para Jiu Jitsu, M para muay thai, S para surf, C para cardio); com mais de dois check-ins mostra o primeiro e "+N"; navegação entre meses até o mês atual | P0 | Feito |
 | RF-28 | Ao tocar num dia, listar os check-ins daquele dia em ordem de horário, com tipo, horário e duração; dia sem check-in orienta tocar em "Fazer check-in", que já usa o dia selecionado | P0 | Feito |
 | RF-29 | Ao abrir um check-in de musculação, mostrar a observação e cada exercício do treino com as cargas do dia por série; exercícios sem carga aparecem como "sem registro", e os marcados como Sem peso como "feito (sem peso)" ou "sem peso"; em check-ins encerrados, tocar num exercício abre o painel para corrigir os pesos (ou o "feito" sem peso) daquele dia | P0 | Feito |
 | RF-34 | Números do Dashboard: check-ins no total, check-ins, horas treinadas e dias com treino no mês | P1 | Feito |
-| RF-35 | "Esta semana" × plano (quantas vezes musculação, jiu-jitsu, muay thai, surf e cardio aparecem na semana montada; cada tipo só aparece se estiver no plano ou tiver check-in na semana) e barras com a contagem de check-ins por tipo no mês exibido | P1 | Feito |
+| RF-35 | "Esta semana" × plano (quantas vezes musculação, Jiu Jitsu, muay thai, surf e cardio aparecem na semana montada; cada tipo só aparece se estiver no plano ou tiver check-in na semana) e barras com a contagem de check-ins por tipo no mês exibido | P1 | Feito |
 
 ### Modelo de dados
 
@@ -200,12 +200,12 @@ O plano pronto é um modelo único, compartilhado por todos os usuários e guard
 | Plano (modelo) | nome, duração (6 semanas) |
 | Inscrição no plano | usuário, plano, data de início, peso inicial, alvo, compartilha aderência (sim/não) |
 | Fase | número (1–3), semanas (1–2, 3–4, 5–6), foco, orientação |
-| Treino-modelo | código (1, 2 ou 3, no plano pronto; 1 a 6 nos treinos da conta), nome, subtítulo, objetivo, o que esperar, impacto no jiu-jitsu, impacto no físico, lista ordenada de exercícios |
+| Treino-modelo | código (1, 2 ou 3, no plano pronto; 1 a 6 nos treinos da conta), nome, subtítulo, objetivo, o que esperar, impacto no Jiu Jitsu, impacto no físico, lista ordenada de exercícios |
 | Exercício (biblioteca) | nome (único, sem diferenciar maiúsculas e acentos), outros nomes (como aparecem nas fichas, para a busca), grupo, dose (séries × reps/tempo/por lado), PSE-alvo, graus H/F/E/M (Alta/Média/Baixa), justificativa, vídeo (hoje desligado), é principal (sim/não). Fica no código (`index.html`), não no banco |
 | Ajuste por fase | exercício, fase, nova dose (ex.: Passada 3×16 na fase 3) |
-| Sessão | inscrição, data, tipo (Treino 1 a 6, jiu-jitsu, muay thai, surf, cardio, descanso), semana, status (planejada, feita, pulada, movida) |
+| Sessão | inscrição, data, tipo (Treino 1 a 6, Jiu Jitsu, muay thai, surf, cardio, descanso), semana, status (planejada, feita, pulada, movida) |
 | Treinos da conta | usuário, até 6 treinos (nome, foco, exercícios com dose e PSE); vazio = plano pronto; última resposta ao aviso da novidade e quando pediu para não mostrar mais |
-| Check-in | usuário, tipo (Treino 1 a 6, jiu-jitsu, muay thai, surf, cardio), início, fim (vazio enquanto aberto), sem horário (sim/não), observação (opcional, só com consentimento), foto (opcional: caminho do arquivo no bucket privado `fotos-checkin`), retroativo (sim/não) |
+| Check-in | usuário, tipo (Treino 1 a 6, Jiu Jitsu, muay thai, surf, cardio), início, fim (vazio enquanto aberto), sem horário (sim/não), observação (opcional, só com consentimento), foto (opcional: caminho do arquivo no bucket privado `fotos-checkin`), retroativo (sim/não) |
 | Cargas do dia | usuário, data, treino (1 a 5), cargas por exercício e série (kg) ou marcação de feito para exercícios sem peso |
 | Medida corporal | usuário, data, peso (kg), % de gordura (opcional) |
 | Proteína | usuário, data, gramas |
@@ -238,7 +238,7 @@ Ajustes únicos de dados ficam em `supabase/ajustes/` e rodam uma vez no SQL Edi
 - **`2026-10-20-zero-vira-feito-marcelo.sql`:** para um usuário (Marcelo Bauer no arquivo), marca como Sem peso os exercícios registrados só com zero e troca esses zeros pelo registro de feito do dia.
 - **`2026-10-20-diagnostico-sem-peso.sql`:** só consulta; lista por usuário os exercícios com carga zero, quantas séries são zero, quantas têm peso, quantas estão como texto e se já estão como Sem peso.
 
-No primeiro login em cada aparelho, os check-ins e configurações que estavam só no navegador (versões anteriores) são enviados para a conta. Contas sem semana salva usam a padrão, montada com os antigos dias de jiu-jitsu.
+No primeiro login em cada aparelho, os check-ins e configurações que estavam só no navegador (versões anteriores) são enviados para a conta. Contas sem semana salva usam a padrão, montada com os antigos dias de Jiu Jitsu.
 
 Exercícios do plano pronto, por treino:
 
@@ -250,7 +250,7 @@ Semana padrão (editável em Você → Minha semana):
 
 | Seg | Ter | Qua | Qui | Sex | Sáb | Dom |
 | --- | --- | --- | --- | --- | --- | --- |
-| Treino 2 | Jiu-jitsu | Treino 1 | Jiu-jitsu | Treino 3 (pernas) | Cardio | Descanso |
+| Treino 2 | Jiu Jitsu | Treino 1 | Jiu Jitsu | Treino 3 (pernas) | Cardio | Descanso |
 
 ### Fluxos e telas principais
 
@@ -262,6 +262,7 @@ Terminar exercícios (registrar pesos) e fazer check-in são ações separadas. 
 
 | Tela | Conteúdo principal |
 | --- | --- |
+| Boas-vindas (conta nova) | Janela em passos com pontinhos: "Bem-vindo ao OSS" (o que o app faz e Começar), "Seus dados" (privacidade, Ler a política completa, Voltar e Entendi) e "Qual é o seu objetivo?" (cartões dos objetivos e Montar do zero). Sem X: só fecha com uma escolha |
 | Entrada | Painel azul com a faixa branca de 4 graus, título "OSS", "Exercícios de Jiu Jitsu e hipertrofia", "Continuar com o Google", "Ao entrar, você concorda com a Política de Privacidade" (abre a política numa janela dentro do app), crédito com link para o LinkedIn |
 | Só para convidados | Para quem entra sem convite: "O OSS é só para convidados", campo para o código, mensagens para convite inválido, usado, expirado ou cancelado e "Pedir acesso"; um link `?convite=` é guardado até o login terminar e usado sozinho |
 | Aviso da política | Quando a política muda: resumo curto com "Entendi" e "Ler a política completa", antes do aviso dos treinos personalizados |
@@ -284,13 +285,13 @@ Terminar exercícios (registrar pesos) e fazer check-in são ações separadas. 
 Todas as regras vêm do plano original; o app as aplica sem que o usuário precise lembrar delas. As marcadas como pendentes ainda não estão no app.
 
 1. **Semana e fase (pendente):** semana = dias desde o início ÷ 7, arredondado para cima (1–6). Fase 1 = semanas 1–2, fase 2 = 3–4, fase 3 = 5–6.
-2. **Semana padrão:** segunda = Treino 2, quarta = Treino 1, sexta = Treino 3 (pernas), terça e quinta = jiu-jitsu, sábado = cardio, domingo = descanso. Pernas ficam na sexta para ter o fim de semana de recuperação e não pesar antes do jiu de terça. O usuário pode mudar tudo em Minha semana.
+2. **Semana padrão:** segunda = Treino 2, quarta = Treino 1, sexta = Treino 3 (pernas), terça e quinta = Jiu Jitsu, sábado = cardio, domingo = descanso. Pernas ficam na sexta para ter o fim de semana de recuperação e não pesar antes do jiu de terça. O usuário pode mudar tudo em Minha semana.
 3. **Semana montada:** cada dia aceita até 2 atividades; ao colocar uma terceira, sai a mais antiga e o app avisa. Dia vazio é descanso. Todos os 7 dias podem receber atividades.
-4. **Conflito de sexta:** com jiu-jitsu na sexta, o usuário move o Treino 3 em Minha semana. O ajuste automático (Treino 3 para sábado ou marcado como pulado) fica pendente.
+4. **Conflito de sexta:** com Jiu Jitsu na sexta, o usuário move o Treino 3 em Minha semana. O ajuste automático (Treino 3 para sábado ou marcado como pulado) fica pendente.
 5. **Avisos da semana:** o app avisa quando:
    - algum treino (do plano pronto ou montado) ficou fora da semana ou aparece mais de uma vez;
    - um dia tem 2 atividades (fazer um check-in para cada);
-   - o jiu-jitsu vem no dia seguinte ao Treino 3 (pernas) ou no mesmo dia;
+   - o Jiu Jitsu vem no dia seguinte ao Treino 3 (pernas) ou no mesmo dia;
    - a semana não tem dia de descanso.
 6. **Progressão de dose (pendente):** na fase 3, Passada para frente passa de 3×10 para 3×16.
 7. **Fase 2 (tempo sob tensão) (pendente):** o app exibe lembrete de cadência controlada nos exercícios principais.
@@ -298,11 +299,11 @@ Todas as regras vêm do plano original; o app as aplica sem que o usuário preci
 9. **Peso médio (pendente):** média das pesagens de seg–dom; ajustes só são sugeridos após 2 semanas de média.
 10. **Segundo alvo (pendente) (Bauer: 73 kg):** só é liberado depois de atingir o primeiro alvo (Bauer: 74 kg) com cargas principais estáveis ou maiores.
 11. **Cardio:** a meta da semana conta quantas vezes o cardio aparece na semana montada (1 no padrão, sábado, 20–40 min). Marcar como dispensável se o peso cair no ritmo previsto (≥ 0,25 kg/semana) fica pendente.
-12. **Check-in e sessão:** um check-in encerrado do tipo planejado (ou de outro treino de musculação, se o planejado era musculação) marca a atividade como feita na agenda. Check-ins de grupos não planejados aparecem como extras ("+ Jiu-jitsu") e não alteram a agenda.
+12. **Check-in e sessão:** um check-in encerrado do tipo planejado (ou de outro treino de musculação, se o planejado era musculação) marca a atividade como feita na agenda. Check-ins de grupos não planejados aparecem como extras ("+ Jiu Jitsu") e não alteram a agenda.
 13. **Vários check-ins por dia:** não há limite de check-ins por dia, mas check-ins do mesmo dia não podem se sobrepor no horário. Só um check-in pode ficar aberto por vez.
 14. **Check-in esquecido:** um check-in que ficou aberto há mais de 3 horas gera aviso na barra "em andamento"; na próxima abertura do app, ele é encerrado na hora da última série registrada (ou 1 hora após o início) e o usuário é avisado. Vale para check-ins abertos em versões anteriores, já que o formulário atual registra o check-in encerrado.
 15. **Check-in retroativo e edição:** a data não pode ser no futuro e a duração vai de 1 a 600 min; check-ins de datas passadas ficam marcados como retroativos. As mesmas regras valem ao editar (a sobreposição ignora o próprio check-in), e um check-in "sem horário" passa a ter horário ao ser editado. Os pesos ficam no dia e no treino: mudar a data ou o tipo de um check-in não leva os pesos junto.
-16. **Duração padrão:** 60 min para musculação, jiu-jitsu e muay thai, 90 min para surf, 30 min para cardio.
+16. **Duração padrão:** 60 min para musculação, Jiu Jitsu e muay thai, 90 min para surf, 30 min para cardio.
 17. **Exclusão:** excluir um check-in pede confirmação; os pesos registrados na ficha continuam salvos.
 18. **Pesos:** salvar um peso grava as cargas do dia daquele treino e não abre check-in nem temporizador. Editar um peso de hoje mantém as outras séries já registradas.
 19. **Acessos:** cada abertura do app já logado atualiza o último acesso; a quantidade só sobe se o acesso anterior foi há mais de 30 min. A hora é a do servidor, e o usuário não consegue alterar esses campos.
@@ -334,7 +335,7 @@ Todas as regras vêm do plano original; o app as aplica sem que o usuário preci
 29. **Exclusão de conta:** só depois de marcar "Entendi" na confirmação; apaga a conta e todos os dados em cascata e não pode ser desfeita. O administrador pode excluir a conta de qualquer usuário pelo monitoramento, mas não a própria nem a de outro administrador.
 30. **Biblioteca sem repetidos:** cada exercício aparece uma vez só (nomes comparados sem maiúsculas e acentos; um duplicado no código é ignorado). Variações do mesmo movimento com outro equipamento ou apoio viram outros nomes do mesmo exercício (ex.: "Elevação de quadril com barra" e "HBL" → Elevação de quadril), que a busca acha; vira exercício próprio só o que é outra máquina ou outro movimento (ex.: Cadeira flexora × Mesa flexora). Nenhum outro nome pode ser o nome de outro exercício.
 31. **Ficha individual:** a ficha de um aluno pode ser aplicada direto na conta dele por SQL (`perfis.treinos`, guardando a versão anterior em `treinos_anterior`), com os nomes da biblioteca; a pessoa continua podendo mudar em Você → Meus treinos.
-32. **Objetivos prontos não mexem em quem já usa:** a escolha do objetivo aparece sozinha só para conta nova (sem check-ins, sem pesos e com o plano pronto). Para quem já usa, mudar o objetivo ("Mudar meu objetivo") é sempre manual e com confirmação, e a versão de antes fica guardada para o Desfazer. A jornada Jiu-jitsu (OSS) é o plano pronto, sem mudança. Um objetivo personalizado continua com o nome dele ("Seu objetivo é X, com os treinos personalizados por você"); se os treinos voltarem a ser iguais aos de um objetivo, voltam a ser ele.
+32. **Objetivos prontos não mexem em quem já usa:** a escolha do objetivo aparece sozinha só para conta nova (sem check-ins, sem pesos e com o plano pronto). Para quem já usa, mudar o objetivo ("Mudar meu objetivo") é sempre manual e com confirmação, e a versão de antes fica guardada para o Desfazer. A jornada Jiu Jitsu é o plano pronto, sem mudança. Um objetivo personalizado continua com o nome dele ("Seu objetivo é X, com os treinos personalizados por você"); se os treinos voltarem a ser iguais aos de um objetivo, voltam a ser ele.
 33. **Vídeos só para quem o administrador libera:** os vídeos dos exercícios ficam desligados por padrão. Só o administrador liga ou desliga, por usuário, todos de uma vez; a pessoa não consegue se liberar. A lista de vídeos fica só no banco e só chega ao app de quem está liberado.
 
 ### Requisitos não funcionais
@@ -402,7 +403,7 @@ Pendências e cuidados:
    - card "Treinos mais feitos" no monitoramento;
    - vídeos dos exercícios só para usuários liberados pelo administrador;
    - animação de carregamento no app e no monitoramento;
-   - objetivos com treinos prontos (Jiu-jitsu, Hipertrofia, Força e potência, Mobilidade e prevenção) nas boas-vindas e em "Mudar meu objetivo";
+   - objetivos com treinos prontos (Jiu Jitsu, Hipertrofia, Força e potência, Mobilidade e prevenção) nas boas-vindas e em "Mudar meu objetivo";
    - eventos de uso que não se perdem quando a internet cai;
    - nome da conta Google quando o perfil está sem nome;
    - temporizador de descanso entre séries (Você → Temporizador), com botão acima do check-in, som e vibração no fim.

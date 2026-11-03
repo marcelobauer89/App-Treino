@@ -29,14 +29,14 @@ const linhas = (p) => p.locator('#jornadas-lista li').evaluateAll((ls) => ls.map
     await p.clock.install({ time: new Date(AGORA) });
     await p.goto(ADMIN); await p.waitForSelector('#painel:not([hidden])'); await p.waitForTimeout(300);
     let l = await linhas(p);
-    ok(l.map((x) => x.nome).join('|') === 'Hipertrofia|Mobilidade e prevenção|Jiu-jitsu (OSS)|Força e potência', `${tag}: ordem (30 dias, última escolha)`, l.map((x) => x.nome).join('|'));
+    ok(l.map((x) => x.nome).join('|') === 'Hipertrofia|Mobilidade e prevenção|Jiu Jitsu|Força e potência', `${tag}: ordem (30 dias, última escolha)`, l.map((x) => x.nome).join('|'));
     ok(l[0].num === '267%' && l[0].sub === '2 pessoas · 1 na troca' && l[1].sub === '1 pessoa' && l[3].zerado && l[3].sub === 'ninguém', `${tag}: números e detalhe`, l.map((x) => `${x.num} ${x.sub}`).join(' / '));
     await p.locator('#jornadas-titulo').scrollIntoViewIfNeeded();
     await p.locator('section[aria-labelledby="jornadas-titulo"]').screenshot({ path: `jornadas-admin-${tag}.png` });
     if (tag === 'light-1280') {
       await p.click('[data-periodo="90"]').catch(() => {}); await p.waitForTimeout(200);
       l = await linhas(p);
-      ok(l.find((x) => x.nome === 'Jiu-jitsu (OSS)').sub === '1 pessoa', '90 dias inclui a escolha mais antiga', l.map((x) => x.sub).join(' / '));
+      ok(l.find((x) => x.nome === 'Jiu Jitsu').sub === '1 pessoa', '90 dias inclui a escolha mais antiga', l.map((x) => x.sub).join(' / '));
     }
     ok(!p.errs.length, `${tag}: sem erros`, p.errs.join(' | '));
     await p.context().close();

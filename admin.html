@@ -701,7 +701,7 @@
         <p class="info-txt" id="info-g1" role="note" hidden></p>
         <ul class="legenda" aria-label="Tipos de treino">
           <li><i style="background:var(--musc)"></i>Musculação</li>
-          <li><i style="background:var(--jiu)"></i>Jiu-jitsu</li>
+          <li><i style="background:var(--jiu)"></i>Jiu Jitsu</li>
           <li><i style="background:var(--bike)"></i>Cardio</li>
           <li><i style="background:var(--muay)"></i>Muay Thai</li>
           <li><i style="background:var(--surf)"></i>Surf</li>
@@ -920,11 +920,11 @@
   const TIPOS = {
     t1: { nome: 'Treino 1', selo: '1', grupo: 'musc' }, t2: { nome: 'Treino 2', selo: '2', grupo: 'musc' },
     t3: { nome: 'Treino 3', selo: '3', grupo: 'musc' }, t4: { nome: 'Treino 4', selo: '4', grupo: 'musc' },
-    t5: { nome: 'Treino 5', selo: '5', grupo: 'musc' }, t6: { nome: 'Treino 6', selo: '6', grupo: 'musc' }, jiu: { nome: 'Jiu-jitsu', selo: 'J', grupo: 'jiu' },
+    t5: { nome: 'Treino 5', selo: '5', grupo: 'musc' }, t6: { nome: 'Treino 6', selo: '6', grupo: 'musc' }, jiu: { nome: 'Jiu Jitsu', selo: 'J', grupo: 'jiu' },
     bike: { nome: 'Cardio', selo: 'C', grupo: 'bike' }, muay: { nome: 'Muay Thai', selo: 'M', grupo: 'muay' },
     surf: { nome: 'Surf', selo: 'S', grupo: 'surf' },
   };
-  const GRUPOS = [['musc', 'Musculação'], ['jiu', 'Jiu-jitsu'], ['bike', 'Cardio'], ['muay', 'Muay Thai'], ['surf', 'Surf']];
+  const GRUPOS = [['musc', 'Musculação'], ['jiu', 'Jiu Jitsu'], ['bike', 'Cardio'], ['muay', 'Muay Thai'], ['surf', 'Surf']];
   const CURTOS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
   const ORDEM_SEMANA = [1, 2, 3, 4, 5, 6, 0];
 
@@ -1323,7 +1323,7 @@
       tile('Usuários ativos', `${m.ativos}<small> de ${total}</small>`, { longo: rotuloPeriodo, curto: '', d: a && delta(m.ativos, a.ativos),
         info: `Quantas pessoas abriram o app ou fizeram check-in pelo menos uma vez no período. O número menor é o total de cadastrados. ${compara}` }),
       tile('Check-ins', fmtNum(m.checkins), { longo: rotuloPeriodo, curto: '', d: a && delta(m.checkins, a.checkins),
-        info: `Total de check-ins feitos no período, somando todos os usuários e tipos de treino (musculação, jiu-jitsu, cardio, muay thai e surf), inclusive os registrados depois. ${compara}` }),
+        info: `Total de check-ins feitos no período, somando todos os usuários e tipos de treino (musculação, Jiu Jitsu, cardio, muay thai e surf), inclusive os registrados depois. ${compara}` }),
       // Num dia só, "por semana" multiplicaria o dia por 7; com Hoje o card mostra os treinos por usuário.
       ehHoje
         ? tile('Treinos por usuário', fmtNum(m.treinosPorUsuario, 1), { longo: 'por usuário ativo, hoje', curto: 'por ativo', d: a && delta(um(m.treinosPorUsuario), um(a.treinosPorUsuario)),
@@ -1406,7 +1406,7 @@
   }
 
   // Jornadas prontas escolhidas no período: a última escolha de cada pessoa, da mais escolhida para a menos.
-  const NOMES_JORNADA = { jiu: 'Jiu-jitsu (OSS)', hipertrofia: 'Hipertrofia', forca: 'Força e potência', mobilidade: 'Mobilidade e prevenção' };
+  const NOMES_JORNADA = { jiu: 'Jiu Jitsu', hipertrofia: 'Hipertrofia', forca: 'Força e potência', mobilidade: 'Mobilidade e prevenção' };
   const CORES_JORNADA = { jiu: 'jiu', hipertrofia: 'musc', forca: 'muay', mobilidade: 'bike' };
   function renderJornadas(j) {
     const ultima = new Map();
@@ -1480,7 +1480,7 @@
     }
     $('g2-nota').textContent = `Ativo: abriu o app ou fez check-in ${unidade === 'hora' ? 'na hora' : unidade === 'semana' ? 'na semana' : 'no dia'}.`;
     const cadaUn = porHora ? 'cada hora de hoje' : `cada ${unidade} do período`;
-    $('info-g1').textContent = `Quantos check-ins foram feitos em ${cadaUn}, somando todos os usuários. Cada cor é um tipo de treino: musculação, jiu-jitsu, cardio, muay thai e surf. Passe o dedo ou o mouse numa barra para ver os números, ou toque em Ver tabela.${unidade === 'semana' ? ' Em períodos longos, cada barra soma uma semana, de segunda a domingo.' : ''}`;
+    $('info-g1').textContent = `Quantos check-ins foram feitos em ${cadaUn}, somando todos os usuários. Cada cor é um tipo de treino: musculação, Jiu Jitsu, cardio, muay thai e surf. Passe o dedo ou o mouse numa barra para ver os números, ou toque em Ver tabela.${unidade === 'semana' ? ' Em períodos longos, cada barra soma uma semana, de segunda a domingo.' : ''}`;
     $('info-g2').textContent = `Quantas pessoas diferentes usaram o app em ${cadaUn}: abriram o app ou fizeram check-in. Cada pessoa conta uma vez por barra, mesmo que use o app várias vezes.${porHora ? ' Os horários seguem o relógio do seu aparelho.' : ''}`;
     barras($('g1'), serie1, { empilhado: true, rotulo: 'check-ins' });
     barras($('g2'), serie2, { empilhado: false, rotulo: 'usuários ativos' });

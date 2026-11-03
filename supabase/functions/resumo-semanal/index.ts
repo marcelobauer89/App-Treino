@@ -23,14 +23,14 @@ import nodemailer from 'npm:nodemailer@6.9.16';
 
 export const TIPO = 'resumo_semanal';
 const FUSO = 'America/Sao_Paulo';
-// Selos e cores iguais aos do app (1 a 6 = treinos de musculação; J = jiu-jitsu; C = cardio; M = muay thai; S = surf).
+// Selos e cores iguais aos do app (1 a 6 = treinos de musculação; J = Jiu Jitsu; C = cardio; M = muay thai; S = surf).
 const TIPOS: Record<string, { nome: string; grupo: string; selo: string }> = {
   t1: { nome: 'Treino 1', grupo: 'musc', selo: '1' }, t2: { nome: 'Treino 2', grupo: 'musc', selo: '2' }, t3: { nome: 'Treino 3', grupo: 'musc', selo: '3' },
   t4: { nome: 'Treino 4', grupo: 'musc', selo: '4' }, t5: { nome: 'Treino 5', grupo: 'musc', selo: '5' }, t6: { nome: 'Treino 6', grupo: 'musc', selo: '6' },
-  jiu: { nome: 'Jiu-jitsu', grupo: 'jiu', selo: 'J' }, bike: { nome: 'Cardio', grupo: 'bike', selo: 'C' },
+  jiu: { nome: 'Jiu Jitsu', grupo: 'jiu', selo: 'J' }, bike: { nome: 'Cardio', grupo: 'bike', selo: 'C' },
   muay: { nome: 'Muay Thai', grupo: 'muay', selo: 'M' }, surf: { nome: 'Surf', grupo: 'surf', selo: 'S' },
 };
-const GRUPOS: [string, string, string][] = [['musc', 'Musculação', '#2a78d6'], ['jiu', 'Jiu-jitsu', '#eb6834'], ['bike', 'Cardio', '#1baf7a'], ['muay', 'Muay Thai', '#eda100'], ['surf', 'Surf', '#c84aa4']];
+const GRUPOS: [string, string, string][] = [['musc', 'Musculação', '#2a78d6'], ['jiu', 'Jiu Jitsu', '#eb6834'], ['bike', 'Cardio', '#1baf7a'], ['muay', 'Muay Thai', '#eda100'], ['surf', 'Surf', '#c84aa4']];
 // Muay Thai e Surf só aparecem no e-mail de quem fez ou planejou; os outros continuam com 3 cartões.
 const gruposDe = (r: { porGrupo: Record<string, number>; muayNoPlano?: boolean; surfNoPlano?: boolean }) =>
   GRUPOS.filter(([g]) => (g !== 'muay' || r.porGrupo.muay > 0 || r.muayNoPlano) && (g !== 'surf' || r.porGrupo.surf > 0 || r.surfNoPlano));
