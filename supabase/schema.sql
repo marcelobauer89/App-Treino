@@ -201,7 +201,10 @@ alter table public.perfis add column if not exists politica_versao text check (p
 alter table public.perfis add column if not exists consentimento_saude text check (consentimento_saude is null or consentimento_saude in ('sim', 'nao'));
 alter table public.perfis add column if not exists consentimento_saude_em timestamptz;
 
-grant update (id, nome, email, foto, tema, estilo, dias_jiu, semana, sem_peso, emails_resumo, treinos, novidade_treinos, novidade_oculta, treinos_anterior, jornada, politica_versao, consentimento_saude, consentimento_saude_em) on public.perfis to authenticated;
+-- Temporizador de descanso (Você → Temporizador): { ativo, segundos, vibrar }. Vazio = desligado.
+alter table public.perfis add column if not exists temporizador jsonb
+  check (temporizador is null or (jsonb_typeof(temporizador) = 'object' and pg_column_size(temporizador) <= 500));
+grant update (id, nome, email, foto, tema, estilo, dias_jiu, semana, sem_peso, emails_resumo, treinos, novidade_treinos, novidade_oculta, treinos_anterior, jornada, temporizador, politica_versao, consentimento_saude, consentimento_saude_em) on public.perfis to authenticated;
 
 -- A nota de recuperação (1 a 5) saiu do app: a coluna e as notas já salvas são apagadas (LGPD: não guardar dado sem uso).
 -- Rode depois de publicar a versão do app sem a recuperação; a anterior ainda envia esse campo.
