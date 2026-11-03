@@ -68,11 +68,15 @@ const perfil = async (p) => (await H.banco(p)).perfis.find((x) => x.id === 'u1')
     ok((await titulo(p)) === 'Seus dados' && /Continuar/.test(await p.innerText('[data-jd-entendi]')), `${tag}: Voltar do objetivo mostra "Seus dados" com Continuar`);
     await p.click('[data-jd-entendi]'); await p.waitForTimeout(100);
     ok(!(await p.evaluate(() => document.documentElement.scrollWidth > innerWidth)), `${tag}: sem rolagem lateral`);
+    // Tela cheia: o app (treinos de exemplo) fica escondido atrás das boas-vindas.
+    ok(await p.evaluate(() => document.body.classList.contains('bv-ativa') && getComputedStyle(document.querySelector('main.wrap')).visibility === 'hidden'), `${tag}: app escondido atrás das boas-vindas`);
+    await p.screenshot({ path: `${H.SAIDA}/boas-vindas-tela-${tag}.png` });
 
     // Escolher Hipertrofia grava os treinos e encerra as boas-vindas.
     await p.click('[data-jd-escolher="hipertrofia"]'); await p.waitForTimeout(400);
     const pf = await perfil(p);
     ok(!(await p.isVisible('#jornada-dialog')) && pf.jornada === 'hipertrofia' && pf.novidade_oculta, `${tag}: escolher Hipertrofia grava e fecha`, `${pf.jornada} / ${pf.novidade_oculta}`);
+    ok(await p.evaluate(() => !document.body.classList.contains('bv-ativa') && getComputedStyle(document.querySelector('main.wrap')).visibility === 'visible'), `${tag}: depois da escolha, o app aparece`);
     ok(!p.errs.length, `${tag}: sem erros`, p.errs.join(' | '));
     await p.context().close();
   }
@@ -111,6 +115,7 @@ const perfil = async (p) => (await H.banco(p)).perfis.find((x) => x.id === 'u1')
   p = await abrir(b, { perfis: [NOVA({ politica_versao: '2026-10-27' })] });
   await p.click('[data-jd-comecar]'); await p.click('[data-jd-zero]'); await p.waitForTimeout(150);
   ok(await p.isVisible('#editor-dialog') && !(await p.isVisible('#jornada-dialog')), 'Montar do zero abre o editor');
+  ok(await p.evaluate(() => document.body.classList.contains('bv-ativa')), 'Montar do zero: app continua escondido');
   await p.keyboard.press('Escape'); await p.waitForTimeout(150);
   if (await p.locator('[data-ed-sair-sim]').count()) { await p.click('[data-ed-sair-sim]'); await p.waitForTimeout(150); }
   ok(await p.isVisible('#jornada-dialog') && (await titulo(p)) === 'Qual é o seu objetivo?', 'sair sem salvar volta ao objetivo');
@@ -121,6 +126,7 @@ const perfil = async (p) => (await H.banco(p)).perfis.find((x) => x.id === 'u1')
   if (!(await salvar.isVisible())) { await p.locator('[data-ed-vista="treino"]').first().click().catch(() => {}); await p.waitForTimeout(100); }
   await salvar.click(); await p.waitForTimeout(400);
   ok(!(await p.isVisible('#editor-dialog')) && !(await p.isVisible('#jornada-dialog')) && (await perfil(p)).novidade_oculta, 'salvar os treinos encerra as boas-vindas');
+  ok(await p.evaluate(() => !document.body.classList.contains('bv-ativa')), 'salvar os treinos mostra o app');
   ok(!p.errs.length, 'montar do zero: sem erros', p.errs.join(' | '));
   await p.context().close();
 

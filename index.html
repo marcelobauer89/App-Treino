@@ -891,6 +891,15 @@
   .bv-voltar { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; padding: 0 8px 0 0; border: 0; background: none; color: var(--tatame-tinta); font: inherit; font-weight: 700; cursor: pointer; }
   .bv-voltar:focus-visible { outline: 3px solid var(--tatame-tinta); outline-offset: 2px; border-radius: 6px; }
   #jornada-title:focus { outline: none; }
+  /* Boas-vindas em tela cheia: o app fica escondido atrás de um fundo sólido na cor do tema. */
+  body.bv-ativa > :not(dialog) { visibility: hidden; }
+  dialog.modal.jornadas-modal.bv-tela::backdrop { background: transparent; }
+  @media (max-width: 560px) {
+    dialog.modal.jornadas-modal.bv-tela { height: 100dvh; max-height: 100dvh; margin: 0; border: 0; border-radius: 0; }
+    .bv-tela .modal-body { display: flex; flex-direction: column; min-height: 100dvh; padding-top: calc(20px + env(safe-area-inset-top, 0px)); }
+    .bv-tela .bv-cabeca { margin-top: calc(-20px - env(safe-area-inset-top, 0px)); padding-top: calc(20px + env(safe-area-inset-top, 0px)); }
+    .bv-tela .bv-rodape { margin-top: auto; }
+  }
   .jornadas-modal .priv-link { margin-top: 12px; }
   .novidade-ocultar { justify-self: start; display: inline-flex; align-items: center; gap: 10px; min-height: 44px; font-size: 15px; color: var(--tinta-2); cursor: pointer; }
   .novidade-ocultar input { flex: 0 0 auto; width: 22px; height: 22px; margin: 0; accent-color: var(--tatame); cursor: pointer; }
@@ -4115,6 +4124,8 @@
     const treinos = doZero ? { 1: { nome: 'Treino 1', subtitulo: '', exercicios: [] } } : copiaTreinos(TREINOS);
     const sel = doZero ? '1' : (treinos[estado.treino] ? estado.treino : Object.keys(treinos)[0]);
     ed = { treinos, sel, vista: doZero ? 'escolher' : 'treino', busca: '', grupo: 'todos', confirmar: null, erro: '', doZero, daBoasVindas };
+    // Vindo das boas-vindas, o app continua escondido até a primeira escolha.
+    if (daBoasVindas) document.body.classList.add('bv-ativa');
     edFabEncolhido = false;
     renderEditor();
     if (!editorDialog.open) editorDialog.showModal();
@@ -4247,7 +4258,7 @@
     registrarEvento('treinos_salvos', {
       treinos: Object.keys(TREINOS).length, exercicios: Object.values(TREINOS).reduce((n, t) => n + t.exercicios.length, 0), plano_pronto: !valor,
     });
-    if (ed.daBoasVindas) gravarNovidade('montar', true);
+    if (ed.daBoasVindas) { gravarNovidade('montar', true); document.body.classList.remove('bv-ativa'); }
     ed = null;
     editorDialog.close();
     renderHoje();
@@ -4306,6 +4317,7 @@
     const voltarBV = ed && ed.daBoasVindas;
     ed = null;
     editorDialog.close();
+    document.body.classList.remove('bv-ativa');
     if (voltarBV) abrirJornadas('boas-vindas', 'objetivo');
   }
 
@@ -4529,6 +4541,9 @@
   function abrirJornadas(modo, passo) {
     const boasVindas = modo === 'boas-vindas';
     jd = { modo, aberta: null, confirmar: null, passo: boasVindas ? passo || 'bemvindo' : null, comDados: boasVindas && (bvTeste || (politica.disponivel && !politica.aceita)) };
+    // Boas-vindas em tela cheia, com fundo sólido: quem chega pela primeira vez não vê treinos que ainda não escolheu.
+    jornadaDialog.classList.toggle('bv-tela', boasVindas);
+    document.body.classList.toggle('bv-ativa', boasVindas);
     renderJornadas();
     if (!jornadaDialog.open) jornadaDialog.showModal();
     if (!boasVindas || jd.passo === 'objetivo') registrarEvento('jornadas_abertas', { origem: modo });
@@ -4635,6 +4650,8 @@
     if (jd.modo === 'boas-vindas' && escolha === 'jornada') gravarNovidade('jornada', true);
     jd = null;
     jornadaDialog.close();
+    jornadaDialog.classList.remove('bv-tela');
+    document.body.classList.remove('bv-ativa');
   }
   jornadaDialog.addEventListener('click', (e) => {
     const b = e.target.closest('button');
