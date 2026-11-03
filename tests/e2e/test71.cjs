@@ -50,6 +50,13 @@ const perfil = async (p) => (await H.banco(p)).perfis.find((x) => x.id === 'u1')
     const cartoes = await p.locator('.jornada .jornada-topo b').allInnerTexts();
     ok(cartoes.includes('Jiu Jitsu') && cartoes.includes('Montar do zero') && !cartoes.some((c) => /\(OSS\)|Jiu-jitsu/i.test(c)), `${tag}: "Jiu Jitsu" e "Montar do zero" na lista`, cartoes.join(' | '));
     await p.locator('#jornada-dialog .modal-body').screenshot({ path: `${H.SAIDA}/boas-vindas-3-${tag}.png` });
+    // Cabeçalho fixo: rolando a lista, etapa, Voltar e título continuam no topo da janela.
+    await p.locator('#jornada-dialog').evaluate((d) => { d.scrollTop = 700; }); await p.waitForTimeout(100);
+    const [cab, dlg] = await Promise.all([p.locator('.bv-cabeca').boundingBox(), p.locator('#jornada-dialog').boundingBox()]);
+    ok(cab && dlg && Math.abs(cab.y - dlg.y) <= 2 && await p.isVisible('.bv-cabeca [data-jd-voltar]'), `${tag}: cabeçalho fixo ao rolar`, `${cab && cab.y} / ${dlg && dlg.y}`);
+    await p.screenshot({ path: `${H.SAIDA}/boas-vindas-3-rolado-${tag}.png` });
+    await p.locator('#jornada-dialog').evaluate((d) => { d.scrollTop = 0; });
+    ok((await p.locator('.bv-rodape [data-jd-voltar]').count()) === 0, `${tag}: Voltar só no cabeçalho`);
     await p.click('[data-jd-voltar]'); await p.waitForTimeout(100);
     ok((await titulo(p)) === 'Seus dados' && /Continuar/.test(await p.innerText('[data-jd-entendi]')), `${tag}: Voltar do objetivo mostra "Seus dados" com Continuar`);
     await p.click('[data-jd-entendi]'); await p.waitForTimeout(100);
