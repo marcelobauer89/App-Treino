@@ -121,6 +121,29 @@ const perfil = async (p) => (await H.banco(p)).perfis.find((x) => x.id === 'u1')
   ok(!(await p.isVisible('#jornada-dialog')), 'Mudar meu objetivo fecha no X');
   await p.context().close();
 
+  // Link de teste só no dev: /dev/?boas-vindas abre as 3 etapas mesmo numa conta que já usa; na produção, nada.
+  const USADA = { perfis: [NOVA({ politica_versao: '2026-10-27', novidade_oculta: '2026-10-01T00:00:00Z' })],
+    checkins: [{ id: 'c1', usuario_id: 'u1', tipo: 't1', inicio: '2026-10-20T10:00:00', fim: '2026-10-20T11:00:00', sem_horario: false, obs: '', retroativo: false, series: {} }] };
+  for (const dev of [true, false]) {
+    p = await H.novaPagina(b, { viewport: { width: 390, height: 844 }, dev, extra: USADA });
+    // No dev, o app lê o localStorage com o prefixo "dev:" (como no test53).
+    if (dev) await p.context().addInitScript(() => {
+      const ler = Storage.prototype.getItem.bind(localStorage);
+      if (!sessionStorage.getItem('dev-semeado')) { localStorage.setItem('dev:mock-supabase', ler('mock-supabase')); sessionStorage.setItem('dev-semeado', '1'); }
+    });
+    await p.goto(`${H.PAGINA}?boas-vindas`); await H.prontos(p); await p.waitForTimeout(300);
+    if (dev) {
+      ok(await p.isVisible('#jornada-dialog') && (await passo(p)) === 'Etapa 1 de 3', 'dev ?boas-vindas: conta que já usa vê as 3 etapas', await passo(p));
+      ok(!(await p.evaluate(() => location.search.includes('boas-vindas'))), 'dev: o parâmetro sai do endereço');
+      await p.click('[data-jd-comecar]'); await p.waitForTimeout(100);
+      ok((await titulo(p)) === 'Seus dados' && /Continuar/.test(await p.innerText('[data-jd-entendi]')), 'dev: "Seus dados" com Continuar (política já aceita)');
+    } else {
+      ok(!(await p.isVisible('#jornada-dialog')), 'produção ?boas-vindas: não abre nada');
+    }
+    ok(!p.errs.length, `?boas-vindas (${dev ? 'dev' : 'produção'}): sem erros`, p.errs.join(' | '));
+    await p.context().close();
+  }
+
   await b.close(); srv.close();
   console.log(fails ? `\n${fails} FALHA(S)` : '\nTUDO OK');
   process.exit(fails ? 1 : 0);

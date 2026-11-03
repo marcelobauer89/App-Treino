@@ -4517,10 +4517,12 @@
   // Boas-vindas da conta nova, sem fechar: 'bemvindo' (o que o app faz; não grava nada) → 'dados' (privacidade, só se
   // a política ainda não foi aceita) → 'objetivo'. A privacidade vem antes de qualquer escolha ser gravada (LGPD).
   let jd = null;
+  // Só no ambiente de desenvolvimento: /dev/?boas-vindas abre as boas-vindas completas em qualquer conta, para testar.
+  let bvTeste = false;
   const passosBV = () => ['bemvindo', ...(jd.comDados ? ['dados'] : []), 'objetivo'];
   function abrirJornadas(modo, passo) {
     const boasVindas = modo === 'boas-vindas';
-    jd = { modo, aberta: null, confirmar: null, passo: boasVindas ? passo || 'bemvindo' : null, comDados: boasVindas && politica.disponivel && !politica.aceita };
+    jd = { modo, aberta: null, confirmar: null, passo: boasVindas ? passo || 'bemvindo' : null, comDados: boasVindas && (bvTeste || (politica.disponivel && !politica.aceita)) };
     renderJornadas();
     if (!jornadaDialog.open) jornadaDialog.showModal();
     if (!boasVindas || jd.passo === 'objetivo') registrarEvento('jornadas_abertas', { origem: modo });
@@ -5763,7 +5765,12 @@
     renderizarApp();
     entrarEmCascata();
     // Conta nova: boas-vindas em passos (o app → seus dados → objetivo); a privacidade vem antes de gravar a escolha.
-    if (vaiVerBoasVindas()) mostrarNovidadeSeFaltar();
+    if (window.AMBIENTE.dev && new URLSearchParams(location.search).has('boas-vindas')) {
+      // Teste no dev: tira o parâmetro do endereço (recarregar não abre de novo) e mostra as 3 etapas.
+      history.replaceState(null, '', location.pathname + location.hash);
+      bvTeste = true;
+      abrirJornadas('boas-vindas');
+    } else if (vaiVerBoasVindas()) mostrarNovidadeSeFaltar();
     else if (politica.disponivel && !politica.aceita) abrirPolitica();
     else mostrarNovidadeSeFaltar();
     if (esquecido) {
