@@ -10,12 +10,19 @@ const abrir = async (b, extra, op = {}) => {
   const p = await H.novaPagina(b, { viewport: { width: 390, height: 844 }, ...op, extra });
   await p.addInitScript(() => {
     window.__vibrou = []; navigator.vibrate = (x) => { window.__vibrou.push(x); return true; };
-    // Áudio falso: conta os bipes (osciladores iniciados).
-    window.__bipes = 0;
+    // Áudio falso: conta os bipes tocados pelo <audio> (som principal, toca no silencioso do iPhone),
+    // o trecho mudo que libera o áudio no toque e os bipes da reserva (Web Audio).
+    window.__bipes = 0; window.__mudo = 0; window.__reserva = 0; window.__playFalha = false;
+    HTMLMediaElement.prototype.play = function () {
+      if (window.__playFalha && this.dataset.som === 'bipe') return Promise.reject(new Error('NotAllowedError'));
+      if (this.dataset.som === 'bipe') window.__bipes += 3;
+      if (this.dataset.som === 'mudo') window.__mudo++;
+      return Promise.resolve();
+    };
     const no = () => ({ connect: (d) => d, gain: { setValueAtTime() {}, exponentialRampToValueAtTime() {} }, frequency: {} });
     window.AudioContext = class { constructor() { this.state = 'running'; this.currentTime = 0; this.destination = {}; }
       resume() { return Promise.resolve(); } createGain() { return no(); }
-      createOscillator() { return { ...no(), type: '', start: () => { window.__bipes++; }, stop() {} }; } };
+      createOscillator() { return { ...no(), type: '', start: () => { window.__reserva++; }, stop() {} }; } };
   });
   await p.clock.install({ time: new Date('2026-10-28T18:00:00') });
   await p.goto(H.PAGINA); await H.prontos(p); await p.waitForTimeout(200);
@@ -88,7 +95,8 @@ const contador = (p) => p.locator('#desc-contador').innerText();
     await p.locator('#fab-descanso').screenshot({ path: `${H.SAIDA}/descanso-fab-${tag}.png` });
     await p.clock.runFor(21000); await p.waitForTimeout(80);
     ok((await p.evaluate(() => window.__vibrou.length)) === 1, `${tag}: vibra no fim`);
-    ok((await p.evaluate(() => window.__bipes)) === 3, `${tag}: toca o som no fim (3 bipes)`, String(await p.evaluate(() => window.__bipes)));
+    ok((await p.evaluate(() => window.__mudo)) >= 1, `${tag}: libera o áudio no toque de iniciar`);
+    ok((await p.evaluate(() => window.__bipes)) === 3 && (await p.evaluate(() => window.__reserva)) === 0, `${tag}: toca o som no fim pelo áudio (3 bipes)`, String(await p.evaluate(() => window.__bipes)));
     ok(await p.locator('#fab-descanso').evaluate((e) => e.classList.contains('acabou')) && await p.isHidden('#fab-descanso-tempo'), `${tag}: botão avisa o fim`);
     await p.click('#fab-descanso'); await p.waitForTimeout(80);
     ok(/Bora para a próxima série/.test(await p.innerText('#descanso-body')) && /Novo descanso/.test(await p.innerText('[data-desc-iniciar]')), `${tag}: janela mostra o fim e "Novo descanso"`);
@@ -108,11 +116,20 @@ const contador = (p) => p.locator('#desc-contador').innerText();
   await p.click('#fab-descanso'); await p.click('[data-desc-pular]'); await p.waitForTimeout(50);
   ok(await p.isVisible('[data-desc-iniciar]') && await p.isHidden('#fab-descanso-tempo'), 'Pular para o descanso');
   await p.click('[data-desc-iniciar]'); await p.clock.runFor(121000); await p.waitForTimeout(50);
-  ok((await p.evaluate(() => window.__vibrou.length)) === 0 && (await p.evaluate(() => window.__bipes)) === 0 && /Bora/.test(await p.innerText('#descanso-body')), 'som e vibração desligados: só o aviso na tela');
+  ok((await p.evaluate(() => window.__vibrou.length)) === 0 && (await p.evaluate(() => window.__bipes)) === 0 && (await p.evaluate(() => window.__reserva)) === 0 && /Bora/.test(await p.innerText('#descanso-body')), 'som e vibração desligados: só o aviso na tela');
   await p.clock.runFor(11000); await p.waitForTimeout(100); db = await H.banco(p);
   const desc = (db.eventos || []).filter((e) => e.tipo === 'descanso').map((e) => e.dados.acao).join(' ');
   ok(/pulado/.test(desc) && /completo/.test(desc) && /iniciado/.test(desc), 'eventos de descanso registrados', desc.slice(0, 200));
   ok(!p.errs.length, 'pular/recarregar: sem erros', p.errs.join(' | '));
+  await p.context().close();
+
+  // 3b. Se o áudio for recusado, toca os bipes pela reserva (Web Audio).
+  p = await abrir(b, { perfis: [PERFIL({ temporizador: { ativo: true, segundos: 30, vibrar: true, som: true } })] });
+  await p.evaluate(() => { window.__playFalha = true; });
+  await p.click('#fab-descanso'); await p.click('[data-desc-iniciar]');
+  await p.clock.runFor(31000); await p.waitForTimeout(100);
+  ok((await p.evaluate(() => window.__reserva)) === 3, 'áudio recusado: bipes pela reserva', String(await p.evaluate(() => window.__reserva)));
+  ok(!p.errs.length, 'reserva: sem erros', p.errs.join(' | '));
   await p.context().close();
 
   // 4. Banco sem a coluna: vem ligado e desligar funciona sem mensagem de erro (vale nesta sessão).
