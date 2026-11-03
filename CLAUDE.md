@@ -35,4 +35,7 @@ Os testes ficam em `tests/` (ver `tests/README.md`) e rodam em paralelo com `nod
 - Antes de cada PR para a `dev`: rodar os testes da área mexida (e os que podem ser afetados) e só abrir o PR com eles verdes.
 - Cada PR para a `dev` ou a `main` roda os testes no GitHub (workflow **Testes**: app e painel, banco e e-mail). Fazer o merge só com os três verdes; se algum ficar vermelho, corrigir antes. Mudança no `supabase/schema.sql` precisa passar também no `tests/sql/rodar.sh`.
 - Teste novo de cada mudança vai para `tests/e2e/`, só com dados de exemplo (nunca nomes, e-mails ou ids de vídeo reais).
-- Ao acompanhar os testes, mandar uma mensagem no início e uma no fim com o resumo, não uma por teste (a não ser que o dono peça).
+- O dono quer acompanhar os testes **em tempo real, sempre**:
+  - avisar quando começam, com o link para acompanhar quando for no GitHub;
+  - mandar o resultado de cada teste (ou de cada parte, no GitHub) assim que sai;
+  - no fim, mandar o resumo. Não esperar o fim para dar notícias.
