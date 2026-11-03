@@ -94,4 +94,11 @@ async function voce(p, pagina) {
   if (await p.evaluate(() => location.hash !== '#voce')) { await p.evaluate(() => { location.hash = '#voce'; }); await p.waitForTimeout(80); }
   if (pagina) { await p.click(`[data-voce="${pagina}"]`); await p.waitForTimeout(80); }
 }
-module.exports = { RAIZ, APOIO, SAIDA, servidor, novaPagina, banco, store, prontos, gravacoes, voce, PAGINA };
+// Boas-vindas: marca o objetivo (ou 'zero') e confirma no rodapé. Com um objetivo, espera a animação terminar.
+async function escolherBV(p, id) {
+  await p.click(`[data-jd-marcar="${id}"]`);
+  await p.click('[data-jd-confirmar]');
+  if (id !== 'zero') await p.waitForSelector('#jornada-dialog', { state: 'hidden', timeout: 15000 });
+  await p.waitForTimeout(150);
+}
+module.exports = { RAIZ, APOIO, SAIDA, servidor, novaPagina, banco, store, prontos, gravacoes, voce, escolherBV, PAGINA };

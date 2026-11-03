@@ -73,11 +73,43 @@ const perfil = async (p) => (await H.banco(p)).perfis.find((x) => x.id === 'u1')
     await p.screenshot({ path: `${H.SAIDA}/boas-vindas-tela-${tag}.png` });
 
     // Escolher Hipertrofia grava os treinos e encerra as boas-vindas.
-    await p.click('[data-jd-escolher="hipertrofia"]'); await p.waitForTimeout(400);
+    // Escolher só marca; o Confirmar aparece no rodapé.
+    ok(!(await p.locator('[data-jd-confirmar]').count()), `${tag}: sem Confirmar antes de escolher`);
+    await p.click('[data-jd-marcar="hipertrofia"]'); await p.waitForTimeout(100);
+    ok(await p.isVisible('.bv-rodape [data-jd-confirmar]') && (await p.getAttribute('[data-jd-marcar="hipertrofia"]', 'aria-pressed')) === 'true'
+      && await p.locator('.jornada.selecionada').count() === 1 && await p.isVisible('#jornada-dialog'), `${tag}: Escolher marca o cartão e mostra Confirmar`);
+    ok(!(await perfil(p)).jornada, `${tag}: só marcar não grava`);
+    await p.locator('#jornada-dialog .modal-body').screenshot({ path: `${H.SAIDA}/boas-vindas-3-escolhido-${tag}.png` });
+    await p.click('[data-jd-confirmar]'); await p.waitForTimeout(250);
+    ok(await p.isVisible('.bv-montando') && /Montando/.test(await p.innerText('.bv-montando')), `${tag}: Confirmar abre a animação "Montando seus treinos"`);
+    ok((await perfil(p)).jornada === 'hipertrofia', `${tag}: a escolha é gravada ao confirmar`);
+    await p.waitForSelector('#jornada-dialog', { state: 'hidden', timeout: 15000 }); await p.waitForTimeout(300);
     const pf = await perfil(p);
     ok(!(await p.isVisible('#jornada-dialog')) && pf.jornada === 'hipertrofia' && pf.novidade_oculta, `${tag}: escolher Hipertrofia grava e fecha`, `${pf.jornada} / ${pf.novidade_oculta}`);
     ok(await p.evaluate(() => !document.body.classList.contains('bv-ativa') && getComputedStyle(document.querySelector('main.wrap')).visibility === 'visible'), `${tag}: depois da escolha, o app aparece`);
     ok(!p.errs.length, `${tag}: sem erros`, p.errs.join(' | '));
+    await p.context().close();
+  }
+
+  // Animação "Montando seus treinos" com movimento: treinos um a um, semana, "Tudo pronto!" e só então o app.
+  for (const scheme of ['light', 'dark']) {
+    const p = await abrir(b, { perfis: [NOVA({ politica_versao: '2026-10-27' })] }, { scheme });
+    await p.click('[data-jd-comecar]'); await p.click('[data-jd-marcar="hipertrofia"]'); await p.click('[data-jd-confirmar]');
+    await p.waitForTimeout(1300);
+    const nomes = await p.locator('.mt-treino b').allInnerTexts();
+    ok(nomes.length === 4 && (await p.locator('.mt-treino.on').count()) >= 1, `${scheme}: monta os 4 treinos de Hipertrofia, um a um`, nomes.join(' | '));
+    ok(/Montando/.test(await p.innerText('#mt-etapa')) && await p.evaluate(() => document.body.classList.contains('bv-ativa')), `${scheme}: etapa anunciada e app ainda escondido`);
+    await p.screenshot({ path: `${H.SAIDA}/montando-1-${scheme}.png` });
+    await p.waitForSelector('.bv-montando.semana-on', { timeout: 8000 }); await p.waitForTimeout(450);
+    await p.screenshot({ path: `${H.SAIDA}/montando-2-${scheme}.png` });
+    ok((await p.locator('.mt-treino.feito').count()) === 4 && /semana|pronto/i.test(await p.innerText('#mt-etapa')), `${scheme}: treinos prontos e semana montando`, `${await p.locator('.mt-treino.feito').count()} / ${await p.innerText('#mt-etapa')}`);
+    await p.waitForSelector('.bv-montando.pronto', { timeout: 8000 }); await p.waitForTimeout(250);
+    ok(/Tudo pronto/.test(await p.innerText('#mt-etapa')), `${scheme}: "Tudo pronto!"`);
+    await p.screenshot({ path: `${H.SAIDA}/montando-3-${scheme}.png` });
+    await p.waitForSelector('#jornada-dialog', { state: 'hidden', timeout: 8000 }); await p.waitForTimeout(300);
+    ok(await p.evaluate(() => !document.body.classList.contains('bv-ativa')) && (await p.locator('.treino-btn').count()) === 4
+      && /Hipertrofia/.test(await p.locator('#toast, .toast').first().innerText().catch(() => '')), `${scheme}: depois da animação, o app com os 4 treinos e o aviso com Desfazer`);
+    ok(!p.errs.length, `${scheme}: animação sem erros`, p.errs.join(' | '));
     await p.context().close();
   }
 
@@ -113,14 +145,14 @@ const perfil = async (p) => (await H.banco(p)).perfis.find((x) => x.id === 'u1')
 
   // Montar do zero: sair do editor sem salvar volta ao objetivo; salvar encerra as boas-vindas.
   p = await abrir(b, { perfis: [NOVA({ politica_versao: '2026-10-27' })] });
-  await p.click('[data-jd-comecar]'); await p.click('[data-jd-zero]'); await p.waitForTimeout(150);
+  await p.click('[data-jd-comecar]'); await H.escolherBV(p, 'zero');
   ok(await p.isVisible('#editor-dialog') && !(await p.isVisible('#jornada-dialog')), 'Montar do zero abre o editor');
   ok(await p.evaluate(() => document.body.classList.contains('bv-ativa')), 'Montar do zero: app continua escondido');
   await p.keyboard.press('Escape'); await p.waitForTimeout(150);
   if (await p.locator('[data-ed-sair-sim]').count()) { await p.click('[data-ed-sair-sim]'); await p.waitForTimeout(150); }
   ok(await p.isVisible('#jornada-dialog') && (await titulo(p)) === 'Qual é o seu objetivo?', 'sair sem salvar volta ao objetivo');
   ok(!(await perfil(p)).novidade_oculta, 'sair sem salvar não encerra as boas-vindas');
-  await p.click('[data-jd-zero]'); await p.waitForTimeout(150);
+  await H.escolherBV(p, 'zero');
   await p.locator('#editor-body [data-ed-add]').first().click(); await p.waitForTimeout(100);
   const salvar = p.locator('[data-ed-salvar]');
   if (!(await salvar.isVisible())) { await p.locator('[data-ed-vista="treino"]').first().click().catch(() => {}); await p.waitForTimeout(100); }
