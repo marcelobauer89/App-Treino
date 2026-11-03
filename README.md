@@ -75,6 +75,7 @@ Para testar mudanças sem mexer no app de verdade, existe um segundo app, de des
 
 - O `ambiente.js` escolhe o projeto pelo endereço: tudo o que está em `/dev/` (e em `localhost`) usa o projeto de testes.
 - O app de desenvolvimento mostra um selo **DEV** no canto e `[DEV]` no título da aba.
+- **Testar as boas-vindas:** abra `/App-Treino/dev/?boas-vindas` para ver as 3 etapas (o app, seus dados e o objetivo) em qualquer conta, mesmo uma que já usa o app. Escolher um objetivo troca de verdade os treinos dessa conta no dev (dá para Desfazer). Na produção, o parâmetro não faz nada.
 - Os dois apps ficam no mesmo domínio, então o `ambiente.js` separa o que fica guardado no aparelho: no dev, tudo ganha o prefixo `dev:`, e as sessões, a fila de check-ins e as marcas não se misturam.
 
 ### Como as mudanças andam
