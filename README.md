@@ -158,7 +158,7 @@ Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 a t6 nos check-i
 
 ### Temporizador de descanso
 
-- **Ligar:** Você → Temporizador. Vem desligado. Escolha o descanso padrão (30 s a 3 min) e se, ao terminar, toca um som e o celular vibra (o iPhone não vibra; o aviso fica na tela).
+- **Configurar:** Você → Temporizador. Vem ligado (dá para desligar). Escolha o descanso padrão (30 s a 3 min) e se, ao terminar, toca um som e o celular vibra (o iPhone não vibra; o aviso fica na tela).
 - **Usar:** ligado, aparece um botão redondo no canto direito da tela Treino, logo acima do "Fazer check-in". Ele abre a janela para escolher o tempo e iniciar; durante o descanso há −15 s, +15 s e Pular, e o botão mostra o tempo que falta.
 - **Banco:** a escolha fica em `perfis.temporizador`. Rode de novo o `supabase/schema.sql` para criar a coluna e liberar a gravação; sem ela, o temporizador funciona, mas a escolha vale só até recarregar.
 

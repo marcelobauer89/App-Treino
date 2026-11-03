@@ -26,26 +26,35 @@ const contador = (p) => p.locator('#desc-contador').innerText();
 (async () => {
   const srv = await H.servidor(); const b = await chromium.launch();
 
-  // 1. Desligado por padrão: sem botão; liga em Você e salva na conta.
+  // 1. Ligado por padrão (conta sem nada salvo): botão na tela Treino; desligar em Você salva na conta e some com o botão.
   let p = await abrir(b, { perfis: [PERFIL()] });
-  ok(await p.isHidden('#fab-descanso'), 'desligado: sem botão flutuante na tela Treino');
+  ok(await p.isVisible('#fab-descanso'), 'padrão: botão flutuante na tela Treino');
   await H.voce(p);
-  ok(/Desligado/.test(await p.innerText('#valor-temporizador')), 'lista de Você mostra "Desligado"');
+  ok(/1 min 30/.test(await p.innerText('#valor-temporizador')), 'lista de Você mostra "1 min 30"', await p.innerText('#valor-temporizador'));
+  ok(await p.isHidden('#fab-descanso'), 'botão não aparece fora da tela Treino');
   await H.voce(p, 'temporizador');
-  ok(await p.isHidden('#temp-opcoes'), 'opções escondidas enquanto desligado');
-  await p.locator('label:has(#temp-ativo)').first().click(); await H.gravacoes(p);
-  ok(await p.isVisible('#temp-opcoes') && (await p.locator('#temp-tempos .chip').count()) === 6, 'ligado: mostra os 6 tempos');
+  ok(await p.isChecked('#temp-ativo') && await p.isVisible('#temp-opcoes') && (await p.locator('#temp-tempos .chip').count()) === 6, 'padrão: ligado, com os 6 tempos');
   ok((await p.getAttribute('#temp-tempos [data-temp-padrao="90"]', 'aria-pressed')) === 'true', 'padrão marcado: 1 min 30');
   await p.click('#temp-tempos [data-temp-padrao="45"]'); await H.gravacoes(p);
   let db = await H.banco(p);
   let t = db.perfis.find((x) => x.id === 'u1').temporizador;
   ok(t && t.ativo === true && t.segundos === 45 && t.vibrar === true && t.som === true, 'salvo na conta (som e vibração ligados)', JSON.stringify(t));
+  await p.locator('label:has(#temp-ativo)').first().click(); await H.gravacoes(p);
+  ok(await p.isHidden('#temp-opcoes'), 'desligado: opções escondidas');
+  db = await H.banco(p); t = db.perfis.find((x) => x.id === 'u1').temporizador;
+  ok(t && t.ativo === false, 'desligar fica salvo na conta', JSON.stringify(t));
   await p.clock.runFor(11000); await p.waitForTimeout(100); db = await H.banco(p);
-  ok((db.eventos || []).some((e) => e.tipo === 'temporizador' && e.dados.ativo === true), 'evento temporizador registrado');
-  ok(await p.isHidden('#fab-descanso'), 'botão não aparece fora da tela Treino');
+  ok((db.eventos || []).some((e) => e.tipo === 'temporizador' && e.dados.ativo === false), 'evento temporizador registrado');
   await p.click('[data-tela="treino"]'); await p.waitForTimeout(150);
-  ok(await p.isVisible('#fab-descanso'), 'botão aparece na tela Treino');
+  ok(await p.isHidden('#fab-descanso'), 'desligado: sem botão na tela Treino');
   ok(!p.errs.length, 'configuração: sem erros', p.errs.join(' | '));
+  await p.context().close();
+
+  // 1b. Conta que desligou: continua desligado ao abrir.
+  p = await abrir(b, { perfis: [PERFIL({ temporizador: { ativo: false, segundos: 90, vibrar: true, som: true } })] });
+  ok(await p.isHidden('#fab-descanso'), 'quem desligou não vê o botão');
+  await H.voce(p);
+  ok(/Desligado/.test(await p.innerText('#valor-temporizador')), 'lista de Você mostra "Desligado"');
   await p.context().close();
 
   // 2. Janela, contador e fim (claro/escuro, celular/computador).
@@ -106,12 +115,13 @@ const contador = (p) => p.locator('#desc-contador').innerText();
   ok(!p.errs.length, 'pular/recarregar: sem erros', p.errs.join(' | '));
   await p.context().close();
 
-  // 4. Banco sem a coluna: liga sem mensagem de erro e vale nesta sessão.
+  // 4. Banco sem a coluna: vem ligado e desligar funciona sem mensagem de erro (vale nesta sessão).
   p = await abrir(b, { perfis: [PERFIL()], semColunas: ['temporizador'] });
+  ok(await p.isVisible('#fab-descanso'), 'sem a coluna: botão aparece (padrão ligado)');
   await H.voce(p, 'temporizador');
   await p.locator('label:has(#temp-ativo)').first().click(); await H.gravacoes(p);
   await p.click('[data-tela="treino"]'); await p.waitForTimeout(150);
-  ok(await p.isVisible('#fab-descanso') && !/Não deu para salvar|erro/i.test(await p.locator('.toast, #toast').first().innerText().catch(() => '')), 'sem a coluna: funciona sem erro');
+  ok(await p.isHidden('#fab-descanso') && !/Não deu para salvar|erro/i.test(await p.locator('.toast, #toast').first().innerText().catch(() => '')), 'sem a coluna: desligar funciona sem erro');
   ok(!p.errs.length, 'sem a coluna: sem erros', p.errs.join(' | '));
   await p.context().close();
 

@@ -2274,13 +2274,13 @@
   const mesmoQuePadrao = (treinos) => JSON.stringify(treinosParaSalvar(treinos)) === JSON.stringify(treinosParaSalvar(PLANO_PADRAO));
 
   // ---------- Perfil e configurações (vêm do Supabase depois do login) ----------
-  // Temporizador de descanso (perfis.temporizador): desligado até a pessoa ligar em Você → Temporizador.
+  // Temporizador de descanso (perfis.temporizador): ligado por padrão; a pessoa pode desligar em Você → Temporizador.
   const TEMPOS_DESCANSO = [30, 45, 60, 90, 120, 180];
-  const TEMP_PADRAO = { ativo: false, segundos: 90, vibrar: true, som: true };
+  const TEMP_PADRAO = { ativo: true, segundos: 90, vibrar: true, som: true };
   function lerTemporizador(v) {
     if (!v || typeof v !== 'object') return { ...TEMP_PADRAO };
     const seg = Number(v.segundos);
-    return { ativo: v.ativo === true, segundos: TEMPOS_DESCANSO.includes(seg) ? seg : TEMP_PADRAO.segundos, vibrar: v.vibrar !== false, som: v.som !== false };
+    return { ativo: v.ativo !== false, segundos: TEMPOS_DESCANSO.includes(seg) ? seg : TEMP_PADRAO.segundos, vibrar: v.vibrar !== false, som: v.som !== false };
   }
   const CHAVE_DESCANSO = 'bauer-descanso';
   // desc: { fim (ms) e total (s) enquanto roda; acabou quando terminou; escolhido = tempo marcado na janela }
