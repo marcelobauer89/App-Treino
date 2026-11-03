@@ -1,6 +1,7 @@
 # Testes automáticos a cada PR para a dev ou a main (tests/README.md).
 # Três partes, ao mesmo tempo: app e painel no navegador, schema.sql e regras de acesso num Postgres
 # de verdade, e o resumo semanal por e-mail. O resultado aparece no PR (verde ou vermelho).
+# Sistema fixo (ubuntu-24.04): o Playwright demora a aceitar a versão nova que o GitHub põe em ubuntu-latest.
 name: Testes
 
 on:
@@ -18,7 +19,7 @@ concurrency:
 jobs:
   app:
     name: App e painel
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
@@ -42,7 +43,7 @@ jobs:
 
   banco:
     name: Banco (schema.sql e regras de acesso)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     services:
       postgres:
@@ -64,7 +65,7 @@ jobs:
 
   email:
     name: Resumo semanal por e-mail
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
