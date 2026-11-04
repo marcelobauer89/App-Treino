@@ -289,7 +289,7 @@ async function abrir(b, extra = {}, op = {}) {
 
   // ---------- Conta nova ----------
   p = await abrir(b, { checkins: [], cargas: [] });
-  ok((await txt(p, '#jornada-title')) === 'Bem-vindo ao OSS', 'conta nova vê as boas-vindas');
+  ok((await txt(p, '#jornada-title')) === 'Bem-vindo ao Gestão de Treinos', 'conta nova vê as boas-vindas');
   await p.click('[data-jd-comecar]'); await p.waitForTimeout(100);
   ok((await txt(p, '#jornada-title')) === 'Qual é o seu objetivo?', 'conta nova vê a escolha de como começar');
   ok((await p.locator('#jornada-body .jornada').count()) === 5, 'jornadas prontas e montar do zero');

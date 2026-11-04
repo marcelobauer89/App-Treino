@@ -423,80 +423,89 @@
   body.deslogado .nav, body.deslogado .ativo { display: none !important; }
   /* Celular: painel azul no topo, cortado em diagonal, com a faixa atravessando e saindo pela direita;
      título, texto e botão em largura total embaixo, perto do polegar. */
-  .entrar { min-height: 100dvh; display: grid; grid-template-rows: auto 1fr; overflow-x: hidden; }
-  .entrar-arte {
-    position: relative; height: clamp(230px, 42dvh, 400px); overflow: hidden;
-    background: var(--tatame); clip-path: polygon(0 0, 100% 0, 100% 100%, 0 84%);
+  /* Tela de entrada "Gestão de Treinos": degradê laranja → rosa → roxo, igual para todos (não segue o tema nem o
+     estilo das cores, que valem do login para dentro). Tudo sob #tela-entrar, para vencer as regras dos estilos. */
+  #tela-entrar {
+    --tinta: #ffffff; --tinta-2: rgba(255, 255, 255, .9); --fio: rgba(255, 255, 255, .35); --tatame-tinta: #ffffff;
+    position: relative; min-height: 100dvh; display: flex; justify-content: center; overflow: hidden; color: #fff;
+    background: #db2777;
   }
-  .faixa-arte {
-    position: absolute; left: -12%; width: 135%; top: 46%; height: 54px;
-    background-color: var(--fita);
-    /* costuras do tecido */
-    background-image: repeating-linear-gradient(to bottom, transparent 0 8px, rgba(16, 19, 24, .08) 8px 9px);
-    transform: rotate(-9deg); box-shadow: 0 16px 36px rgba(0, 0, 0, .28);
-    animation: faixa-entra .55s cubic-bezier(.2, .8, .2, 1) both;
+  #tela-entrar .entrar-arte {
+    position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(90% 60% at 15% 10%, #fb923c 0, transparent 60%), radial-gradient(80% 60% at 100% 45%, #ec4899 0, transparent 65%),
+      radial-gradient(90% 70% at 20% 100%, #7c3aed 0, transparent 70%), #db2777;
   }
-  .faixa-ponta {
-    position: absolute; top: 0; bottom: 0; left: 60%; width: 132px;
-    display: flex; gap: 8px; padding-left: 16px; background: var(--faixa);
+  #tela-entrar .entrar-arte::after { content: ""; position: absolute; inset: 0; opacity: .12; background-image: radial-gradient(#fff 1px, transparent 1.2px); background-size: 6px 6px; }
+  #tela-entrar .entrar-corpo {
+    --tinta: #ffffff; --tinta-2: rgba(255, 255, 255, .9); --fio: rgba(255, 255, 255, .35); --tatame-tinta: #ffffff;
+    position: relative; display: flex; flex-direction: column; gap: clamp(12px, 2.4dvh, 22px); width: 100%; max-width: 480px; min-height: 100dvh;
+    padding: calc(clamp(28px, 7dvh, 88px) + env(safe-area-inset-top, 0px)) max(20px, env(safe-area-inset-right, 0px)) calc(20px + env(safe-area-inset-bottom, 0px)) max(20px, env(safe-area-inset-left, 0px));
+    background: none; box-shadow: none; color: #fff;
   }
-  .faixa-ponta i { width: 9px; background: var(--fita); }
-  @keyframes faixa-entra { from { transform: translateX(-28%) rotate(-9deg); opacity: 0; } }
-  .entrar-corpo {
-    display: flex; flex-direction: column; gap: 14px; width: 100%; max-width: 480px;
-    padding: 0 max(16px, env(safe-area-inset-right, 0px)) calc(20px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  #tela-entrar .entrar-marca { align-self: flex-start; display: inline-flex; align-items: center; gap: 10px; padding: 7px 14px 7px 7px; border-radius: 999px; background: rgba(255, 255, 255, .18); }
+  #tela-entrar .entrar-marca i { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: #fff; color: #db2777; font: 900 13px/1 var(--display); font-style: normal; }
+  #tela-entrar .entrar-titulo { margin: 0; font: 800 13px/1.2 var(--texto); letter-spacing: .12em; text-transform: uppercase; color: #fff; }
+  #tela-entrar .entrar-lema {
+    margin: 0; font-family: var(--display); font-stretch: 64%; font-weight: 900; font-size: clamp(54px, 10.5dvh, 88px); line-height: .88; color: #fff;
   }
-  /* O título sobe para o espaço livre que o corte diagonal deixa à esquerda. */
-  .entrar-titulo {
-    position: relative; margin: clamp(-40px, -5dvh, -20px) 0 0;
-    font-family: var(--display); font-stretch: 68%; font-weight: 850;
-    font-size: clamp(50px, 14.5vw, 76px); line-height: .92;
+  #tela-entrar .entrar-lema span { display: block; }
+  #tela-entrar .entrar-lema .contorno { color: transparent; -webkit-text-stroke: 2.5px #fff; }
+  #tela-entrar .entrar-grafico { position: relative; width: calc(100% + 40px); height: clamp(48px, 10dvh, 92px); margin: 0 -20px; }
+  #tela-entrar .entrar-grafico svg { display: block; width: 100%; height: 100%; }
+  /* A bolinha fica fora do SVG esticado, para continuar redonda em qualquer largura. */
+  #tela-entrar .entrar-ponto { position: absolute; left: 84.6%; top: 21.7%; width: 12px; height: 12px; margin: -6px; border-radius: 50%; background: #fff; }
+  #tela-entrar .entrar-texto { margin: 0; max-width: 36ch; font-size: 18px; line-height: 1.38; font-weight: 500; color: #fff; opacity: .95; }
+  #tela-entrar .form-erro { margin: 0; padding: 10px 12px; border-radius: 10px; background: rgba(255, 255, 255, .94); color: #b91c1c; font-weight: 600; }
+  #tela-entrar .entrar-acoes { display: grid; gap: 12px; margin-top: auto; padding-top: 16px; }
+  #tela-entrar .entrar-acoes > .btn { min-height: 52px; background: #fff; color: #be185d; border: 0; box-shadow: 0 10px 30px rgba(76, 29, 149, .3); }
+  #tela-entrar .btn-google {
+    display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; min-height: 54px; padding: 0 20px;
+    border: 0; border-radius: 14px; background: #fff; color: #1f1f1f; font-size: 16px; font-weight: 700;
+    box-shadow: 0 10px 30px rgba(76, 29, 149, .35);
   }
-  .entrar-texto { margin: 0; max-width: 36ch; font-size: 20px; line-height: 1.35; font-weight: 500; color: var(--tinta-2); }
-  /* Ações descem para perto do polegar, como nos apps de treino. */
-  .entrar-acoes { display: grid; gap: 12px; margin-top: auto; padding-top: 20px; }
-  .entrar-acoes .btn { min-height: 52px; }
-  .btn-google {
-    display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; min-height: 52px; padding: 0 20px;
-    border: 1px solid var(--fio); border-radius: 12px; background: var(--papel); color: var(--tinta);
-    font-size: 16px; font-weight: 700;
+  #tela-entrar .btn-google:hover { background: #fdf2f8; }
+  #tela-entrar :is(.btn-google, .entrar-acoes > .btn, a, button):focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+  #tela-entrar .btn-google:disabled { opacity: .7; cursor: wait; }
+  /* Formulário do convite num cartão, com as cores do app (claro), para os campos ficarem legíveis sobre o degradê. */
+  #tela-entrar .convite-form {
+    --tinta: #111418; --tinta-2: #4b5361; --fio: #d9dde3; --papel: #ffffff; --gi: #f3f4f6; --tatame: #2563eb; --tatame-tinta: #1d4ed8; --sobre-tatame: #ffffff;
+    display: grid; gap: 12px; padding: 16px; border-radius: 16px; background: #fff; color: #111418; box-shadow: 0 14px 34px rgba(76, 29, 149, .3);
   }
-  .btn-google:hover { border-color: var(--tinta-2); }
-  .btn-google:focus-visible, .entrar-acoes .btn:focus-visible { outline: 2px solid var(--tatame-tinta); outline-offset: 2px; }
-  .btn-google:disabled { opacity: .6; cursor: wait; }
-  .convite-form { display: grid; gap: 12px; }
+  #tela-entrar .convite-form :is(.btn, .btn-sec) { box-shadow: none; }
+  #tela-entrar .convite-form .form-erro { padding: 0; background: none; }
   .convite-form .btn, .convite-form .btn-sec { min-height: 52px; }
   .convite-form input { text-transform: uppercase; letter-spacing: .12em; font-family: var(--display); font-weight: 700; font-size: 20px; }
   .convite-form input::placeholder { letter-spacing: normal; text-transform: none; font-family: var(--texto); font-weight: 400; font-size: 16px; }
   .convite-ou { display: flex; align-items: center; gap: 12px; color: var(--tinta-2); font-size: 13px; }
   .convite-ou::before, .convite-ou::after { content: ""; flex: 1; border-top: 1px solid var(--fio); }
-  .convite-pedido { margin: 0; padding: 10px 12px; border-radius: 10px; background: var(--feito-suave); color: var(--feito-tinta); font-size: 14px; }
+  .convite-pedido { margin: 0; padding: 10px 12px; border-radius: 10px; background: #dcfce7; color: #166534; font-size: 14px; }
   .convite-sair { justify-self: center; }
-  .entrar-privacidade { margin: 0; font-size: 13px; color: var(--tinta-2); text-align: center; }
+  #tela-entrar .entrar-privacidade { margin: 0; font-size: 13px; color: #fff; opacity: .88; text-align: center; }
+  #tela-entrar .entrar-privacidade a { color: #fff; text-decoration: underline; text-underline-offset: 2px; }
   /* Enquanto a sessão carrega, uma barra fina corre no lugar do botão. */
-  .entrar-carga { position: relative; height: 3px; border-radius: 2px; overflow: hidden; background: var(--fio); }
-  .entrar-carga::after {
-    content: ""; position: absolute; inset: 0 auto 0 0; width: 35%; border-radius: 2px; background: var(--tatame);
+  #tela-entrar .entrar-carga { position: relative; height: 3px; border-radius: 2px; overflow: hidden; background: rgba(255, 255, 255, .35); }
+  #tela-entrar .entrar-carga::after {
+    content: ""; position: absolute; inset: 0 auto 0 0; width: 35%; border-radius: 2px; background: #fff;
     animation: carga 1.1s ease-in-out infinite;
   }
   @keyframes carga { from { transform: translateX(-100%); } to { transform: translateX(290%); } }
-  .credito { margin: 8px 0 0; font-size: 14px; color: var(--tinta-2); text-align: center; }
-  .credito a { color: var(--tatame-tinta); font-weight: 600; text-underline-offset: 3px; }
-  /* Computador: tela dividida, painel largo à esquerda com corte inclinado e o formulário à direita. */
+  #tela-entrar .credito { margin: 6px 0 0; font-size: 13.5px; color: #fff; opacity: .88; text-align: center; }
+  #tela-entrar .credito a { color: #fff; font-weight: 700; text-underline-offset: 3px; }
+  /* Telas baixas: a linha de evolução sai para tudo caber sem rolar. */
+  @media (max-height: 680px) { #tela-entrar .entrar-grafico { display: none; } }
   @media (min-width: 900px) {
-    .entrar { grid-template-rows: none; grid-template-columns: 7fr 5fr; align-items: center; }
-    .entrar-arte { height: 100dvh; clip-path: polygon(0 0, 100% 0, 86% 100%, 0 100%); }
-    .faixa-arte { top: 50%; height: 72px; left: -10%; width: 125%; }
-    .faixa-ponta { width: 176px; gap: 11px; padding-left: 22px; }
-    .faixa-ponta i { width: 12px; }
-    .entrar-corpo { max-width: 440px; padding: 48px 40px; justify-self: start; min-height: 0; }
-    .entrar-titulo { margin: 0; font-size: 80px; }
-    .entrar-acoes { margin-top: 16px; }
-    .credito { margin-top: 16px; text-align: left; }
+    #tela-entrar .entrar-corpo { padding-top: 10dvh; padding-bottom: 32px; }
   }
+  @media (prefers-reduced-motion: no-preference) {
+    #tela-entrar .entrar-lema span { animation: mt-sobe .6s cubic-bezier(.2, .8, .2, 1) both; }
+    #tela-entrar .entrar-lema span:nth-child(2) { animation-delay: .12s; }
+    #tela-entrar .entrar-lema span:nth-child(3) { animation-delay: .24s; }
+    #tela-entrar .entrar-grafico .linha { stroke-dasharray: 520; stroke-dashoffset: 520; animation: entrar-linha 1.4s cubic-bezier(.3, .7, .2, 1) .4s forwards; }
+    #tela-entrar .entrar-ponto { animation: mt-pop .5s cubic-bezier(.3, 1.6, .5, 1) 1.5s both; }
+  }
+  @keyframes entrar-linha { to { stroke-dashoffset: 0; } }
   @media (prefers-reduced-motion: reduce) {
-    .faixa-arte { animation: none; }
-    .entrar-carga::after { animation: none; width: 100%; opacity: .5; }
+    #tela-entrar .entrar-carga::after { animation: none; width: 100%; opacity: .5; }
   }
   /* Carregando os dados de quem já entrou: o "molde" da tela Treino com brilho passando,
      detalhes nas cores dos treinos e a etapa atual. */
@@ -1225,7 +1234,6 @@
   .priv-baixar span { display: grid; }
   .priv-baixar b { font-size: 15px; }
   .priv-baixar small { font-size: 13px; color: var(--tinta-2); }
-  .entrar-privacidade a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
 
   /* Estilos neon (Você → Aparência). Só cores, sombras e brilho: o layout é o mesmo do estilo Padrão.
      São sempre escuros, qualquer que seja o tema. Sem data-estilo, vale o Padrão acima. */
@@ -1456,11 +1464,17 @@
 
 <section class="entrar" id="tela-entrar" aria-labelledby="entrar-titulo">
   <!-- Arte: a faixa branca com a ponteira e 4 graus, a mesma figura que marca os níveis dos exercícios. -->
-  <div class="entrar-arte" aria-hidden="true">
-    <span class="faixa-arte"><span class="faixa-ponta"><i></i><i></i><i></i><i></i></span></span>
-  </div>
+  <div class="entrar-arte" aria-hidden="true"></div>
   <div class="entrar-corpo">
-    <h1 class="entrar-titulo" id="entrar-titulo">OSS</h1>
+    <div class="entrar-marca"><i aria-hidden="true">GT</i><h1 class="entrar-titulo" id="entrar-titulo">Gestão de Treinos</h1></div>
+    <p class="entrar-lema"><span>Treine.</span> <span class="contorno">Registre.</span> <span>Evolua.</span></p>
+    <div class="entrar-grafico" aria-hidden="true">
+      <svg viewBox="0 0 390 92" preserveAspectRatio="none">
+        <path d="M0 80 C60 76 80 64 120 66 S190 50 220 46 S300 26 330 20 S370 10 390 6 V92 H0Z" fill="rgba(255,255,255,.14)"/>
+        <path class="linha" d="M0 80 C60 76 80 64 120 66 S190 50 220 46 S300 26 330 20 S370 10 390 6" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+      </svg>
+      <i class="entrar-ponto"></i>
+    </div>
     <p class="entrar-texto" id="entrar-status" role="status">Carregando seus treinos…</p>
     <p class="form-erro" id="entrar-erro" role="alert" hidden></p>
     <div class="entrar-acoes">
@@ -4779,7 +4793,7 @@
     const item = (txt) => `<li>${ICON_CHECK}<span>${txt}</span></li>`;
     if (jd.passo === 'bemvindo') {
       return `
-      ${cabecaBV('Boas-vindas', 'Bem-vindo ao OSS')}
+      ${cabecaBV('Boas-vindas', 'Bem-vindo ao Gestão de Treinos')}
       <p class="resumo-enc">Seu treino de Jiu Jitsu e academia num lugar só.</p>
       <ul class="novidade-lista">
         ${item('<b>Treino do dia</b>: a ficha de hoje, com as cargas de cada série')}
@@ -5919,7 +5933,7 @@
     registrarEvento('convite_usado', { resultado: r });
     if (r === 'ok' || r === 'ja_liberado') {
       acesso.liberado = true;
-      toast('Convite aceito! Bem-vindo ao OSS.');
+      toast('Convite aceito! Bem-vindo ao Gestão de Treinos.');
     }
     return r;
   }
@@ -5980,8 +5994,8 @@
     $('entrar-status').textContent = {
       carregando: 'Carregando seus treinos…',
       config: 'O app ainda não está ligado ao Supabase. Preencha o endereço e a chave do projeto no ambiente.js (o passo a passo está no README).',
-      login: conviteGuardado() ? 'Você foi convidado para o OSS! Entre com o Google para começar.' : 'Exercícios de Jiu Jitsu e hipertrofia',
-      convite: 'O OSS é só para convidados. Digite o código do convite que você recebeu ou peça acesso.',
+      login: conviteGuardado() ? 'Você foi convidado para o Gestão de Treinos! Entre com o Google para começar.' : 'Seus treinos, suas cargas e seu progresso, sempre com você.',
+      convite: 'O Gestão de Treinos é só para convidados. Digite o código do convite que você recebeu ou peça acesso.',
       erro: msg,
     }[modo];
   }
