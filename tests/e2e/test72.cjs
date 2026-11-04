@@ -1,5 +1,5 @@
-// Check-in visual: cartões com o ícone de cada atividade no formulário e a celebração em tela cheia
-// (ícone animado da atividade, resumo e o nº do treino na semana) ao salvar um check-in novo e ao encerrar um treino.
+// Celebração do check-in em tela cheia (✓ grande na cor da atividade, resumo e o nº do treino na semana)
+// ao salvar um check-in novo e ao encerrar um treino. O formulário continua com o selo e o nome, sem ícones.
 const { chromium } = require('playwright');
 const H = require('../apoio/harness.cjs');
 let fails = 0;
@@ -27,14 +27,15 @@ async function checkin(p, tipo, data) {
   for (const scheme of ['light', 'dark']) {
     const p = await abrir(b, { scheme });
     await p.click('#fab-checkin'); await p.waitForTimeout(100);
-    const cards = await p.locator('#form-body .opcao-card').count();
-    ok(cards >= 7 && (await p.locator('#form-body .opcao-card .ic-tipo').count()) === cards, `${scheme}: tipos em cartões, cada um com ícone`, String(cards));
+    const opcoes = await p.locator('#form-body .opcao').count();
+    ok(opcoes >= 7 && !(await p.locator('#form-body .opcao svg').count()), `${scheme}: formulário como antes (selo e nome, sem ícones)`, String(opcoes));
     await p.locator('#form-dialog .modal-body').screenshot({ path: `${H.SAIDA}/checkin-form-${scheme}.png` });
     await p.click('#form-body [data-fechar]');
     await checkin(p, 'surf', '2026-10-28');
     ok(await p.isVisible('#celebra-dialog') && (await p.getAttribute('.cel', 'data-grupo')) === 'surf', `${scheme}: celebração do surf em tela cheia`);
     ok((await txt(p, '#cel-title')) === 'Check-in feito!' && (await txt(p, '.cel-tipo')) === 'Surf' && /Hoje · 07:00 às/.test(await txt(p, '.cel-info')), `${scheme}: título, tipo e horário`, await txt(p, '.cel-info'));
-    ok(/1º treino da semana/.test(await txt(p, '.cel-semana')) && await p.locator('.cel-mar').count() === 1, `${scheme}: 1º treino da semana e o mar do surf`);
+    ok(/1º treino da semana/.test(await txt(p, '.cel-semana')), `${scheme}: 1º treino da semana`);
+    ok(await p.locator('.cel-icone svg').count() === 1 && !(await p.locator('.cel .ic-tipo, .cel-mar, .cel-linhas').count()), `${scheme}: ✓ no centro, sem o ícone da atividade`);
     ok(await p.evaluate(() => document.body.classList.contains('bv-ativa')), `${scheme}: app escondido atrás`);
     const db = await H.banco(p);
     ok(db.checkins.some((c) => c.tipo === 'surf'), `${scheme}: check-in gravado na hora`);
@@ -58,7 +59,7 @@ async function checkin(p, tipo, data) {
       await checkin(p, tipo, data);
       if (tipo === 'muay' && await p.isVisible('#f-erro')) { await p.fill('#f-inicio', '18:00'); await p.click('[data-salvar-form]'); await p.waitForTimeout(250); }
       n++;
-      ok((await p.getAttribute('.cel', 'data-grupo')) === grupo && await p.locator('.cel-icone .ic-tipo').count() === 1, `${tipo}: celebração com o ícone de ${grupo}`);
+      ok((await p.getAttribute('.cel', 'data-grupo')) === grupo && await p.locator('.cel-icone svg').count() === 1, `${tipo}: celebração na cor de ${grupo}`);
       ok(new RegExp(`${n}º treino da semana`).test(await txt(p, '.cel-semana')), `${tipo}: ${n}º treino da semana`, await txt(p, '.cel-semana'));
       await p.clock.runFor(1500); await p.waitForTimeout(100);
       await p.screenshot({ path: `${H.SAIDA}/celebra-${grupo}.png` });
@@ -78,7 +79,7 @@ async function checkin(p, tipo, data) {
     const p = await abrir(b, { checkins: [{ id: 'a1', usuario_id: 'u1', tipo: 'jiu', inicio: '2026-10-28T18:30:00', fim: null, sem_horario: false, obs: '', retroativo: false, series: {} }] });
     await p.click('#ativo [data-encerrar]'); await p.waitForTimeout(100);
     await p.click('[data-confirmar-enc]'); await p.waitForTimeout(250);
-    ok(await p.isVisible('#celebra-dialog') && (await txt(p, '#cel-title')) === 'Treino concluído!' && (await p.getAttribute('.cel', 'data-grupo')) === 'jiu', 'encerrar: "Treino concluído!" com o ícone do Jiu Jitsu');
+    ok(await p.isVisible('#celebra-dialog') && (await txt(p, '#cel-title')) === 'Treino concluído!' && (await p.getAttribute('.cel', 'data-grupo')) === 'jiu', 'encerrar: "Treino concluído!" na cor do Jiu Jitsu');
     ok(/18:30 às 20:00 · 1 h 30 min/.test(await txt(p, '.cel-info')), 'encerrar: horário e duração', await txt(p, '.cel-info'));
     await p.keyboard.press('Escape'); await p.waitForTimeout(150);
     ok(!(await p.isVisible('#celebra-dialog')) && /encerrado/.test(await txt(p, '#toast')), 'Esc fecha e mostra o aviso de encerrado');
