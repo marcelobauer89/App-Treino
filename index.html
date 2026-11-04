@@ -891,6 +891,9 @@
   .bv-voltar { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; padding: 0 8px 0 0; border: 0; background: none; color: var(--tatame-tinta); font: inherit; font-weight: 700; cursor: pointer; }
   .bv-voltar:focus-visible { outline: 3px solid var(--tatame-tinta); outline-offset: 2px; border-radius: 6px; }
   #jornada-title:focus { outline: none; }
+  /* Mudar meu objetivo: aviso da versão anterior ao lado do Confirmar. */
+  .bv-rodape-aviso .bv-aviso { flex: 1; margin: 0; font-size: 13.5px; line-height: 1.35; color: var(--tinta-2); text-align: left; }
+  .bv-rodape-aviso .modal-done { flex: 0 0 auto; }
   /* Cartão escolhido nas boas-vindas (o Confirmar do rodapé aplica). */
   .jornada.selecionada { border-color: var(--tatame); box-shadow: 0 0 0 2px var(--tatame); }
   .jornada-acoes .btn.escolhido { display: inline-flex; align-items: center; justify-content: center; gap: 6px; background: var(--feito-tinta); color: var(--papel); }
@@ -4319,6 +4322,8 @@
       return renderEditor();
     }
     Object.entries(ed.treinos).forEach(([id, t]) => { t.nome = limpar(t.nome, 40) || `Treino ${id}`; t.subtitulo = limpar(t.subtitulo, 60); });
+    // Mudou algo de verdade (e não veio das boas-vindas)? Então os treinos se "remontam" na animação antes do aviso.
+    const animar = !ed.daBoasVindas && edMudou();
     const valor = mesmoQuePadrao(ed.treinos) ? null : treinosParaSalvar(ed.treinos);
     const antes = Object.keys(TREINOS);
     // Cópia do que existia antes de salvar, para Desfazer agora ou restaurar depois.
@@ -4349,9 +4354,12 @@
     atualizarCheckinUI();
     if (telaAtual() === 'voce') renderConfig();
     const fora = Object.keys(TREINOS).filter((id) => !config.semana.flat().includes(`t${id}`));
-    toastAcao(saiuDaSemana ? 'Treinos salvos. O treino excluído saiu da sua semana.'
+    const avisar = () => toastAcao(saiuDaSemana ? 'Treinos salvos. O treino excluído saiu da sua semana.'
       : novos.length || fora.length ? 'Treinos salvos. Coloque os treinos na semana em Você → Minha semana.'
         : 'Treinos salvos.', 'Desfazer', () => restaurarAnterior('desfazer'));
+    if (!animar) return avisar();
+    animarMontagem({ titulo: 'Atualizando seus treinos', inicio: 'Salvando suas mudanças…', fimTitulo: 'Treinos atualizados!',
+      aoTerminar: () => { fecharJornadas('editor'); avisar(); } });
   }
 
   const fotoDosTreinos = () => ({ treinos: treinosParaSalvar(TREINOS), semana: copiaSemana(config.semana), em: new Date().toISOString(), jornada });
@@ -4684,14 +4692,14 @@
     }
     return null;
   }
-  // Nas boas-vindas, "Escolher" só marca o cartão; o Confirmar do rodapé aplica a escolha.
-  function botaoEscolherBV(id) {
+  // "Escolher" só marca o cartão; o Confirmar do rodapé aplica a escolha (nas boas-vindas e em Mudar meu objetivo).
+  function botaoEscolherBV(id, rotulo = 'Escolher') {
     const marcado = jd.selecionado === id;
-    return `<button class="${marcado ? 'btn escolhido' : 'btn'}" type="button" data-jd-marcar="${id}" aria-pressed="${marcado}">${marcado ? `${ICON_CHECK}Escolhido` : 'Escolher'}</button>`;
+    return `<button class="${marcado ? 'btn escolhido' : 'btn'}" type="button" data-jd-marcar="${id}" aria-pressed="${marcado}">${marcado ? `${ICON_CHECK}Escolhido` : rotulo}</button>`;
   }
   function renderJornadas(foco) {
     const boasVindas = jd.modo === 'boas-vindas';
-    if (boasVindas && jd.passo === 'montando') return;
+    if (jd.passo === 'montando') return;
     if (boasVindas && jd.passo !== 'objetivo') {
       $('jornada-body').innerHTML = renderPassoBV();
       return;
@@ -4709,14 +4717,10 @@
           <div><h4>${seloHTML(`t${n}`)}${esc(j.treinos[n].nome)}${j.treinos[n].subtitulo ? ` <small>${esc(j.treinos[n].subtitulo)}</small>` : ''}</h4>
           <ol>${j.treinos[n].exercicios.map((e) => `<li>${esc(e.nome)} <small>${esc(e.dose)}</small></li>`).join('')}</ol></div>`).join('')}
         </div>` : ''}
-        ${jd.confirmar === j.id ? `<div class="ed-confirma" role="alert">
-          <p>Mudar seu objetivo para ${esc(j.nome)}? Seus treinos e a semana de agora ficam guardados como versão anterior, e dá para desfazer.</p>
-          <div><button class="btn" type="button" data-jd-sim="${j.id}">Mudar objetivo</button><button class="btn-sec" type="button" data-jd-cancelar>Cancelar</button></div>
-        </div>` : `<div class="jornada-acoes">
+        <div class="jornada-acoes">
           <button class="btn-sec" type="button" data-jd-ver="${j.id}" aria-expanded="${aberta}"${aberta ? ` aria-controls="jornada-treinos-${j.id}"` : ''}>${aberta ? 'Esconder treinos' : 'Ver treinos'}</button>
-          ${atual === j && ehDaJornada(j) ? '' : boasVindas ? botaoEscolherBV(j.id)
-    : `<button class="btn" type="button" data-jd-escolher="${j.id}">${atual === j ? 'Voltar ao original' : 'Escolher'}</button>`}
-        </div>`}
+          ${atual === j && ehDaJornada(j) ? '' : botaoEscolherBV(j.id, atual === j ? 'Voltar ao original' : 'Escolher')}
+        </div>
       </li>`;
     };
     $('jornada-body').innerHTML = `
@@ -4731,7 +4735,8 @@
           <div class="jornada-acoes">${boasVindas ? botaoEscolherBV('zero') : '<button class="btn-sec" type="button" data-jd-zero>Montar meus treinos</button>'}</div>
         </li>
       </ul>
-      ${boasVindas ? rodapeBV(jd.selecionado ? `<button class="modal-done" type="button" data-jd-confirmar>${jd.selecionado === 'zero' ? 'Montar meus treinos' : 'Confirmar'}</button>` : '') : ''}`;
+      ${boasVindas ? rodapeBV(jd.selecionado ? `<button class="modal-done" type="button" data-jd-confirmar>${jd.selecionado === 'zero' ? 'Montar meus treinos' : 'Confirmar'}</button>` : '')
+    : jd.selecionado ? `<div class="bv-rodape bv-rodape-aviso"><p class="bv-aviso">Seus treinos e a semana de agora ficam guardados como versão anterior, e dá para desfazer.</p><button class="modal-done" type="button" data-jd-confirmar>Confirmar</button></div>` : ''}`;
     if (foco) { const el = $('jornada-body').querySelector(foco); if (el) el.focus(); }
   }
   function fecharJornadas(escolha) {
@@ -4761,29 +4766,16 @@
       if (jd.selecionado === 'zero') { fecharJornadas('montar'); return abrirEditor({ doZero: true, daBoasVindas: true }); }
       return montarTreinosBV(jd.selecionado);
     }
-    if (b && b.dataset.jdEscolher) {
-      // Na troca, confirma antes; nas boas-vindas a conta ainda não tem nada para perder.
-      if (jd.modo === 'trocar') { jd.confirmar = b.dataset.jdEscolher; return renderJornadas(`[data-jd-sim="${b.dataset.jdEscolher}"]`); }
-      const modo = jd.modo;
-      fecharJornadas('jornada');
-      return aplicarJornada(b.dataset.jdEscolher, modo);
-    }
-    if (b && b.dataset.jdSim) { const modo = jd.modo; fecharJornadas('jornada'); return aplicarJornada(b.dataset.jdSim, modo); }
-    if (b && 'jdCancelar' in b.dataset) {
-      const id = jd.confirmar;
-      jd.confirmar = null;
-      return renderJornadas(`[data-jd-escolher="${id}"]`);
-    }
     if (b && 'jdZero' in b.dataset) {
       const daBoasVindas = jd.modo === 'boas-vindas';
       fecharJornadas('montar');
       return abrirEditor({ doZero: true, daBoasVindas });
     }
-    // As boas-vindas não fecham sem uma escolha (sem X, sem Esc e sem tocar fora).
-    if (jd && jd.modo === 'boas-vindas') return;
+    // As boas-vindas não fecham sem uma escolha, e a animação não fecha no meio (sem X, sem Esc e sem tocar fora).
+    if (jd && (jd.modo === 'boas-vindas' || jd.passo === 'montando')) return;
     if (e.target === jornadaDialog || e.target.closest('[data-fechar]')) fecharJornadas('fechou');
   });
-  jornadaDialog.addEventListener('cancel', (e) => { e.preventDefault(); if (jd && jd.modo !== 'boas-vindas') fecharJornadas('fechou'); });
+  jornadaDialog.addEventListener('cancel', (e) => { e.preventDefault(); if (jd && jd.modo !== 'boas-vindas' && jd.passo !== 'montando') fecharJornadas('fechou'); });
 
   // Semana sugerida: tira os treinos da semana de agora e põe os da jornada, sem mexer em jiu, muay, surf e cardio.
   function semanaDaJornada(j) {
@@ -4818,16 +4810,24 @@
   }
   const avisarJornada = (j) => toastAcao(`Objetivo ${j.nome} escolhido. Os treinos já estão na sua semana.`, 'Desfazer', () => restaurarAnterior('desfazer'));
 
-  // ---------- Animação "Montando seus treinos" (depois de confirmar o objetivo nas boas-vindas) ----------
-  // Grava a escolha na hora; a animação mostra os treinos e a semana se formando e só então abre o app.
+  // ---------- Animação "Montando seus treinos" ----------
+  // Ao confirmar um objetivo (boas-vindas ou Mudar meu objetivo) e ao salvar treinos alterados no editor.
+  // A gravação é feita antes; a animação mostra os treinos e a semana se formando, em tela cheia, e só então mostra o app.
   const ICON_HALTER = '<svg viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg>';
   const DIAS_LETRA = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
   let montagemTimers = [];
   function montarTreinosBV(id) {
     const j = jornadaPorId(id);
     if (!j) return;
-    aplicarJornada(id, 'boas-vindas', { semAviso: true });
+    aplicarJornada(id, jd.modo, { semAviso: true });
+    animarMontagem({ rotulo: `Treinos de ${j.nome}`, aoTerminar: () => { fecharJornadas('jornada'); avisarJornada(j); } });
+  }
+  function animarMontagem({ titulo = 'Montando seus treinos', inicio = 'Analisando seu objetivo…', fimTitulo = 'Treinos prontos!', rotulo = 'Seus treinos', aoTerminar }) {
+    if (!jd) jd = { modo: 'editor' };
     jd.passo = 'montando';
+    jornadaDialog.classList.add('bv-tela');
+    document.body.classList.add('bv-ativa');
+    if (!jornadaDialog.open) jornadaDialog.showModal();
     const ids = Object.keys(TREINOS);
     const treinos = ids.map((n, i) => {
       const t = TREINOS[n];
@@ -4853,10 +4853,10 @@
           <span class="mt-faiscas" aria-hidden="true">${faiscas}</span>
         </div>
         <div class="mt-textos">
-          <h3 id="jornada-title" tabindex="-1">Montando seus treinos</h3>
-          <p class="mt-etapa" id="mt-etapa" role="status" aria-live="polite">Analisando seu objetivo…</p>
+          <h3 id="jornada-title" tabindex="-1">${titulo}</h3>
+          <p class="mt-etapa" id="mt-etapa" role="status" aria-live="polite">${inicio}</p>
         </div>
-        <ol class="mt-treinos" aria-label="Treinos de ${esc(j.nome)}">${treinos}</ol>
+        <ol class="mt-treinos" aria-label="${esc(rotulo)}">${treinos}</ol>
         <div class="mt-semana-box"><p class="mt-rotulo">Sua semana</p><ol class="mt-semana">${semana}</ol></div>
       </div>`;
     $('jornada-title').focus();
@@ -4885,12 +4885,12 @@
     t += reduzido ? 250 : 1000;
     linha.push([t, () => {
       etapa('Tudo pronto! Bons treinos.');
-      $('jornada-title').textContent = 'Treinos prontos!';
+      $('jornada-title').textContent = fimTitulo;
       raiz.classList.add('pronto');
       raiz.style.setProperty('--prog', '1');
     }]);
     t += reduzido ? 600 : 1500;
-    linha.push([t, () => { fecharJornadas('jornada'); avisarJornada(j); }]);
+    linha.push([t, aoTerminar]);
     montagemTimers.forEach(clearTimeout);
     montagemTimers = linha.map(([ms, fn]) => setTimeout(fn, ms));
   }

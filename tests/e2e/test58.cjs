@@ -21,7 +21,7 @@ const CINCO = Object.fromEntries([1, 2, 3, 4, 5].map((n) => [n, { nome: `Treino 
     ok((await p.locator('[data-ed-treino]').count()) === 6, `${scheme}: 6 treinos no editor`);
     ok(await p.locator('[data-ed-novo]').isDisabled(), `${scheme}: com 6, "+ Novo treino" travado`);
     await p.screenshot({ path: `${H.SAIDA}/seis-editor-${scheme}.png` });
-    await p.click('[data-ed-salvar]'); await p.waitForTimeout(400); await H.gravacoes(p);
+    await H.salvarEditor(p); await p.waitForTimeout(400); await H.gravacoes(p);
     const db = await H.banco(p);
     ok(Object.keys(db.perfis[0].treinos || {}).join(',') === '1,2,3,4,5,6' && db.perfis[0].treinos['6'].exercicios[0].nome === 'Sissy squat', `${scheme}: 6º treino salvo no banco`, Object.keys(db.perfis[0].treinos || {}).join(','));
     // Tela Treino

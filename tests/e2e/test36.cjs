@@ -9,7 +9,7 @@ const PERFIL = { id: 'u1', nome: 'Marcelo Bauer', email: 'marcelo@exemplo.com', 
 const ANTIGO = [{ id: 'c1', usuario_id: 'u1', tipo: 't2', inicio: '2026-10-19T10:00:00', fim: '2026-10-19T11:00:00', sem_horario: false, recuperacao: 4, obs: '', retroativo: false, series: {} }];
 const CARGAS = [{ usuario_id: 'u1', data: '2026-10-19', treino: 't2', series: { 'Supino no chão': [{ carga: 20 }, { carga: 22 }, null] } }];
 const SHOT = (n) => `${H.SAIDA}/${n}.png`;
-const salvar = (p) => p.click('[data-ed-salvar]');
+const salvar = (p) => H.salvarEditor(p);
 
 async function abrir(b, extra = {}, op = {}) {
   const p = await H.novaPagina(b, { extra: { perfis: [{ ...PERFIL, ...(extra.perfil || {}) }], checkins: extra.checkins ?? ANTIGO, cargas: extra.cargas ?? CARGAS }, ...op });

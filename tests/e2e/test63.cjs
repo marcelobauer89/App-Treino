@@ -82,7 +82,7 @@ const abrir = (b, extra, op = {}) => H.novaPagina(b, { viewport: op.viewport || 
         // Personalizar: tira um exercício e salva.
         await p.click('#editar-treinos');
         await p.click('[data-ed-remover="0"]');
-        await p.click('[data-ed-salvar]'); await H.gravacoes(p);
+        await H.salvarEditor(p); await H.gravacoes(p);
         ok(/personalizados por você/.test(await txt(p, '#meus-treinos-nota')) && (await H.banco(p)).perfis[0].jornada === 'hipertrofia', 'personalizar: jornada continua, agora personalizada');
         await p.evaluate(() => { location.hash = '#voce'; }); await p.waitForTimeout(100);
         ok((await txt(p, '#valor-treinos')) === 'Hipertrofia (personalizada)', 'lista de Você mostra (personalizada)', await txt(p, '#valor-treinos'));
@@ -97,13 +97,19 @@ const abrir = (b, extra, op = {}) => H.novaPagina(b, { viewport: op.viewport || 
   await H.voce(p, 'treinos');
   await p.click('#trocar-jornada');
   ok((await txt(p, '#jornada-title')) === 'Mudar meu objetivo' && !(await p.locator('#jornada-body #novidade-ocultar').count()), 'Mudar meu objetivo abre sem a caixa de boas-vindas');
-  await p.click('[data-jd-escolher="mobilidade"]');
-  ok(/ficam guardados/.test(await txt(p, '#jornada-body .ed-confirma')) && await p.evaluate(() => document.activeElement.dataset.jdSim === 'mobilidade'), 'pede confirmação antes de trocar');
+  ok(!(await p.locator('[data-jd-confirmar]').count()), 'sem Confirmar antes de escolher');
+  await p.click('[data-jd-marcar="mobilidade"]');
+  ok(/ficam guardados/.test(await txt(p, '#jornada-body .bv-aviso')) && await p.isVisible('.bv-rodape [data-jd-confirmar]')
+    && (await p.getAttribute('[data-jd-marcar="mobilidade"]', 'aria-pressed')) === 'true', 'Escolher marca e mostra o aviso e o Confirmar');
   await p.screenshot({ path: `${S}/jornadas-confirmar.png` });
-  await p.click('[data-jd-cancelar]');
+  await p.click('[data-jd-marcar="mobilidade"]');
   db = await H.banco(p);
-  ok(JSON.stringify(db.perfis[0].treinos) === JSON.stringify(PROPRIO), 'cancelar não muda nada');
-  await p.click('[data-jd-escolher="mobilidade"]'); await p.click('[data-jd-sim="mobilidade"]'); await H.gravacoes(p);
+  ok(JSON.stringify(db.perfis[0].treinos) === JSON.stringify(PROPRIO) && !(await p.locator('[data-jd-confirmar]').count()), 'desmarcar não muda nada');
+  await p.click('[data-jd-marcar="mobilidade"]'); await p.click('[data-jd-confirmar]'); await p.waitForTimeout(200);
+  ok(await p.isVisible('.bv-montando') && await p.evaluate(() => document.body.classList.contains('bv-ativa')), 'Confirmar mostra a animação em tela cheia');
+  await p.keyboard.press('Escape'); await p.waitForTimeout(100);
+  ok(await p.isVisible('.bv-montando'), 'a animação não fecha no Esc');
+  await p.waitForSelector('#jornada-dialog', { state: 'hidden', timeout: 15000 }); await H.gravacoes(p);
   db = await H.banco(p);
   ok(db.perfis[0].jornada === 'mobilidade' && db.perfis[0].treinos['3'].nome === 'Pegada', 'trocou para Mobilidade e prevenção');
   ok(JSON.stringify(db.perfis[0].semana) === JSON.stringify([[], ['t1'], ['jiu'], ['t2'], ['jiu'], ['t3'], []]), 'semana com os treinos novos e o jiu mantido', JSON.stringify(db.perfis[0].semana));

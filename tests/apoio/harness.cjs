@@ -98,7 +98,20 @@ async function voce(p, pagina) {
 async function escolherBV(p, id) {
   await p.click(`[data-jd-marcar="${id}"]`);
   await p.click('[data-jd-confirmar]');
-  if (id !== 'zero') await p.waitForSelector('#jornada-dialog', { state: 'hidden', timeout: 15000 });
+  for (let i = 0; id !== 'zero' && i < 60 && await p.locator('#jornada-dialog[open]').count(); i++) {
+    await p.clock.runFor(500).catch(() => {});
+    await p.waitForTimeout(120);
+  }
   await p.waitForTimeout(150);
 }
-module.exports = { RAIZ, APOIO, SAIDA, servidor, novaPagina, banco, store, prontos, gravacoes, voce, escolherBV, PAGINA };
+// Editor de treinos: toca em Salvar e, se a animação "Atualizando seus treinos" abrir, espera ela terminar
+// (avança o relógio falso quando o teste usa um).
+async function salvarEditor(p) {
+  await p.click('[data-ed-salvar]');
+  await p.waitForTimeout(80);
+  for (let i = 0; i < 60 && await p.locator('#jornada-dialog[open]').count(); i++) {
+    await p.clock.runFor(500).catch(() => {});
+    await p.waitForTimeout(120);
+  }
+}
+module.exports = { RAIZ, APOIO, SAIDA, servidor, novaPagina, banco, store, prontos, gravacoes, voce, escolherBV, salvarEditor, PAGINA };
