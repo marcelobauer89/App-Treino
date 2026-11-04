@@ -26,7 +26,7 @@ function servidor() {
 const PERFIL = { id: 'u1', nome: 'Marcelo Bauer', email: 'marcelo@exemplo.com', foto: '', tema: 'auto', dias_jiu: [2, 4], novidade_oculta: '2026-10-01T00:00:00Z' };
 const SESSAO = { user: { id: 'u1', email: 'marcelo@exemplo.com', user_metadata: { full_name: 'Marcelo Bauer' } } };
 
-// opcoes: { scheme, logado (padrão true), local: {chave: valor}, configurar (padrão true) }
+// opcoes: { scheme, logado (padrão true), local: {chave: valor}, configurar (padrão true), celebracao (padrão false) }
 async function novaPagina(b, opcoes = {}) {
   const { scheme = 'light', logado = true, local = {}, configurar = true, checkins = [], extra = {}, viewport = { width: 375, height: 760 }, userAgent } = opcoes;
   const ctx = await b.newContext({ viewport, deviceScaleFactor: 2, colorScheme: scheme, ...(userAgent ? { userAgent } : {}) });
@@ -64,6 +64,8 @@ async function novaPagina(b, opcoes = {}) {
   db.perfis = db.perfis.map((x) => ('liberado' in x ? x : { ...x, liberado: true }));
   // Testes antigos: política já aceita e consentimento de saúde dado (os campos aparecem como antes).
   db.perfis = db.perfis.map((x) => ({ politica_versao: '2026-10-27', consentimento_saude: 'sim', ...x }));
+  // A celebração do check-in fica desligada nos testes antigos; celebracao: true liga (test72).
+  if (!opcoes.celebracao) await ctx.addInitScript(() => { window.__semCelebracao = true; });
   await ctx.addInitScript(([db, local]) => {
     if (sessionStorage.getItem('semeado')) return;
     localStorage.setItem('mock-supabase', JSON.stringify(db));

@@ -157,6 +157,11 @@ Cada pessoa pode montar até 6 treinos (t1 a t6), com até 15 exercícios cada, 
 
 Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 a t6 nos check-ins e nas cargas e cria as colunas `treinos`, `novidade_treinos` e `novidade_oculta`.
 
+### Check-in visual
+
+- **Formulário:** a escolha do treino é uma grade de cartões, cada um com o ícone da atividade (halter, faixa, luva, prancha e bicicleta).
+- **Celebração:** ao salvar um check-in novo ou encerrar um treino em andamento, a tela inteira mostra o ícone animado da atividade, o horário, a duração e o nº do treino na semana. Fecha sozinha em uns 4 segundos ou no **Continuar**. Editar um check-in não celebra.
+
 ### Temporizador de descanso
 
 - **Configurar:** Você → Temporizador. Vem ligado (dá para desligar). Escolha o descanso padrão (30 s a 3 min) e se, ao terminar, toca um som e o celular vibra (o iPhone não vibra; o aviso fica na tela).
