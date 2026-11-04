@@ -11,6 +11,7 @@ const ok = (c, l, x = '') => { if (!c) fails++; console.log(`${c ? 'PASS' : 'FAI
     let p = await H.novaPagina(b, { scheme, viewport: { width: 390, height: 844 }, local: { 'bauer-x': 'producao' } });
     await p.goto(H.PAGINA); await H.prontos(p); await p.waitForTimeout(300);
     ok(!/DEV/.test(await p.title()) && !(await p.getByText('DEV', { exact: true }).count()), `${scheme}: produção sem selo nem [DEV]`);
+    ok((await p.title()) === 'Gestão de Treinos' && (await p.getAttribute('meta[property="og:title"]', 'content')) === 'Gestão de Treinos', `${scheme}: nome "Gestão de Treinos" no título e no compartilhamento`, await p.title());
     ok((await p.evaluate(() => localStorage.getItem('bauer-x'))) === 'producao', `${scheme}: produção lê as chaves sem prefixo`);
     ok(!p.errs.length, `${scheme}: produção sem erros`, p.errs.join(' | '));
     await p.context().close();
