@@ -4859,7 +4859,8 @@
     $('jornada-title').focus();
     const raiz = $('jornada-body').querySelector('.bv-montando');
     const reduzido = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const passo = reduzido ? 180 : 650;
+    // Com movimento: cerca de 7,5 a 8 s no total (+1 s nos treinos, +0,5 s na semana e +0,5 s no "pronto").
+    const passo = reduzido ? 180 : 650 + Math.round(1000 / ids.length);
     const etapa = (txt) => { $('mt-etapa').textContent = txt; };
     const linha = [];
     let t = reduzido ? 150 : 700;
@@ -4879,14 +4880,14 @@
       raiz.classList.add('semana-on');
       raiz.style.setProperty('--prog', '0.92');
     }]);
-    t += reduzido ? 250 : 1000;
+    t += reduzido ? 250 : 1500;
     linha.push([t, () => {
       etapa('Tudo pronto! Bons treinos.');
       $('jornada-title').textContent = fimTitulo;
       raiz.classList.add('pronto');
       raiz.style.setProperty('--prog', '1');
     }]);
-    t += reduzido ? 600 : 1500;
+    t += reduzido ? 600 : 2000;
     linha.push([t, aoTerminar]);
     montagemTimers.forEach(clearTimeout);
     montagemTimers = linha.map(([ms, fn]) => setTimeout(fn, ms));

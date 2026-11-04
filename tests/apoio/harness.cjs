@@ -98,7 +98,7 @@ async function voce(p, pagina) {
 async function escolherBV(p, id) {
   await p.click(`[data-jd-marcar="${id}"]`);
   await p.click('[data-jd-confirmar]');
-  for (let i = 0; id !== 'zero' && i < 60 && await p.locator('#jornada-dialog[open]').count(); i++) {
+  for (let i = 0; id !== 'zero' && i < 150 && await p.locator('#jornada-dialog[open]').count(); i++) {
     await p.clock.runFor(500).catch(() => {});
     await p.waitForTimeout(120);
   }
@@ -109,7 +109,7 @@ async function escolherBV(p, id) {
 async function salvarEditor(p) {
   await p.click('[data-ed-salvar]');
   await p.waitForTimeout(80);
-  for (let i = 0; i < 60 && await p.locator('#jornada-dialog[open]').count(); i++) {
+  for (let i = 0; i < 150 && await p.locator('#jornada-dialog[open]').count(); i++) {
     await p.clock.runFor(500).catch(() => {});
     await p.waitForTimeout(120);
   }
