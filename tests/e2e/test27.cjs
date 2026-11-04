@@ -59,17 +59,22 @@ const ADM = {
   // 4. Admin, celular e computador, claro e escuro
   for (const scheme of ['light', 'dark']) for (const viewport of [{ width: 375, height: 760 }, { width: 360, height: 760 }, { width: 1280, height: 900 }]) {
     p = await H.novaPagina(b, { scheme, viewport, extra: { admin: ADM } });
+    // Sem a entrada em cascata do painel: com ela, os cartões ainda estavam se mexendo quando o teste media as posições.
+    await p.emulateMedia({ reducedMotion: 'reduce' });
     await p.clock.install({ time: T });
     await p.goto(ADMIN); await p.waitForSelector('#painel:not([hidden])');
     const tag = `${scheme}-${viewport.width}`;
     const sw = await p.evaluate(() => document.documentElement.scrollWidth - innerWidth);
     ok(sw <= 0, `${tag}: sem rolagem horizontal`, String(sw));
     // Números: 2 colunas no celular, último na linha inteira; texto curto só no celular
+    // Espera as fontes: sem elas, os cartões podem mudar 1 px de lugar logo depois de carregar (falhava às vezes no GitHub).
+    await p.evaluate(() => document.fonts.ready); await p.waitForTimeout(100);
     const caixas = await p.locator('#kpis .kpi').evaluateAll((els) => els.map((e) => { const r = e.getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width }; }));
+    const mesma = (a, c) => Math.abs(a - c) <= 1;
     const ctxs = await p.locator('#kpis .kpi .ctx').allInnerTexts();
     const larguraKpis = await p.locator('#kpis').evaluate((e) => e.getBoundingClientRect().width);
     if (viewport.width < 720) {
-      ok(caixas[0].y === caixas[1].y && caixas[2].y === caixas[3].y && caixas[2].y > caixas[0].y && caixas[0].x < caixas[1].x, `${tag}: números em 2 colunas`);
+      ok(mesma(caixas[0].y, caixas[1].y) && mesma(caixas[2].y, caixas[3].y) && caixas[2].y > caixas[0].y + 1 && caixas[0].x < caixas[1].x, `${tag}: números em 2 colunas`, JSON.stringify(caixas.slice(0, 4).map((c) => Math.round(c.y))));
       ok(Math.abs(caixas[4].w - larguraKpis) < 1 && caixas[4].y > caixas[2].y, `${tag}: último card na linha inteira`);
       ok(!/nos últimos/.test(ctxs.join(' ')) && /do planejado/.test(ctxs[3]) && !/semana montada/.test(ctxs[3]), `${tag}: textos curtos`, ctxs.join(' | ').replace(/\s+/g, ' '));
       const kpisAlt = await p.locator('#kpis').evaluate((e) => e.getBoundingClientRect().height);
@@ -86,7 +91,8 @@ const ADM = {
       ok(sit.y < nome.y + nome.height && sit.x > nome.x, `${tag}: situação na linha do nome, à direita`);
       ok(await txt(p, '#usuarios-corpo tr:nth-child(4) .resumo-cel') === 'sem uso · 0 check-ins · 0% do plano', `${tag}: resumo de quem nunca usou`);
     } else {
-      ok(caixas.length === 7 && new Set(caixas.map((c) => Math.round(c.y))).size === 2 && caixas.slice(0, 4).every((c) => c.y === caixas[0].y), `${tag}: 7 números em 2 linhas (4 + 3) no computador`);
+      ok(caixas.length === 7 && caixas.slice(0, 4).every((c) => mesma(c.y, caixas[0].y)) && caixas.slice(4).every((c) => mesma(c.y, caixas[4].y)) && caixas[4].y > caixas[0].y + 1,
+        `${tag}: 7 números em 2 linhas (4 + 3) no computador`, JSON.stringify(caixas.map((c) => Math.round(c.y))));
       ok(/nos últimos 30 dias/.test(ctxs[0]) && /semana montada/.test(ctxs[3]), `${tag}: textos longos no computador`);
       await p.click('#tab-usuarios'); 
       ok(await p.locator('#usuarios th').count() === 8 && await p.locator('#usuarios thead').isVisible() && await p.locator('#usuarios-corpo .resumo-cel').first().isHidden(), `${tag}: tabela intacta`);
