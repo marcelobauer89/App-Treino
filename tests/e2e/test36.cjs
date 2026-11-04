@@ -9,7 +9,7 @@ const PERFIL = { id: 'u1', nome: 'Marcelo Bauer', email: 'marcelo@exemplo.com', 
 const ANTIGO = [{ id: 'c1', usuario_id: 'u1', tipo: 't2', inicio: '2026-10-19T10:00:00', fim: '2026-10-19T11:00:00', sem_horario: false, recuperacao: 4, obs: '', retroativo: false, series: {} }];
 const CARGAS = [{ usuario_id: 'u1', data: '2026-10-19', treino: 't2', series: { 'Supino no chão': [{ carga: 20 }, { carga: 22 }, null] } }];
 const SHOT = (n) => `${H.SAIDA}/${n}.png`;
-const salvar = (p) => p.click('[data-ed-salvar]');
+const salvar = (p) => H.salvarEditor(p);
 
 async function abrir(b, extra = {}, op = {}) {
   const p = await H.novaPagina(b, { extra: { perfis: [{ ...PERFIL, ...(extra.perfil || {}) }], checkins: extra.checkins ?? ANTIGO, cargas: extra.cargas ?? CARGAS }, ...op });
@@ -289,11 +289,13 @@ async function abrir(b, extra = {}, op = {}) {
 
   // ---------- Conta nova ----------
   p = await abrir(b, { checkins: [], cargas: [] });
-  ok((await txt(p, '#jornada-title')) === 'Como você quer treinar?', 'conta nova vê a escolha de como começar');
+  ok((await txt(p, '#jornada-title')) === 'Bem-vindo ao OSS', 'conta nova vê as boas-vindas');
+  await p.click('[data-jd-comecar]'); await p.waitForTimeout(100);
+  ok((await txt(p, '#jornada-title')) === 'Qual é o seu objetivo?', 'conta nova vê a escolha de como começar');
   ok((await p.locator('#jornada-body .jornada').count()) === 5, 'jornadas prontas e montar do zero');
-  ok(await p.locator('#novidade-ocultar').isVisible(), 'conta nova também tem a caixa');
+  ok(!(await p.locator('#novidade-ocultar').count()) && !(await p.locator('#jornada-body [data-fechar]').count()), 'boas-vindas sem caixa e sem X');
   await p.waitForTimeout(400); await p.screenshot({ path: SHOT('pt-nova-light') });
-  await p.click('[data-jd-zero]');
+  await H.escolherBV(p, 'zero');
   ok(await p.locator('#ed-busca').isVisible(), 'montar abre direto a biblioteca');
   await p.locator('.ed-fixo [data-ed-vista="treino"]').click();
   await salvar(p);
@@ -308,13 +310,13 @@ async function abrir(b, extra = {}, op = {}) {
   ok(!(await H.banco(p)).perfis[0].semana || !(await H.banco(p)).perfis[0].semana.flat().some((t) => /^t[23]$/.test(t)), 'semana sem treinos que não existem');
   await p.click('[data-tela="dashboard"]'); await p.waitForTimeout(100);
   await p.reload(); await H.prontos(p); await p.waitForTimeout(200);
-  ok((await txt(p, '#novidade-title')) === 'Baita atualização!' && await p.locator('#novidade-ocultar').isVisible(), 'conta nova que montou os treinos passa a ver "Baita atualização!"');
-  await p.click('#novidade-body [data-fechar]');
+  ok(!(await p.isVisible('#novidade-dialog')) && !(await p.isVisible('#jornada-dialog')), 'conta nova que montou os treinos nas boas-vindas não vê mais avisos');
   ok(p.errs.length === 0, 'sem erros (conta nova)', p.errs.join(' | '));
   await p.context().close();
 
   p = await abrir(b, { checkins: [], cargas: [] });
-  await p.click('[data-jd-escolher="jiu"]'); await H.gravacoes(p);
+  await p.click('[data-jd-comecar]');
+  await H.escolherBV(p, 'jiu'); await H.gravacoes(p);
   ok((await H.banco(p)).perfis[0].treinos == null && (await p.locator('.treino-btn').count()) === 3, 'conta nova com o plano pronto');
   await p.context().close();
 

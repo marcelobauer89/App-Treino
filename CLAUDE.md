@@ -1,12 +1,13 @@
 # Instruções para o Claude
 
-## PRs: abrir e fazer o merge sem esperar aprovação
+## PRs: perguntar antes de abrir; depois, fazer o merge sem esperar aprovação
 
 O dono do repositório não quer abrir nem aceitar PRs pelo GitHub. Ao terminar uma mudança:
 
 1. Faça o commit na branch de trabalho (`claude/...`, criada a partir da `dev`) e o push.
-2. Abra o PR para a **`dev`** e, com os testes do GitHub verdes, faça o merge você mesmo (método `merge`), sem pedir confirmação. O `/dev/` é publicado sozinho em 1 a 2 minutos.
-3. **Produção:** quando o dono pedir para subir para produção ("manda pra prod", "pode publicar"), abra o PR de `dev` para `main` e faça o merge na hora, também sem pedir confirmação.
+2. **Pergunte ao dono se já pode abrir o PR** (ele pode querer juntar mais ajustes antes). Só abra quando ele disser que sim.
+3. Com o sim, abra o PR para a **`dev`** e, com os testes do GitHub verdes, faça o merge você mesmo (método `merge`). O `/dev/` é publicado sozinho em 1 a 2 minutos.
+4. **Produção:** quando o dono pedir para subir para produção ("manda pra prod", "pode publicar"), abra o PR de `dev` para `main` e faça o merge na hora, também sem pedir confirmação.
 
 Regras:
 

@@ -35,6 +35,8 @@ const T = new Date('2026-10-27T15:00:00'); // terça: treino com vídeos na list
     const p = await H.novaPagina(b, { semVideos: true, extra: { perfis: [{ id: 'u1', nome: 'Ana', email: 'a@x.com', foto: '', tema: 'auto', dias_jiu: [2, 4], novidade_oculta: null, novidade_treinos: null, treinos: null }], checkins: contaNova ? [] : [{ id: 'c', usuario_id: 'u1', tipo: 't1', inicio: '2026-10-20T10:00:00', fim: '2026-10-20T11:00:00', sem_horario: false, obs: '', retroativo: false, series: {} }] } });
     await p.clock.install({ time: T });
     await p.goto(H.PAGINA); await p.waitForTimeout(900);
+    // Conta nova: a biblioteca aparece no passo do objetivo das boas-vindas (depois de "Começar").
+    if (contaNova) { await p.click('[data-jd-comecar]').catch(() => {}); await p.waitForTimeout(100); }
     const t = (await p.locator(contaNova ? '#jornada-body' : '#novidade-body').innerText().catch(() => '')).replace(/\s+/g, ' ');
     ok(t.length > 20 && !/vídeo/.test(t) && /136 exercícios/.test(t), `aviso ${contaNova ? 'de conta nova' : 'de novidade'} sem vídeo`, t.slice(0, 160));
     await p.context().close();

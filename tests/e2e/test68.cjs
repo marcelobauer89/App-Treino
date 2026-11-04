@@ -30,7 +30,7 @@ const sobra = { id: 'c-cali', usuario_id: 'u1', tipo: 'cali', inicio: '2026-11-0
   await a.clock.install({ time: T });
   await a.goto(ADMIN); await a.waitForSelector('#painel:not([hidden])'); await a.waitForTimeout(300);
   ok(!/Calistenia/.test(await a.locator('#painel').innerText()), 'painel sem Calistenia');
-  ok(/Jiu-jitsu/.test(await a.locator('#treinos-lista').innerText()), 'painel conta os outros check-ins normalmente');
+  ok(/Jiu Jitsu/.test(await a.locator('#treinos-lista').innerText()), 'painel conta os outros check-ins normalmente');
   ok(!a.errs.length, 'painel: sem erros', a.errs.join(' | '));
   await b.close(); srv.close();
   console.log(fails ? `\n${fails} FALHA(S)` : '\nTUDO OK');

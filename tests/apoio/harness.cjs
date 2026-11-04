@@ -26,7 +26,7 @@ function servidor() {
 const PERFIL = { id: 'u1', nome: 'Marcelo Bauer', email: 'marcelo@exemplo.com', foto: '', tema: 'auto', dias_jiu: [2, 4], novidade_oculta: '2026-10-01T00:00:00Z' };
 const SESSAO = { user: { id: 'u1', email: 'marcelo@exemplo.com', user_metadata: { full_name: 'Marcelo Bauer' } } };
 
-// opcoes: { scheme, logado (padrão true), local: {chave: valor}, configurar (padrão true) }
+// opcoes: { scheme, logado (padrão true), local: {chave: valor}, configurar (padrão true), celebracao (padrão false) }
 async function novaPagina(b, opcoes = {}) {
   const { scheme = 'light', logado = true, local = {}, configurar = true, checkins = [], extra = {}, viewport = { width: 375, height: 760 }, userAgent } = opcoes;
   const ctx = await b.newContext({ viewport, deviceScaleFactor: 2, colorScheme: scheme, ...(userAgent ? { userAgent } : {}) });
@@ -64,6 +64,8 @@ async function novaPagina(b, opcoes = {}) {
   db.perfis = db.perfis.map((x) => ('liberado' in x ? x : { ...x, liberado: true }));
   // Testes antigos: política já aceita e consentimento de saúde dado (os campos aparecem como antes).
   db.perfis = db.perfis.map((x) => ({ politica_versao: '2026-10-27', consentimento_saude: 'sim', ...x }));
+  // A celebração do check-in fica desligada nos testes antigos; celebracao: true liga (test72).
+  if (!opcoes.celebracao) await ctx.addInitScript(() => { window.__semCelebracao = true; });
   await ctx.addInitScript(([db, local]) => {
     if (sessionStorage.getItem('semeado')) return;
     localStorage.setItem('mock-supabase', JSON.stringify(db));
@@ -94,4 +96,24 @@ async function voce(p, pagina) {
   if (await p.evaluate(() => location.hash !== '#voce')) { await p.evaluate(() => { location.hash = '#voce'; }); await p.waitForTimeout(80); }
   if (pagina) { await p.click(`[data-voce="${pagina}"]`); await p.waitForTimeout(80); }
 }
-module.exports = { RAIZ, APOIO, SAIDA, servidor, novaPagina, banco, store, prontos, gravacoes, voce, PAGINA };
+// Boas-vindas: marca o objetivo (ou 'zero') e confirma no rodapé. Com um objetivo, espera a animação terminar.
+async function escolherBV(p, id) {
+  await p.click(`[data-jd-marcar="${id}"]`);
+  await p.click('[data-jd-confirmar]');
+  for (let i = 0; id !== 'zero' && i < 150 && await p.locator('#jornada-dialog[open]').count(); i++) {
+    await p.clock.runFor(500).catch(() => {});
+    await p.waitForTimeout(120);
+  }
+  await p.waitForTimeout(150);
+}
+// Editor de treinos: toca em Salvar e, se a animação "Atualizando seus treinos" abrir, espera ela terminar
+// (avança o relógio falso quando o teste usa um).
+async function salvarEditor(p) {
+  await p.click('[data-ed-salvar]');
+  await p.waitForTimeout(80);
+  for (let i = 0; i < 150 && await p.locator('#jornada-dialog[open]').count(); i++) {
+    await p.clock.runFor(500).catch(() => {});
+    await p.waitForTimeout(120);
+  }
+}
+module.exports = { RAIZ, APOIO, SAIDA, servidor, novaPagina, banco, store, prontos, gravacoes, voce, escolherBV, salvarEditor, PAGINA };

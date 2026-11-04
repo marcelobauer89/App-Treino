@@ -52,7 +52,7 @@ const ck = (id, tipo, ini, fim, extra = {}) => ({ id, usuario_id: 'u1', tipo, in
       ok((await txt(p, '#form-title')) === 'Editar check-in' && await p.inputValue('#f-inicio') === '17:35' && await p.inputValue('#f-dur') === '50', 'form prefilled');
       await p.waitForTimeout(400); await p.screenshot({ path: 'ed-light-form.png' });
       await p.fill('#f-inicio', '19:30'); await p.click('[data-salvar-form]');
-      ok((await txt(p, '#f-erro')).includes('sobrepõe ao Jiu-jitsu'), 'overlap with another check-in refused');
+      ok((await txt(p, '#f-erro')).includes('sobrepõe ao Jiu Jitsu'), 'overlap with another check-in refused');
       await p.fill('#f-inicio', '17:00'); await p.fill('#f-dur', '70');
       ok(await p.locator('input[name="f-rec"]').count() === 0, 'sem recuperação no formulário');
       await p.fill('#f-obs', 'Ajustei o horário');

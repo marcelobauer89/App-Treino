@@ -81,7 +81,7 @@ async function arrastar(p, de, para, { soltar = true, passos = 12 } = {}) {
     await p.click('[data-ed-alca="2"]');
     ok((await nomes(p)).join('|') === t1.join('|'), `${scheme}: tocar sem arrastar não muda a ordem`);
     // Salvar grava a ordem
-    await p.click('[data-ed-salvar]'); await H.gravacoes(p);
+    await H.salvarEditor(p); await H.gravacoes(p);
     const db = await H.banco(p);
     // O editor abre no treino do dia (depende da data): confere o treino que estava aberto.
     ok(db.perfis[0].treinos && Object.values(db.perfis[0].treinos).some((t) => t.exercicios.map((e) => e.nome).join('|') === t1.join('|')), `${scheme}: ordem salva no banco`);

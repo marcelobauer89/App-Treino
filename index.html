@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f3f4f6" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0f1115" media="(prefers-color-scheme: dark)">
-<title>Bauer • Jiu-Jitsu + Hipertrofia</title>
+<title>Bauer • Jiu Jitsu + Hipertrofia</title>
 <script src="ambiente.js"></script>
 <script>
   // Aplica o tema escolhido antes da primeira pintura, para a tela não piscar.
@@ -865,6 +865,49 @@
   /* O selo azul do treino continua visível sobre o fundo azul da opção marcada. */
   .opcao input:checked + span .selo { box-shadow: 0 0 0 2px var(--sobre-tatame); }
   .opcao input:focus-visible + span { outline: 2px solid var(--tatame-tinta); outline-offset: 2px; }
+  /* Celebração do check-in, em tela cheia. */
+  dialog.modal.celebra { width: 100vw; max-width: 100vw; height: 100dvh; max-height: 100dvh; margin: 0; border: 0; border-radius: 0; background: var(--papel); }
+  dialog.modal.celebra::backdrop { background: transparent; }
+  .celebra .modal-body { min-height: 100dvh; display: grid; place-items: center; padding: calc(24px + env(safe-area-inset-top, 0px)) 16px calc(24px + env(safe-area-inset-bottom, 0px)); }
+  .cel { display: grid; justify-items: center; gap: 6px; width: 100%; max-width: 420px; text-align: center; }
+  .cel-palco {
+    position: relative; display: grid; place-items: center; width: 200px; height: 200px; margin-bottom: 14px; border-radius: 50%;
+    background: radial-gradient(circle, color-mix(in srgb, var(--cor) 24%, transparent) 0 58%, transparent 60%);
+  }
+  .cel-icone { display: grid; place-items: center; color: var(--cor); }
+  .cel-icone svg { width: 104px; height: 104px; stroke-width: 2.8; }
+  .cel-onda { position: absolute; inset: 22px; border-radius: 50%; border: 3px solid var(--cor); opacity: 0; }
+  .cel-faiscas { position: absolute; inset: 0; pointer-events: none; }
+  .cel-faiscas i { position: absolute; left: 50%; top: 50%; width: 9px; height: 9px; margin: -4.5px; border-radius: 2px; background: var(--c); opacity: 0; }
+  .cel h3 { margin: 0; font-family: var(--display); font-stretch: 80%; font-weight: 800; font-size: 36px; line-height: 1.05; }
+  .cel h3:focus { outline: none; }
+  .cel-tipo { margin: 2px 0 0; font-size: 20px; font-weight: 800; color: var(--cor); }
+  .cel-info { margin: 0; color: var(--tinta-2); font-weight: 600; }
+  .cel-semana { margin: 10px 0 0; padding: 8px 16px; border-radius: 999px; background: var(--gi); font-weight: 600; }
+  .cel-semana b { font-size: 18px; color: var(--cor); }
+  .cel-ok-btn { width: auto; min-width: 180px; margin-top: 22px; padding: 0 28px; }
+  @media (prefers-reduced-motion: no-preference) {
+    .cel-palco { animation: cel-pop .7s cubic-bezier(.3, 1.5, .5, 1) both; }
+    .cel > :not(.cel-palco) { animation: mt-sobe .5s cubic-bezier(.2, .8, .2, 1) both; }
+    .cel > :nth-child(2) { animation-delay: .35s; }
+    .cel > :nth-child(3) { animation-delay: .45s; }
+    .cel > :nth-child(4) { animation-delay: .55s; }
+    .cel > :nth-child(5) { animation-delay: .75s; }
+    .cel > :nth-child(6) { animation-delay: .95s; }
+    .cel-onda { animation: cel-onda 1.8s ease-out .3s infinite; }
+    .cel-onda2 { animation-delay: 1.2s; }
+    .cel-faiscas i { animation: cel-faisca 1.1s cubic-bezier(.15, .7, .3, 1) .45s both; }
+    .cel-faiscas i:nth-child(odd) { animation-duration: 1.4s; }
+    .cel-semana b { display: inline-block; animation: mt-pop .5s cubic-bezier(.3, 1.6, .5, 1) 1.05s both; }
+    .cel-icone { animation: cel-check .7s cubic-bezier(.3, 1.6, .5, 1) .3s both; }
+  }
+  @keyframes cel-pop { 0% { transform: scale(.3); opacity: 0; } 100% { transform: none; opacity: 1; } }
+  @keyframes cel-onda { 0% { transform: scale(.85); opacity: .7; } 100% { transform: scale(1.35); opacity: 0; } }
+  @keyframes cel-faisca {
+    0% { opacity: 1; transform: rotate(var(--a)) translateY(0) scale(1.1); }
+    100% { opacity: 0; transform: rotate(var(--a)) translateY(-130px) scale(.4); }
+  }
+  @keyframes cel-check { 0% { transform: scale(.2) rotate(-25deg); opacity: 0; } 100% { transform: none; opacity: 1; } }
 
   /* Aviso da novidade e editor "Meus treinos" */
   .novidade-selo {
@@ -875,6 +918,115 @@
   .novidade-lista li { display: flex; gap: 10px; align-items: flex-start; font-size: 15px; }
   .novidade-lista svg { flex: 0 0 auto; margin-top: 3px; color: var(--checkin); }
   .novidade-acoes { display: grid; gap: 8px; }
+  /* Boas-vindas em etapas: cabeçalho fixo ao rolar (etapa e Voltar, etiqueta e título); botão principal à direita. */
+  .bv-cabeca {
+    position: sticky; top: 0; z-index: 2; display: grid; justify-items: start; gap: 12px;
+    margin: -20px -16px 0; padding: 20px 16px 14px; background: var(--papel); border-bottom: 1px solid var(--fio);
+  }
+  .bv-titulo { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; width: 100%; }
+  .bv-titulo h3 { margin: 0; font-family: var(--display); font-stretch: 80%; font-weight: 800; font-size: 26px; line-height: 1.1; }
+  .bv-etapa { flex: 0 0 auto; font-size: 14px; font-weight: 700; color: var(--tinta-2); white-space: nowrap; }
+  .bv-rodape {
+    position: sticky; bottom: 0; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    margin: 0 -16px -20px; padding: 12px 16px calc(16px + env(safe-area-inset-bottom, 0px)); background: var(--papel); border-top: 1px solid var(--fio);
+  }
+  .bv-rodape .modal-done { width: auto; min-width: 160px; margin: 0 0 0 auto; padding: 0 28px; }
+  .bv-voltar { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; padding: 0 8px 0 0; border: 0; background: none; color: var(--tatame-tinta); font: inherit; font-weight: 700; cursor: pointer; }
+  .bv-voltar:focus-visible { outline: 3px solid var(--tatame-tinta); outline-offset: 2px; border-radius: 6px; }
+  #jornada-title:focus { outline: none; }
+  /* Cartão escolhido nas boas-vindas (o Confirmar do rodapé aplica). */
+  .jornada.selecionada { border-color: var(--tatame); box-shadow: 0 0 0 2px var(--tatame); }
+  .jornada-acoes .btn.escolhido { display: inline-flex; align-items: center; justify-content: center; gap: 6px; background: var(--feito-tinta); color: var(--papel); }
+  .jornada-acoes .btn.escolhido svg { color: currentColor; }
+
+  /* Animação "Montando seus treinos". */
+  .bv-montando { display: grid; justify-items: center; gap: 18px; padding: 8px 0 4px; text-align: center; }
+  .mt-anel { position: relative; width: 132px; height: 132px; }
+  .mt-anel > svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .mt-anel circle { fill: none; stroke-width: 9; }
+  .mt-fundo { stroke: var(--fio); }
+  .mt-barra {
+    stroke: var(--tatame); stroke-linecap: round; stroke-dasharray: 339.3;
+    stroke-dashoffset: calc(339.3 * (1 - var(--prog, 0))); transition: stroke-dashoffset .6s cubic-bezier(.3, .7, .2, 1), stroke .4s;
+  }
+  .mt-icone { position: absolute; inset: 0; display: grid; place-items: center; color: var(--tatame); transition: opacity .3s, transform .4s; }
+  .mt-icone svg { width: 48px; height: 48px; }
+  .mt-pronto { opacity: 0; transform: scale(.4); color: var(--feito-tinta); }
+  .mt-pronto svg { width: 58px; height: 58px; }
+  .mt-faiscas { position: absolute; inset: 0; pointer-events: none; }
+  .mt-faiscas i { position: absolute; left: 50%; top: 50%; width: 8px; height: 8px; margin: -4px; border-radius: 2px; background: var(--c); opacity: 0; }
+  .bv-montando.pronto .mt-barra { stroke: var(--feito-tinta); }
+  .bv-montando.pronto .mt-halter { opacity: 0; transform: scale(.4); }
+  .bv-montando.pronto .mt-pronto { opacity: 1; transform: none; }
+  .mt-textos h3 { margin: 0; font-family: var(--display); font-stretch: 80%; font-weight: 800; font-size: 28px; line-height: 1.1; }
+  .mt-etapa { margin: 6px 0 0; min-height: 1.4em; font-weight: 600; color: var(--tinta-2); }
+  .bv-montando.pronto .mt-etapa { color: var(--feito-tinta); }
+  .mt-treinos { display: grid; gap: 8px; width: 100%; max-width: 460px; margin: 0; padding: 0; list-style: none; text-align: left; }
+  .mt-treino { padding: 10px 12px; border: 1.5px solid var(--fio); border-radius: 12px; background: var(--papel); opacity: .35; }
+  .mt-treino.on { opacity: 1; border-color: var(--tatame); }
+  .mt-treino.feito { border-color: var(--fio); }
+  .mt-treino-topo { display: flex; align-items: center; gap: 8px; }
+  .mt-treino-topo b { flex: 1; }
+  .mt-estado { display: grid; place-items: center; width: 22px; height: 22px; }
+  .mt-estado > * { grid-area: 1 / 1; }
+  .mt-estado svg { opacity: 0; color: var(--feito-tinta); }
+  .mt-gira { width: 16px; height: 16px; border: 2.5px solid var(--fio); border-top-color: var(--tatame); border-radius: 50%; opacity: 0; }
+  .mt-treino.on .mt-gira { opacity: 1; }
+  .mt-treino.feito .mt-gira { opacity: 0; }
+  .mt-treino.feito .mt-estado svg { opacity: 1; }
+  .mt-treino ul { display: none; margin: 6px 0 0 32px; padding: 0; list-style: none; font-size: 14px; color: var(--tinta-2); }
+  .mt-treino.on ul { display: block; }
+  .mt-treino.feito ul { display: none; }
+  .mt-treino li.mt-mais { font-style: italic; }
+  .mt-semana-box { width: 100%; max-width: 460px; opacity: .35; }
+  .bv-montando.semana-on .mt-semana-box { opacity: 1; }
+  .mt-rotulo { margin: 0 0 6px; font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--tinta-2); text-align: left; }
+  .mt-semana { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin: 0; padding: 0; list-style: none; }
+  .mt-dia { display: grid; justify-items: center; gap: 4px; padding: 6px 0; border-radius: 10px; background: var(--gi); }
+  .mt-dia small { font-size: 12px; font-weight: 700; color: var(--tinta-2); }
+  .mt-dia > span { display: flex; flex-direction: column; align-items: center; gap: 3px; min-height: 26px; }
+  .mt-dia span .selo, .bv-montando.semana-on .mt-dia span .selo { visibility: hidden; }
+  .bv-montando.semana-on .mt-dia span .selo { visibility: visible; }
+  .mt-folga { width: 6px; height: 6px; margin-top: 10px; border-radius: 50%; background: var(--fio); }
+  @media (prefers-reduced-motion: no-preference) {
+    .bv-montando > * { animation: mt-sobe .5s cubic-bezier(.2, .8, .2, 1) both; }
+    .bv-montando > :nth-child(2) { animation-delay: .08s; }
+    .bv-montando > :nth-child(3) { animation-delay: .16s; }
+    .bv-montando > :nth-child(4) { animation-delay: .24s; }
+    .mt-halter svg { animation: mt-levanta 1.1s ease-in-out infinite; }
+    .mt-gira { animation: mt-roda .7s linear infinite; }
+    .mt-treino { transition: opacity .35s, border-color .35s, transform .35s; transform: scale(.97); }
+    .mt-treino.on { transform: none; }
+    .mt-treino.on ul li { animation: mt-entra .4s cubic-bezier(.2, .8, .2, 1) both; animation-delay: calc(var(--k) * 90ms + 120ms); }
+    .mt-treino.feito .mt-estado svg { animation: mt-pop .4s cubic-bezier(.3, 1.6, .5, 1) both; }
+    .mt-semana-box { transition: opacity .35s; }
+    .bv-montando.semana-on .mt-dia { animation: mt-pop .45s cubic-bezier(.3, 1.6, .5, 1) both; animation-delay: calc(var(--k) * 110ms); }
+    .bv-montando.semana-on .mt-dia span .selo { animation: mt-cai .45s cubic-bezier(.3, 1.5, .5, 1) both; animation-delay: calc(var(--k) * 110ms + 120ms); }
+    .bv-montando.pronto .mt-anel { animation: mt-pulso .6s ease-out; }
+    .bv-montando.pronto .mt-faiscas i { animation: mt-faisca .9s cubic-bezier(.15, .7, .3, 1) both; }
+    .bv-montando.pronto .mt-faiscas i:nth-child(even) { animation-duration: 1.1s; }
+  }
+  @keyframes mt-sobe { from { opacity: 0; transform: translateY(14px); } }
+  @keyframes mt-levanta { 0%, 100% { transform: translateY(4px) rotate(-6deg); } 50% { transform: translateY(-6px) rotate(6deg); } }
+  @keyframes mt-roda { to { transform: rotate(360deg); } }
+  @keyframes mt-entra { from { opacity: 0; transform: translateX(-12px); } }
+  @keyframes mt-pop { 0% { transform: scale(.4); opacity: 0; } 100% { transform: none; opacity: 1; } }
+  @keyframes mt-cai { from { transform: translateY(-16px) scale(.6); opacity: 0; } }
+  @keyframes mt-pulso { 40% { transform: scale(1.08); } }
+  @keyframes mt-faisca {
+    0% { opacity: 1; transform: rotate(var(--a)) translateY(0) scale(1); }
+    100% { opacity: 0; transform: rotate(var(--a)) translateY(-96px) scale(.4); }
+  }
+  /* Boas-vindas em tela cheia: o app fica escondido atrás de um fundo sólido na cor do tema. */
+  body.bv-ativa > :not(dialog) { visibility: hidden; }
+  dialog.modal.jornadas-modal.bv-tela::backdrop { background: transparent; }
+  @media (max-width: 560px) {
+    dialog.modal.jornadas-modal.bv-tela { height: 100dvh; max-height: 100dvh; margin: 0; border: 0; border-radius: 0; }
+    .bv-tela .modal-body { display: flex; flex-direction: column; min-height: 100dvh; padding-top: calc(20px + env(safe-area-inset-top, 0px)); }
+    .bv-tela .bv-cabeca { margin-top: calc(-20px - env(safe-area-inset-top, 0px)); padding-top: calc(20px + env(safe-area-inset-top, 0px)); }
+    .bv-tela .bv-rodape { margin-top: auto; }
+  }
+  .jornadas-modal .priv-link { margin-top: 12px; }
   .novidade-ocultar { justify-self: start; display: inline-flex; align-items: center; gap: 10px; min-height: 44px; font-size: 15px; color: var(--tinta-2); cursor: pointer; }
   .novidade-ocultar input { flex: 0 0 auto; width: 22px; height: 22px; margin: 0; accent-color: var(--tatame); cursor: pointer; }
   .escolha-cards { display: grid; gap: 8px; }
@@ -1365,7 +1517,7 @@
         <li><span class="ponteira" data-nivel="1" aria-hidden="true"><i></i><i></i><i></i></span>Baixa ou secundária</li>
       </ul>
       <p>PSE é a percepção subjetiva de esforço; o 10 fica reservado ao tatame. Use a carga que respeite a técnica e a recuperação.</p>
-      <p>A semana se monta em Você: arraste os treinos, o jiu-jitsu, o muay thai, o surf e o cardio para os dias (até 2 por dia). O padrão é Treino 2 na segunda, Treino 1 na quarta, Treino 3 na sexta, jiu na terça e na quinta e cardio no sábado.</p>
+      <p>A semana se monta em Você: arraste os treinos, o Jiu Jitsu, o muay thai, o surf e o cardio para os dias (até 2 por dia). O padrão é Treino 2 na segunda, Treino 1 na quarta, Treino 3 na sexta, jiu na terça e na quinta e cardio no sábado.</p>
       <p>Check-ins e cargas ficam salvos na sua conta e aparecem em qualquer aparelho em que você entrar.</p>
       <p>Adaptação prática do PDF enviado. Não substitui avaliação de um profissional de educação física ou nutrição, especialmente se houver dor ou lesão.</p>
     </footer>
@@ -1398,7 +1550,7 @@
       <div class="cal-grade" id="cal-grade"></div>
       <ul class="legenda-cal" aria-label="Legenda do calendário">
         <li><span class="selo musc" aria-hidden="true">1</span><span class="selo musc" aria-hidden="true">2</span><span class="selo musc" aria-hidden="true">3</span><span>Musculação</span></li>
-        <li><span class="selo jiu" aria-hidden="true">J</span><span>Jiu-jitsu</span></li>
+        <li><span class="selo jiu" aria-hidden="true">J</span><span>Jiu Jitsu</span></li>
         <li><span class="selo muay" aria-hidden="true">M</span><span>Muay Thai</span></li>
         <li><span class="selo surf" aria-hidden="true">S</span><span>Surf</span></li>
         <li><span class="selo bike" aria-hidden="true">C</span><span>Cardio</span></li>
@@ -1648,6 +1800,7 @@
 <dialog class="modal" id="enc-dialog" aria-labelledby="enc-title">
   <div class="modal-body" id="enc-body"></div>
 </dialog>
+<dialog class="modal celebra" id="celebra-dialog" aria-labelledby="cel-title"><div class="modal-body" id="celebra-body"></div></dialog>
 <dialog class="modal" id="form-dialog" aria-labelledby="form-title">
   <div class="modal-body" id="form-body"></div>
 </dialog>
@@ -2099,7 +2252,7 @@
   const exJ = (nome, dose, pse) => ({ nome, dose, pse });
   const JORNADAS = [
     {
-      id: 'jiu', nome: 'Jiu-jitsu (OSS)', resumo: 'Força que vai para o tatame.',
+      id: 'jiu', nome: 'Jiu Jitsu', resumo: 'Força que vai para o tatame.',
       nivel: 'Intermediário', dias: 3, tempo: '50–60 min', equipamento: 'Academia',
       treinos: PLANO_PADRAO, semana: { 1: ['t2'], 3: ['t1'], 5: ['t3'] },
     },
@@ -2373,7 +2526,7 @@
   // Tipos de check-in. Musculação usa uma cor só; o número no selo diz qual treino foi.
   // t1 a t6 existem sempre, para os check-ins de um treino que foi excluído continuarem com nome.
   const TIPOS = {
-    jiu: { nome: 'Jiu-jitsu', selo: 'J', grupo: 'jiu' },
+    jiu: { nome: 'Jiu Jitsu', selo: 'J', grupo: 'jiu' },
     muay: { nome: 'Muay Thai', selo: 'M', grupo: 'muay' },
     surf: { nome: 'Surf', selo: 'S', grupo: 'surf' },
     // A chave 'bike' fica no banco (check-ins e semana já salvos); na tela o tipo se chama Cardio.
@@ -3179,11 +3332,66 @@
     const depois = depoisEncerrar;
     depoisEncerrar = null;
     encDialog.close();
-    toast(`${TIPOS[a.tipo].nome} encerrado: ${fmtDur(duracaoMin(a))} de treino.`);
     registrarEvento('checkin_encerrado', { tipo: a.tipo });
     atualizarCheckinUI();
-    if (depois) depois();
+    celebrarCheckin(a, { encerrado: true, aoFechar: () => {
+      toast(`${TIPOS[a.tipo].nome} encerrado: ${fmtDur(duracaoMin(a))} de treino.`);
+      if (depois) depois();
+    } });
   }
+
+  // ---------- Celebração do check-in (tela cheia) ----------
+  // Ao salvar um check-in novo e ao encerrar um treino em andamento: um ✓ grande na cor da atividade, o resumo e
+  // quantos treinos a pessoa já fez na semana. Fecha sozinha em poucos segundos ou no Continuar.
+  const celebraDialog = $('celebra-dialog');
+  let celebra = null;
+  function treinosDaSemana(data) {
+    const d = deData(data);
+    const seg = new Date(d); seg.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+    const dom = new Date(seg); dom.setDate(seg.getDate() + 6);
+    const ini = isoLocal(seg).slice(0, 10), fim = isoLocal(dom).slice(0, 10);
+    return checkins.filter((c) => dataDe(c) >= ini && dataDe(c) <= fim).length;
+  }
+  function celebrarCheckin(c, { encerrado = false, aoFechar } = {}) {
+    // Os testes antigos desligam a celebração (window.__semCelebracao) para seguir direto.
+    if (window.__semCelebracao) { if (aoFechar) aoFechar(); return; }
+    const g = TIPOS[c.tipo].grupo;
+    const data = dataDe(c);
+    const quando = data === hoje() ? 'Hoje' : fmtData(data, { weekday: 'short', day: '2-digit', month: '2-digit' });
+    const dur = duracaoMin(c);
+    const n = treinosDaSemana(data);
+    const faiscas = Array.from({ length: 16 }, (_, k) => `<i style="--a:${k * 22.5}deg;--c:var(${['--cor', '--tatame', '--checkin', '--feito-tinta'][k % 4]})"></i>`).join('');
+    $('celebra-body').innerHTML = `
+      <div class="cel" data-grupo="${g}" style="--cor:var(--${g})">
+        <div class="cel-palco">
+          <span class="cel-onda" aria-hidden="true"></span><span class="cel-onda cel-onda2" aria-hidden="true"></span>
+          <span class="cel-icone" aria-hidden="true">${ICON_CHECK}</span>
+          <span class="cel-faiscas" aria-hidden="true">${faiscas}</span>
+        </div>
+        <h3 id="cel-title" tabindex="-1">${encerrado ? 'Treino concluído!' : 'Check-in feito!'}</h3>
+        <p class="cel-tipo">${TIPOS[c.tipo].nome}</p>
+        <p class="cel-info">${quando} · ${horaDe(c.inicio)} às ${horaDe(c.fim)}${dur ? ` · ${fmtDur(dur)}` : ''}</p>
+        <p class="cel-semana"><b>${n}º</b> treino da semana</p>
+        <button class="modal-done cel-ok-btn" type="button" data-cel-fechar>Continuar</button>
+      </div>`;
+    document.body.classList.add('bv-ativa');
+    celebraDialog.showModal();
+    $('cel-title').focus();
+    const reduzido = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    clearTimeout(celebra && celebra.timer);
+    celebra = { aoFechar, timer: setTimeout(fecharCelebracao, reduzido ? 2200 : 4200) };
+  }
+  function fecharCelebracao() {
+    if (!celebra) return;
+    const { aoFechar, timer } = celebra;
+    celebra = null;
+    clearTimeout(timer);
+    celebraDialog.close();
+    document.body.classList.remove('bv-ativa');
+    if (aoFechar) aoFechar();
+  }
+  celebraDialog.addEventListener('click', (e) => { if (e.target.closest('[data-cel-fechar]')) fecharCelebracao(); });
+  celebraDialog.addEventListener('cancel', (e) => { e.preventDefault(); fecharCelebracao(); });
 
   // ---------- Check-in rápido, extra ou retroativo ----------
   const formDialog = $('form-dialog');
@@ -3405,11 +3613,11 @@
     salvarCheckin(novo);
     aplicarFotoForm(novo);
     formDialog.close();
-    toast(`Check-in de ${TIPOS[tipo].nome} salvo.`);
     registrarEvento('checkin_criado', { tipo, retroativo: novo.retroativo, origem: telaAtual() });
     diaSel = data;
     mesExibido = { ano: deData(data).getFullYear(), mes: deData(data).getMonth() };
     atualizarCheckinUI();
+    celebrarCheckin(novo, { aoFechar: () => toast(`Check-in de ${TIPOS[tipo].nome} salvo.`) });
   }
 
   // ---------- Render: tela Treino ----------
@@ -3450,7 +3658,7 @@
           <div><h3>Objetivo</h3><p>${t.objetivo}</p></div>
           <div><h3>O que esperar</h3><p>${t.esperado}</p></div>
           <div><h3>Impacto</h3>
-            <p><b>No jiu-jitsu:</b> ${t.impacto_jiu}</p>
+            <p><b>No Jiu Jitsu:</b> ${t.impacto_jiu}</p>
             <p><b>No físico:</b> ${t.impacto_fisico}</p>
           </div>
         </div>
@@ -3696,7 +3904,7 @@
     const planejado = (g) => config.semana.flat().filter((t) => (ehTreino(t) ? 'musc' : t) === g).length;
     $('metas').innerHTML =
       linha('Musculação', 't1', 'musc', conta('musc'), planejado('musc')) +
-      linha('Jiu-jitsu', 'jiu', 'jiu', conta('jiu'), planejado('jiu')) +
+      linha('Jiu Jitsu', 'jiu', 'jiu', conta('jiu'), planejado('jiu')) +
       linha('Muay Thai', 'muay', 'muay', conta('muay'), planejado('muay')) +
       linha('Surf', 'surf', 'surf', conta('surf'), planejado('surf')) +
       linha('Cardio', 'bike', 'bike', conta('bike'), planejado('bike'));
@@ -4094,10 +4302,12 @@
   const edMudou = () => JSON.stringify(treinosParaSalvar(ed.treinos)) !== JSON.stringify(treinosParaSalvar(TREINOS));
   const altas = (ex) => DIMS.filter(({ k }) => ex[k] === 'alta').map(({ label }) => label.toLowerCase());
 
-  function abrirEditor({ doZero = false } = {}) {
+  function abrirEditor({ doZero = false, daBoasVindas = false } = {}) {
     const treinos = doZero ? { 1: { nome: 'Treino 1', subtitulo: '', exercicios: [] } } : copiaTreinos(TREINOS);
     const sel = doZero ? '1' : (treinos[estado.treino] ? estado.treino : Object.keys(treinos)[0]);
-    ed = { treinos, sel, vista: doZero ? 'escolher' : 'treino', busca: '', grupo: 'todos', confirmar: null, erro: '', doZero };
+    ed = { treinos, sel, vista: doZero ? 'escolher' : 'treino', busca: '', grupo: 'todos', confirmar: null, erro: '', doZero, daBoasVindas };
+    // Vindo das boas-vindas, o app continua escondido até a primeira escolha.
+    if (daBoasVindas) document.body.classList.add('bv-ativa');
     edFabEncolhido = false;
     renderEditor();
     if (!editorDialog.open) editorDialog.showModal();
@@ -4208,6 +4418,8 @@
       return renderEditor();
     }
     Object.entries(ed.treinos).forEach(([id, t]) => { t.nome = limpar(t.nome, 40) || `Treino ${id}`; t.subtitulo = limpar(t.subtitulo, 60); });
+    // Mudou algo de verdade (e não veio das boas-vindas)? Então os treinos se "remontam" na animação antes do aviso.
+    const animar = !ed.daBoasVindas && edMudou();
     const valor = mesmoQuePadrao(ed.treinos) ? null : treinosParaSalvar(ed.treinos);
     const antes = Object.keys(TREINOS);
     // Cópia do que existia antes de salvar, para Desfazer agora ou restaurar depois.
@@ -4230,6 +4442,7 @@
     registrarEvento('treinos_salvos', {
       treinos: Object.keys(TREINOS).length, exercicios: Object.values(TREINOS).reduce((n, t) => n + t.exercicios.length, 0), plano_pronto: !valor,
     });
+    if (ed.daBoasVindas) { gravarNovidade('montar', true); document.body.classList.remove('bv-ativa'); }
     ed = null;
     editorDialog.close();
     renderHoje();
@@ -4237,9 +4450,12 @@
     atualizarCheckinUI();
     if (telaAtual() === 'voce') renderConfig();
     const fora = Object.keys(TREINOS).filter((id) => !config.semana.flat().includes(`t${id}`));
-    toastAcao(saiuDaSemana ? 'Treinos salvos. O treino excluído saiu da sua semana.'
+    const avisar = () => toastAcao(saiuDaSemana ? 'Treinos salvos. O treino excluído saiu da sua semana.'
       : novos.length || fora.length ? 'Treinos salvos. Coloque os treinos na semana em Você → Minha semana.'
         : 'Treinos salvos.', 'Desfazer', () => restaurarAnterior('desfazer'));
+    if (!animar) return avisar();
+    animarMontagem({ titulo: 'Atualizando seus treinos', inicio: 'Salvando suas mudanças…', fimTitulo: 'Treinos atualizados!',
+      aoTerminar: () => { fecharJornadas('editor'); avisar(); } });
   }
 
   const fotoDosTreinos = () => ({ treinos: treinosParaSalvar(TREINOS), semana: copiaSemana(config.semana), em: new Date().toISOString(), jornada });
@@ -4284,8 +4500,12 @@
 
   function fecharEditor() {
     if (ed && ed.confirmar !== 'sair' && edMudou()) { ed.confirmar = 'sair'; ed.vista = 'treino'; renderEditor(); editorDialog.querySelector('[data-ed-sair-sim]').focus(); return; }
+    // Veio de "Montar do zero" nas boas-vindas e saiu sem salvar: volta para a escolha do objetivo.
+    const voltarBV = ed && ed.daBoasVindas;
     ed = null;
     editorDialog.close();
+    document.body.classList.remove('bv-ativa');
+    if (voltarBV) abrirJornadas('boas-vindas', 'objetivo');
   }
 
   editorDialog.addEventListener('cancel', (e) => {
@@ -4435,7 +4655,7 @@
       Object.assign(ed, { treinos: copiaTreinos(PLANO_PADRAO), sel: '1', confirmar: null, erro: '' });
       return renderEditor();
     }
-    if (alvo('[data-ed-sair-sim]')) { ed = null; return editorDialog.close(); }
+    if (alvo('[data-ed-sair-sim]')) { ed.confirmar = 'sair'; return fecharEditor(); }
     if (alvo('[data-ed-cancelar]')) { ed.confirmar = null; return renderEditor(); }
     if (alvo('[data-ed-salvar]')) return salvarEditor();
   });
@@ -4497,22 +4717,95 @@
   const jornadaDialog = $('jornada-dialog');
   const jornadaAtual = () => jornadaPorId(jornada);
   const ehDaJornada = (j) => JSON.stringify(treinosParaSalvar(TREINOS)) === JSON.stringify(treinosParaSalvar(j.treinos));
-  // jd: { modo: 'boas-vindas' | 'trocar', aberta: id da jornada com os treinos à mostra, confirmar: id }.
+  // jd: { modo: 'boas-vindas' | 'trocar', aberta: id da jornada com os treinos à mostra, confirmar: id,
+  //       passo e comDados (só nas boas-vindas) }.
+  // Boas-vindas da conta nova, sem fechar: 'bemvindo' (o que o app faz; não grava nada) → 'dados' (privacidade, só se
+  // a política ainda não foi aceita) → 'objetivo'. A privacidade vem antes de qualquer escolha ser gravada (LGPD).
   let jd = null;
-  function abrirJornadas(modo) {
-    jd = { modo, aberta: null, confirmar: null };
+  // Só no ambiente de desenvolvimento: /dev/?boas-vindas abre as boas-vindas completas em qualquer conta, para testar.
+  let bvTeste = false;
+  const passosBV = () => ['bemvindo', ...(jd.comDados ? ['dados'] : []), 'objetivo'];
+  function abrirJornadas(modo, passo) {
+    const boasVindas = modo === 'boas-vindas';
+    jd = { modo, aberta: null, confirmar: null, passo: boasVindas ? passo || 'bemvindo' : null, comDados: boasVindas && (bvTeste || (politica.disponivel && !politica.aceita)) };
+    // Boas-vindas em tela cheia, com fundo sólido: quem chega pela primeira vez não vê treinos que ainda não escolheu.
+    jornadaDialog.classList.toggle('bv-tela', boasVindas);
+    document.body.classList.toggle('bv-ativa', boasVindas);
     renderJornadas();
     if (!jornadaDialog.open) jornadaDialog.showModal();
-    registrarEvento('jornadas_abertas', { origem: modo });
+    if (!boasVindas || jd.passo === 'objetivo') registrarEvento('jornadas_abertas', { origem: modo });
+    if (boasVindas) { const t = $('jornada-title'); if (t) t.focus(); }
+  }
+  function irParaPasso(passo) {
+    jd.passo = passo;
+    jd.aberta = null;
+    renderJornadas();
+    if (passo === 'objetivo') registrarEvento('jornadas_abertas', { origem: jd.modo });
+    $('jornada-title').focus();
+  }
+  // "Etapa X de N" no topo, ao lado da etiqueta (só ali, para não repetir a etapa em dois lugares).
+  function etapaBV() {
+    const passos = passosBV();
+    return `<span class="bv-etapa">Etapa ${passos.indexOf(jd.passo) + 1} de ${passos.length}</span>`;
+  }
+  // Cabeçalho das boas-vindas, fixo ao rolar: a etiqueta e, abaixo, o título com "Etapa X de N" à direita.
+  function cabecaBV(selo, titulo) {
+    return `
+      <div class="bv-cabeca">
+        <span class="novidade-selo">${selo}</span>
+        <div class="bv-titulo"><h3 id="jornada-title" tabindex="-1">${titulo}</h3>${etapaBV()}</div>
+      </div>`;
+  }
+  // Rodapé fixo ao rolar: Voltar à esquerda e o botão principal à direita (na etapa do objetivo, só o Voltar).
+  function rodapeBV(botao = '') {
+    const passos = passosBV();
+    const anterior = passos[passos.indexOf(jd.passo) - 1];
+    const voltar = anterior ? `<button class="bv-voltar" type="button" data-jd-voltar="${anterior}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Voltar</button>` : '';
+    return `<div class="bv-rodape">${voltar}${botao}</div>`;
+  }
+  function renderPassoBV() {
+    const item = (txt) => `<li>${ICON_CHECK}<span>${txt}</span></li>`;
+    if (jd.passo === 'bemvindo') {
+      return `
+      ${cabecaBV('Boas-vindas', 'Bem-vindo ao OSS')}
+      <p class="resumo-enc">Seu treino de Jiu Jitsu e academia num lugar só.</p>
+      <ul class="novidade-lista">
+        ${item('<b>Treino do dia</b>: a ficha de hoje, com as cargas de cada série')}
+        ${item('<b>Check-in</b> de cada treino: musculação, Jiu Jitsu, muay thai, surf e cardio')}
+        ${item('<b>Dashboard</b> com o calendário e o histórico dos seus treinos')}
+        ${item('<b>Temporizador de descanso</b> entre as séries')}
+        ${item('<b>Você</b>: treinos, semana, aparência e privacidade do seu jeito')}
+      </ul>
+      ${rodapeBV('<button class="modal-done" type="button" data-jd-comecar>Começar</button>')}`;
+    }
+    if (jd.passo === 'dados') {
+      return `
+      ${cabecaBV('Privacidade', 'Seus dados')}
+      <p class="resumo-enc">Antes de escolher seus treinos, veja como cuidamos dos seus dados.</p>
+      ${itensPolitica(false)}
+      <a class="btn-sec priv-link" href="privacidade.html" target="_blank" rel="noopener">Ler a política completa</a>
+      ${rodapeBV(`<button class="modal-done" type="button" data-jd-entendi>${politica.aceita ? 'Continuar' : 'Entendi'}</button>`)}`;
+    }
+    return null;
+  }
+  // "Escolher" só marca o cartão; o Confirmar do rodapé aplica a escolha (nas boas-vindas e em Mudar meu objetivo).
+  function botaoEscolherBV(id, rotulo = 'Escolher') {
+    const marcado = jd.selecionado === id;
+    return `<button class="${marcado ? 'btn escolhido' : 'btn'}" type="button" data-jd-marcar="${id}" aria-pressed="${marcado}">${marcado ? `${ICON_CHECK}Escolhido` : rotulo}</button>`;
   }
   function renderJornadas(foco) {
     const boasVindas = jd.modo === 'boas-vindas';
+    if (jd.passo === 'montando') return;
+    if (boasVindas && jd.passo !== 'objetivo') {
+      $('jornada-body').innerHTML = renderPassoBV();
+      return;
+    }
     const atual = boasVindas ? null : jornadaAtual();
     const cartao = (j) => {
       const ids = Object.keys(j.treinos);
       const aberta = jd.aberta === j.id;
       return `
-      <li class="jornada${atual === j ? ' atual' : ''}">
+      <li class="jornada${atual === j ? ' atual' : ''}${jd.selecionado === j.id ? ' selecionada' : ''}">
         <div class="jornada-topo"><b>${esc(j.nome)}</b>${atual === j ? `<span class="jornada-tag">${ehDaJornada(j) ? 'Atual' : 'Atual, personalizada'}</span>` : ''}</div>
         <p>${esc(j.resumo)}</p>
         <p class="jornada-meta">${esc(j.nivel)} · ${ids.length} treinos · ${j.dias} dias por semana · ${esc(j.tempo)} · ${esc(j.equipamento)}</p>
@@ -4520,63 +4813,65 @@
           <div><h4>${seloHTML(`t${n}`)}${esc(j.treinos[n].nome)}${j.treinos[n].subtitulo ? ` <small>${esc(j.treinos[n].subtitulo)}</small>` : ''}</h4>
           <ol>${j.treinos[n].exercicios.map((e) => `<li>${esc(e.nome)} <small>${esc(e.dose)}</small></li>`).join('')}</ol></div>`).join('')}
         </div>` : ''}
-        ${jd.confirmar === j.id ? `<div class="ed-confirma" role="alert">
-          <p>Mudar seu objetivo para ${esc(j.nome)}? Seus treinos e a semana de agora ficam guardados como versão anterior, e dá para desfazer.</p>
-          <div><button class="btn" type="button" data-jd-sim="${j.id}">Mudar objetivo</button><button class="btn-sec" type="button" data-jd-cancelar>Cancelar</button></div>
-        </div>` : `<div class="jornada-acoes">
+        <div class="jornada-acoes">
           <button class="btn-sec" type="button" data-jd-ver="${j.id}" aria-expanded="${aberta}"${aberta ? ` aria-controls="jornada-treinos-${j.id}"` : ''}>${aberta ? 'Esconder treinos' : 'Ver treinos'}</button>
-          ${atual === j && ehDaJornada(j) ? '' : `<button class="btn" type="button" data-jd-escolher="${j.id}">${atual === j ? 'Voltar ao original' : 'Escolher'}</button>`}
-        </div>`}
+          ${atual === j && ehDaJornada(j) ? '' : botaoEscolherBV(j.id, atual === j ? 'Voltar ao original' : 'Escolher')}
+        </div>
       </li>`;
     };
     $('jornada-body').innerHTML = `
-      <div class="modal-head"><div>${boasVindas ? '<span class="novidade-selo">Boas-vindas</span>' : ''}<h3 id="jornada-title">${boasVindas ? 'Como você quer treinar?' : 'Mudar meu objetivo'}</h3></div>${BOTAO_FECHAR}</div>
-      <p class="resumo-enc">Escolha um objetivo e receba os treinos prontos. Depois dá para mudar exercícios, séries e dias em Você → Meus treinos.</p>
+      ${boasVindas ? cabecaBV('Boas-vindas', 'Qual é o seu objetivo?')
+    : `<div class="modal-head"><div><h3 id="jornada-title" tabindex="-1">Mudar meu objetivo</h3></div>${BOTAO_FECHAR}</div>`}
+      <p class="resumo-enc">Escolha um objetivo e receba os treinos prontos${boasVindas ? ', ou monte os seus do zero' : ''}. Depois dá para mudar exercícios, séries e dias em Você → Meus treinos.</p>
       <ul class="jornadas">
         ${JORNADAS.map(cartao).join('')}
-        <li class="jornada">
+        <li class="jornada${jd.selecionado === 'zero' ? ' selecionada' : ''}">
           <div class="jornada-topo"><b>Montar do zero</b></div>
           <p>Escolha entre ${BIBLIOTECA.length} exercícios e monte até ${MAX_TREINOS} treinos do seu jeito.</p>
-          <div class="jornada-acoes"><button class="btn-sec" type="button" data-jd-zero>Montar meus treinos</button></div>
+          <div class="jornada-acoes">${boasVindas ? botaoEscolherBV('zero') : '<button class="btn-sec" type="button" data-jd-zero>Montar meus treinos</button>'}</div>
         </li>
       </ul>
-      ${boasVindas ? OCULTAR_NOVIDADE : ''}`;
+      ${boasVindas ? rodapeBV(jd.selecionado ? `<button class="modal-done" type="button" data-jd-confirmar>${jd.selecionado === 'zero' ? 'Montar meus treinos' : 'Confirmar'}</button>` : '')
+    : jd.selecionado ? '<div class="bv-rodape"><button class="modal-done" type="button" data-jd-confirmar>Confirmar</button></div>' : ''}`;
     if (foco) { const el = $('jornada-body').querySelector(foco); if (el) el.focus(); }
   }
   function fecharJornadas(escolha) {
     if (!jd) return;
-    if (jd.modo === 'boas-vindas') {
-      // Escolher uma jornada encerra as boas-vindas; fechar ou montar do zero segue a caixa "Não mostrar de novo".
-      const caixa = $('novidade-ocultar');
-      gravarNovidade(escolha, escolha === 'jornada' || !!(caixa && caixa.checked));
-    }
+    // Nas boas-vindas, escolher um objetivo encerra a apresentação (montar do zero só encerra ao salvar os treinos).
+    if (jd.modo === 'boas-vindas' && escolha === 'jornada') gravarNovidade('jornada', true);
     jd = null;
     jornadaDialog.close();
+    jornadaDialog.classList.remove('bv-tela');
+    document.body.classList.remove('bv-ativa');
   }
   jornadaDialog.addEventListener('click', (e) => {
     const b = e.target.closest('button');
+    if (b && 'jdComecar' in b.dataset) return irParaPasso(passosBV()[1]);
+    if (b && 'jdEntendi' in b.dataset) { registrarAceitePolitica(); return irParaPasso('objetivo'); }
+    if (b && b.dataset.jdVoltar) return irParaPasso(b.dataset.jdVoltar);
     if (b && b.dataset.jdVer) {
       jd.aberta = jd.aberta === b.dataset.jdVer ? null : b.dataset.jdVer;
       jd.confirmar = null;
       return renderJornadas(`[data-jd-ver="${b.dataset.jdVer}"]`);
     }
-    if (b && b.dataset.jdEscolher) {
-      // Na troca, confirma antes; nas boas-vindas a conta ainda não tem nada para perder.
-      if (jd.modo === 'trocar') { jd.confirmar = b.dataset.jdEscolher; return renderJornadas(`[data-jd-sim="${b.dataset.jdEscolher}"]`); }
-      const modo = jd.modo;
-      fecharJornadas('jornada');
-      return aplicarJornada(b.dataset.jdEscolher, modo);
+    if (b && b.dataset.jdMarcar) {
+      jd.selecionado = jd.selecionado === b.dataset.jdMarcar ? null : b.dataset.jdMarcar;
+      return renderJornadas(`[data-jd-marcar="${b.dataset.jdMarcar}"]`);
     }
-    if (b && b.dataset.jdSim) { const modo = jd.modo; fecharJornadas('jornada'); return aplicarJornada(b.dataset.jdSim, modo); }
-    if (b && 'jdCancelar' in b.dataset) {
-      const id = jd.confirmar;
-      jd.confirmar = null;
-      return renderJornadas(`[data-jd-escolher="${id}"]`);
+    if (b && 'jdConfirmar' in b.dataset && jd.selecionado) {
+      if (jd.selecionado === 'zero') { fecharJornadas('montar'); return abrirEditor({ doZero: true, daBoasVindas: true }); }
+      return montarTreinosBV(jd.selecionado);
     }
-    if (b && 'jdZero' in b.dataset) { fecharJornadas('montar'); return abrirEditor({ doZero: true }); }
+    if (b && 'jdZero' in b.dataset) {
+      const daBoasVindas = jd.modo === 'boas-vindas';
+      fecharJornadas('montar');
+      return abrirEditor({ doZero: true, daBoasVindas });
+    }
+    // As boas-vindas não fecham sem uma escolha, e a animação não fecha no meio (sem X, sem Esc e sem tocar fora).
+    if (jd && (jd.modo === 'boas-vindas' || jd.passo === 'montando')) return;
     if (e.target === jornadaDialog || e.target.closest('[data-fechar]')) fecharJornadas('fechou');
   });
-  jornadaDialog.addEventListener('cancel', (e) => { e.preventDefault(); fecharJornadas('fechou'); });
+  jornadaDialog.addEventListener('cancel', (e) => { e.preventDefault(); if (jd && jd.modo !== 'boas-vindas' && jd.passo !== 'montando') fecharJornadas('fechou'); });
 
   // Semana sugerida: tira os treinos da semana de agora e põe os da jornada, sem mexer em jiu, muay, surf e cardio.
   function semanaDaJornada(j) {
@@ -4586,7 +4881,7 @@
     }
     return validarSemana(s);
   }
-  function aplicarJornada(id, origem) {
+  function aplicarJornada(id, origem, { semAviso = false } = {}) {
     const j = jornadaPorId(id);
     if (!j) return;
     treinosAnterior = fotoDosTreinos();
@@ -4607,7 +4902,94 @@
     renderTudo();
     atualizarCheckinUI();
     if (telaAtual() === 'voce') renderConfig();
-    toastAcao(`Objetivo ${j.nome} escolhido. Os treinos já estão na sua semana.`, 'Desfazer', () => restaurarAnterior('desfazer'));
+    if (!semAviso) avisarJornada(j);
+  }
+  const avisarJornada = (j) => toastAcao(`Objetivo ${j.nome} escolhido. Os treinos já estão na sua semana.`, 'Desfazer', () => restaurarAnterior('desfazer'));
+
+  // ---------- Animação "Montando seus treinos" ----------
+  // Ao confirmar um objetivo (boas-vindas ou Mudar meu objetivo) e ao salvar treinos alterados no editor.
+  // A gravação é feita antes; a animação mostra os treinos e a semana se formando, em tela cheia, e só então mostra o app.
+  const ICON_HALTER = '<svg viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg>';
+  const DIAS_LETRA = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+  let montagemTimers = [];
+  function montarTreinosBV(id) {
+    const j = jornadaPorId(id);
+    if (!j) return;
+    aplicarJornada(id, jd.modo, { semAviso: true });
+    animarMontagem({ rotulo: `Treinos de ${j.nome}`, aoTerminar: () => { fecharJornadas('jornada'); avisarJornada(j); } });
+  }
+  function animarMontagem({ titulo = 'Montando seus treinos', inicio = 'Analisando seu objetivo…', fimTitulo = 'Treinos prontos!', rotulo = 'Seus treinos', aoTerminar }) {
+    if (!jd) jd = { modo: 'editor' };
+    jd.passo = 'montando';
+    jornadaDialog.classList.add('bv-tela');
+    document.body.classList.add('bv-ativa');
+    if (!jornadaDialog.open) jornadaDialog.showModal();
+    const ids = Object.keys(TREINOS);
+    const treinos = ids.map((n, i) => {
+      const t = TREINOS[n];
+      const mostra = t.exercicios.slice(0, 4);
+      const resto = t.exercicios.length - mostra.length;
+      return `
+        <li class="mt-treino" data-mt-treino="${i}">
+          <div class="mt-treino-topo">${seloHTML(`t${n}`)}<b>${esc(t.nome)}</b><span class="mt-estado" aria-hidden="true"><i class="mt-gira"></i>${ICON_CHECK}</span></div>
+          <ul>${mostra.map((e, k) => `<li style="--k:${k}">${esc(e.nome)}</li>`).join('')}${resto > 0 ? `<li class="mt-mais" style="--k:${mostra.length}">+${resto} exercício${resto > 1 ? 's' : ''}</li>` : ''}</ul>
+        </li>`;
+    }).join('');
+    // Semana começando na segunda, como no Dashboard.
+    const ordem = [1, 2, 3, 4, 5, 6, 0];
+    const semana = ordem.map((d, k) => `
+        <li class="mt-dia" style="--k:${k}"><small>${DIAS_LETRA[d]}</small><span>${config.semana[d].map((t) => (TIPOS[t] ? seloHTML(t) : '')).join('') || '<i class="mt-folga"></i>'}</span></li>`).join('');
+    const faiscas = Array.from({ length: 14 }, (_, k) => `<i style="--a:${k * (360 / 14)}deg;--c:var(${['--tatame', '--checkin', '--jiu', '--musc', '--bike', '--muay', '--surf'][k % 7]})"></i>`).join('');
+    $('jornada-body').innerHTML = `
+      <div class="bv-montando" style="--prog:0">
+        <div class="mt-anel">
+          <svg viewBox="0 0 120 120" aria-hidden="true"><circle class="mt-fundo" cx="60" cy="60" r="54"/><circle class="mt-barra" cx="60" cy="60" r="54"/></svg>
+          <span class="mt-icone mt-halter">${ICON_HALTER}</span>
+          <span class="mt-icone mt-pronto">${ICON_CHECK}</span>
+          <span class="mt-faiscas" aria-hidden="true">${faiscas}</span>
+        </div>
+        <div class="mt-textos">
+          <h3 id="jornada-title" tabindex="-1">${titulo}</h3>
+          <p class="mt-etapa" id="mt-etapa" role="status" aria-live="polite">${inicio}</p>
+        </div>
+        <ol class="mt-treinos" aria-label="${esc(rotulo)}">${treinos}</ol>
+        <div class="mt-semana-box"><p class="mt-rotulo">Sua semana</p><ol class="mt-semana">${semana}</ol></div>
+      </div>`;
+    $('jornada-title').focus();
+    const raiz = $('jornada-body').querySelector('.bv-montando');
+    const reduzido = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // Com movimento: cerca de 7,5 a 8 s no total (+1 s nos treinos, +0,5 s na semana e +0,5 s no "pronto").
+    const passo = reduzido ? 180 : 650 + Math.round(1000 / ids.length);
+    const etapa = (txt) => { $('mt-etapa').textContent = txt; };
+    const linha = [];
+    let t = reduzido ? 150 : 700;
+    linha.push([0, () => { raiz.style.setProperty('--prog', '0.08'); }]);
+    ids.forEach((n, i) => {
+      linha.push([t, () => {
+        etapa(`Montando ${TREINOS[n].nome}…`);
+        if (i > 0) raiz.querySelector(`[data-mt-treino="${i - 1}"]`).classList.add('feito');
+        raiz.querySelector(`[data-mt-treino="${i}"]`).classList.add('on');
+        raiz.style.setProperty('--prog', String(0.1 + 0.65 * (i + 1) / ids.length));
+      }]);
+      t += passo;
+    });
+    linha.push([t, () => {
+      etapa('Organizando sua semana…');
+      raiz.querySelector(`[data-mt-treino="${ids.length - 1}"]`).classList.add('feito');
+      raiz.classList.add('semana-on');
+      raiz.style.setProperty('--prog', '0.92');
+    }]);
+    t += reduzido ? 250 : 1500;
+    linha.push([t, () => {
+      etapa('Tudo pronto! Bons treinos.');
+      $('jornada-title').textContent = fimTitulo;
+      raiz.classList.add('pronto');
+      raiz.style.setProperty('--prog', '1');
+    }]);
+    t += reduzido ? 600 : 2000;
+    linha.push([t, aoTerminar]);
+    montagemTimers.forEach(clearTimeout);
+    montagemTimers = linha.map(([ms, fn]) => setTimeout(fn, ms));
   }
 
   // ---------- Aviso da novidade (até marcar "não mostrar mais") ----------
@@ -4621,11 +5003,7 @@
     const comVideo = BIBLIOTECA.filter((ex) => VIDEOS[ex.nome]).length;
     const item = (txt) => `<li>${ICON_CHECK}<span>${txt}</span></li>`;
     // Conta nova com o plano pronto escolhe uma jornada; quem já montou os treinos vê a versão "Baita atualização!".
-    if (novidade.contaNova && !treinosDaConta) {
-      abrirJornadas('boas-vindas');
-      registrarEvento('novidade_treinos', { escolha: 'viu', conta_nova: novidade.contaNova });
-      return;
-    }
+    if (novidade.contaNova && !treinosDaConta) return abrirJornadas('boas-vindas');
     $('novidade-body').innerHTML = (`
       <div class="modal-head"><div><span class="novidade-selo">Novidade</span><h3 id="novidade-title">Baita atualização!</h3></div>${BOTAO_FECHAR}</div>
       <p class="resumo-enc">Agora você pode montar os seus próprios treinos.</p>
@@ -4644,6 +5022,7 @@
   }
   // Aparece a cada abertura do app enquanto a pessoa não marcar "Não mostrar esta mensagem de novo"
   // (sem outra janela aberta por cima).
+  const vaiVerBoasVindas = () => novidade.disponivel && !novidade.vista && novidade.contaNova && !treinosDaConta;
   function mostrarNovidadeSeFaltar() {
     if (novidade.disponivel && !novidade.vista && !document.querySelector('dialog[open]')) abrirNovidade();
   }
@@ -5376,27 +5755,36 @@
 
   // ---------- Privacidade (LGPD) ----------
   const politicaDialog = $('politica-dialog');
+  // Itens do aviso de privacidade: na janela própria (política nova) e no passo "Seus dados" das boas-vindas.
+  function itensPolitica(novidadeFoto) {
+    return `
+      <ul class="novidade-lista">
+        <li>${ICON_CHECK}<span>Guardamos seus treinos, check-ins e pesos para o app funcionar, só enquanto sua conta existir.</span></li>
+        ${novidadeFoto ? `<li>${ICON_CHECK}<span>Agora dá para anexar uma foto ao check-in, se quiser. Ela fica guardada de forma privada: só você vê; o administrador não.</span></li>` : ''}
+        <li>${ICON_CHECK}<span>O administrador vê quem está com o app aberto, em que tela, e o histórico de uso. Não vê pesos, cargas nem observações.</span></li>
+        <li>${ICON_CHECK}<span>Observações nos check-ins ficam desligadas até você ligar em Você → Privacidade.</span></li>
+        <li>${ICON_CHECK}<span>Em Você → Privacidade você baixa seus dados, e em Você dá para excluir a conta.</span></li>
+      </ul>`;
+  }
   function abrirPolitica() {
     $('politica-body').innerHTML = `
       <div class="modal-head"><div><span class="novidade-selo">Privacidade</span><h3 id="politica-title">${politica.contaNova ? 'Antes de começar' : 'Atualizamos nossa Política de Privacidade'}</h3></div></div>
       <p class="resumo-enc">${politica.contaNova ? 'Veja como cuidamos dos seus dados.' : 'Veja o que mudou.'}</p>
-      <ul class="novidade-lista">
-        <li>${ICON_CHECK}<span>Guardamos seus treinos, check-ins e pesos para o app funcionar, só enquanto sua conta existir.</span></li>
-        ${politica.contaNova ? '' : `<li>${ICON_CHECK}<span>Agora dá para anexar uma foto ao check-in, se quiser. Ela fica guardada de forma privada: só você vê; o administrador não.</span></li>`}
-        <li>${ICON_CHECK}<span>O administrador vê quem está com o app aberto, em que tela, e o histórico de uso. Não vê pesos, cargas nem observações.</span></li>
-        <li>${ICON_CHECK}<span>Observações nos check-ins ficam desligadas até você ligar em Você → Privacidade.</span></li>
-        <li>${ICON_CHECK}<span>Em Você → Privacidade você baixa seus dados, e em Você dá para excluir a conta.</span></li>
-      </ul>
+      ${itensPolitica(!politica.contaNova)}
       <div class="novidade-acoes">
         <button class="modal-done" type="button" data-politica-ok>Entendi</button>
         <a class="btn-sec priv-link" href="privacidade.html" target="_blank" rel="noopener">Ler a política completa</a>
       </div>`;
     politicaDialog.showModal();
   }
-  function aceitarPolitica() {
+  function registrarAceitePolitica() {
+    if (politica.aceita) return;
     politica.aceita = true;
     salvarPerfil({ politica_versao: POLITICA_VERSAO });
     registrarEvento('politica_aceita', { versao: POLITICA_VERSAO });
+  }
+  function aceitarPolitica() {
+    registrarAceitePolitica();
     politicaDialog.close();
     mostrarNovidadeSeFaltar();
   }
@@ -5679,7 +6067,14 @@
     abrirTreinoDoDia();
     renderizarApp();
     entrarEmCascata();
-    if (politica.disponivel && !politica.aceita) abrirPolitica();
+    // Conta nova: boas-vindas em passos (o app → seus dados → objetivo); a privacidade vem antes de gravar a escolha.
+    if (window.AMBIENTE.dev && new URLSearchParams(location.search).has('boas-vindas')) {
+      // Teste no dev: tira o parâmetro do endereço (recarregar não abre de novo) e mostra as 3 etapas.
+      history.replaceState(null, '', location.pathname + location.hash);
+      bvTeste = true;
+      abrirJornadas('boas-vindas');
+    } else if (vaiVerBoasVindas()) mostrarNovidadeSeFaltar();
+    else if (politica.disponivel && !politica.aceita) abrirPolitica();
     else mostrarNovidadeSeFaltar();
     if (esquecido) {
       toast(`O check-in do ${TIPOS[esquecido.tipo].nome} ficou aberto e foi encerrado às ${horaDe(esquecido.fim)}.`);

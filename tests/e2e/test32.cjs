@@ -47,7 +47,7 @@ const ADM = {
     await p.click('[data-mais-atividade]');
     dias = await p.locator('#det-atividade .atv-dia').allInnerTexts();
     ok(await li.count() === 18 && dias.length === 3 && dias[2].toLowerCase() === 'seg, 19 de out' && await p.locator('[data-mais-atividade]').count() === 0, `${tag}: tudo, terceiro dia, sem botão`, `${await li.count()} ${dias.join('|')}`);
-    ok((await txt(p, '#det-atividade')).includes('Check-in de Jiu-jitsu'), `${tag}: check-in aparece na lista`);
+    ok((await txt(p, '#det-atividade')).includes('Check-in de Jiu Jitsu'), `${tag}: check-in aparece na lista`);
     await p.locator('#det-tempo').locator('xpath=..').screenshot({ path: `atv-${tag}-tudo.png` });
     await p.click('[data-fechar]');
     await abrir('Marcelo');

@@ -43,7 +43,7 @@ const ADM = {
     ok(/^Sumiram 2 de 3/.test(kS), `${tag}: cartão Sumiram (2 de 3 que treinaram)`, kS);
     ok(/^Recordes 8/.test(kR) && /3 pessoas/.test(kR) && /mais que o período anterior/.test(kR), `${tag}: cartão Recordes (7 dias) com delta`, kR);
     const sumiu = (await p.locator('#sumiu-lista .item-lista').allInnerTexts()).map((t) => t.replace(/\s+/g, ' ').trim());
-    ok(sumiu.length === 2 && /^Alessandra Machado 9 dias/.test(sumiu[0]) && /Jiu-jitsu/.test(sumiu[0]) && /treinava 2× por semana/.test(sumiu[0]) && /^Davi Rocha 8 dias/.test(sumiu[1]) && /Surf/.test(sumiu[1]) && /treinava 1× por semana/.test(sumiu[1]), `${tag}: lista de quem sumiu, ordem pelo ritmo`, sumiu.join(' | '));
+    ok(sumiu.length === 2 && /^Alessandra Machado 9 dias/.test(sumiu[0]) && /Jiu Jitsu/.test(sumiu[0]) && /treinava 2× por semana/.test(sumiu[0]) && /^Davi Rocha 8 dias/.test(sumiu[1]) && /Surf/.test(sumiu[1]) && /treinava 1× por semana/.test(sumiu[1]), `${tag}: lista de quem sumiu, ordem pelo ritmo`, sumiu.join(' | '));
     ok(!/Marcelo|Bruno|Carla|Eva/.test(await txt(p, '#sumiu-lista')), `${tag}: fora admin, quem treinou ontem, quem parou há muito e quem nunca treinou`);
     const ev = (await p.locator('#evoluiu-lista .item-lista').allInnerTexts()).map((t) => t.replace(/\s+/g, ' ').trim());
     ok(ev.length === 3 && /^Alessandra Machado 5 recordes/.test(ev[0]) && /Puxada, Supino no chão, Agachamento e mais 1/.test(ev[0]) && /^Bruno Lima 2 recordes/.test(ev[1]) && /^Davi Rocha 1 recorde/.test(ev[2]), `${tag}: ranking de recordes`, ev.join(' | '));

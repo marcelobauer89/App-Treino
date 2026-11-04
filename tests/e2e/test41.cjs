@@ -14,7 +14,7 @@ const ok = (c, l, x = '') => { if (!c) fails++; console.log(`${c ? 'PASS' : 'FAI
     await p.click('[data-ed-novo]');
     await p.click('[data-ed-add="Agachamento Zercher"]'); await p.click('[data-ed-add="Stiff"]'); await p.click('[data-ed-add="Cócoras"]');
     await p.locator('.ed-fixo [data-ed-vista="treino"]').click();
-    await p.click('[data-ed-salvar]'); await H.gravacoes(p);
+    await H.salvarEditor(p); await H.gravacoes(p);
     await p.click('.nav [data-tela="treino"]'); await p.waitForTimeout(400);
     for (const id of ['atual', '4', '3', '1']) {
       if (id !== 'atual') { await p.click(`[data-treino="${id}"]`); await p.waitForTimeout(300); }

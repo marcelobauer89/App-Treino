@@ -101,7 +101,7 @@ const itens = (p) => p.locator('.ed-bib-item').evaluateAll((ls) => ls.map((l) =>
   await p.fill('#ed-busca', 'sissy'); await p.click('[data-ed-add="Sissy squat"]');
   ok((await p.getAttribute('[data-ed-add="Sissy squat"]', 'aria-pressed')) === 'true', 'novo exercício marcado como adicionado');
   await p.locator('.ed-fixo [data-ed-vista="treino"]').click(); await p.waitForTimeout(100);
-  await p.click('[data-ed-salvar]'); await p.waitForTimeout(400); await H.gravacoes(p);
+  await H.salvarEditor(p); await p.waitForTimeout(400); await H.gravacoes(p);
   const db = await H.banco(p);
   const salvo = JSON.stringify(db.perfis[0].treinos || {});
   ok(/Sissy squat/.test(salvo) && /3–4×6/.test(salvo), 'salvo no treino com a dose da ficha', salvo.slice(0, 120));
