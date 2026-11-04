@@ -22,7 +22,7 @@ const ok = (c, l, x = '') => { if (!c) fails++; console.log(`${c ? 'PASS' : 'FAI
     });
     ok(m.sw === w, `${scheme} ${nome}: no horizontal scroll`, m.sw);
     ok(m.sh <= h + 1, `${scheme} ${nome}: fits without vertical scroll`, `${m.sh} vs ${h}`);
-    if (w < 900) ok(Math.abs(m.btn - (m.corpo - 32)) < 2, `${scheme} ${nome}: full-width button`, `${m.btn}/${m.corpo}`);
+    if (w < 900) ok(Math.abs(m.btn - (m.corpo - 40)) < 2, `${scheme} ${nome}: full-width button`, `${m.btn}/${m.corpo}`);
     ok(m.label === 'Continuar com o Google' && m.priv && !m.carga, `${scheme} ${nome}: login state`);
     await p.screenshot({ path: `l-${scheme}-${nome}.png` });
     if (scheme === 'light' && nome === '375') {
