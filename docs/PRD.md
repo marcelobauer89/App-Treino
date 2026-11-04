@@ -1,6 +1,6 @@
 ## PRD — App Bauer: Jiu Jitsu + Hipertrofia
 
-2026-11-03 · @Bauer
+2026-11-04 · @Bauer
 
 ### Visão geral
 
@@ -407,7 +407,11 @@ Pendências e cuidados:
    - objetivos com treinos prontos (Jiu Jitsu, Hipertrofia, Força e potência, Mobilidade e prevenção) nas boas-vindas e em "Mudar meu objetivo";
    - eventos de uso que não se perdem quando a internet cai;
    - nome da conta Google quando o perfil está sem nome;
-   - temporizador de descanso entre séries (Você → Temporizador), com botão acima do check-in, som e vibração no fim.
+   - temporizador de descanso entre séries (Você → Temporizador), com botão acima do check-in, som e vibração no fim;
+   - boas-vindas da conta nova em etapas e em tela cheia (o app, seus dados e o objetivo), com a escolha obrigatória e a privacidade antes de gravar qualquer escolha;
+   - confirmar o objetivo no rodapé e a animação "Montando seus treinos" (nas boas-vindas, em Mudar meu objetivo e ao salvar treinos alterados);
+   - celebração em tela cheia ao fazer ou encerrar um check-in;
+   - "Jiu Jitsu" como nome da atividade e do objetivo em todo o app.
 2. **MVP (web, grupo de amigos):**
    - PWA responsiva com modo offline;
    - onboarding com peso e alvo, semana e fase, peso e proteína;
