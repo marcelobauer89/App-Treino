@@ -865,6 +865,49 @@
   /* O selo azul do treino continua visível sobre o fundo azul da opção marcada. */
   .opcao input:checked + span .selo { box-shadow: 0 0 0 2px var(--sobre-tatame); }
   .opcao input:focus-visible + span { outline: 2px solid var(--tatame-tinta); outline-offset: 2px; }
+  /* Celebração do check-in, em tela cheia. */
+  dialog.modal.celebra { width: 100vw; max-width: 100vw; height: 100dvh; max-height: 100dvh; margin: 0; border: 0; border-radius: 0; background: var(--papel); }
+  dialog.modal.celebra::backdrop { background: transparent; }
+  .celebra .modal-body { min-height: 100dvh; display: grid; place-items: center; padding: calc(24px + env(safe-area-inset-top, 0px)) 16px calc(24px + env(safe-area-inset-bottom, 0px)); }
+  .cel { display: grid; justify-items: center; gap: 6px; width: 100%; max-width: 420px; text-align: center; }
+  .cel-palco {
+    position: relative; display: grid; place-items: center; width: 200px; height: 200px; margin-bottom: 14px; border-radius: 50%;
+    background: radial-gradient(circle, color-mix(in srgb, var(--cor) 24%, transparent) 0 58%, transparent 60%);
+  }
+  .cel-icone { display: grid; place-items: center; color: var(--cor); }
+  .cel-icone svg { width: 104px; height: 104px; stroke-width: 2.8; }
+  .cel-onda { position: absolute; inset: 22px; border-radius: 50%; border: 3px solid var(--cor); opacity: 0; }
+  .cel-faiscas { position: absolute; inset: 0; pointer-events: none; }
+  .cel-faiscas i { position: absolute; left: 50%; top: 50%; width: 9px; height: 9px; margin: -4.5px; border-radius: 2px; background: var(--c); opacity: 0; }
+  .cel h3 { margin: 0; font-family: var(--display); font-stretch: 80%; font-weight: 800; font-size: 36px; line-height: 1.05; }
+  .cel h3:focus { outline: none; }
+  .cel-tipo { margin: 2px 0 0; font-size: 20px; font-weight: 800; color: var(--cor); }
+  .cel-info { margin: 0; color: var(--tinta-2); font-weight: 600; }
+  .cel-semana { margin: 10px 0 0; padding: 8px 16px; border-radius: 999px; background: var(--gi); font-weight: 600; }
+  .cel-semana b { font-size: 18px; color: var(--cor); }
+  .cel-ok-btn { width: auto; min-width: 180px; margin-top: 22px; padding: 0 28px; }
+  @media (prefers-reduced-motion: no-preference) {
+    .cel-palco { animation: cel-pop .7s cubic-bezier(.3, 1.5, .5, 1) both; }
+    .cel > :not(.cel-palco) { animation: mt-sobe .5s cubic-bezier(.2, .8, .2, 1) both; }
+    .cel > :nth-child(2) { animation-delay: .35s; }
+    .cel > :nth-child(3) { animation-delay: .45s; }
+    .cel > :nth-child(4) { animation-delay: .55s; }
+    .cel > :nth-child(5) { animation-delay: .75s; }
+    .cel > :nth-child(6) { animation-delay: .95s; }
+    .cel-onda { animation: cel-onda 1.8s ease-out .3s infinite; }
+    .cel-onda2 { animation-delay: 1.2s; }
+    .cel-faiscas i { animation: cel-faisca 1.1s cubic-bezier(.15, .7, .3, 1) .45s both; }
+    .cel-faiscas i:nth-child(odd) { animation-duration: 1.4s; }
+    .cel-semana b { display: inline-block; animation: mt-pop .5s cubic-bezier(.3, 1.6, .5, 1) 1.05s both; }
+    .cel-icone { animation: cel-check .7s cubic-bezier(.3, 1.6, .5, 1) .3s both; }
+  }
+  @keyframes cel-pop { 0% { transform: scale(.3); opacity: 0; } 100% { transform: none; opacity: 1; } }
+  @keyframes cel-onda { 0% { transform: scale(.85); opacity: .7; } 100% { transform: scale(1.35); opacity: 0; } }
+  @keyframes cel-faisca {
+    0% { opacity: 1; transform: rotate(var(--a)) translateY(0) scale(1.1); }
+    100% { opacity: 0; transform: rotate(var(--a)) translateY(-130px) scale(.4); }
+  }
+  @keyframes cel-check { 0% { transform: scale(.2) rotate(-25deg); opacity: 0; } 100% { transform: none; opacity: 1; } }
 
   /* Aviso da novidade e editor "Meus treinos" */
   .novidade-selo {
@@ -1757,6 +1800,7 @@
 <dialog class="modal" id="enc-dialog" aria-labelledby="enc-title">
   <div class="modal-body" id="enc-body"></div>
 </dialog>
+<dialog class="modal celebra" id="celebra-dialog" aria-labelledby="cel-title"><div class="modal-body" id="celebra-body"></div></dialog>
 <dialog class="modal" id="form-dialog" aria-labelledby="form-title">
   <div class="modal-body" id="form-body"></div>
 </dialog>
@@ -3288,11 +3332,66 @@
     const depois = depoisEncerrar;
     depoisEncerrar = null;
     encDialog.close();
-    toast(`${TIPOS[a.tipo].nome} encerrado: ${fmtDur(duracaoMin(a))} de treino.`);
     registrarEvento('checkin_encerrado', { tipo: a.tipo });
     atualizarCheckinUI();
-    if (depois) depois();
+    celebrarCheckin(a, { encerrado: true, aoFechar: () => {
+      toast(`${TIPOS[a.tipo].nome} encerrado: ${fmtDur(duracaoMin(a))} de treino.`);
+      if (depois) depois();
+    } });
   }
+
+  // ---------- Celebração do check-in (tela cheia) ----------
+  // Ao salvar um check-in novo e ao encerrar um treino em andamento: um ✓ grande na cor da atividade, o resumo e
+  // quantos treinos a pessoa já fez na semana. Fecha sozinha em poucos segundos ou no Continuar.
+  const celebraDialog = $('celebra-dialog');
+  let celebra = null;
+  function treinosDaSemana(data) {
+    const d = deData(data);
+    const seg = new Date(d); seg.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+    const dom = new Date(seg); dom.setDate(seg.getDate() + 6);
+    const ini = isoLocal(seg).slice(0, 10), fim = isoLocal(dom).slice(0, 10);
+    return checkins.filter((c) => dataDe(c) >= ini && dataDe(c) <= fim).length;
+  }
+  function celebrarCheckin(c, { encerrado = false, aoFechar } = {}) {
+    // Os testes antigos desligam a celebração (window.__semCelebracao) para seguir direto.
+    if (window.__semCelebracao) { if (aoFechar) aoFechar(); return; }
+    const g = TIPOS[c.tipo].grupo;
+    const data = dataDe(c);
+    const quando = data === hoje() ? 'Hoje' : fmtData(data, { weekday: 'short', day: '2-digit', month: '2-digit' });
+    const dur = duracaoMin(c);
+    const n = treinosDaSemana(data);
+    const faiscas = Array.from({ length: 16 }, (_, k) => `<i style="--a:${k * 22.5}deg;--c:var(${['--cor', '--tatame', '--checkin', '--feito-tinta'][k % 4]})"></i>`).join('');
+    $('celebra-body').innerHTML = `
+      <div class="cel" data-grupo="${g}" style="--cor:var(--${g})">
+        <div class="cel-palco">
+          <span class="cel-onda" aria-hidden="true"></span><span class="cel-onda cel-onda2" aria-hidden="true"></span>
+          <span class="cel-icone" aria-hidden="true">${ICON_CHECK}</span>
+          <span class="cel-faiscas" aria-hidden="true">${faiscas}</span>
+        </div>
+        <h3 id="cel-title" tabindex="-1">${encerrado ? 'Treino concluído!' : 'Check-in feito!'}</h3>
+        <p class="cel-tipo">${TIPOS[c.tipo].nome}</p>
+        <p class="cel-info">${quando} · ${horaDe(c.inicio)} às ${horaDe(c.fim)}${dur ? ` · ${fmtDur(dur)}` : ''}</p>
+        <p class="cel-semana"><b>${n}º</b> treino da semana</p>
+        <button class="modal-done cel-ok-btn" type="button" data-cel-fechar>Continuar</button>
+      </div>`;
+    document.body.classList.add('bv-ativa');
+    celebraDialog.showModal();
+    $('cel-title').focus();
+    const reduzido = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    clearTimeout(celebra && celebra.timer);
+    celebra = { aoFechar, timer: setTimeout(fecharCelebracao, reduzido ? 2200 : 4200) };
+  }
+  function fecharCelebracao() {
+    if (!celebra) return;
+    const { aoFechar, timer } = celebra;
+    celebra = null;
+    clearTimeout(timer);
+    celebraDialog.close();
+    document.body.classList.remove('bv-ativa');
+    if (aoFechar) aoFechar();
+  }
+  celebraDialog.addEventListener('click', (e) => { if (e.target.closest('[data-cel-fechar]')) fecharCelebracao(); });
+  celebraDialog.addEventListener('cancel', (e) => { e.preventDefault(); fecharCelebracao(); });
 
   // ---------- Check-in rápido, extra ou retroativo ----------
   const formDialog = $('form-dialog');
@@ -3514,11 +3613,11 @@
     salvarCheckin(novo);
     aplicarFotoForm(novo);
     formDialog.close();
-    toast(`Check-in de ${TIPOS[tipo].nome} salvo.`);
     registrarEvento('checkin_criado', { tipo, retroativo: novo.retroativo, origem: telaAtual() });
     diaSel = data;
     mesExibido = { ano: deData(data).getFullYear(), mes: deData(data).getMonth() };
     atualizarCheckinUI();
+    celebrarCheckin(novo, { aoFechar: () => toast(`Check-in de ${TIPOS[tipo].nome} salvo.`) });
   }
 
   // ---------- Render: tela Treino ----------
@@ -4319,6 +4418,8 @@
       return renderEditor();
     }
     Object.entries(ed.treinos).forEach(([id, t]) => { t.nome = limpar(t.nome, 40) || `Treino ${id}`; t.subtitulo = limpar(t.subtitulo, 60); });
+    // Mudou algo de verdade (e não veio das boas-vindas)? Então os treinos se "remontam" na animação antes do aviso.
+    const animar = !ed.daBoasVindas && edMudou();
     const valor = mesmoQuePadrao(ed.treinos) ? null : treinosParaSalvar(ed.treinos);
     const antes = Object.keys(TREINOS);
     // Cópia do que existia antes de salvar, para Desfazer agora ou restaurar depois.
@@ -4349,9 +4450,12 @@
     atualizarCheckinUI();
     if (telaAtual() === 'voce') renderConfig();
     const fora = Object.keys(TREINOS).filter((id) => !config.semana.flat().includes(`t${id}`));
-    toastAcao(saiuDaSemana ? 'Treinos salvos. O treino excluído saiu da sua semana.'
+    const avisar = () => toastAcao(saiuDaSemana ? 'Treinos salvos. O treino excluído saiu da sua semana.'
       : novos.length || fora.length ? 'Treinos salvos. Coloque os treinos na semana em Você → Minha semana.'
         : 'Treinos salvos.', 'Desfazer', () => restaurarAnterior('desfazer'));
+    if (!animar) return avisar();
+    animarMontagem({ titulo: 'Atualizando seus treinos', inicio: 'Salvando suas mudanças…', fimTitulo: 'Treinos atualizados!',
+      aoTerminar: () => { fecharJornadas('editor'); avisar(); } });
   }
 
   const fotoDosTreinos = () => ({ treinos: treinosParaSalvar(TREINOS), semana: copiaSemana(config.semana), em: new Date().toISOString(), jornada });
@@ -4684,14 +4788,14 @@
     }
     return null;
   }
-  // Nas boas-vindas, "Escolher" só marca o cartão; o Confirmar do rodapé aplica a escolha.
-  function botaoEscolherBV(id) {
+  // "Escolher" só marca o cartão; o Confirmar do rodapé aplica a escolha (nas boas-vindas e em Mudar meu objetivo).
+  function botaoEscolherBV(id, rotulo = 'Escolher') {
     const marcado = jd.selecionado === id;
-    return `<button class="${marcado ? 'btn escolhido' : 'btn'}" type="button" data-jd-marcar="${id}" aria-pressed="${marcado}">${marcado ? `${ICON_CHECK}Escolhido` : 'Escolher'}</button>`;
+    return `<button class="${marcado ? 'btn escolhido' : 'btn'}" type="button" data-jd-marcar="${id}" aria-pressed="${marcado}">${marcado ? `${ICON_CHECK}Escolhido` : rotulo}</button>`;
   }
   function renderJornadas(foco) {
     const boasVindas = jd.modo === 'boas-vindas';
-    if (boasVindas && jd.passo === 'montando') return;
+    if (jd.passo === 'montando') return;
     if (boasVindas && jd.passo !== 'objetivo') {
       $('jornada-body').innerHTML = renderPassoBV();
       return;
@@ -4709,14 +4813,10 @@
           <div><h4>${seloHTML(`t${n}`)}${esc(j.treinos[n].nome)}${j.treinos[n].subtitulo ? ` <small>${esc(j.treinos[n].subtitulo)}</small>` : ''}</h4>
           <ol>${j.treinos[n].exercicios.map((e) => `<li>${esc(e.nome)} <small>${esc(e.dose)}</small></li>`).join('')}</ol></div>`).join('')}
         </div>` : ''}
-        ${jd.confirmar === j.id ? `<div class="ed-confirma" role="alert">
-          <p>Mudar seu objetivo para ${esc(j.nome)}? Seus treinos e a semana de agora ficam guardados como versão anterior, e dá para desfazer.</p>
-          <div><button class="btn" type="button" data-jd-sim="${j.id}">Mudar objetivo</button><button class="btn-sec" type="button" data-jd-cancelar>Cancelar</button></div>
-        </div>` : `<div class="jornada-acoes">
+        <div class="jornada-acoes">
           <button class="btn-sec" type="button" data-jd-ver="${j.id}" aria-expanded="${aberta}"${aberta ? ` aria-controls="jornada-treinos-${j.id}"` : ''}>${aberta ? 'Esconder treinos' : 'Ver treinos'}</button>
-          ${atual === j && ehDaJornada(j) ? '' : boasVindas ? botaoEscolherBV(j.id)
-    : `<button class="btn" type="button" data-jd-escolher="${j.id}">${atual === j ? 'Voltar ao original' : 'Escolher'}</button>`}
-        </div>`}
+          ${atual === j && ehDaJornada(j) ? '' : botaoEscolherBV(j.id, atual === j ? 'Voltar ao original' : 'Escolher')}
+        </div>
       </li>`;
     };
     $('jornada-body').innerHTML = `
@@ -4731,7 +4831,8 @@
           <div class="jornada-acoes">${boasVindas ? botaoEscolherBV('zero') : '<button class="btn-sec" type="button" data-jd-zero>Montar meus treinos</button>'}</div>
         </li>
       </ul>
-      ${boasVindas ? rodapeBV(jd.selecionado ? `<button class="modal-done" type="button" data-jd-confirmar>${jd.selecionado === 'zero' ? 'Montar meus treinos' : 'Confirmar'}</button>` : '') : ''}`;
+      ${boasVindas ? rodapeBV(jd.selecionado ? `<button class="modal-done" type="button" data-jd-confirmar>${jd.selecionado === 'zero' ? 'Montar meus treinos' : 'Confirmar'}</button>` : '')
+    : jd.selecionado ? '<div class="bv-rodape"><button class="modal-done" type="button" data-jd-confirmar>Confirmar</button></div>' : ''}`;
     if (foco) { const el = $('jornada-body').querySelector(foco); if (el) el.focus(); }
   }
   function fecharJornadas(escolha) {
@@ -4761,29 +4862,16 @@
       if (jd.selecionado === 'zero') { fecharJornadas('montar'); return abrirEditor({ doZero: true, daBoasVindas: true }); }
       return montarTreinosBV(jd.selecionado);
     }
-    if (b && b.dataset.jdEscolher) {
-      // Na troca, confirma antes; nas boas-vindas a conta ainda não tem nada para perder.
-      if (jd.modo === 'trocar') { jd.confirmar = b.dataset.jdEscolher; return renderJornadas(`[data-jd-sim="${b.dataset.jdEscolher}"]`); }
-      const modo = jd.modo;
-      fecharJornadas('jornada');
-      return aplicarJornada(b.dataset.jdEscolher, modo);
-    }
-    if (b && b.dataset.jdSim) { const modo = jd.modo; fecharJornadas('jornada'); return aplicarJornada(b.dataset.jdSim, modo); }
-    if (b && 'jdCancelar' in b.dataset) {
-      const id = jd.confirmar;
-      jd.confirmar = null;
-      return renderJornadas(`[data-jd-escolher="${id}"]`);
-    }
     if (b && 'jdZero' in b.dataset) {
       const daBoasVindas = jd.modo === 'boas-vindas';
       fecharJornadas('montar');
       return abrirEditor({ doZero: true, daBoasVindas });
     }
-    // As boas-vindas não fecham sem uma escolha (sem X, sem Esc e sem tocar fora).
-    if (jd && jd.modo === 'boas-vindas') return;
+    // As boas-vindas não fecham sem uma escolha, e a animação não fecha no meio (sem X, sem Esc e sem tocar fora).
+    if (jd && (jd.modo === 'boas-vindas' || jd.passo === 'montando')) return;
     if (e.target === jornadaDialog || e.target.closest('[data-fechar]')) fecharJornadas('fechou');
   });
-  jornadaDialog.addEventListener('cancel', (e) => { e.preventDefault(); if (jd && jd.modo !== 'boas-vindas') fecharJornadas('fechou'); });
+  jornadaDialog.addEventListener('cancel', (e) => { e.preventDefault(); if (jd && jd.modo !== 'boas-vindas' && jd.passo !== 'montando') fecharJornadas('fechou'); });
 
   // Semana sugerida: tira os treinos da semana de agora e põe os da jornada, sem mexer em jiu, muay, surf e cardio.
   function semanaDaJornada(j) {
@@ -4818,16 +4906,24 @@
   }
   const avisarJornada = (j) => toastAcao(`Objetivo ${j.nome} escolhido. Os treinos já estão na sua semana.`, 'Desfazer', () => restaurarAnterior('desfazer'));
 
-  // ---------- Animação "Montando seus treinos" (depois de confirmar o objetivo nas boas-vindas) ----------
-  // Grava a escolha na hora; a animação mostra os treinos e a semana se formando e só então abre o app.
+  // ---------- Animação "Montando seus treinos" ----------
+  // Ao confirmar um objetivo (boas-vindas ou Mudar meu objetivo) e ao salvar treinos alterados no editor.
+  // A gravação é feita antes; a animação mostra os treinos e a semana se formando, em tela cheia, e só então mostra o app.
   const ICON_HALTER = '<svg viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg>';
   const DIAS_LETRA = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
   let montagemTimers = [];
   function montarTreinosBV(id) {
     const j = jornadaPorId(id);
     if (!j) return;
-    aplicarJornada(id, 'boas-vindas', { semAviso: true });
+    aplicarJornada(id, jd.modo, { semAviso: true });
+    animarMontagem({ rotulo: `Treinos de ${j.nome}`, aoTerminar: () => { fecharJornadas('jornada'); avisarJornada(j); } });
+  }
+  function animarMontagem({ titulo = 'Montando seus treinos', inicio = 'Analisando seu objetivo…', fimTitulo = 'Treinos prontos!', rotulo = 'Seus treinos', aoTerminar }) {
+    if (!jd) jd = { modo: 'editor' };
     jd.passo = 'montando';
+    jornadaDialog.classList.add('bv-tela');
+    document.body.classList.add('bv-ativa');
+    if (!jornadaDialog.open) jornadaDialog.showModal();
     const ids = Object.keys(TREINOS);
     const treinos = ids.map((n, i) => {
       const t = TREINOS[n];
@@ -4853,16 +4949,17 @@
           <span class="mt-faiscas" aria-hidden="true">${faiscas}</span>
         </div>
         <div class="mt-textos">
-          <h3 id="jornada-title" tabindex="-1">Montando seus treinos</h3>
-          <p class="mt-etapa" id="mt-etapa" role="status" aria-live="polite">Analisando seu objetivo…</p>
+          <h3 id="jornada-title" tabindex="-1">${titulo}</h3>
+          <p class="mt-etapa" id="mt-etapa" role="status" aria-live="polite">${inicio}</p>
         </div>
-        <ol class="mt-treinos" aria-label="Treinos de ${esc(j.nome)}">${treinos}</ol>
+        <ol class="mt-treinos" aria-label="${esc(rotulo)}">${treinos}</ol>
         <div class="mt-semana-box"><p class="mt-rotulo">Sua semana</p><ol class="mt-semana">${semana}</ol></div>
       </div>`;
     $('jornada-title').focus();
     const raiz = $('jornada-body').querySelector('.bv-montando');
     const reduzido = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const passo = reduzido ? 180 : 650;
+    // Com movimento: cerca de 7,5 a 8 s no total (+1 s nos treinos, +0,5 s na semana e +0,5 s no "pronto").
+    const passo = reduzido ? 180 : 650 + Math.round(1000 / ids.length);
     const etapa = (txt) => { $('mt-etapa').textContent = txt; };
     const linha = [];
     let t = reduzido ? 150 : 700;
@@ -4882,15 +4979,15 @@
       raiz.classList.add('semana-on');
       raiz.style.setProperty('--prog', '0.92');
     }]);
-    t += reduzido ? 250 : 1000;
+    t += reduzido ? 250 : 1500;
     linha.push([t, () => {
       etapa('Tudo pronto! Bons treinos.');
-      $('jornada-title').textContent = 'Treinos prontos!';
+      $('jornada-title').textContent = fimTitulo;
       raiz.classList.add('pronto');
       raiz.style.setProperty('--prog', '1');
     }]);
-    t += reduzido ? 600 : 1500;
-    linha.push([t, () => { fecharJornadas('jornada'); avisarJornada(j); }]);
+    t += reduzido ? 600 : 2000;
+    linha.push([t, aoTerminar]);
     montagemTimers.forEach(clearTimeout);
     montagemTimers = linha.map(([ms, fn]) => setTimeout(fn, ms));
   }

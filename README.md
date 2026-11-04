@@ -157,6 +157,10 @@ Cada pessoa pode montar até 6 treinos (t1 a t6), com até 15 exercícios cada, 
 
 Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 a t6 nos check-ins e nas cargas e cria as colunas `treinos`, `novidade_treinos` e `novidade_oculta`.
 
+### Celebração do check-in
+
+- Ao salvar um check-in novo ou encerrar um treino em andamento, a tela inteira mostra um ✓ grande na cor da atividade, o nome dela, o horário, a duração e o nº do treino na semana. Fecha sozinha em uns 4 segundos ou no **Continuar**. Editar um check-in não celebra.
+
 ### Temporizador de descanso
 
 - **Configurar:** Você → Temporizador. Vem ligado (dá para desligar). Escolha o descanso padrão (30 s a 3 min) e se, ao terminar, toca um som e o celular vibra (o iPhone não vibra; o aviso fica na tela).
@@ -177,7 +181,7 @@ Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 a t6 nos check-i
   3. **Qual é o seu objetivo?:** os objetivos prontos ou Montar do zero (sair do editor sem salvar volta para a escolha).
 
   Escolher grava os treinos (`perfis.treinos`), a semana sugerida (mantendo jiu, muay, surf e cardio) e a jornada (`perfis.jornada`), e encerra as boas-vindas.
-- **Quem já usa:** "Mudar meu objetivo", em Você → Meus treinos, sempre com confirmação. A versão de antes vai para `treinos_anterior`, e o "Desfazer" volta a ela. **Nenhum treino de quem já usa muda sozinho.**
+- **Quem já usa:** "Mudar meu objetivo", em Você → Meus treinos: "Escolher" marca o cartão e o rodapé mostra o **Confirmar**. Ao confirmar, a animação "Montando seus treinos" mostra os treinos e a semana se formando; ao salvar treinos alterados no editor, a mesma animação aparece como "Atualizando seus treinos". A versão de antes vai para `treinos_anterior`, e o "Desfazer" volta a ela. **Nenhum treino de quem já usa muda sozinho.**
 - **Personalizar:** depois de escolher, tudo continua editável. Meus treinos mostra "Jornada X" ou "X (personalizada)".
 - **No banco:** a coluna `perfis.jornada` guarda só o id da jornada. Sem ela (schema antigo), escolher funciona do mesmo jeito, sem o rótulo.
 - **Monitoramento:** os eventos `jornadas_abertas` e `jornada_escolhida` alimentam o card "Objetivos escolhidos".

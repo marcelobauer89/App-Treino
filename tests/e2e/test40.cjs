@@ -10,7 +10,7 @@ async function excluirTreino1(p) {
   await p.click('#editar-treinos'); await p.waitForTimeout(300);
   await p.click('[data-ed-treino="1"]');
   await p.click('[data-ed-excluir]'); await p.click('[data-ed-excluir-sim]');
-  await p.click('[data-ed-salvar]'); await H.gravacoes(p);
+  await H.salvarEditor(p); await H.gravacoes(p);
 }
 (async () => {
   const srv = await H.servidor(); const b = await chromium.launch();

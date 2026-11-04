@@ -113,6 +113,27 @@ const perfil = async (p) => (await H.banco(p)).perfis.find((x) => x.id === 'u1')
     await p.context().close();
   }
 
+  // Em Você → Meus treinos: salvar o editor com mudança anima ("Atualizando seus treinos"); sem mudança, não.
+  {
+    const p = await abrir(b, { perfis: [NOVA({ politica_versao: '2026-10-27', novidade_oculta: '2026-10-01T00:00:00Z' })],
+      checkins: [{ id: 'c1', usuario_id: 'u1', tipo: 't1', inicio: '2026-10-20T10:00:00', fim: '2026-10-20T11:00:00', sem_horario: false, obs: '', retroativo: false, series: {} }] });
+    await H.voce(p, 'treinos');
+    await p.click('#editar-treinos'); await p.waitForTimeout(150);
+    await p.click('[data-ed-salvar]'); await p.waitForTimeout(250);
+    ok(!(await p.locator('#jornada-dialog[open]').count()) && !(await p.isVisible('#editor-dialog')), 'salvar sem mudança: fecha sem animação');
+    await p.click('#editar-treinos'); await p.waitForTimeout(150);
+    await p.locator('#editor-body [data-ed-remover]').first().click(); await p.waitForTimeout(100);
+    await p.click('[data-ed-salvar]'); await p.waitForTimeout(400);
+    ok(await p.isVisible('.bv-montando') && (await p.innerText('#jornada-title')) === 'Atualizando seus treinos' && await p.evaluate(() => document.body.classList.contains('bv-ativa')),
+      'salvar com mudança: animação "Atualizando seus treinos" em tela cheia', await p.innerText('#jornada-title').catch(() => ''));
+    await p.screenshot({ path: `${H.SAIDA}/atualizando-light.png` });
+    await p.waitForSelector('#jornada-dialog', { state: 'hidden', timeout: 15000 }); await p.waitForTimeout(300);
+    ok(/Treinos salvos/.test(await p.locator('#toast, .toast').first().innerText().catch(() => '')) && await p.evaluate(() => !document.body.classList.contains('bv-ativa')),
+      'depois da animação: aviso "Treinos salvos" e o app de volta');
+    ok(!p.errs.length, 'editor com animação: sem erros', p.errs.join(' | '));
+    await p.context().close();
+  }
+
   // Nada registrado antes da privacidade: os eventos de uso só citam as boas-vindas depois do Entendi.
   let p = await abrir(b, { perfis: [NOVA()] });
   await p.waitForTimeout(200);
