@@ -33,6 +33,27 @@ const ok = (c, l, x = '') => { if (!c) fails++; console.log(`${c ? 'PASS' : 'FAI
     ok(!p.errs.length, `${scheme} ${nome}: no errors`, p.errs.join());
     await p.context().close();
   }
+  // Tela de entrada "Gestão de Treinos" fixa: igual no claro, no escuro e com qualquer estilo de cores.
+  const visual = async (scheme, local) => {
+    const q = await H.novaPagina(b, { logado: false, scheme, local, viewport: { width: 390, height: 844 } });
+    await q.goto(H.PAGINA); await q.waitForSelector('#entrar-google:not([hidden])'); await q.waitForTimeout(300);
+    const v = await q.evaluate(() => ({
+      fundo: getComputedStyle(document.getElementById('tela-entrar')).backgroundColor,
+      arte: getComputedStyle(document.querySelector('.entrar-arte')).backgroundImage,
+      titulo: document.getElementById('entrar-titulo').textContent.trim(),
+      cor: getComputedStyle(document.getElementById('entrar-status')).color,
+      lema: document.querySelector('.entrar-lema').textContent.replace(/\s+/g, ' ').trim(),
+    }));
+    await q.screenshot({ path: `${H.SAIDA}/entrada-${scheme}-${local['bauer-estilo'] || 'padrao'}.png` });
+    await q.context().close();
+    return v;
+  };
+  const base = await visual('light', {});
+  ok(base.titulo === 'Gestão de Treinos' && base.lema === 'Treine. Registre. Evolua.' && /gradient/.test(base.arte), 'entrada: Gestão de Treinos com o degradê', JSON.stringify(base));
+  for (const [scheme, local] of [['dark', { 'bauer-tema': 'escuro' }], ['dark', { 'bauer-tema': 'escuro', 'bauer-estilo': 'cyber' }], ['light', { 'bauer-estilo': 'violeta' }]]) {
+    const v = await visual(scheme, local);
+    ok(JSON.stringify(v) === JSON.stringify(base), `entrada igual com ${scheme} ${JSON.stringify(local)}`, JSON.stringify(v));
+  }
   // estados
   const c = await H.novaPagina(b, { logado: false, configurar: false });
   await c.goto(H.PAGINA); await c.waitForTimeout(400);
