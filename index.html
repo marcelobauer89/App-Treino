@@ -450,7 +450,10 @@
   }
   #tela-entrar .entrar-lema span { display: block; }
   #tela-entrar .entrar-lema .contorno { color: transparent; -webkit-text-stroke: 2.5px #fff; }
-  #tela-entrar .entrar-grafico { display: block; width: calc(100% + 40px); height: clamp(48px, 10dvh, 92px); margin: 0 -20px; }
+  #tela-entrar .entrar-grafico { position: relative; width: calc(100% + 40px); height: clamp(48px, 10dvh, 92px); margin: 0 -20px; }
+  #tela-entrar .entrar-grafico svg { display: block; width: 100%; height: 100%; }
+  /* A bolinha fica fora do SVG esticado, para continuar redonda em qualquer largura. */
+  #tela-entrar .entrar-ponto { position: absolute; left: 84.6%; top: 21.7%; width: 12px; height: 12px; margin: -6px; border-radius: 50%; background: #fff; }
   #tela-entrar .entrar-texto { margin: 0; max-width: 36ch; font-size: 18px; line-height: 1.38; font-weight: 500; color: #fff; opacity: .95; }
   #tela-entrar .form-erro { margin: 0; padding: 10px 12px; border-radius: 10px; background: rgba(255, 255, 255, .94); color: #b91c1c; font-weight: 600; }
   #tela-entrar .entrar-acoes { display: grid; gap: 12px; margin-top: auto; padding-top: 16px; }
@@ -498,7 +501,7 @@
     #tela-entrar .entrar-lema span:nth-child(2) { animation-delay: .12s; }
     #tela-entrar .entrar-lema span:nth-child(3) { animation-delay: .24s; }
     #tela-entrar .entrar-grafico .linha { stroke-dasharray: 520; stroke-dashoffset: 520; animation: entrar-linha 1.4s cubic-bezier(.3, .7, .2, 1) .4s forwards; }
-    #tela-entrar .entrar-grafico circle { animation: mt-pop .5s cubic-bezier(.3, 1.6, .5, 1) 1.5s both; }
+    #tela-entrar .entrar-ponto { animation: mt-pop .5s cubic-bezier(.3, 1.6, .5, 1) 1.5s both; }
   }
   @keyframes entrar-linha { to { stroke-dashoffset: 0; } }
   @media (prefers-reduced-motion: reduce) {
@@ -1465,11 +1468,13 @@
   <div class="entrar-corpo">
     <div class="entrar-marca"><i aria-hidden="true">GT</i><h1 class="entrar-titulo" id="entrar-titulo">Gestão de Treinos</h1></div>
     <p class="entrar-lema"><span>Treine.</span> <span class="contorno">Registre.</span> <span>Evolua.</span></p>
-    <svg class="entrar-grafico" viewBox="0 0 390 92" preserveAspectRatio="none" aria-hidden="true">
-      <path d="M0 80 C60 76 80 64 120 66 S190 50 220 46 S300 26 330 20 S370 10 390 6 V92 H0Z" fill="rgba(255,255,255,.14)"/>
-      <path class="linha" d="M0 80 C60 76 80 64 120 66 S190 50 220 46 S300 26 330 20 S370 10 390 6" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-      <circle cx="330" cy="20" r="6" fill="#fff"/>
-    </svg>
+    <div class="entrar-grafico" aria-hidden="true">
+      <svg viewBox="0 0 390 92" preserveAspectRatio="none">
+        <path d="M0 80 C60 76 80 64 120 66 S190 50 220 46 S300 26 330 20 S370 10 390 6 V92 H0Z" fill="rgba(255,255,255,.14)"/>
+        <path class="linha" d="M0 80 C60 76 80 64 120 66 S190 50 220 46 S300 26 330 20 S370 10 390 6" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+      </svg>
+      <i class="entrar-ponto"></i>
+    </div>
     <p class="entrar-texto" id="entrar-status" role="status">Carregando seus treinos…</p>
     <p class="form-erro" id="entrar-erro" role="alert" hidden></p>
     <div class="entrar-acoes">
