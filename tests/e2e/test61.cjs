@@ -32,7 +32,8 @@ const ADM = (atraso) => ({ ids: ['u1'], atraso, usuarios: [usuario('u1', 'Marcel
     ok(await p.locator('#painel').evaluate((e) => e.classList.contains('entra')) && (await p.locator('#painel .entra-item').count()) >= 5, `${tag}: painel entra em cascata`, String(await p.locator('#painel .entra-item').count()));
     ok(await p.locator('#estado').isHidden() && !(await p.locator('#estado').getAttribute('aria-busy')), `${tag}: esqueleto some`);
     await p.waitForTimeout(150); await p.screenshot({ path: `${H.SAIDA}/entrando-${tag}.png` });
-    await p.waitForTimeout(1200);
+    // A limpeza acontece 600 ms + 55 ms por bloco depois; espera por ela (um tempo fixo ficava no limite no GitHub).
+    await p.waitForFunction(() => !document.querySelector('#painel.entra, #painel .entra-item'), null, { timeout: 4000 }).catch(() => {});
     ok(!(await p.locator('#painel.entra, #painel .entra-item').count()), `${tag}: cascata termina e limpa as classes`);
     // Atualizar: ícone gira, sem esqueleto
     await p.click('#atualizar'); await p.waitForTimeout(200);

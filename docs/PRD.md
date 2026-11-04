@@ -264,7 +264,7 @@ Terminar exercícios (registrar pesos) e fazer check-in são ações separadas. 
 | Tela | Conteúdo principal |
 | --- | --- |
 | Boas-vindas (conta nova) | Janela em etapas, com "Etapa X de N" no topo: "Bem-vindo ao OSS" (o que o app faz e Começar), "Seus dados" (privacidade, Ler a política completa, Voltar e Entendi) e "Qual é o seu objetivo?" (cartões dos objetivos e Montar do zero). Sem X: só fecha com uma escolha |
-| Entrada | Painel azul com a faixa branca de 4 graus, título "OSS", "Exercícios de Jiu Jitsu e hipertrofia", "Continuar com o Google", "Ao entrar, você concorda com a Política de Privacidade" (abre a política numa janela dentro do app), crédito com link para o LinkedIn |
+| Entrada | Painel azul com a faixa branca de 4 graus, título "OSS", "Exercícios de Jiu Jitsu e hipertrofia", "Continuar com o Google", "Ao entrar, você concorda com a Política de Privacidade" (abre a política numa janela dentro do app), crédito com link para o LinkedIn. Ao compartilhar o link, a prévia mostra "Gestão de Treinos" (título e tags de compartilhamento) |
 | Só para convidados | Para quem entra sem convite: "O OSS é só para convidados", campo para o código, mensagens para convite inválido, usado, expirado ou cancelado e "Pedir acesso"; um link `?convite=` é guardado até o login terminar e usado sozinho |
 | Aviso da política | Quando a política muda: resumo curto com "Entendi" e "Ler a política completa", antes do aviso dos treinos personalizados |
 | Onboarding | Peso, % de gordura, alvo, data de início (pendente) |
