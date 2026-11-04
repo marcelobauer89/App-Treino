@@ -59,6 +59,8 @@ const ADM = {
   // 4. Admin, celular e computador, claro e escuro
   for (const scheme of ['light', 'dark']) for (const viewport of [{ width: 375, height: 760 }, { width: 360, height: 760 }, { width: 1280, height: 900 }]) {
     p = await H.novaPagina(b, { scheme, viewport, extra: { admin: ADM } });
+    // Sem a entrada em cascata do painel: com ela, os cartões ainda estavam se mexendo quando o teste media as posições.
+    await p.emulateMedia({ reducedMotion: 'reduce' });
     await p.clock.install({ time: T });
     await p.goto(ADMIN); await p.waitForSelector('#painel:not([hidden])');
     const tag = `${scheme}-${viewport.width}`;
