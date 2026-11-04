@@ -177,7 +177,7 @@ Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 a t6 nos check-i
   3. **Qual é o seu objetivo?:** os objetivos prontos ou Montar do zero (sair do editor sem salvar volta para a escolha).
 
   Escolher grava os treinos (`perfis.treinos`), a semana sugerida (mantendo jiu, muay, surf e cardio) e a jornada (`perfis.jornada`), e encerra as boas-vindas.
-- **Quem já usa:** "Mudar meu objetivo", em Você → Meus treinos: "Escolher" marca o cartão e o rodapé mostra o aviso e o **Confirmar**. Ao confirmar, a animação "Montando seus treinos" mostra os treinos e a semana se formando; ao salvar treinos alterados no editor, a mesma animação aparece como "Atualizando seus treinos". A versão de antes vai para `treinos_anterior`, e o "Desfazer" volta a ela. **Nenhum treino de quem já usa muda sozinho.**
+- **Quem já usa:** "Mudar meu objetivo", em Você → Meus treinos: "Escolher" marca o cartão e o rodapé mostra o **Confirmar**. Ao confirmar, a animação "Montando seus treinos" mostra os treinos e a semana se formando; ao salvar treinos alterados no editor, a mesma animação aparece como "Atualizando seus treinos". A versão de antes vai para `treinos_anterior`, e o "Desfazer" volta a ela. **Nenhum treino de quem já usa muda sozinho.**
 - **Personalizar:** depois de escolher, tudo continua editável. Meus treinos mostra "Jornada X" ou "X (personalizada)".
 - **No banco:** a coluna `perfis.jornada` guarda só o id da jornada. Sem ela (schema antigo), escolher funciona do mesmo jeito, sem o rótulo.
 - **Monitoramento:** os eventos `jornadas_abertas` e `jornada_escolhida` alimentam o card "Objetivos escolhidos".

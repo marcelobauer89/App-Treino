@@ -99,8 +99,8 @@ const abrir = (b, extra, op = {}) => H.novaPagina(b, { viewport: op.viewport || 
   ok((await txt(p, '#jornada-title')) === 'Mudar meu objetivo' && !(await p.locator('#jornada-body #novidade-ocultar').count()), 'Mudar meu objetivo abre sem a caixa de boas-vindas');
   ok(!(await p.locator('[data-jd-confirmar]').count()), 'sem Confirmar antes de escolher');
   await p.click('[data-jd-marcar="mobilidade"]');
-  ok(/ficam guardados/.test(await txt(p, '#jornada-body .bv-aviso')) && await p.isVisible('.bv-rodape [data-jd-confirmar]')
-    && (await p.getAttribute('[data-jd-marcar="mobilidade"]', 'aria-pressed')) === 'true', 'Escolher marca e mostra o aviso e o Confirmar');
+  ok(await p.isVisible('.bv-rodape [data-jd-confirmar]') && !(await p.locator('.bv-rodape p').count())
+    && (await p.getAttribute('[data-jd-marcar="mobilidade"]', 'aria-pressed')) === 'true', 'Escolher marca e mostra só o Confirmar no rodapé');
   await p.screenshot({ path: `${S}/jornadas-confirmar.png` });
   await p.click('[data-jd-marcar="mobilidade"]');
   db = await H.banco(p);

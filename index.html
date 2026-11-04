@@ -891,9 +891,6 @@
   .bv-voltar { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; padding: 0 8px 0 0; border: 0; background: none; color: var(--tatame-tinta); font: inherit; font-weight: 700; cursor: pointer; }
   .bv-voltar:focus-visible { outline: 3px solid var(--tatame-tinta); outline-offset: 2px; border-radius: 6px; }
   #jornada-title:focus { outline: none; }
-  /* Mudar meu objetivo: aviso da versão anterior ao lado do Confirmar. */
-  .bv-rodape-aviso .bv-aviso { flex: 1; margin: 0; font-size: 13.5px; line-height: 1.35; color: var(--tinta-2); text-align: left; }
-  .bv-rodape-aviso .modal-done { flex: 0 0 auto; }
   /* Cartão escolhido nas boas-vindas (o Confirmar do rodapé aplica). */
   .jornada.selecionada { border-color: var(--tatame); box-shadow: 0 0 0 2px var(--tatame); }
   .jornada-acoes .btn.escolhido { display: inline-flex; align-items: center; justify-content: center; gap: 6px; background: var(--feito-tinta); color: var(--papel); }
@@ -4736,7 +4733,7 @@
         </li>
       </ul>
       ${boasVindas ? rodapeBV(jd.selecionado ? `<button class="modal-done" type="button" data-jd-confirmar>${jd.selecionado === 'zero' ? 'Montar meus treinos' : 'Confirmar'}</button>` : '')
-    : jd.selecionado ? `<div class="bv-rodape bv-rodape-aviso"><p class="bv-aviso">Seus treinos e a semana de agora ficam guardados como versão anterior, e dá para desfazer.</p><button class="modal-done" type="button" data-jd-confirmar>Confirmar</button></div>` : ''}`;
+    : jd.selecionado ? '<div class="bv-rodape"><button class="modal-done" type="button" data-jd-confirmar>Confirmar</button></div>' : ''}`;
     if (foco) { const el = $('jornada-body').querySelector(foco); if (el) el.focus(); }
   }
   function fecharJornadas(escolha) {
