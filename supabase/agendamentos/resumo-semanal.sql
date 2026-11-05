@@ -64,6 +64,16 @@ select cron.schedule(
 --   params := '{"previa": "seu-email@gmail.com"}'::jsonb,
 --   timeout_milliseconds := 30000);
 
+-- Prévia da versão "E aí, sumiu?" (a de quem está no card Quem sumiu), para qualquer pessoa.
+-- Mande também em "params": o pg_net nem sempre entrega o corpo, e a função lê da URL.
+-- select net.http_post(
+--   url := 'https://mlovfgbndtpeczgnvivi.supabase.co/functions/v1/rapid-worker',
+--   headers := jsonb_build_object('content-type', 'application/json',
+--     'x-resumo-token', (select decrypted_secret from vault.decrypted_secrets where name = 'resumo_token')),
+--   body := '{"previa": "seu-email@gmail.com", "volta": true}'::jsonb,
+--   params := '{"previa": "seu-email@gmail.com", "volta": "1"}'::jsonb,
+--   timeout_milliseconds := 30000);
+
 -- Ver a resposta das últimas chamadas (uns 10 segundos depois). O campo "modo" diz o que a função
 -- entendeu: previa, simular ou envio. status_code vazio = sem resposta;
 -- veja timed_out e error_msg. O pg_net espera só 5 s se a chamada não disser outro limite.
