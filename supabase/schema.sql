@@ -862,6 +862,8 @@ begin
   if found then raise exception 'Esse nome já foi do exercício %. Escolha outro.', v_outro; end if;
   if v_video <> '' and v_video !~ '^[A-Za-z0-9_-]{11}$' then raise exception 'Vídeo inválido: use o link ou o código de 11 letras do YouTube.'; end if;
 
+  -- Um nome excluído antes volta a poder ser usado.
+  delete from public.exercicios_excluidos d where public.chave_exercicio(d.nome) = public.chave_exercicio(v_nome);
   if p_nome_atual is null or p_nome_atual = '' then
     insert into public.exercicios (nome, grupo, dose, pse, hipertrofia, mobilidade, forca, explosao, explicacao, variacoes, objetivos, ativo)
     values (v_nome, p ->> 'grupo', coalesce(nullif(btrim(p ->> 'dose'), ''), '3×10'), coalesce((p ->> 'pse')::smallint, 8),
@@ -893,11 +895,49 @@ begin
   return v_nome;
 end;
 $$;
-revoke execute on function public.admin_exercicios(), public.admin_salvar_exercicio(text, jsonb) from public, anon;
-grant execute on function public.admin_exercicios(), public.admin_salvar_exercicio(text, jsonb) to authenticated;
+-- Exercícios excluídos pelo painel: a carga inicial (abaixo) não traz de volta. Criar de novo com o nome tira daqui.
+create table if not exists public.exercicios_excluidos (
+  nome text primary key,
+  excluido_em timestamptz not null default now()
+);
+alter table public.exercicios_excluidos enable row level security;
+revoke all on public.exercicios_excluidos from anon, authenticated;
+
+-- Excluir de vez um exercício. Só quando ninguém o tem nos treinos (nem no plano pronto) e ele não está num objetivo
+-- pronto: nesses casos, o certo é desativar (sai da lista de escolha e continua nos treinos de quem já tem).
+create or replace function public.admin_excluir_exercicio(p_nome text)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_antigos text[];
+  v_usos int;
+  v_obj text;
+begin
+  if not public.eh_admin() then raise exception 'Acesso restrito a administradores.'; end if;
+  select e.nomes_antigos into v_antigos from public.exercicios e where e.nome = p_nome for update;
+  if not found then raise exception 'Exercício não encontrado.'; end if;
+  select coalesce(a.usos, 0) into v_usos from public.admin_exercicios() a where a.nome = p_nome;
+  if v_usos > 0 then
+    raise exception 'Está nos treinos de % %. Desative em vez de excluir: ele sai da lista de escolha e continua nos treinos de quem já tem.',
+      v_usos, case when v_usos = 1 then 'conta' else 'contas' end;
+  end if;
+  select j.dados ->> 'nome' into v_obj from public.jornadas j, jsonb_each(j.dados -> 'treinos') t, jsonb_array_elements(t.value -> 'exercicios') x
+    where x ->> 'nome' = p_nome or x ->> 'nome' = any(v_antigos) limit 1;
+  if found then raise exception 'Faz parte do objetivo pronto %. Desative em vez de excluir.', v_obj; end if;
+  insert into public.exercicios_excluidos (nome) select n from unnest(array[p_nome] || v_antigos) n on conflict (nome) do nothing;
+  delete from public.videos_exercicios where exercicio = p_nome;
+  delete from public.exercicios where nome = p_nome;
+end;
+$$;
+
+revoke execute on function public.admin_exercicios(), public.admin_salvar_exercicio(text, jsonb), public.admin_excluir_exercicio(text) from public, anon;
+grant execute on function public.admin_exercicios(), public.admin_salvar_exercicio(text, jsonb), public.admin_excluir_exercicio(text) to authenticated;
 
 -- catalogo:inicio (gerado por supabase/gerar-catalogo.cjs a partir do index.html; não edite à mão)
--- Carga inicial: só entra o que ainda não existe. Exercícios renomeados (nome antigo em nomes_antigos) não voltam,
+-- Carga inicial: só entra o que ainda não existe. Exercícios renomeados (nome antigo em nomes_antigos) e excluídos não voltam,
 -- e o que já foi editado pelo painel continua como está.
 insert into public.exercicios (nome, grupo, dose, pse, hipertrofia, mobilidade, forca, explosao, explicacao, variacoes, objetivos)
 select x.nome, x.grupo, x.dose, x.pse, x.hipertrofia, x.mobilidade, x.forca, x.explosao, x.explicacao,
@@ -1041,6 +1081,7 @@ from jsonb_to_recordset($catalogo$[
   {"nome":"Cardio intermediário","grupo":"Cardio","dose":"3×3 min","pse":8,"hipertrofia":"baixa","mobilidade":"baixa","forca":"baixa","explosao":"media","explicacao":"3 rounds de 3 min de trabalho com 1 min 30 s de descanso, 1 vez por semana; resistência para aguentar um rola inteiro em ritmo forte.","variacoes":["Cardio 2"],"objetivos":["forca"]}
 ]$catalogo$::jsonb) as x(nome text, grupo text, dose text, pse smallint, hipertrofia text, mobilidade text, forca text, explosao text, explicacao text, variacoes jsonb, objetivos jsonb)
 where not exists (select 1 from public.exercicios e where e.nome = x.nome or x.nome = any(e.nomes_antigos))
+  and not exists (select 1 from public.exercicios_excluidos d where d.nome = x.nome)
 on conflict do nothing;
 
 insert into public.jornadas (id, ordem, dados)

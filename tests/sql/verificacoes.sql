@@ -145,6 +145,24 @@ do $$ declare n int; r record; begin
   exception when insufficient_privilege then null; end;
 end $$;
 
+-- Excluir: só exercício fora dos treinos e dos objetivos prontos; excluído não volta com a carga inicial.
+do $$ begin
+  begin perform public.admin_excluir_exercicio('Supino reto');
+    raise exception 'FALHOU: não exclui exercício que está nos treinos de alguém';
+  exception when raise_exception then if sqlerrm not like 'Está nos treinos de 1 conta%' then raise; end if; end;
+  begin perform public.admin_excluir_exercicio('Escorpião');
+    raise exception 'FALHOU: não exclui exercício do plano pronto em uso';
+  exception when raise_exception then if sqlerrm not like 'Está nos treinos de%' then raise; end if; end;
+  -- Fora de treinos e de objetivos: exclui.
+  perform public.admin_excluir_exercicio('Sissy squat');
+end $$;
+do $$ begin
+  if exists (select 1 from public.admin_exercicios() where nome = 'Sissy squat') then raise exception 'FALHOU: Sissy squat continua na lista'; end if;
+  begin perform public.admin_excluir_exercicio('Face pull');
+    raise exception 'FALHOU: não exclui exercício que faz parte de um objetivo pronto';
+  exception when raise_exception then if sqlerrm not like 'Faz parte do objetivo pronto%' then raise; end if; end;
+end $$;
+
 -- Rodar o schema.sql de novo (como em cada atualização) não mexe nos treinos, semanas, objetivos e cargas das contas
 -- nem desfaz o que foi mudado no catálogo pelo painel.
 reset role;
@@ -164,6 +182,7 @@ do $$ begin
   if (select exercicios from antes) <> (select count(*) from public.exercicios) or exists (select 1 from public.exercicios where nome = 'Agachamento')
     then raise exception 'FALHOU: a carga inicial não traz de volta exercício renomeado nem duplica'; end if;
   if (select ativo from public.exercicios where nome = 'Exercício de teste') then raise exception 'FALHOU: a carga inicial não reativa exercício'; end if;
+  if exists (select 1 from public.exercicios where nome = 'Sissy squat') then raise exception 'FALHOU: a carga inicial não traz de volta exercício excluído'; end if;
 end $$;
 set local role authenticated;
 do $$ begin perform set_config('request.jwt.claim.sub', '11111111-1111-1111-1111-111111111111', true); end $$;

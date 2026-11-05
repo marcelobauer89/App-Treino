@@ -36,7 +36,7 @@ if (require.main === module) gerar();
 function gerar() {
 const linhas = [
   '-- catalogo:inicio (gerado por supabase/gerar-catalogo.cjs a partir do index.html; não edite à mão)',
-  '-- Carga inicial: só entra o que ainda não existe. Exercícios renomeados (nome antigo em nomes_antigos) não voltam,',
+  '-- Carga inicial: só entra o que ainda não existe. Exercícios renomeados (nome antigo em nomes_antigos) e excluídos não voltam,',
   '-- e o que já foi editado pelo painel continua como está.',
   'insert into public.exercicios (nome, grupo, dose, pse, hipertrofia, mobilidade, forca, explosao, explicacao, variacoes, objetivos)',
   'select x.nome, x.grupo, x.dose, x.pse, x.hipertrofia, x.mobilidade, x.forca, x.explosao, x.explicacao,',
@@ -45,6 +45,7 @@ const linhas = [
   exercicios.map((e) => '  ' + JSON.stringify(e)).join(',\n'),
   ']$catalogo$::jsonb) as x(nome text, grupo text, dose text, pse smallint, hipertrofia text, mobilidade text, forca text, explosao text, explicacao text, variacoes jsonb, objetivos jsonb)',
   'where not exists (select 1 from public.exercicios e where e.nome = x.nome or x.nome = any(e.nomes_antigos))',
+  '  and not exists (select 1 from public.exercicios_excluidos d where d.nome = x.nome)',
   'on conflict do nothing;',
   '',
   'insert into public.jornadas (id, ordem, dados)',

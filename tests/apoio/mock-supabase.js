@@ -336,6 +336,17 @@
               gravar(db); return { data: null, error: null };
             }
             // Catálogo pelo painel: db.exercicios (como a tabela), vídeos em db.videos e uso em admin.usos = { nome: n }.
+            if (nome === 'admin_excluir_exercicio') {
+              const a = db.admin || {}; const eu = db.sessao && db.sessao.user.id;
+              if (!(a.ids || []).includes(eu)) { gravar(db); return { data: null, error: { message: 'Acesso restrito a administradores.' } }; }
+              const e = (db.exercicios || []).find((x) => x.nome === args.p_nome);
+              const usos = (a.usos || {})[args.p_nome] || 0;
+              const obj = (db.jornadas || []).find((j) => Object.values(j.dados.treinos).some((t) => t.exercicios.some((x) => x.nome === args.p_nome)));
+              const erro = !e ? 'Exercício não encontrado.' : usos ? `Está nos treinos de ${usos} ${usos === 1 ? 'conta' : 'contas'}. Desative em vez de excluir.`
+                : obj ? `Faz parte do objetivo pronto ${obj.dados.nome}. Desative em vez de excluir.` : null;
+              if (!erro) { db.exercicios = db.exercicios.filter((x) => x !== e); db.videos = (db.videos || []).filter((v) => v.exercicio !== args.p_nome); db.log.push(`admin_excluir_exercicio:${args.p_nome}`); }
+              gravar(db); return { data: null, error: erro ? { message: erro } : null };
+            }
             if (nome === 'admin_exercicios' || nome === 'admin_salvar_exercicio') {
               const a = db.admin || {}; const eu = db.sessao && db.sessao.user.id;
               if (!(a.ids || []).includes(eu)) { gravar(db); return { data: null, error: { code: '42501', message: 'acesso restrito' } }; }

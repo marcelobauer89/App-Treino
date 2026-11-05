@@ -274,7 +274,8 @@
   .info svg { width: 18px; height: 18px; }
   .info:hover, .info[aria-expanded="true"] { color: var(--tatame-tinta); background: var(--tatame-suave); }
   .titulo-info { display: flex; align-items: center; gap: 10px; }
-  .graficos .cartao, #aba-saude > .cartao { position: relative; }
+  .graficos .cartao, #aba-saude > .cartao, #aba-exercicios > .bloco { position: relative; }
+  #aba-exercicios > .bloco > .info-txt { top: 44px; left: 0; }
   .cartao > .info-txt { top: 56px; left: 8px; }
   .info-txt {
     position: absolute; z-index: 6; top: 40px; left: 8px; width: min(300px, calc(100vw - 32px)); margin: 0; padding: 10px 12px;
@@ -404,8 +405,10 @@
   dialog.detalhe {
     width: min(560px, 100vw); max-width: 100vw; max-height: 100dvh; margin: 0 0 0 auto; height: 100dvh; padding: 0;
     border: 0; border-left: 1px solid var(--fio); background: var(--papel); color: var(--tinta);
+    box-shadow: -18px 0 48px rgba(0, 0, 0, .3);
   }
-  dialog.detalhe::backdrop { background: rgba(10, 12, 16, .5); }
+  /* Toda janela: fundo escurecido atrás e uma sombra leve. */
+  dialog.detalhe::backdrop { background: rgba(8, 10, 14, .7); }
   @media (max-width: 720px) {
     dialog.detalhe { margin: auto 0 0; width: 100vw; height: auto; max-height: 92dvh; border: 0; border-top: 1px solid var(--fio); border-radius: 18px 18px 0 0; }
   }
@@ -483,8 +486,9 @@
   dialog.modal-excluir {
     width: min(460px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); padding: 0;
     border: 1px solid var(--fio); border-radius: 18px; background: var(--papel); color: var(--tinta);
+    box-shadow: 0 24px 64px rgba(0, 0, 0, .32), 0 4px 14px rgba(0, 0, 0, .18);
   }
-  dialog.modal-excluir::backdrop { background: rgba(10, 12, 16, .55); }
+  dialog.modal-excluir::backdrop { background: rgba(8, 10, 14, .7); }
   @media (max-width: 720px) {
     dialog.modal-excluir { width: 100%; max-width: 100%; max-height: 92dvh; margin: auto 0 0; border-bottom: 0; border-radius: 18px 18px 0 0; }
   }
@@ -540,6 +544,16 @@
   .conv-pessoa:focus-visible { outline: 2px solid var(--tatame-tinta); outline-offset: 2px; border-radius: 4px; }
   /* Exercícios (catálogo do app) */
   .ex-filtros { display: grid; gap: 10px; margin-bottom: 12px; }
+  .ex-busca-linha { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+  .ex-busca-linha input { width: 100%; min-height: 48px; padding: 0 12px; border: 1px solid var(--fio); border-radius: 10px; background: var(--gi); color: var(--tinta); font: inherit; font-size: 16px; }
+  .ex-filtrar { min-height: 48px; }
+  .ex-filtrar svg { width: 18px; height: 18px; }
+  .ex-filtrar[aria-expanded="true"] { background: var(--tatame-suave); }
+  .ex-filtros-n { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--tatame); color: var(--sobre-tatame); font-size: 12px; line-height: 20px; text-align: center; }
+  .ex-filtros-painel { display: grid; gap: 14px; padding: 14px; border: 1px solid var(--fio); border-radius: 12px; background: var(--papel); }
+  .ex-filtro-bloco { display: grid; gap: 8px; }
+  .ex-filtro-bloco > b { font-size: 13px; color: var(--tinta-2); }
+  .ex-filtros-painel .link-btn { justify-self: start; }
   .ex-grupos { display: flex; flex-wrap: wrap; gap: 6px; }
   .ex-grupos button { min-height: 36px; padding: 0 12px; border: 1px solid var(--fio); border-radius: 999px; background: var(--papel); color: var(--tinta-2); font-size: 14px; font-weight: 600; }
   .ex-grupos button[aria-pressed="true"] { border-color: var(--tatame); background: var(--tatame); color: var(--sobre-tatame); }
@@ -553,8 +567,9 @@
   dialog.ex-dialog {
     width: min(720px, calc(100vw - 48px)); height: min(860px, 90dvh); max-width: none; max-height: none; padding: 0;
     border: 1px solid var(--fio); border-radius: 18px; background: var(--papel); color: var(--tinta); overflow: hidden;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, .32), 0 4px 14px rgba(0, 0, 0, .18);
   }
-  dialog.ex-dialog::backdrop { background: rgba(10, 12, 16, .55); }
+  dialog.ex-dialog::backdrop { background: rgba(8, 10, 14, .7); }
   @media (max-width: 720px) {
     dialog.ex-dialog { width: 100vw; height: 100dvh; margin: 0; border: 0; border-radius: 0; }
   }
@@ -613,6 +628,14 @@
   .ex-bloco .ex-dica { margin: 0; }
   .ex-form .excluir-entendi { padding-top: 0; min-height: 40px; align-items: center; }
   .ex-form .excluir-entendi input { accent-color: var(--tatame); }
+  .ex-excluir { padding-top: 8px; border-top: 1px solid var(--fio); }
+  .ex-excluir-btn { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 4px; border: 0; background: none; color: var(--erro); font-size: 15px; font-weight: 700; }
+  .ex-excluir-btn svg { width: 18px; height: 18px; }
+  .ex-excluir-caixa { display: grid; gap: 10px; padding: 12px 14px; border-radius: 12px; font-size: 14px;
+    background: color-mix(in srgb, var(--erro) 10%, var(--papel)); border: 1px solid color-mix(in srgb, var(--erro) 35%, transparent); }
+  .ex-excluir-caixa p { margin: 0; }
+  .ex-excluir-acoes { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+  .btn-peq.perigo { border: 0; background: var(--erro); color: var(--sobre-erro); }
   .ex-aviso { margin: 0; padding: 12px 14px; border-radius: 12px; background: var(--tatame-suave); color: var(--tinta); font-size: 14px; }
   .btn-peq { min-height: 40px; padding: 0 12px; border-radius: 10px; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
   .btn-peq.prim { border: 0; background: var(--tatame); color: var(--sobre-tatame); }
@@ -974,10 +997,17 @@
         <p class="info-txt" id="info-ex" role="note" hidden>A biblioteca que aparece no app para montar os treinos. O que você muda aqui vale na hora para todos, sem publicar o app. Os treinos de quem já usa não mudam: renomear guarda o nome antigo (o exercício continua nos treinos, com as cargas) e desativar só tira o exercício da lista de escolha. "Em N contas" conta quem tem o exercício nos treinos, incluindo o plano pronto.</p>
         <p class="nota" id="ex-resumo" style="margin:-4px 0 12px"></p>
         <div class="ex-filtros">
-          <label class="sr" for="ex-busca">Buscar exercício</label>
-          <input id="ex-busca" type="search" autocomplete="off" placeholder="Buscar pelo nome ou outro nome">
-          <div class="ex-grupos" id="ex-grupos" role="group" aria-label="Filtrar por grupo"></div>
-          <div class="ex-grupos" id="ex-objs-filtro" role="group" aria-label="Filtrar por objetivo"></div>
+          <div class="ex-busca-linha">
+            <label class="sr" for="ex-busca">Buscar exercício</label>
+            <input id="ex-busca" type="search" autocomplete="off" placeholder="Buscar pelo nome ou outro nome">
+            <button class="btn-sec ex-filtrar" type="button" id="ex-filtrar" aria-expanded="false" aria-controls="ex-filtros-painel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg><span>Filtros</span><span class="ex-filtros-n" id="ex-filtros-n" hidden></span></button>
+          </div>
+          <div class="ex-filtros-painel" id="ex-filtros-painel" hidden>
+            <div class="ex-filtro-bloco"><b>Grupo</b><div class="ex-grupos" id="ex-grupos" role="group" aria-label="Filtrar por grupo"></div></div>
+            <div class="ex-filtro-bloco" id="ex-objs-bloco"><b>Objetivo</b><div class="ex-grupos" id="ex-objs-filtro" role="group" aria-label="Filtrar por objetivo"></div></div>
+            <div class="ex-filtro-bloco"><b>Situação</b><div class="ex-grupos" id="ex-sit-filtro" role="group" aria-label="Filtrar por situação"></div></div>
+            <button class="link-btn" type="button" id="ex-limpar">Limpar filtros</button>
+          </div>
         </div>
         <div class="cartao lista-cartao" id="ex-lista"><p class="vazio">Carregando…</p></div>
       </section>
@@ -2174,7 +2204,8 @@
     balao.style.left = '8px';
     // Não deixa o balão passar da borda dos cards nem da tela.
     const r = balao.getBoundingClientRect();
-    const limite = Math.min(botao.closest('.kpis, .cartao').getBoundingClientRect().right, document.documentElement.clientWidth - 16);
+    const caixa = botao.closest('.kpis, .cartao, .bloco') || document.body;
+    const limite = Math.min(caixa.getBoundingClientRect().right, document.documentElement.clientWidth - 16);
     const sobra = r.right - limite;
     if (sobra > 0) balao.style.left = `${8 - sobra}px`;
   }
@@ -2522,9 +2553,9 @@
   const GRUPOS_EX = ['Mobilidade', 'Core', 'Explosivos', 'Pernas', 'Costas', 'Peito', 'Ombros', 'Braços', 'Pescoço', 'Cardio'];
   const rotuloGrupoEx = (g) => ({ Core: 'Core e abdômen' }[g] || g);
   const NIVEIS_EX = [['hipertrofia', 'Hipertrofia'], ['forca', 'Força'], ['explosao', 'Explosão'], ['mobilidade', 'Mobilidade']];
-  const ROTULO_NIVEL = { alta: 'Alta', media: 'Média', baixa: 'Baixa' };
+  const ROTULO_NIVEL = { baixa: 'Baixa', media: 'Média', alta: 'Alta' };
   const chaveEx = (t) => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
-  const exs = { lista: null, erro: '', busca: '', grupo: 'todos', obj: 'todos', atual: null, jornadas: [] };
+  const exs = { lista: null, erro: '', busca: '', grupo: 'todos', obj: 'todos', sit: 'todos', atual: null, jornadas: [] };
   async function carregarExercicios() {
     // Objetivos (tabela jornadas): para marcar e filtrar os exercícios por objetivo.
     const [r, jr] = await Promise.all([sb.rpc('admin_exercicios'), sb.from('jornadas').select('id, dados, ordem, ativo').then((x) => x, () => ({ error: true }))]);
@@ -2565,10 +2596,18 @@
     const nomeObj = (id) => (exs.jornadas.find((j) => j.id === id) || { nome: id }).nome;
     const contaObj = (id) => todos.filter((e) => (e.objetivos || []).includes(id)).length;
     $('ex-objs-filtro').innerHTML = exs.jornadas.length ? ['todos', ...exs.jornadas.map((j) => j.id)].map((id) => `
-      <button type="button" data-ex-obj="${esc(id)}" aria-pressed="${exs.obj === id}">${id === 'todos' ? 'Todos os objetivos' : esc(nomeObj(id))} <small>${id === 'todos' ? todos.length : contaObj(id)}</small></button>`).join('') : '';
+      <button type="button" data-ex-obj="${esc(id)}" aria-pressed="${exs.obj === id}">${id === 'todos' ? 'Todos' : esc(nomeObj(id))} <small>${id === 'todos' ? todos.length : contaObj(id)}</small></button>`).join('') : '';
+    $('ex-objs-bloco').hidden = !exs.jornadas.length;
+    $('ex-sit-filtro').innerHTML = [['todos', 'Todos', todos.length], ['ativos', 'Ativos', ativos], ['desativados', 'Desativados', desativados], ['sem-video', 'Sem vídeo', todos.filter((e) => !e.video_id).length]].map(([k, r, n]) => `
+      <button type="button" data-ex-sit="${k}" aria-pressed="${exs.sit === k}">${r} <small>${n}</small></button>`).join('');
+    const nFiltros = ['grupo', 'obj', 'sit'].filter((k) => exs[k] !== 'todos').length;
+    $('ex-filtros-n').hidden = !nFiltros;
+    $('ex-filtros-n').textContent = nFiltros;
+    $('ex-filtrar').setAttribute('aria-label', nFiltros ? `Filtros (${nFiltros} ${nFiltros === 1 ? 'ativo' : 'ativos'})` : 'Filtros');
     const busca = chaveEx(exs.busca);
     const itens = todos
-      .filter((e) => (exs.grupo === 'todos' || e.grupo === exs.grupo) && (exs.obj === 'todos' || (e.objetivos || []).includes(exs.obj)) && (!busca || [e.nome, ...(e.variacoes || []), ...(e.nomes_antigos || [])].some((n) => chaveEx(n).includes(busca))))
+      .filter((e) => (exs.grupo === 'todos' || e.grupo === exs.grupo) && (exs.obj === 'todos' || (e.objetivos || []).includes(exs.obj))
+        && (exs.sit === 'todos' || (exs.sit === 'ativos' ? e.ativo : exs.sit === 'desativados' ? !e.ativo : !e.video_id)) && (!busca || [e.nome, ...(e.variacoes || []), ...(e.nomes_antigos || [])].some((n) => chaveEx(n).includes(busca))))
       .sort((a, b) => (b.ativo - a.ativo) || GRUPOS_EX.indexOf(a.grupo) - GRUPOS_EX.indexOf(b.grupo) || a.nome.localeCompare(b.nome, 'pt-BR'));
     lista.innerHTML = itens.length ? itens.map((e) => `
       <div class="conv-item ex-item">
@@ -2656,6 +2695,10 @@
           <label class="excluir-entendi"><input type="checkbox" id="ex-ativo"${v.ativo ? ' checked' : ''}><span>Ativo: aparece para escolher nos treinos</span></label>
           <p class="ex-aviso" id="ex-aviso" hidden></p>
           <p class="excluir-erro" id="ex-erro" role="alert" hidden></p>
+          ${e ? `<div class="ex-excluir">
+            <button class="ex-excluir-btn" type="button" id="ex-excluir">${ICON.lixeira}<span>Excluir exercício</span></button>
+            <div class="ex-excluir-caixa" id="ex-excluir-caixa" hidden></div>
+          </div>` : ''}
         </div>
         <div class="ex-rodape">
           <button class="btn-sec" type="button" data-ex-fechar>Cancelar</button>
@@ -2694,8 +2737,43 @@
     if (ev.target.id === 'ex-var') ev.target.value = ev.target.value.split(',').map(padronizarNome).filter(Boolean).join(', ');
     if (ev.target.id === 'ex-series' || ev.target.id === 'ex-valor') { ev.target.value = traco(ev.target.value); mostrarDose(); }
   });
-  $('ex-dialog').addEventListener('click', (ev) => {
-    if (ev.target === $('ex-dialog') || ev.target.closest('[data-ex-fechar]')) $('ex-dialog').close();
+  // Excluir: só quando ninguém tem o exercício nos treinos; senão, a sugestão é desativar.
+  function mostrarExcluir() {
+    const e = exs.atual;
+    const caixa = $('ex-excluir-caixa');
+    caixa.hidden = false;
+    $('ex-excluir').hidden = true;
+    caixa.innerHTML = e.usos
+      ? `<p>Este exercício está nos treinos de <b>${e.usos} ${e.usos === 1 ? 'conta' : 'contas'}</b>, por isso não pode ser excluído. Desative: ele sai da lista de escolha e continua nos treinos de quem já tem.</p>
+         <div class="ex-excluir-acoes"><button class="btn-peq sec" type="button" data-ex-excluir-nao>Voltar</button>${e.ativo ? '<button class="btn-peq prim" type="button" data-ex-desativar>Desativar</button>' : ''}</div>`
+      : `<p>Excluir <b>${esc(e.nome)}</b> de vez? Ele sai do catálogo e do app, junto com o vídeo. Não dá para desfazer.</p>
+         <div class="ex-excluir-acoes"><button class="btn-peq sec" type="button" data-ex-excluir-nao>Manter</button><button class="btn-peq perigo" type="button" data-ex-excluir-sim>Excluir de vez</button></div>`;
+    caixa.scrollIntoView({ block: 'nearest' });
+  }
+  $('ex-dialog').addEventListener('click', async (ev) => {
+    if (ev.target === $('ex-dialog') || ev.target.closest('[data-ex-fechar]')) return $('ex-dialog').close();
+    if (ev.target.closest('#ex-excluir')) return mostrarExcluir();
+    if (ev.target.closest('[data-ex-excluir-nao]')) { $('ex-excluir-caixa').hidden = true; $('ex-excluir').hidden = false; return; }
+    if (ev.target.closest('[data-ex-desativar]')) {
+      $('ex-ativo').checked = false; avisoExercicio();
+      $('ex-excluir-caixa').hidden = true; $('ex-excluir').hidden = false;
+      return $('ex-salvar').focus();
+    }
+    const sim = ev.target.closest('[data-ex-excluir-sim]');
+    if (sim) {
+      const e = exs.atual;
+      sim.disabled = true; sim.textContent = 'Excluindo…';
+      const { error } = await sb.rpc('admin_excluir_exercicio', { p_nome: e.nome });
+      if (error) {
+        sim.disabled = false; sim.textContent = 'Excluir de vez';
+        $('ex-erro').textContent = /admin_excluir_exercicio|schema cache/.test(error.message || '') ? 'Para excluir exercícios, rode de novo o supabase/schema.sql no Supabase.' : error.message;
+        $('ex-erro').hidden = false;
+        return;
+      }
+      $('ex-dialog').close();
+      toast(`${e.nome} excluído.`);
+      await carregarExercicios();
+    }
   });
   $('ex-dialog').addEventListener('submit', async (ev) => {
     ev.preventDefault();
@@ -2734,6 +2812,14 @@
   });
   $('ex-busca').addEventListener('input', (ev) => { exs.busca = ev.target.value; renderExercicios(); });
   document.addEventListener('click', (ev) => {
+    if (ev.target.closest('#ex-filtrar')) {
+      const abrir = $('ex-filtros-painel').hidden;
+      $('ex-filtros-painel').hidden = !abrir;
+      return $('ex-filtrar').setAttribute('aria-expanded', String(abrir));
+    }
+    if (ev.target.closest('#ex-limpar')) { Object.assign(exs, { grupo: 'todos', obj: 'todos', sit: 'todos' }); return renderExercicios(); }
+    const st = ev.target.closest('[data-ex-sit]');
+    if (st) { exs.sit = st.dataset.exSit; return renderExercicios(); }
     const ob = ev.target.closest('[data-ex-obj]');
     if (ob) { exs.obj = ob.dataset.exObj; return renderExercicios(); }
     const g = ev.target.closest('[data-ex-grupo]');
