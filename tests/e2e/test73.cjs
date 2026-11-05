@@ -1,5 +1,6 @@
 // Catálogo no banco (exercicios e jornadas): o app usa o que vem do banco, guarda uma cópia no aparelho
-// e não muda os treinos de quem já usa (renomeado continua pelo nome antigo, desativado continua em quem o tem).
+// e não muda os treinos de quem já usa (renomeado aparece com o nome novo, com as cargas do nome antigo; desativado continua em quem o tem).
+// Também: o catálogo é buscado de novo ao voltar para o app e o filtro "Do meu objetivo".
 const { chromium } = require('playwright');
 const H = require('../apoio/harness.cjs');
 let fails = 0;
@@ -42,7 +43,7 @@ async function biblioteca(p) {
   for (const scheme of ['light', 'dark']) {
     const p = await abrir(b, { scheme, extra: { videos: [{ exercicio: 'Puxada frontal', video_id: 'vidPuxadaA1' }] } });
     const nomes = await nomesNoTreino(p);
-    ok(nomes.includes('Puxada') && nomes.includes('Superman') && !nomes.includes('Puxada frontal'), `${scheme}: plano pronto continua com os mesmos exercícios (nome salvo e desativado)`, nomes.join(', '));
+    ok(nomes.includes('Puxada frontal') && nomes.includes('Superman') && !nomes.includes('Puxada') && nomes.length === 8, `${scheme}: plano pronto com os mesmos exercícios, o renomeado com o nome novo e o desativado`, nomes.join(', '));
     ok(await p.locator('[data-video="vidPuxadaA1"]').count() === 1, `${scheme}: o vídeo do exercício renomeado aparece pelo nome antigo`);
     const sup = p.locator('.exercicio, li', { has: p.locator('h3', { hasText: /^Superman$/ }) }).first();
     ok(/cadeia posterior/i.test(await sup.innerText().catch(() => '')), `${scheme}: exercício desativado segue completo (explicação e níveis)`);
@@ -76,12 +77,13 @@ async function biblioteca(p) {
     const cargas = [{ usuario_id: 'u1', data: '2026-10-21', treino: 't1', series: { Puxada: [{ carga: 50 }] } }];
     const p = await abrir(b, { perfil: { ...PERFIL, treinos, semana: [[], [], [], ['t1'], [], [], []] }, extra: { cargas } });
     const nomes = await nomesNoTreino(p);
-    ok(nomes.join('|') === 'Puxada|Superman|Agachamento', 'treinos próprios: mesmos exercícios, na mesma ordem', nomes.join('|'));
+    ok(nomes.join('|') === 'Puxada frontal|Superman|Agachamento', 'treinos próprios: mesmos exercícios, na mesma ordem, o renomeado com o nome novo', nomes.join('|'));
     const txt = await p.locator('main').first().innerText();
     ok(/4×8/.test(txt) && /PSE 9/.test(txt), 'treinos próprios: dose e PSE da conta');
     ok(/Explicação nova vinda do banco/.test(txt), 'treinos próprios: detalhes do exercício vêm do catálogo');
     await p.click('#list [data-log="0"]'); await p.waitForTimeout(150);
     ok(/Última vez: 50/.test(await p.locator('#log-dialog .log-hint').innerText().catch(() => '')) && await p.inputValue('#kg-0') === '50', 'treinos próprios: a carga salva com o nome antigo continua (Última vez: 50 kg)');
+    ok((await p.locator('#log-title').innerText()).trim() === 'Puxada frontal', 'treinos próprios: janela de pesos com o nome novo');
     await p.keyboard.press('Escape'); await p.waitForTimeout(100);
     const db = await H.banco(p);
     ok(JSON.stringify(db.perfis[0].treinos) === JSON.stringify(treinos) && JSON.stringify(db.cargas) === JSON.stringify(cargas), 'treinos próprios: nada muda no banco');
@@ -117,6 +119,38 @@ async function biblioteca(p) {
     ok(!(await p.evaluate(() => localStorage.getItem('bauer-catalogo'))), 'banco sem o catálogo: não guarda cópia');
     ok(!p.errs.length, 'sem catálogo: sem erros', p.errs.join(' | '));
     await p.context().close();
+  }
+
+  // 5. Volta para o app depois de uma mudança no painel: o card já mostra o nome novo, sem fechar o app.
+  {
+    const p = await abrir(b);
+    ok((await nomesNoTreino(p)).includes('Remada inversa'), 'antes da mudança: Remada inversa');
+    await p.evaluate(() => { const d = JSON.parse(localStorage.getItem('mock-supabase')); const e = d.exercicios.find((x) => x.nome === 'Remada inversa'); e.nomes_antigos = ['Remada inversa']; e.nome = 'Remada invertida na barra'; e.explicacao = 'Explicação mudada agora.'; localStorage.setItem('mock-supabase', JSON.stringify(d)); });
+    await p.clock.fastForward(130000);
+    await p.evaluate(() => document.dispatchEvent(new Event('visibilitychange'))); await p.waitForTimeout(300);
+    const nomes = await nomesNoTreino(p);
+    ok(nomes.includes('Remada invertida na barra') && !nomes.includes('Remada inversa') && /Explicação mudada agora/.test(await p.locator('main').first().innerText()), 'ao voltar para o app: card com o nome e a explicação novos', nomes.join(', '));
+    ok((await H.banco(p)).perfis[0].treinos == null, 'ao voltar: nada gravado na conta');
+    ok(!p.errs.length, 'ao voltar: sem erros', p.errs.join(' | '));
+    await p.context().close();
+  }
+
+  // 6. Filtro "Do meu objetivo" na biblioteca do editor.
+  {
+    const p = await abrir(b, { perfil: { ...PERFIL, jornada: 'hipertrofia' } });
+    await biblioteca(p);
+    ok(/Do meu objetivo \(Hipertrofia\)/.test(await p.locator('[data-ed-grupo="objetivo"]').innerText().catch(() => '')), 'chip "Do meu objetivo (Hipertrofia)"');
+    await p.click('[data-ed-grupo="objetivo"]'); await p.waitForTimeout(100);
+    const doObj = await p.locator('.ed-bib-item b').allInnerTexts();
+    ok(doObj.includes('Supino reto') && doObj.includes('Agachamento') && !doObj.includes('Escorpião') && doObj.length < 60, 'filtro mostra só os exercícios marcados para o objetivo', `${doObj.length}`);
+    await p.screenshot({ path: `${H.SAIDA}/catalogo-objetivo.png` });
+    ok(!p.errs.length, 'objetivo: sem erros', p.errs.join(' | '));
+    await p.context().close();
+    // Sem objetivo na conta, sem o chip.
+    const q = await abrir(b);
+    await biblioteca(q);
+    ok(!(await q.locator('[data-ed-grupo="objetivo"]').count()), 'sem objetivo na conta: sem o chip');
+    await q.context().close();
   }
 
   await b.close(); srv.close();

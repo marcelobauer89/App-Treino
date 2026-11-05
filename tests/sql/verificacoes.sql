@@ -53,6 +53,9 @@ do $$ begin
   if (select count(*) from public.meus_videos()) <> 0 then raise exception 'FALHOU: sem liberação, nenhum vídeo chega'; end if;
   if (select count(*) from public.checkins) <> 0 then raise exception 'FALHOU: só vê os próprios check-ins'; end if;
   insert into public.checkins (id, tipo, inicio, fim) values (gen_random_uuid(), 't1', '2026-11-02 07:00', '2026-11-02 08:00');
+  -- Futebol e Futvôlei são aceitos.
+  insert into public.checkins (id, tipo, inicio, fim) values (gen_random_uuid(), 'futebol', '2026-11-03 19:00', '2026-11-03 20:30'),
+    (gen_random_uuid(), 'futvolei', '2026-11-04 07:00', '2026-11-04 08:30');
   begin insert into public.checkins (id, tipo, inicio, fim) values (gen_random_uuid(), 'cali', '2026-11-02 07:00', '2026-11-02 08:00');
     raise exception 'FALHOU: tipo de check-in que não existe (cali) é recusado';
   exception when check_violation then null; end;
@@ -96,7 +99,7 @@ do $$ begin perform set_config('request.jwt.claim.sub', '11111111-1111-1111-1111
 
 do $$ begin
   if (select count(*) from public.admin_usuarios()) <> 3 then raise exception 'FALHOU: o painel vê todos os usuários'; end if;
-  if (select count(*) from public.admin_checkins()) <> 2 then raise exception 'FALHOU: o painel vê os check-ins de todos'; end if;
+  if (select count(*) from public.admin_checkins()) <> 4 then raise exception 'FALHOU: o painel vê os check-ins de todos'; end if;
   perform public.admin_liberar_videos('22222222-2222-2222-2222-222222222222', true);
 end $$;
 
@@ -108,10 +111,12 @@ do $$ declare n int; r record; begin
   if (select usos from public.admin_exercicios() where nome = 'Puxada') <> 2 then raise exception 'FALHOU: quem usa o plano pronto conta no uso'; end if;
   if (select video_id from public.admin_exercicios() where nome = 'Agachamento') <> 'ABCDEFGHIJK' then raise exception 'FALHOU: o painel vê o vídeo do exercício'; end if;
 
-  perform public.admin_salvar_exercicio(null, '{"nome":"  Exercício   de teste ","grupo":"Core","dose":"3×12","pse":7,"hipertrofia":"media","variacoes":["Outro nome"],"video_id":"zzzzzzzzzzz"}');
+  perform public.admin_salvar_exercicio(null, '{"nome":"  exercício   de teste ","grupo":"Core","dose":"3×12","pse":7,"hipertrofia":"media","variacoes":["outro nome"],"objetivos":["forca","jiu"],"video_id":"zzzzzzzzzzz"}');
   select * into r from public.admin_exercicios() where nome = 'Exercício de teste';
   if r is null or r.dose <> '3×12' or r.pse <> 7 or r.hipertrofia <> 'media' or r.video_id <> 'zzzzzzzzzzz' or r.variacoes <> array['Outro nome'] then
-    raise exception 'FALHOU: cria exercício com os campos e o vídeo'; end if;
+    raise exception 'FALHOU: cria exercício com os campos e o vídeo (nome e outros nomes padronizados)'; end if;
+  if r.objetivos <> array['forca', 'jiu'] then raise exception 'FALHOU: grava os objetivos do exercício'; end if;
+  if (select objetivos from public.admin_exercicios() where nome = 'Puxada') <> array['hipertrofia', 'jiu'] then raise exception 'FALHOU: carga inicial com os objetivos em que o exercício aparece'; end if;
 
   perform public.admin_salvar_exercicio('Agachamento', '{"nome":"Agachamento livre","grupo":"Pernas","dose":"3×10","pse":8,"hipertrofia":"alta","forca":"alta"}');
   if not exists (select 1 from public.exercicios where nome = 'Agachamento livre' and 'Agachamento' = any(nomes_antigos)) then raise exception 'FALHOU: renomear guarda o nome antigo'; end if;

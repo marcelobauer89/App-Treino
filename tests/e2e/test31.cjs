@@ -45,7 +45,7 @@ const ADM = {
     ok((await txt(p, '#g2-nota')) === 'Ativo: abriu o app ou fez check-in na hora.', `${tag}: nota na hora`);
     await p.click('[data-alternar="g1"]');
     const t1 = (await p.locator('#g1-tabela tbody tr').allInnerTexts()).map((t) => t.replace(/\s+/g, ' ').trim());
-    ok(t1.length === 24 && t1[7] === '07h–08h 2 0 0 0 0 2' && t1[12] === '12h–13h 0 1 0 0 0 1' && t1[23].startsWith('23h–00h'), `${tag}: tabela de check-ins por hora`, `${t1.length} ${t1[7]} | ${t1[12]}`);
+    ok(t1.length === 24 && t1[7] === '07h–08h 2 0 0 0 0 0 0 2' && t1[12] === '12h–13h 0 1 0 0 0 0 0 1' && t1[23].startsWith('23h–00h'), `${tag}: tabela de check-ins por hora`, `${t1.length} ${t1[7]} | ${t1[12]}`);
     await p.click('[data-alternar="g1"]');
     await p.click('[data-alternar="g2"]');
     const t2 = (await p.locator('#g2-tabela tbody tr').allInnerTexts()).map((t) => t.replace(/\s+/g, ' ').trim());
