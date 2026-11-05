@@ -69,6 +69,26 @@ do $$ begin
   end;
 end $$;
 
+-- Catálogo: todo mundo lê; ninguém além do administrador muda.
+do $$ begin
+  if (select count(*) from public.exercicios where ativo) < 100 then raise exception 'FALHOU: a pessoa lê o catálogo de exercícios'; end if;
+  if (select count(*) from public.jornadas) <> 4 then raise exception 'FALHOU: a pessoa lê os objetivos prontos'; end if;
+  begin update public.exercicios set dose = '9×9' where nome = 'Puxada';
+    raise exception 'FALHOU: a pessoa não muda o catálogo';
+  exception when insufficient_privilege then null; end;
+  begin insert into public.exercicios (nome, grupo) values ('Inventado', 'Core');
+    raise exception 'FALHOU: a pessoa não cria exercício';
+  exception when insufficient_privilege then null; end;
+  begin perform * from public.admin_exercicios();
+    raise exception 'FALHOU: só o administrador vê a lista do painel';
+  exception when insufficient_privilege then null; end;
+  begin perform public.admin_salvar_exercicio('Puxada', '{"nome":"Puxada","grupo":"Costas"}');
+    raise exception 'FALHOU: só o administrador salva exercício';
+  exception when raise_exception then
+    if sqlerrm like 'FALHOU%' then raise; end if;
+  end;
+end $$;
+
 -- ---------- Administrador ----------
 reset role;
 set local role authenticated;
@@ -79,6 +99,69 @@ do $$ begin
   if (select count(*) from public.admin_checkins()) <> 2 then raise exception 'FALHOU: o painel vê os check-ins de todos'; end if;
   perform public.admin_liberar_videos('22222222-2222-2222-2222-222222222222', true);
 end $$;
+
+-- Catálogo pelo painel: contagem de uso, criar, renomear (nome antigo e vídeo acompanham), repetidos e desativar.
+do $$ declare n int; r record; begin
+  if (select count(*) from public.admin_exercicios()) <> (select count(*) from public.exercicios) then raise exception 'FALHOU: o painel vê todos os exercícios'; end if;
+  if (select usos from public.admin_exercicios() where nome = 'Supino reto') <> 1 then raise exception 'FALHOU: conta quem tem o exercício nos treinos'; end if;
+  -- Admin e Bruno estão no plano pronto (treinos vazio): contam nos exercícios do Jiu Jitsu.
+  if (select usos from public.admin_exercicios() where nome = 'Puxada') <> 2 then raise exception 'FALHOU: quem usa o plano pronto conta no uso'; end if;
+  if (select video_id from public.admin_exercicios() where nome = 'Agachamento') <> 'ABCDEFGHIJK' then raise exception 'FALHOU: o painel vê o vídeo do exercício'; end if;
+
+  perform public.admin_salvar_exercicio(null, '{"nome":"  Exercício   de teste ","grupo":"Core","dose":"3×12","pse":7,"hipertrofia":"media","variacoes":["Outro nome"],"video_id":"zzzzzzzzzzz"}');
+  select * into r from public.admin_exercicios() where nome = 'Exercício de teste';
+  if r is null or r.dose <> '3×12' or r.pse <> 7 or r.hipertrofia <> 'media' or r.video_id <> 'zzzzzzzzzzz' or r.variacoes <> array['Outro nome'] then
+    raise exception 'FALHOU: cria exercício com os campos e o vídeo'; end if;
+
+  perform public.admin_salvar_exercicio('Agachamento', '{"nome":"Agachamento livre","grupo":"Pernas","dose":"3×10","pse":8,"hipertrofia":"alta","forca":"alta"}');
+  if not exists (select 1 from public.exercicios where nome = 'Agachamento livre' and 'Agachamento' = any(nomes_antigos)) then raise exception 'FALHOU: renomear guarda o nome antigo'; end if;
+  if exists (select 1 from public.exercicios where nome = 'Agachamento') then raise exception 'FALHOU: renomear não duplica'; end if;
+  if (select video_id from public.admin_exercicios() where nome = 'Agachamento livre') is distinct from 'ABCDEFGHIJK' then raise exception 'FALHOU: o vídeo acompanha o exercício renomeado'; end if;
+  if (select usos from public.admin_exercicios() where nome = 'Agachamento livre') <> 2 then raise exception 'FALHOU: o uso conta pelo nome antigo também'; end if;
+
+  begin perform public.admin_salvar_exercicio(null, '{"nome":"supino RETO","grupo":"Peito"}');
+    raise exception 'FALHOU: não cria nome repetido (sem diferenciar maiúsculas)';
+  exception when raise_exception then if sqlerrm not like 'Já existe%' then raise; end if; end;
+  begin perform public.admin_salvar_exercicio(null, '{"nome":"Agachámento","grupo":"Pernas"}');
+    raise exception 'FALHOU: não reaproveita o nome antigo de outro exercício';
+  exception when raise_exception then if sqlerrm not like 'Esse nome já foi%' then raise; end if; end;
+  begin perform public.admin_salvar_exercicio(null, '{"nome":"Errado","grupo":"Inventado"}');
+    raise exception 'FALHOU: grupo que não existe é recusado';
+  exception when check_violation then null; end;
+  begin perform public.admin_salvar_exercicio('Puxada', '{"nome":"Puxada","grupo":"Costas","video_id":"curto"}');
+    raise exception 'FALHOU: vídeo inválido é recusado';
+  exception when raise_exception then if sqlerrm not like 'Vídeo inválido%' then raise; end if; end;
+
+  perform public.admin_salvar_exercicio('Exercício de teste', '{"nome":"Exercício de teste","grupo":"Core","ativo":false,"video_id":""}');
+  if (select ativo from public.exercicios where nome = 'Exercício de teste') then raise exception 'FALHOU: desativa o exercício'; end if;
+  if (select video_id from public.admin_exercicios() where nome = 'Exercício de teste') is not null then raise exception 'FALHOU: video_id vazio tira o vídeo'; end if;
+  begin delete from public.exercicios where nome = 'Exercício de teste';
+    raise exception 'FALHOU: nem o administrador apaga direto pela API';
+  exception when insufficient_privilege then null; end;
+end $$;
+
+-- Rodar o schema.sql de novo (como em cada atualização) não mexe nos treinos, semanas, objetivos e cargas das contas
+-- nem desfaz o que foi mudado no catálogo pelo painel.
+reset role;
+insert into public.cargas (usuario_id, data, treino, series)
+  values ('22222222-2222-2222-2222-222222222222', '2026-11-02', 't1', '{"Supino reto":[{"carga":40}]}');
+create temp table antes as
+  select md5(string_agg(concat_ws('|', id, treinos, semana, treinos_anterior, jornada), ',' order by id)) as perfis,
+    (select md5(string_agg(concat_ws('|', usuario_id, data, treino, series), ',' order by usuario_id, data)) from public.cargas) as cargas,
+    (select count(*) from public.exercicios) as exercicios
+  from public.perfis;
+\ir ../../supabase/schema.sql
+do $$ begin
+  if (select perfis from antes) <> (select md5(string_agg(concat_ws('|', id, treinos, semana, treinos_anterior, jornada), ',' order by id)) from public.perfis)
+    then raise exception 'FALHOU: rodar o schema.sql de novo não muda os treinos das contas'; end if;
+  if (select cargas from antes) <> (select md5(string_agg(concat_ws('|', usuario_id, data, treino, series), ',' order by usuario_id, data)) from public.cargas)
+    then raise exception 'FALHOU: rodar o schema.sql de novo não muda as cargas'; end if;
+  if (select exercicios from antes) <> (select count(*) from public.exercicios) or exists (select 1 from public.exercicios where nome = 'Agachamento')
+    then raise exception 'FALHOU: a carga inicial não traz de volta exercício renomeado nem duplica'; end if;
+  if (select ativo from public.exercicios where nome = 'Exercício de teste') then raise exception 'FALHOU: a carga inicial não reativa exercício'; end if;
+end $$;
+set local role authenticated;
+do $$ begin perform set_config('request.jwt.claim.sub', '11111111-1111-1111-1111-111111111111', true); end $$;
 
 -- ---------- Ana depois de liberada ----------
 reset role;
