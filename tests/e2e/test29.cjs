@@ -9,7 +9,7 @@ const ADM = {
   usuarios: [{ id: 'u1', nome: 'Marcelo Bauer', email: 'marcelo@exemplo.com', cadastro: '2026-08-01T12:00:00Z', ultimo_acesso: '2026-10-21T11:00:00Z', acessos: 40, semana: null, dias_jiu: [2, 4], sem_peso: [] }],
   checkins: [], eventos: [],
 };
-const ESPERADO = [/abriram o app ou fizeram check-in/, /Total de check-ins/, /check-ins do período ÷ usuários ativos ÷ semanas/, /semana montada em Você/, /entre 8 e 14 dias atrás/, /nenhum nos últimos 7 dias/, /superou o próprio peso máximo/];
+const ESPERADO = [/abriram o app ou fizeram check-in/, /Total de check-ins/, /check-ins do período ÷ usuários ativos ÷ semanas/, /semana montada em Você/, /entre 8 e 14 dias atrás/, /não abriram nem registraram nada nos últimos 7 dias/, /superou o próprio peso máximo/];
 (async () => {
   const srv = await H.servidor();
   const b = await chromium.launch();

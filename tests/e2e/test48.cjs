@@ -18,7 +18,7 @@ const ADMIN = H.PAGINA.replace('index.html', 'admin.html');
     // Check-in
     await p.click('#fab-checkin');
     const opcoes = (await p.locator('#form-body .opcao').allInnerTexts()).map((t) => t.replace(/\s+/g, ''));
-    ok(opcoes.join('|').includes('MMuayThai|SSurf|CCardio'), `${scheme}: Surf no check-in, entre muay thai e cardio`, opcoes.join('|'));
+    ok(opcoes.join('|').includes('MMuayThai|SSurf|FFutebol|VFutvôlei|CCardio'), `${scheme}: Surf no check-in, entre muay thai e futebol`, opcoes.join('|'));
     await p.check('input[name="f-tipo"][value="surf"]', { force: true });
     ok((await p.inputValue('#f-dur')) === '90', `${scheme}: duração padrão 90 min`, await p.inputValue('#f-dur'));
     await p.waitForTimeout(300); await p.screenshot({ path: `${H.SAIDA}/surf-form-${scheme}.png` });
