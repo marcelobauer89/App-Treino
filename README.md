@@ -195,7 +195,7 @@ Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 a t6 nos check-i
 ## Catálogo de exercícios e objetivos
 
 - **Onde fica:** no banco, nas tabelas `exercicios` (a biblioteca) e `jornadas` (os objetivos prontos). Quem entra no app lê; só administradores mudam.
-- **Editar os exercícios:** no monitoramento, aba **Exercícios**. Dá para buscar e, no botão **Filtros**, filtrar por grupo, objetivo e situação (ativos, desativados, sem vídeo); criar, editar (nome, grupo, séries, PSE, níveis, explicação, outros nomes e vídeo do YouTube, colando o link) e desativar. Vale na hora para todos, sem publicar o app. Cada exercício mostra em quantas contas está.
+- **Editar os exercícios:** no monitoramento, aba **Exercícios**. Dá para buscar e, na janela do botão **Filtros**, filtrar por grupo, objetivo e situação (ativos, desativados, sem vídeo); criar, editar (nome, grupo, séries, PSE, níveis, explicação, outros nomes e vídeo do YouTube, colando o link) e desativar. Vale na hora para todos, sem publicar o app. Cada exercício mostra em quantas contas está.
 - **Quem já usa não perde nada:** os treinos das contas guardam só nome, séries e PSE, e mudar o catálogo não mexe neles.
   - **Renomear:** o nome antigo fica em `nomes_antigos`. O app continua achando o exercício por ele, com vídeo, cargas e recordes, e o painel avisa quantas contas usam antes de salvar.
   - **Desativar:** o exercício sai da lista de escolha, mas continua completo nos treinos de quem já o tem.
