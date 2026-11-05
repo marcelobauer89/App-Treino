@@ -131,6 +131,19 @@ const linhas = (p) => p.locator('#ex-lista .ex-item b').allInnerTexts();
     await p.locator('#ex-dialog').screenshot({ path: `${H.SAIDA}/admin-exercicio-excluir-${tag}.png` });
     await p.click('[data-ex-excluir-sim]'); await p.waitForTimeout(250);
     ok(!(await H.banco(p)).exercicios.some((e) => e.nome === 'Sissy squat') && !(await linhas(p)).includes('Sissy squat') && /Sissy squat excluído/.test(await txt(p, '#toast')), `${tag}: exclui o exercício livre`);
+    // Lixeira na própria lista: livre exclui; em uso oferece desativar.
+    await p.click('[data-ex-apagar="Abdominal infra"]'); await p.waitForTimeout(120);
+    ok(await p.locator('#ex-apagar-dialog[open]').count() === 1 && /Excluir Abdominal infra\?/.test(await txt(p, '#ex-apagar-title')), `${tag}: lixeira da lista pede confirmação`);
+    await p.locator('#ex-apagar-dialog').screenshot({ path: `${H.SAIDA}/admin-exercicio-lixeira-${tag}.png` });
+    await p.click('#ex-apagar-sim'); await p.waitForTimeout(250);
+    ok(!(await H.banco(p)).exercicios.some((e) => e.nome === 'Abdominal infra') && !(await linhas(p)).includes('Abdominal infra') && /Abdominal infra excluído/.test(await txt(p, '#toast')), `${tag}: lixeira exclui o exercício livre`);
+    await p.click('[data-ex-apagar="Puxada frontal"]'); await p.waitForTimeout(120);
+    ok(/Não dá para excluir Puxada frontal/.test(await txt(p, '#ex-apagar-title')) && /treinos de 3 contas/.test(await txt(p, '#ex-apagar-dialog')) && !(await p.locator('#ex-apagar-sim').count()), `${tag}: lixeira em exercício em uso não exclui`);
+    await p.click('#ex-apagar-desativar'); await p.waitForTimeout(250);
+    ok((await H.banco(p)).exercicios.find((e) => e.nome === 'Puxada frontal').ativo === false && /Puxada frontal desativado/.test(await txt(p, '#toast')), `${tag}: lixeira oferece Desativar`);
+    await p.click('[data-ex-apagar="Face pull"]'); await p.click('#ex-apagar-sim'); await p.waitForTimeout(200);
+    ok(/Faz parte do objetivo pronto/.test(await txt(p, '#ex-apagar-erro')) && await p.locator('#ex-apagar-dialog[open]').count() === 1, `${tag}: lixeira mostra o motivo quando o banco recusa`);
+    await p.keyboard.press('Escape'); await p.waitForTimeout(100);
     // Fundo escurecido e sombra na janela.
     await p.click('[data-ex-editar="Remada no anel"]'); await p.waitForTimeout(120);
     const fundo = await p.evaluate(() => getComputedStyle(document.querySelector('#ex-dialog'), '::backdrop').backgroundColor);

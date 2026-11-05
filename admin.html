@@ -559,6 +559,7 @@
   .ex-grupos button[aria-pressed="true"] { border-color: var(--tatame); background: var(--tatame); color: var(--sobre-tatame); }
   .ex-grupos small { font-size: 12px; opacity: .8; }
   .ex-grupos:empty { display: none; }
+  #ex-lista .conv-botoes { align-items: center; }
   .ex-tags { grid-column: 1; display: flex; flex-wrap: wrap; gap: 4px; }
   .ex-tags span { padding: 1px 8px; border-radius: 999px; background: var(--tatame-suave); color: var(--tatame-tinta); font-size: 12px; font-weight: 700; }
   .ex-item small .ex-sem-video { color: var(--tinta-2); }
@@ -1021,6 +1022,9 @@
 
 <dialog class="modal-excluir" id="conv-excluir-dialog" aria-labelledby="conv-excluir-title">
   <div class="excluir-corpo" id="conv-excluir-body"></div>
+</dialog>
+<dialog class="modal-excluir" id="ex-apagar-dialog" aria-labelledby="ex-apagar-title">
+  <div class="excluir-corpo" id="ex-apagar-body"></div>
 </dialog>
 <dialog class="ex-dialog" id="ex-dialog" aria-labelledby="ex-title">
   <div class="ex-corpo" id="ex-body"></div>
@@ -2614,7 +2618,7 @@
         <b>${esc(e.nome)}${e.ativo ? '' : ' <span class="conv-estado desativado">Desativado</span>'}</b>
         <small>${esc(rotuloGrupoEx(e.grupo))} · ${esc(e.dose)} · PSE ${e.pse} · ${e.video_id ? 'com vídeo' : '<span class="ex-sem-video">sem vídeo</span>'} · ${e.usos ? `em ${e.usos} ${e.usos === 1 ? 'conta' : 'contas'}` : 'em nenhum treino'}${(e.nomes_antigos || []).length ? ` · antes: ${esc(e.nomes_antigos.join(', '))}` : ''}</small>
         ${(e.objetivos || []).length ? `<span class="ex-tags">${e.objetivos.map((id) => `<span>${esc(nomeObj(id))}</span>`).join('')}</span>` : ''}
-        <span class="conv-botoes"><button class="btn-peq sec" type="button" data-ex-editar="${esc(e.nome)}" aria-label="Editar ${esc(e.nome)}">Editar</button></span>
+        <span class="conv-botoes"><button class="btn-peq sec" type="button" data-ex-editar="${esc(e.nome)}" aria-label="Editar ${esc(e.nome)}">Editar</button><button class="excluir-btn" type="button" data-ex-apagar="${esc(e.nome)}" aria-label="Excluir ${esc(e.nome)}" title="Excluir exercício">${ICON.lixeira}</button></span>
       </div>`).join('') : '<p class="vazio">Nenhum exercício com esse nome neste grupo.</p>';
   }
   // Séries no padrão do app: "3×10", "2–3×12 / lado", "3×30 s", "3×1 min", "3×12 totais". O que não cabe nisso
@@ -2810,6 +2814,50 @@
     toast(e ? (e.ativo && !p.ativo ? `${nome} desativado.` : `${nome} salvo. Já vale no app.`) : `${nome} criado. Já aparece no app.`);
     await carregarExercicios();
   });
+  // Excluir pela lista: confirmação numa janela. Em uso, não exclui: oferece desativar.
+  let exApagar = null;
+  function abrirApagar(nome) {
+    const e = exs.lista.find((x) => x.nome === nome);
+    if (!e) return;
+    exApagar = e;
+    const emUso = e.usos > 0;
+    $('ex-apagar-body').innerHTML = `
+      <div class="excluir-topo"><h2 id="ex-apagar-title">${emUso ? `Não dá para excluir ${esc(e.nome)}` : `Excluir ${esc(e.nome)}?`}</h2>
+        <button class="excluir-fechar" type="button" data-ex-apagar-fechar aria-label="Fechar">${ICON.xis}</button></div>
+      <p class="excluir-intro">${emUso
+        ? `Ele está nos treinos de <b>${e.usos} ${e.usos === 1 ? 'conta' : 'contas'}</b>. ${e.ativo ? 'Desative: ele sai da lista de escolha e continua nos treinos de quem já tem.' : 'Ele já está desativado: não aparece para escolher e continua nos treinos de quem já tem.'}`
+        : 'Ele sai do catálogo e do app, junto com o vídeo. Não dá para desfazer.'}</p>
+      <p class="excluir-erro" id="ex-apagar-erro" role="alert" hidden></p>
+      <div class="excluir-acoes">
+        ${emUso ? (e.ativo ? '<button class="btn" type="button" id="ex-apagar-desativar">Desativar</button>' : '')
+          : '<button class="btn-excluir" type="button" id="ex-apagar-sim">Excluir de vez</button>'}
+        <button class="btn-sec" type="button" data-ex-apagar-fechar>${emUso ? 'Voltar' : 'Cancelar'}</button>
+      </div>`;
+    $('ex-apagar-dialog').showModal();
+  }
+  $('ex-apagar-dialog').addEventListener('click', async (ev) => {
+    if (ev.target === $('ex-apagar-dialog') || ev.target.closest('[data-ex-apagar-fechar]')) return $('ex-apagar-dialog').close();
+    const e = exApagar;
+    const botao = ev.target.closest('#ex-apagar-sim, #ex-apagar-desativar');
+    if (!botao || !e) return;
+    const desativar = botao.id === 'ex-apagar-desativar';
+    const antes = botao.textContent;
+    botao.disabled = true; botao.textContent = desativar ? 'Desativando…' : 'Excluindo…';
+    const { error } = desativar
+      ? await sb.rpc('admin_salvar_exercicio', { p_nome_atual: e.nome, p: {
+        nome: e.nome, grupo: e.grupo, dose: e.dose, pse: e.pse, hipertrofia: e.hipertrofia, mobilidade: e.mobilidade, forca: e.forca, explosao: e.explosao,
+        explicacao: e.explicacao, variacoes: e.variacoes || [], objetivos: e.objetivos || [], ativo: false } })
+      : await sb.rpc('admin_excluir_exercicio', { p_nome: e.nome });
+    if (error) {
+      botao.disabled = false; botao.textContent = antes;
+      $('ex-apagar-erro').textContent = /admin_excluir_exercicio|schema cache/.test(error.message || '') ? 'Para excluir exercícios, rode de novo o supabase/schema.sql no Supabase.' : error.message;
+      $('ex-apagar-erro').hidden = false;
+      return;
+    }
+    $('ex-apagar-dialog').close();
+    toast(desativar ? `${e.nome} desativado.` : `${e.nome} excluído.`);
+    await carregarExercicios();
+  });
   $('ex-busca').addEventListener('input', (ev) => { exs.busca = ev.target.value; renderExercicios(); });
   document.addEventListener('click', (ev) => {
     if (ev.target.closest('#ex-filtrar')) {
@@ -2824,6 +2872,8 @@
     if (ob) { exs.obj = ob.dataset.exObj; return renderExercicios(); }
     const g = ev.target.closest('[data-ex-grupo]');
     if (g) { exs.grupo = g.dataset.exGrupo; return renderExercicios(); }
+    const ap = ev.target.closest('[data-ex-apagar]');
+    if (ap) return abrirApagar(ap.dataset.exApagar);
     const ed = ev.target.closest('[data-ex-editar]');
     if (ed) return abrirExercicio(ed.dataset.exEditar);
     if (ev.target.closest('#ex-novo')) return abrirExercicio(null);
