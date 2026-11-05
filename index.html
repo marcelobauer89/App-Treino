@@ -787,10 +787,8 @@
   dialog.modal {
     width: min(440px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); padding: 0;
     border: 1px solid var(--fio); border-radius: 18px; background: var(--papel); color: var(--tinta);
-    /* Toda janela: fundo escurecido atrás e uma sombra leve, para destacar do app. */
-    box-shadow: 0 24px 64px rgba(0, 0, 0, .32), 0 4px 14px rgba(0, 0, 0, .18);
   }
-  dialog.modal::backdrop { background: rgba(8, 10, 14, .7); }
+  dialog.modal::backdrop { background: rgba(10, 12, 16, .55); }
   @media (max-width: 560px) {
     dialog.modal {
       width: 100%; max-width: 100%; max-height: 90dvh; margin: auto 0 0;

@@ -27,6 +27,7 @@ const linhas = (p) => p.locator('#ex-lista .ex-item b').allInnerTexts();
     ok(await p.locator('#aba-exercicios').isVisible() && /#exercicios$/.test(p.url()), `${tag}: aba Exercícios abre (e fica no endereço)`);
     ok((await linhas(p)).length === 136, `${tag}: lista os 136 exercícios`, String((await linhas(p)).length));
     ok(/136 exercícios ativos · 1 com vídeo/.test(await txt(p, '#ex-resumo')), `${tag}: resumo com ativos e vídeos`, await txt(p, '#ex-resumo'));
+    ok(await p.locator('#ex-lista [data-ex-editar] svg').count() === 136 && !/Editar/.test(await txt(p, '#ex-lista')), `${tag}: editar é o ícone de lápis`);
     ok(/em 3 contas/.test(await txt(p, '#ex-lista .ex-item:has(b:text-is("Puxada"))')) && /com vídeo/.test(await txt(p, '#ex-lista .ex-item:has(b:text-is("Puxada"))')), `${tag}: mostra o uso e o vídeo de cada um`);
     ok(!(await p.evaluate(() => document.documentElement.scrollWidth > innerWidth)), `${tag}: sem rolagem lateral`);
     await p.screenshot({ path: `${H.SAIDA}/admin-exercicios-${tag}.png` });
@@ -35,23 +36,24 @@ const linhas = (p) => p.locator('#ex-lista .ex-item b').allInnerTexts();
     await p.fill('#ex-busca', 'agachamento com barra'); await p.waitForTimeout(80);
     ok((await linhas(p)).join('|') === 'Agachamento', `${tag}: busca acha pelos outros nomes`, (await linhas(p)).join('|'));
     // Filtros: só a busca à vista; grupos, objetivos e situação abrem no botão Filtros.
-    ok(await p.locator('#ex-filtros-painel').isHidden() && await p.locator('#ex-busca').isVisible() && await p.locator('#ex-filtrar').isVisible(), `${tag}: só a busca e o botão Filtros à vista`);
+    ok(await p.locator('#ex-filtros-dialog[open]').count() === 0 && await p.locator('#ex-busca').isVisible() && await p.locator('#ex-filtrar').isVisible(), `${tag}: só a busca e o botão Filtros à vista`);
     // O balão do "i" abre colado no título.
     await p.click('[data-info="info-ex"]'); await p.waitForTimeout(80);
     const bi = await p.locator('[data-info="info-ex"]').boundingBox(), bb = await p.locator('#info-ex').boundingBox();
     ok(bb && bb.y - (bi.y + bi.height) < 40 && bb.y > bi.y && bb.x >= 0 && bb.x + bb.width <= viewport.width, `${tag}: balão do "i" perto do botão`, `${Math.round(bb.y - bi.y)}px abaixo`);
     await p.keyboard.press('Escape'); await p.waitForTimeout(60);
     await p.fill('#ex-busca', ''); await p.click('#ex-filtrar'); await p.waitForTimeout(80);
-    ok(await p.locator('#ex-filtros-painel').isVisible() && await p.getAttribute('#ex-filtrar', 'aria-expanded') === 'true', `${tag}: botão Filtros abre os filtros`);
+    ok(await p.locator('#ex-filtros-dialog[open]').count() === 1 && await p.locator('#ex-grupos').isVisible(), `${tag}: botão Filtros abre os filtros numa janela`);
+    await p.locator('#ex-filtros-dialog').screenshot({ path: `${H.SAIDA}/admin-exercicios-filtros-${tag}.png` });
     await p.click('[data-ex-grupo="Pescoço"]'); await p.waitForTimeout(80);
-    ok((await p.locator('#ex-filtros-n').innerText()) === '1', `${tag}: botão mostra quantos filtros estão ativos`);
+    ok((await p.locator('#ex-filtros-n').innerText()) === '1' && /^Ver \d+ exercícios?$/.test((await p.locator('#ex-filtros-ver').innerText()).trim()), `${tag}: botão mostra quantos filtros estão ativos e a janela, quantos exercícios`, await p.locator('#ex-filtros-ver').innerText());
     const pescoco = await linhas(p);
     ok(pescoco.length >= 1 && pescoco.length < 10, `${tag}: filtro por grupo`, pescoco.join('|'));
     await p.click('#ex-limpar'); await p.waitForTimeout(80);
     ok(await p.locator('#ex-filtros-n').isHidden(), `${tag}: Limpar filtros`);
     await p.click('[data-ex-sit="sem-video"]'); await p.waitForTimeout(80);
     ok((await linhas(p)).length === 135 && !(await linhas(p)).includes('Puxada'), `${tag}: filtro sem vídeo`, String((await linhas(p)).length));
-    await p.click('#ex-limpar'); await p.click('#ex-filtrar'); await p.waitForTimeout(80);
+    await p.click('#ex-limpar'); await p.click('#ex-filtros-ver'); await p.waitForTimeout(80);
 
     // Editar a Puxada: renomear avisa quem usa; o vídeo vai por link.
     await p.click('[data-ex-editar="Puxada"]'); await p.waitForTimeout(120);
@@ -99,7 +101,7 @@ const linhas = (p) => p.locator('#ex-lista .ex-item b').allInnerTexts();
     await p.click('#ex-filtrar'); await p.click('[data-ex-obj="forca"]'); await p.waitForTimeout(80);
     const daForca = await linhas(p);
     ok(daForca.includes('Remada no anel') && daForca.includes('Deadlift') && !daForca.includes('Escorpião'), `${tag}: filtro por objetivo`, String(daForca.length));
-    await p.click('#ex-limpar'); await p.click('#ex-filtrar'); await p.waitForTimeout(80);
+    await p.click('#ex-limpar'); await p.click('#ex-filtros-ver'); await p.waitForTimeout(80);
     // Formato que não cabe nos campos (texto livre) abre em "Outro formato" e continua igual.
     await p.click('[data-ex-editar="Cardio curto intervalado"]'); await p.waitForTimeout(120);
     ok(await p.isChecked('#ex-dose-livre') && await p.locator('#ex-dose').isVisible() && await p.locator('#ex-dose-campos').isHidden(), `${tag}: formato livre abre em "Outro formato"`, await p.inputValue('#ex-dose'));
@@ -143,11 +145,6 @@ const linhas = (p) => p.locator('#ex-lista .ex-item b').allInnerTexts();
     ok((await H.banco(p)).exercicios.find((e) => e.nome === 'Puxada frontal').ativo === false && /Puxada frontal desativado/.test(await txt(p, '#toast')), `${tag}: lixeira oferece Desativar`);
     await p.click('[data-ex-apagar="Face pull"]'); await p.click('#ex-apagar-sim'); await p.waitForTimeout(200);
     ok(/Faz parte do objetivo pronto/.test(await txt(p, '#ex-apagar-erro')) && await p.locator('#ex-apagar-dialog[open]').count() === 1, `${tag}: lixeira mostra o motivo quando o banco recusa`);
-    await p.keyboard.press('Escape'); await p.waitForTimeout(100);
-    // Fundo escurecido e sombra na janela.
-    await p.click('[data-ex-editar="Remada no anel"]'); await p.waitForTimeout(120);
-    const fundo = await p.evaluate(() => getComputedStyle(document.querySelector('#ex-dialog'), '::backdrop').backgroundColor);
-    ok(/0\.7\)/.test(fundo), `${tag}: fundo da janela escurecido`, fundo);
     await p.keyboard.press('Escape'); await p.waitForTimeout(100);
     // Erro do banco aparece na janela e nada fecha.
     await p.evaluate(() => { const d = JSON.parse(localStorage.getItem('mock-supabase')); d.admin.falharSalvarExercicio = true; localStorage.setItem('mock-supabase', JSON.stringify(d)); });

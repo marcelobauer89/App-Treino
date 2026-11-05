@@ -405,10 +405,8 @@
   dialog.detalhe {
     width: min(560px, 100vw); max-width: 100vw; max-height: 100dvh; margin: 0 0 0 auto; height: 100dvh; padding: 0;
     border: 0; border-left: 1px solid var(--fio); background: var(--papel); color: var(--tinta);
-    box-shadow: -18px 0 48px rgba(0, 0, 0, .3);
   }
-  /* Toda janela: fundo escurecido atrás e uma sombra leve. */
-  dialog.detalhe::backdrop { background: rgba(8, 10, 14, .7); }
+  dialog.detalhe::backdrop { background: rgba(10, 12, 16, .5); }
   @media (max-width: 720px) {
     dialog.detalhe { margin: auto 0 0; width: 100vw; height: auto; max-height: 92dvh; border: 0; border-top: 1px solid var(--fio); border-radius: 18px 18px 0 0; }
   }
@@ -477,6 +475,7 @@
     background: var(--papel); color: var(--tinta-2); cursor: pointer;
   }
   .excluir-btn:hover:not(:disabled) { color: var(--erro); border-color: var(--erro); }
+  .excluir-btn.editar-btn:hover:not(:disabled) { color: var(--tatame-tinta); border-color: var(--tatame); }
   .excluir-btn:disabled { opacity: .35; cursor: not-allowed; }
   .excluir-btn svg { width: 18px; height: 18px; }
   @media (max-width: 720px) {
@@ -486,9 +485,8 @@
   dialog.modal-excluir {
     width: min(460px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); padding: 0;
     border: 1px solid var(--fio); border-radius: 18px; background: var(--papel); color: var(--tinta);
-    box-shadow: 0 24px 64px rgba(0, 0, 0, .32), 0 4px 14px rgba(0, 0, 0, .18);
   }
-  dialog.modal-excluir::backdrop { background: rgba(8, 10, 14, .7); }
+  dialog.modal-excluir::backdrop { background: rgba(10, 12, 16, .55); }
   @media (max-width: 720px) {
     dialog.modal-excluir { width: 100%; max-width: 100%; max-height: 92dvh; margin: auto 0 0; border-bottom: 0; border-radius: 18px 18px 0 0; }
   }
@@ -548,12 +546,14 @@
   .ex-busca-linha input { width: 100%; min-height: 48px; padding: 0 12px; border: 1px solid var(--fio); border-radius: 10px; background: var(--gi); color: var(--tinta); font: inherit; font-size: 16px; }
   .ex-filtrar { min-height: 48px; }
   .ex-filtrar svg { width: 18px; height: 18px; }
-  .ex-filtrar[aria-expanded="true"] { background: var(--tatame-suave); }
+
   .ex-filtros-n { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--tatame); color: var(--sobre-tatame); font-size: 12px; line-height: 20px; text-align: center; }
-  .ex-filtros-painel { display: grid; gap: 14px; padding: 14px; border: 1px solid var(--fio); border-radius: 12px; background: var(--papel); }
+  dialog.ex-filtros-dialog { width: min(520px, calc(100vw - 32px)); }
+  .ex-filtros-acoes { display: grid; grid-template-columns: 1fr 2fr; gap: 10px; padding-top: 4px; }
+  .ex-filtros-acoes .btn, .ex-filtros-acoes .btn-sec { min-height: 48px; }
   .ex-filtro-bloco { display: grid; gap: 8px; }
   .ex-filtro-bloco > b { font-size: 13px; color: var(--tinta-2); }
-  .ex-filtros-painel .link-btn { justify-self: start; }
+
   .ex-grupos { display: flex; flex-wrap: wrap; gap: 6px; }
   .ex-grupos button { min-height: 36px; padding: 0 12px; border: 1px solid var(--fio); border-radius: 999px; background: var(--papel); color: var(--tinta-2); font-size: 14px; font-weight: 600; }
   .ex-grupos button[aria-pressed="true"] { border-color: var(--tatame); background: var(--tatame); color: var(--sobre-tatame); }
@@ -568,9 +568,8 @@
   dialog.ex-dialog {
     width: min(720px, calc(100vw - 48px)); height: min(860px, 90dvh); max-width: none; max-height: none; padding: 0;
     border: 1px solid var(--fio); border-radius: 18px; background: var(--papel); color: var(--tinta); overflow: hidden;
-    box-shadow: 0 24px 64px rgba(0, 0, 0, .32), 0 4px 14px rgba(0, 0, 0, .18);
   }
-  dialog.ex-dialog::backdrop { background: rgba(8, 10, 14, .7); }
+  dialog.ex-dialog::backdrop { background: rgba(10, 12, 16, .55); }
   @media (max-width: 720px) {
     dialog.ex-dialog { width: 100vw; height: 100dvh; margin: 0; border: 0; border-radius: 0; }
   }
@@ -1001,13 +1000,7 @@
           <div class="ex-busca-linha">
             <label class="sr" for="ex-busca">Buscar exercício</label>
             <input id="ex-busca" type="search" autocomplete="off" placeholder="Buscar pelo nome ou outro nome">
-            <button class="btn-sec ex-filtrar" type="button" id="ex-filtrar" aria-expanded="false" aria-controls="ex-filtros-painel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg><span>Filtros</span><span class="ex-filtros-n" id="ex-filtros-n" hidden></span></button>
-          </div>
-          <div class="ex-filtros-painel" id="ex-filtros-painel" hidden>
-            <div class="ex-filtro-bloco"><b>Grupo</b><div class="ex-grupos" id="ex-grupos" role="group" aria-label="Filtrar por grupo"></div></div>
-            <div class="ex-filtro-bloco" id="ex-objs-bloco"><b>Objetivo</b><div class="ex-grupos" id="ex-objs-filtro" role="group" aria-label="Filtrar por objetivo"></div></div>
-            <div class="ex-filtro-bloco"><b>Situação</b><div class="ex-grupos" id="ex-sit-filtro" role="group" aria-label="Filtrar por situação"></div></div>
-            <button class="link-btn" type="button" id="ex-limpar">Limpar filtros</button>
+            <button class="btn-sec ex-filtrar" type="button" id="ex-filtrar" aria-haspopup="dialog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg><span>Filtros</span><span class="ex-filtros-n" id="ex-filtros-n" hidden></span></button>
           </div>
         </div>
         <div class="cartao lista-cartao" id="ex-lista"><p class="vazio">Carregando…</p></div>
@@ -1022,6 +1015,19 @@
 
 <dialog class="modal-excluir" id="conv-excluir-dialog" aria-labelledby="conv-excluir-title">
   <div class="excluir-corpo" id="conv-excluir-body"></div>
+</dialog>
+<dialog class="modal-excluir ex-filtros-dialog" id="ex-filtros-dialog" aria-labelledby="ex-filtros-title">
+  <div class="excluir-corpo">
+    <div class="excluir-topo"><h2 id="ex-filtros-title">Filtros</h2>
+      <button class="excluir-fechar" type="button" data-ex-filtros-fechar aria-label="Fechar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+    <div class="ex-filtro-bloco"><b>Grupo</b><div class="ex-grupos" id="ex-grupos" role="group" aria-label="Filtrar por grupo"></div></div>
+    <div class="ex-filtro-bloco" id="ex-objs-bloco"><b>Objetivo</b><div class="ex-grupos" id="ex-objs-filtro" role="group" aria-label="Filtrar por objetivo"></div></div>
+    <div class="ex-filtro-bloco"><b>Situação</b><div class="ex-grupos" id="ex-sit-filtro" role="group" aria-label="Filtrar por situação"></div></div>
+    <div class="ex-filtros-acoes">
+      <button class="btn-sec" type="button" id="ex-limpar">Limpar</button>
+      <button class="btn" type="button" id="ex-filtros-ver" data-ex-filtros-fechar>Ver exercícios</button>
+    </div>
+  </div>
 </dialog>
 <dialog class="modal-excluir" id="ex-apagar-dialog" aria-labelledby="ex-apagar-title">
   <div class="excluir-corpo" id="ex-apagar-body"></div>
@@ -1073,6 +1079,7 @@
   const ORDEM_SEMANA = [1, 2, 3, 4, 5, 6, 0];
 
   const ICON = {
+    lapis: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
     lixeira: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6"/></svg>',
     xis: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>',
     sobe: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg>',
@@ -2613,12 +2620,13 @@
       .filter((e) => (exs.grupo === 'todos' || e.grupo === exs.grupo) && (exs.obj === 'todos' || (e.objetivos || []).includes(exs.obj))
         && (exs.sit === 'todos' || (exs.sit === 'ativos' ? e.ativo : exs.sit === 'desativados' ? !e.ativo : !e.video_id)) && (!busca || [e.nome, ...(e.variacoes || []), ...(e.nomes_antigos || [])].some((n) => chaveEx(n).includes(busca))))
       .sort((a, b) => (b.ativo - a.ativo) || GRUPOS_EX.indexOf(a.grupo) - GRUPOS_EX.indexOf(b.grupo) || a.nome.localeCompare(b.nome, 'pt-BR'));
+    $('ex-filtros-ver').textContent = `Ver ${itens.length} ${itens.length === 1 ? 'exercício' : 'exercícios'}`;
     lista.innerHTML = itens.length ? itens.map((e) => `
       <div class="conv-item ex-item">
         <b>${esc(e.nome)}${e.ativo ? '' : ' <span class="conv-estado desativado">Desativado</span>'}</b>
         <small>${esc(rotuloGrupoEx(e.grupo))} · ${esc(e.dose)} · PSE ${e.pse} · ${e.video_id ? 'com vídeo' : '<span class="ex-sem-video">sem vídeo</span>'} · ${e.usos ? `em ${e.usos} ${e.usos === 1 ? 'conta' : 'contas'}` : 'em nenhum treino'}${(e.nomes_antigos || []).length ? ` · antes: ${esc(e.nomes_antigos.join(', '))}` : ''}</small>
         ${(e.objetivos || []).length ? `<span class="ex-tags">${e.objetivos.map((id) => `<span>${esc(nomeObj(id))}</span>`).join('')}</span>` : ''}
-        <span class="conv-botoes"><button class="btn-peq sec" type="button" data-ex-editar="${esc(e.nome)}" aria-label="Editar ${esc(e.nome)}">Editar</button><button class="excluir-btn" type="button" data-ex-apagar="${esc(e.nome)}" aria-label="Excluir ${esc(e.nome)}" title="Excluir exercício">${ICON.lixeira}</button></span>
+        <span class="conv-botoes"><button class="excluir-btn editar-btn" type="button" data-ex-editar="${esc(e.nome)}" aria-label="Editar ${esc(e.nome)}" title="Editar exercício">${ICON.lapis}</button><button class="excluir-btn" type="button" data-ex-apagar="${esc(e.nome)}" aria-label="Excluir ${esc(e.nome)}" title="Excluir exercício">${ICON.lixeira}</button></span>
       </div>`).join('') : '<p class="vazio">Nenhum exercício com esse nome neste grupo.</p>';
   }
   // Séries no padrão do app: "3×10", "2–3×12 / lado", "3×30 s", "3×1 min", "3×12 totais". O que não cabe nisso
@@ -2860,11 +2868,8 @@
   });
   $('ex-busca').addEventListener('input', (ev) => { exs.busca = ev.target.value; renderExercicios(); });
   document.addEventListener('click', (ev) => {
-    if (ev.target.closest('#ex-filtrar')) {
-      const abrir = $('ex-filtros-painel').hidden;
-      $('ex-filtros-painel').hidden = !abrir;
-      return $('ex-filtrar').setAttribute('aria-expanded', String(abrir));
-    }
+    if (ev.target.closest('#ex-filtrar')) return $('ex-filtros-dialog').showModal();
+    if (ev.target === $('ex-filtros-dialog') || ev.target.closest('[data-ex-filtros-fechar]')) return $('ex-filtros-dialog').close();
     if (ev.target.closest('#ex-limpar')) { Object.assign(exs, { grupo: 'todos', obj: 'todos', sit: 'todos' }); return renderExercicios(); }
     const st = ev.target.closest('[data-ex-sit]');
     if (st) { exs.sit = st.dataset.exSit; return renderExercicios(); }
