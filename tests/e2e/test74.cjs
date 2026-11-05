@@ -10,7 +10,7 @@ const txt = async (p, s) => ((await p.locator(s).first().innerText().catch(() =>
 const USUARIOS = [{ id: 'u1', nome: 'Pessoa Admin', email: 'admin@exemplo.com', liberado: true, acessos: 3 }];
 async function abrir(b, { scheme = 'light', viewport = { width: 390, height: 844 }, semCatalogo = false } = {}) {
   const c = H.catalogo();
-  const extra = { admin: { ids: ['u1'], usuarios: USUARIOS, usos: { Puxada: 3, Superman: 2 } }, videos: [{ exercicio: 'Puxada', video_id: 'vidPuxada01' }] };
+  const extra = { admin: { ids: ['u1'], usuarios: USUARIOS, usos: { Puxada: 3, 'Puxada frontal': 3, Superman: 2 } }, videos: [{ exercicio: 'Puxada', video_id: 'vidPuxada01' }] };
   if (!semCatalogo) Object.assign(extra, { exercicios: c.exercicios, jornadas: c.jornadas });
   const p = await H.novaPagina(b, { scheme, viewport, extra });
   await p.goto(ADMIN); await p.waitForSelector('#painel:not([hidden])'); await p.waitForTimeout(300);
@@ -34,10 +34,24 @@ const linhas = (p) => p.locator('#ex-lista .ex-item b').allInnerTexts();
     // Busca e grupo
     await p.fill('#ex-busca', 'agachamento com barra'); await p.waitForTimeout(80);
     ok((await linhas(p)).join('|') === 'Agachamento', `${tag}: busca acha pelos outros nomes`, (await linhas(p)).join('|'));
-    await p.fill('#ex-busca', ''); await p.click('[data-ex-grupo="Pescoço"]'); await p.waitForTimeout(80);
+    // Filtros: só a busca à vista; grupos, objetivos e situação abrem no botão Filtros.
+    ok(await p.locator('#ex-filtros-painel').isHidden() && await p.locator('#ex-busca').isVisible() && await p.locator('#ex-filtrar').isVisible(), `${tag}: só a busca e o botão Filtros à vista`);
+    // O balão do "i" abre colado no título.
+    await p.click('[data-info="info-ex"]'); await p.waitForTimeout(80);
+    const bi = await p.locator('[data-info="info-ex"]').boundingBox(), bb = await p.locator('#info-ex').boundingBox();
+    ok(bb && bb.y - (bi.y + bi.height) < 40 && bb.y > bi.y && bb.x >= 0 && bb.x + bb.width <= viewport.width, `${tag}: balão do "i" perto do botão`, `${Math.round(bb.y - bi.y)}px abaixo`);
+    await p.keyboard.press('Escape'); await p.waitForTimeout(60);
+    await p.fill('#ex-busca', ''); await p.click('#ex-filtrar'); await p.waitForTimeout(80);
+    ok(await p.locator('#ex-filtros-painel').isVisible() && await p.getAttribute('#ex-filtrar', 'aria-expanded') === 'true', `${tag}: botão Filtros abre os filtros`);
+    await p.click('[data-ex-grupo="Pescoço"]'); await p.waitForTimeout(80);
+    ok((await p.locator('#ex-filtros-n').innerText()) === '1', `${tag}: botão mostra quantos filtros estão ativos`);
     const pescoco = await linhas(p);
     ok(pescoco.length >= 1 && pescoco.length < 10, `${tag}: filtro por grupo`, pescoco.join('|'));
-    await p.click('[data-ex-grupo="todos"]'); await p.waitForTimeout(80);
+    await p.click('#ex-limpar'); await p.waitForTimeout(80);
+    ok(await p.locator('#ex-filtros-n').isHidden(), `${tag}: Limpar filtros`);
+    await p.click('[data-ex-sit="sem-video"]'); await p.waitForTimeout(80);
+    ok((await linhas(p)).length === 135 && !(await linhas(p)).includes('Puxada'), `${tag}: filtro sem vídeo`, String((await linhas(p)).length));
+    await p.click('#ex-limpar'); await p.click('#ex-filtrar'); await p.waitForTimeout(80);
 
     // Editar a Puxada: renomear avisa quem usa; o vídeo vai por link.
     await p.click('[data-ex-editar="Puxada"]'); await p.waitForTimeout(120);
@@ -45,6 +59,7 @@ const linhas = (p) => p.locator('#ex-lista .ex-item b').allInnerTexts();
     ok(await p.locator('#ex-aviso').isHidden(), `${tag}: sem aviso antes de mudar o nome`);
     await p.fill('#ex-nome', 'Puxada frontal');
     ok(/3 contas têm este exercício nos treinos\. O nome novo aparece no treino delas, e as cargas e o histórico continuam ligados/.test(await txt(p, '#ex-aviso')), `${tag}: renomear avisa quantas contas usam`, await txt(p, '#ex-aviso'));
+    ok((await p.locator('.ex-nivel').first().locator('.ex-seg span').allInnerTexts()).join('|') === 'Baixa|Média|Alta', `${tag}: níveis na ordem Baixa, Média, Alta`);
     ok(await p.inputValue('#ex-series') === '3' && await p.inputValue('#ex-valor') === '10' && await p.inputValue('#ex-pse') === '8' && await p.isChecked('input[name="ex-hipertrofia"][value="alta"]') && await p.isChecked('input[name="ex-obj"][value="hipertrofia"]'), `${tag}: abre com séries, PSE, níveis e objetivos nos campos`);
     const caixa = await p.locator('#ex-dialog').boundingBox();
     ok(viewport.width < 720 ? Math.abs(caixa.height - viewport.height) <= 1 && Math.abs(caixa.width - viewport.width) <= 1 : caixa.width >= 700 && caixa.height >= 700, `${tag}: janela em tela cheia no celular (grande no computador)`, `${Math.round(caixa.width)}×${Math.round(caixa.height)}`);
@@ -81,10 +96,10 @@ const linhas = (p) => p.locator('#ex-lista .ex-item b').allInnerTexts();
     const novo = db.exercicios.find((e) => e.nome === 'Remada no anel');
     ok(novo && novo.grupo === 'Peito' && novo.dose === '3×12 / lado' && novo.pse === 7 && novo.forca === 'alta' && novo.variacoes.join('|') === 'Remada nas argolas|Remada no TRX' && novo.objetivos.join('|') === 'forca' && novo.ativo, `${tag}: cria com todos os campos no padrão`, JSON.stringify(novo));
     ok(/Força e potência/.test(await txt(p, '#ex-lista .ex-item:has(b:text-is("Remada no anel"))')), `${tag}: lista mostra o objetivo`);
-    await p.click('[data-ex-obj="forca"]'); await p.waitForTimeout(80);
+    await p.click('#ex-filtrar'); await p.click('[data-ex-obj="forca"]'); await p.waitForTimeout(80);
     const daForca = await linhas(p);
     ok(daForca.includes('Remada no anel') && daForca.includes('Deadlift') && !daForca.includes('Escorpião'), `${tag}: filtro por objetivo`, String(daForca.length));
-    await p.click('[data-ex-obj="todos"]'); await p.waitForTimeout(80);
+    await p.click('#ex-limpar'); await p.click('#ex-filtrar'); await p.waitForTimeout(80);
     // Formato que não cabe nos campos (texto livre) abre em "Outro formato" e continua igual.
     await p.click('[data-ex-editar="Cardio curto intervalado"]'); await p.waitForTimeout(120);
     ok(await p.isChecked('#ex-dose-livre') && await p.locator('#ex-dose').isVisible() && await p.locator('#ex-dose-campos').isHidden(), `${tag}: formato livre abre em "Outro formato"`, await p.inputValue('#ex-dose'));
@@ -100,6 +115,40 @@ const linhas = (p) => p.locator('#ex-lista .ex-item b').allInnerTexts();
     ok(db.exercicios.find((e) => e.nome === 'Superman').ativo === false && /Desativado/.test(await txt(p, '#ex-lista .ex-item:has(b:has-text("Superman"))')) && /Superman desativado/.test(await txt(p, '#toast')), `${tag}: desativado marcado na lista`);
     ok(/1 desativado/.test(await txt(p, '#ex-resumo')), `${tag}: resumo conta o desativado`);
 
+    // Excluir: exercício em uso só pode ser desativado; o de um objetivo pronto é recusado; o livre sai de vez.
+    await p.click('[data-ex-editar="Puxada frontal"]'); await p.waitForTimeout(120);
+    await p.click('#ex-excluir'); await p.waitForTimeout(80);
+    ok(/está nos treinos de 3 contas/.test(await txt(p, '#ex-excluir-caixa')) && !(await p.locator('[data-ex-excluir-sim]').count()), `${tag}: em uso, não exclui e sugere desativar`);
+    await p.click('[data-ex-desativar]'); await p.waitForTimeout(60);
+    ok(!(await p.isChecked('#ex-ativo')), `${tag}: Desativar desmarca o Ativo`);
+    await p.keyboard.press('Escape'); await p.waitForTimeout(100);
+    await p.click('[data-ex-editar="Face pull"]'); await p.waitForTimeout(120);
+    await p.click('#ex-excluir'); await p.click('[data-ex-excluir-sim]'); await p.waitForTimeout(200);
+    ok(/Faz parte do objetivo pronto/.test(await txt(p, '#ex-erro')) && (await H.banco(p)).exercicios.some((e) => e.nome === 'Face pull'), `${tag}: exercício de objetivo pronto não é excluído`);
+    await p.keyboard.press('Escape'); await p.waitForTimeout(100);
+    await p.click('[data-ex-editar="Sissy squat"]'); await p.waitForTimeout(120);
+    await p.click('#ex-excluir'); await p.waitForTimeout(80);
+    await p.locator('#ex-dialog').screenshot({ path: `${H.SAIDA}/admin-exercicio-excluir-${tag}.png` });
+    await p.click('[data-ex-excluir-sim]'); await p.waitForTimeout(250);
+    ok(!(await H.banco(p)).exercicios.some((e) => e.nome === 'Sissy squat') && !(await linhas(p)).includes('Sissy squat') && /Sissy squat excluído/.test(await txt(p, '#toast')), `${tag}: exclui o exercício livre`);
+    // Lixeira na própria lista: livre exclui; em uso oferece desativar.
+    await p.click('[data-ex-apagar="Abdominal infra"]'); await p.waitForTimeout(120);
+    ok(await p.locator('#ex-apagar-dialog[open]').count() === 1 && /Excluir Abdominal infra\?/.test(await txt(p, '#ex-apagar-title')), `${tag}: lixeira da lista pede confirmação`);
+    await p.locator('#ex-apagar-dialog').screenshot({ path: `${H.SAIDA}/admin-exercicio-lixeira-${tag}.png` });
+    await p.click('#ex-apagar-sim'); await p.waitForTimeout(250);
+    ok(!(await H.banco(p)).exercicios.some((e) => e.nome === 'Abdominal infra') && !(await linhas(p)).includes('Abdominal infra') && /Abdominal infra excluído/.test(await txt(p, '#toast')), `${tag}: lixeira exclui o exercício livre`);
+    await p.click('[data-ex-apagar="Puxada frontal"]'); await p.waitForTimeout(120);
+    ok(/Não dá para excluir Puxada frontal/.test(await txt(p, '#ex-apagar-title')) && /treinos de 3 contas/.test(await txt(p, '#ex-apagar-dialog')) && !(await p.locator('#ex-apagar-sim').count()), `${tag}: lixeira em exercício em uso não exclui`);
+    await p.click('#ex-apagar-desativar'); await p.waitForTimeout(250);
+    ok((await H.banco(p)).exercicios.find((e) => e.nome === 'Puxada frontal').ativo === false && /Puxada frontal desativado/.test(await txt(p, '#toast')), `${tag}: lixeira oferece Desativar`);
+    await p.click('[data-ex-apagar="Face pull"]'); await p.click('#ex-apagar-sim'); await p.waitForTimeout(200);
+    ok(/Faz parte do objetivo pronto/.test(await txt(p, '#ex-apagar-erro')) && await p.locator('#ex-apagar-dialog[open]').count() === 1, `${tag}: lixeira mostra o motivo quando o banco recusa`);
+    await p.keyboard.press('Escape'); await p.waitForTimeout(100);
+    // Fundo escurecido e sombra na janela.
+    await p.click('[data-ex-editar="Remada no anel"]'); await p.waitForTimeout(120);
+    const fundo = await p.evaluate(() => getComputedStyle(document.querySelector('#ex-dialog'), '::backdrop').backgroundColor);
+    ok(/0\.7\)/.test(fundo), `${tag}: fundo da janela escurecido`, fundo);
+    await p.keyboard.press('Escape'); await p.waitForTimeout(100);
     // Erro do banco aparece na janela e nada fecha.
     await p.evaluate(() => { const d = JSON.parse(localStorage.getItem('mock-supabase')); d.admin.falharSalvarExercicio = true; localStorage.setItem('mock-supabase', JSON.stringify(d)); });
     await p.click('[data-ex-editar="Remada no anel"]'); await p.waitForTimeout(120); await p.click('#ex-salvar'); await p.waitForTimeout(200);
