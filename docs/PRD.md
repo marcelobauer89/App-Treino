@@ -1,6 +1,6 @@
 ## PRD — App Bauer: Jiu Jitsu + Hipertrofia
 
-2026-11-06 · @Bauer
+2026-11-05 · @Bauer
 
 ### Visão geral
 
