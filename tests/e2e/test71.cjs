@@ -22,7 +22,7 @@ const perfil = async (p) => (await H.banco(p)).perfis.find((x) => x.id === 'u1')
 
     // Passo 1: o app. A janela separada da política não aparece; nada é gravado.
     ok(await p.isVisible('#jornada-dialog') && !(await p.isVisible('#politica-dialog')), `${tag}: abre as boas-vindas (sem a janela da política)`);
-    ok((await titulo(p)) === 'Bem-vindo ao OSS' && (await passo(p)) === 'Etapa 1 de 3', `${tag}: passo 1 de 3`, `${await titulo(p)} / ${await passo(p)}`);
+    ok((await titulo(p)) === 'Bem-vindo ao Gestão de Treinos' && (await passo(p)) === 'Etapa 1 de 3', `${tag}: passo 1 de 3`, `${await titulo(p)} / ${await passo(p)}`);
     const corpo = await p.innerText('#jornada-body');
     ok(['Treino do dia', 'Check-in', 'Dashboard', 'Temporizador de descanso', 'Você'].every((x) => corpo.includes(x)), `${tag}: explica o app`);
     ok(!(await p.locator('#jornada-body [data-fechar]').count()) && !(await p.locator('#novidade-ocultar').count()), `${tag}: sem X e sem "Não mostrar de novo"`);
@@ -30,7 +30,7 @@ const perfil = async (p) => (await H.banco(p)).perfis.find((x) => x.id === 'u1')
     await p.locator('#jornada-dialog .modal-body').screenshot({ path: `${H.SAIDA}/boas-vindas-1-${tag}.png` });
     await p.keyboard.press('Escape'); await p.waitForTimeout(100);
     await p.mouse.click(5, 5); await p.waitForTimeout(100);
-    ok(await p.isVisible('#jornada-dialog') && (await titulo(p)) === 'Bem-vindo ao OSS', `${tag}: Esc e toque fora não fecham`);
+    ok(await p.isVisible('#jornada-dialog') && (await titulo(p)) === 'Bem-vindo ao Gestão de Treinos', `${tag}: Esc e toque fora não fecham`);
     await p.waitForTimeout(200);
     ok(!(await perfil(p)).politica_versao, `${tag}: passo 1 não grava a política`);
 
@@ -46,7 +46,7 @@ const perfil = async (p) => (await H.banco(p)).perfis.find((x) => x.id === 'u1')
     }
     await p.locator('#jornada-dialog .modal-body').screenshot({ path: `${H.SAIDA}/boas-vindas-2-${tag}.png` });
     await p.click('[data-jd-voltar]'); await p.waitForTimeout(100);
-    ok((await titulo(p)) === 'Bem-vindo ao OSS', `${tag}: Voltar volta ao passo 1`);
+    ok((await titulo(p)) === 'Bem-vindo ao Gestão de Treinos', `${tag}: Voltar volta ao passo 1`);
     await p.click('[data-jd-comecar]'); await p.waitForTimeout(100);
     await p.click('[data-jd-entendi]'); await p.waitForTimeout(400);
     ok((await perfil(p)).politica_versao, `${tag}: Entendi grava a política`);
