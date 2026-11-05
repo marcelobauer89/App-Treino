@@ -415,7 +415,11 @@ Pendências e cuidados:
    - boas-vindas da conta nova em etapas e em tela cheia (o app, seus dados e o objetivo), com a escolha obrigatória e a privacidade antes de gravar qualquer escolha;
    - confirmar o objetivo no rodapé e a animação "Montando seus treinos" (nas boas-vindas, em Mudar meu objetivo e ao salvar treinos alterados);
    - celebração em tela cheia ao fazer ou encerrar um check-in;
-   - "Jiu Jitsu" como nome da atividade e do objetivo em todo o app.
+   - "Jiu Jitsu" como nome da atividade e do objetivo em todo o app;
+   - catálogo de exercícios e objetivos no banco, com a aba Exercícios no monitoramento (busca, filtros numa janela, criar, editar com campos no padrão do app, renomear, desativar, excluir, vídeo por link e objetivos por exercício), refletido nos cartões de quem já usa sem mexer nos treinos;
+   - chip "Do meu objetivo" ao adicionar exercício;
+   - futebol e futvôlei como atividades;
+   - "Quem sumiu" no monitoramento só com os possíveis churn (sem usar o app há 7 dias ou mais).
 2. **MVP (web, grupo de amigos):**
    - PWA responsiva com modo offline;
    - onboarding com peso e alvo, semana e fase, peso e proteína;
