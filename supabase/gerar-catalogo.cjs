@@ -15,9 +15,11 @@ const { BIBLIOTECA_APP, JORNADAS_APP } = new Function(`${html.slice(ini, fim)}; 
 
 const sqlTexto = (s) => `'${String(s).replace(/'/g, "''")}'`;
 const json = (v) => sqlTexto(JSON.stringify(v));
+// Objetivos de cada exercício: os objetivos prontos em que ele aparece.
+const objetivosDe = (nome) => JORNADAS_APP.filter((j) => Object.values(j.treinos).some((t) => t.exercicios.some((e) => e.nome === nome))).map((j) => j.id).sort();
 const exercicios = BIBLIOTECA_APP.map((ex) => ({
   nome: ex.nome, grupo: ex.grupo, dose: ex.dose, pse: ex.pse,
-  hipertrofia: ex.H, mobilidade: ex.M, forca: ex.F, explosao: ex.E, explicacao: ex.why, variacoes: ex.variacoes,
+  hipertrofia: ex.H, mobilidade: ex.M, forca: ex.F, explosao: ex.E, explicacao: ex.why, variacoes: ex.variacoes, objetivos: objetivosDe(ex.nome),
 }));
 // Nos objetivos vão só nome, dose e PSE de cada exercício (o resto vem do catálogo, como nos treinos das contas).
 const jornadas = JORNADAS_APP.map((j, i) => {
@@ -36,12 +38,12 @@ const linhas = [
   '-- catalogo:inicio (gerado por supabase/gerar-catalogo.cjs a partir do index.html; não edite à mão)',
   '-- Carga inicial: só entra o que ainda não existe. Exercícios renomeados (nome antigo em nomes_antigos) não voltam,',
   '-- e o que já foi editado pelo painel continua como está.',
-  'insert into public.exercicios (nome, grupo, dose, pse, hipertrofia, mobilidade, forca, explosao, explicacao, variacoes)',
+  'insert into public.exercicios (nome, grupo, dose, pse, hipertrofia, mobilidade, forca, explosao, explicacao, variacoes, objetivos)',
   'select x.nome, x.grupo, x.dose, x.pse, x.hipertrofia, x.mobilidade, x.forca, x.explosao, x.explicacao,',
-  "  array(select jsonb_array_elements_text(x.variacoes))",
+  "  array(select jsonb_array_elements_text(x.variacoes)), array(select jsonb_array_elements_text(x.objetivos))",
   'from jsonb_to_recordset($catalogo$[',
   exercicios.map((e) => '  ' + JSON.stringify(e)).join(',\n'),
-  ']$catalogo$::jsonb) as x(nome text, grupo text, dose text, pse smallint, hipertrofia text, mobilidade text, forca text, explosao text, explicacao text, variacoes jsonb)',
+  ']$catalogo$::jsonb) as x(nome text, grupo text, dose text, pse smallint, hipertrofia text, mobilidade text, forca text, explosao text, explicacao text, variacoes jsonb, objetivos jsonb)',
   'where not exists (select 1 from public.exercicios e where e.nome = x.nome or x.nome = any(e.nomes_antigos))',
   'on conflict do nothing;',
   '',

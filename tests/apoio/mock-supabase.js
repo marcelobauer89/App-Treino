@@ -348,7 +348,8 @@
                 gravar(db); return { data, error: null };
               }
               const p = args.p || {}; const atual = args.p_nome_atual || null;
-              const n = String(p.nome || '').trim().replace(/\s+/g, ' ');
+              let n = String(p.nome || '').trim().replace(/\s+/g, ' ');
+              n = n ? n[0].toUpperCase() + n.slice(1) : n;
               const video = String(p.video_id || '').trim();
               let erro = null;
               const outro = db.exercicios.find((e) => chave(e.nome) === chave(n) && e.nome !== atual);
@@ -361,7 +362,8 @@
               if (erro) { gravar(db); return { data: null, error: { message: erro } }; }
               const campos = { nome: n, grupo: p.grupo, dose: p.dose || '3×10', pse: Number(p.pse) || 8, hipertrofia: p.hipertrofia || 'baixa', mobilidade: p.mobilidade || 'baixa',
                 forca: p.forca || 'baixa', explosao: p.explosao || 'baixa', explicacao: String(p.explicacao || '').trim(), variacoes: p.variacoes || [], ativo: p.ativo !== false, atualizado_em: new Date().toISOString() };
-              if (!atual) db.exercicios.push({ ...campos, nomes_antigos: [] });
+              if ('objetivos' in p) campos.objetivos = p.objetivos || [];
+              if (!atual) db.exercicios.push({ objetivos: [], ...campos, nomes_antigos: [] });
               else {
                 const e = db.exercicios.find((x) => x.nome === atual);
                 if (!e) { gravar(db); return { data: null, error: { message: 'Exercício não encontrado.' } }; }

@@ -1,5 +1,6 @@
-// Painel → aba Exercícios: lista do catálogo, busca e grupos, criar, editar, renomear (avisa quem usa),
-// vídeo por link, nome repetido recusado, desativar e banco sem o SQL do catálogo.
+// Painel → aba Exercícios: lista do catálogo, busca, grupos e objetivos, criar, editar, renomear (avisa quem usa),
+// vídeo por link, nome repetido recusado, desativar e banco sem o SQL do catálogo. Cadastro com campos no padrão
+// (séries por campos, PSE em lista, níveis em botões, nome padronizado, objetivos) numa janela em tela cheia no celular.
 const { chromium } = require('playwright');
 const H = require('../apoio/harness.cjs');
 const ADMIN = H.PAGINA.replace('index.html', 'admin.html');
@@ -43,7 +44,11 @@ const linhas = (p) => p.locator('#ex-lista .ex-item b').allInnerTexts();
     ok(await p.locator('#ex-dialog[open]').count() === 1 && (await p.inputValue('#ex-nome')) === 'Puxada' && (await p.inputValue('#ex-video')) === 'vidPuxada01', `${tag}: editar abre com os dados`);
     ok(await p.locator('#ex-aviso').isHidden(), `${tag}: sem aviso antes de mudar o nome`);
     await p.fill('#ex-nome', 'Puxada frontal');
-    ok(/3 contas têm este exercício nos treinos\. Elas continuam com ele, com o nome de antes/.test(await txt(p, '#ex-aviso')), `${tag}: renomear avisa quantas contas usam`, await txt(p, '#ex-aviso'));
+    ok(/3 contas têm este exercício nos treinos\. O nome novo aparece no treino delas, e as cargas e o histórico continuam ligados/.test(await txt(p, '#ex-aviso')), `${tag}: renomear avisa quantas contas usam`, await txt(p, '#ex-aviso'));
+    ok(await p.inputValue('#ex-series') === '3' && await p.inputValue('#ex-valor') === '10' && await p.inputValue('#ex-pse') === '8' && await p.isChecked('input[name="ex-hipertrofia"][value="alta"]') && await p.isChecked('input[name="ex-obj"][value="hipertrofia"]'), `${tag}: abre com séries, PSE, níveis e objetivos nos campos`);
+    const caixa = await p.locator('#ex-dialog').boundingBox();
+    ok(viewport.width < 720 ? Math.abs(caixa.height - viewport.height) <= 1 && Math.abs(caixa.width - viewport.width) <= 1 : caixa.width >= 700 && caixa.height >= 700, `${tag}: janela em tela cheia no celular (grande no computador)`, `${Math.round(caixa.width)}×${Math.round(caixa.height)}`);
+    ok(await p.locator('.ex-rodape #ex-salvar').isVisible() && await p.locator('.ex-topo h2').isVisible(), `${tag}: título e Salvar sempre à vista`);
     await p.fill('#ex-video', 'https://youtube.com/shorts/abcdefghijk?si=x');
     await p.locator('#ex-dialog').screenshot({ path: `${H.SAIDA}/admin-exercicio-editar-${tag}.png` });
     await p.click('#ex-salvar'); await p.waitForTimeout(250);
@@ -60,12 +65,30 @@ const linhas = (p) => p.locator('#ex-lista .ex-item b').allInnerTexts();
     ok(/Já existe um exercício com esse nome: Supino reto/.test(await txt(p, '#ex-erro')), `${tag}: nome repetido (maiúsculas e espaços) é recusado`, await txt(p, '#ex-erro'));
     await p.fill('#ex-nome', 'Remada no anel'); await p.fill('#ex-video', 'https://exemplo.com/video'); await p.click('#ex-salvar'); await p.waitForTimeout(100);
     ok(/Não reconheci o vídeo/.test(await txt(p, '#ex-erro')), `${tag}: vídeo inválido é recusado`);
-    await p.fill('#ex-video', ''); await p.fill('#ex-dose', '3×12'); await p.fill('#ex-pse', '7');
-    await p.selectOption('#ex-forca', 'alta'); await p.fill('#ex-why', 'Puxada com instabilidade.'); await p.fill('#ex-var', 'Remada nas argolas, Remada no TRX');
+    await p.fill('#ex-video', ''); await p.fill('#ex-nome', '  remada   no anel '); await p.locator('#ex-nome').blur();
+    ok(await p.inputValue('#ex-nome') === 'Remada no anel', `${tag}: nome padronizado ao sair do campo`, await p.inputValue('#ex-nome'));
+    await p.fill('#ex-series', '3'); await p.fill('#ex-valor', '10-12'); await p.locator('#ex-valor').blur(); await p.check('#ex-lado');
+    ok(/No app: 3×10–12 \/ lado/.test(await txt(p, '#ex-dose-previa')), `${tag}: séries por campos geram o padrão`, await txt(p, '#ex-dose-previa'));
+    await p.fill('#ex-valor', 'dez'); await p.click('#ex-salvar'); await p.waitForTimeout(100);
+    ok(/Confira as séries/.test(await txt(p, '#ex-erro')), `${tag}: séries fora do padrão são recusadas`);
+    await p.fill('#ex-valor', '12');
+    await p.selectOption('#ex-pse', '7');
+    await p.check('input[name="ex-forca"][value="alta"]', { force: true }); await p.check('input[name="ex-obj"][value="forca"]', { force: true });
+    await p.fill('#ex-why', 'Puxada com instabilidade.'); await p.fill('#ex-var', 'remada nas argolas,  Remada no TRX'); await p.locator('#ex-var').blur();
+    await p.locator('#ex-dialog').screenshot({ path: `${H.SAIDA}/admin-exercicio-novo-${tag}.png` });
     await p.click('#ex-salvar'); await p.waitForTimeout(250);
     db = await H.banco(p);
     const novo = db.exercicios.find((e) => e.nome === 'Remada no anel');
-    ok(novo && novo.grupo === 'Peito' && novo.dose === '3×12' && novo.pse === 7 && novo.forca === 'alta' && novo.variacoes.join('|') === 'Remada nas argolas|Remada no TRX' && novo.ativo, `${tag}: cria com todos os campos`, JSON.stringify(novo));
+    ok(novo && novo.grupo === 'Peito' && novo.dose === '3×12 / lado' && novo.pse === 7 && novo.forca === 'alta' && novo.variacoes.join('|') === 'Remada nas argolas|Remada no TRX' && novo.objetivos.join('|') === 'forca' && novo.ativo, `${tag}: cria com todos os campos no padrão`, JSON.stringify(novo));
+    ok(/Força e potência/.test(await txt(p, '#ex-lista .ex-item:has(b:text-is("Remada no anel"))')), `${tag}: lista mostra o objetivo`);
+    await p.click('[data-ex-obj="forca"]'); await p.waitForTimeout(80);
+    const daForca = await linhas(p);
+    ok(daForca.includes('Remada no anel') && daForca.includes('Deadlift') && !daForca.includes('Escorpião'), `${tag}: filtro por objetivo`, String(daForca.length));
+    await p.click('[data-ex-obj="todos"]'); await p.waitForTimeout(80);
+    // Formato que não cabe nos campos (texto livre) abre em "Outro formato" e continua igual.
+    await p.click('[data-ex-editar="Cardio curto intervalado"]'); await p.waitForTimeout(120);
+    ok(await p.isChecked('#ex-dose-livre') && await p.locator('#ex-dose').isVisible() && await p.locator('#ex-dose-campos').isHidden(), `${tag}: formato livre abre em "Outro formato"`, await p.inputValue('#ex-dose'));
+    await p.keyboard.press('Escape'); await p.waitForTimeout(100);
     ok((await linhas(p)).includes('Remada no anel') && /137 exercícios ativos/.test(await txt(p, '#ex-resumo')), `${tag}: novo aparece na lista`);
 
     // Desativar o Superman: avisa que continua em quem tem e marca na lista.

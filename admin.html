@@ -27,7 +27,7 @@
     --recorde-suave: #fef3c7; --recorde-tinta: #92400e;
     --erro: #c62828; --sobre-erro: #ffffff;
     /* Tipos de treino (paleta categórica do app, validada para daltonismo) */
-    --musc: #2a78d6; --jiu: #eb6834; --bike: #1baf7a; --muay: #eda100; --surf: #c84aa4; --selo-tinta: #0b0d10;
+    --musc: #2a78d6; --jiu: #eb6834; --bike: #1baf7a; --muay: #eda100; --surf: #c84aa4; --futebol: #a2bc75; --futvolei: #8494d6; --selo-tinta: #0b0d10;
     /* Intensidade do mapa de atividade: um tom só, do claro ao escuro */
     --int-0: #eef1f5; --int-1: #bfd3f5; --int-2: #7aa5ea; --int-3: #2563eb; --int-4: #173f9e;
     --display: "Archivo", "Arial Narrow", system-ui, sans-serif;
@@ -39,7 +39,7 @@
       --gi: #0f1115; --papel: #171a20; --tinta: #f2f4f7; --tinta-2: #a3abb8; --fio: #2a2f38;
       --tatame: #3566d6; --tatame-forte: #2b57bf; --tatame-tinta: #8db0ff; --tatame-suave: #1b2740;
       --feito-suave: #12301f; --feito-tinta: #6ee7a0; --online: #22c55e; --online-anel: rgba(34, 197, 94, .45); --recorde-suave: #33270a; --recorde-tinta: #fcd34d; --erro: #ff6b6b; --sobre-erro: #0b0d10;
-      --musc: #3987e5; --jiu: #d95926; --bike: #199e70; --muay: #c98500; --surf: #c84aa4;
+      --musc: #3987e5; --jiu: #d95926; --bike: #199e70; --muay: #c98500; --surf: #c84aa4; --futebol: #8f9a4f; --futvolei: #7679bb;
       --int-0: #1f242c; --int-1: #1e3561; --int-2: #2b57bf; --int-3: #5b8ef0; --int-4: #a9c4ff;
       color-scheme: dark;
     }
@@ -48,7 +48,7 @@
     --gi: #0f1115; --papel: #171a20; --tinta: #f2f4f7; --tinta-2: #a3abb8; --fio: #2a2f38;
     --tatame: #3566d6; --tatame-forte: #2b57bf; --tatame-tinta: #8db0ff; --tatame-suave: #1b2740;
     --feito-suave: #12301f; --feito-tinta: #6ee7a0; --online: #22c55e; --online-anel: rgba(34, 197, 94, .45); --recorde-suave: #33270a; --recorde-tinta: #fcd34d; --erro: #ff6b6b; --sobre-erro: #0b0d10;
-    --musc: #3987e5; --jiu: #d95926; --bike: #199e70; --muay: #c98500; --surf: #c84aa4;
+    --musc: #3987e5; --jiu: #d95926; --bike: #199e70; --muay: #c98500; --surf: #c84aa4; --futebol: #8f9a4f; --futvolei: #7679bb;
     --int-0: #1f242c; --int-1: #1e3561; --int-2: #2b57bf; --int-3: #5b8ef0; --int-4: #a9c4ff;
     color-scheme: dark;
   }
@@ -442,6 +442,8 @@
   .selo.bike { background: var(--bike); }
   .selo.muay { background: var(--muay); }
   .selo.surf { background: var(--surf); }
+  .selo.futebol { background: var(--futebol); }
+  .selo.futvolei { background: var(--futvolei); }
   .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
   .chips li { padding: 4px 10px; border-radius: 999px; background: var(--gi); font-size: 13px; }
   .linha-tempo { margin: 0; padding: 0; list-style: none; display: grid; }
@@ -538,26 +540,78 @@
   .conv-pessoa:focus-visible { outline: 2px solid var(--tatame-tinta); outline-offset: 2px; border-radius: 4px; }
   /* Exercícios (catálogo do app) */
   .ex-filtros { display: grid; gap: 10px; margin-bottom: 12px; }
-  .ex-filtros input, .ex-form input:not([type="checkbox"]), .ex-form select, .ex-form textarea {
-    width: 100%; min-height: 48px; padding: 0 12px; border: 1px solid var(--fio); border-radius: 10px; background: var(--gi); color: var(--tinta); font: inherit; font-size: 16px;
-  }
-  .ex-form textarea { min-height: 88px; padding: 10px 12px; resize: vertical; }
   .ex-grupos { display: flex; flex-wrap: wrap; gap: 6px; }
   .ex-grupos button { min-height: 36px; padding: 0 12px; border: 1px solid var(--fio); border-radius: 999px; background: var(--papel); color: var(--tinta-2); font-size: 14px; font-weight: 600; }
   .ex-grupos button[aria-pressed="true"] { border-color: var(--tatame); background: var(--tatame); color: var(--sobre-tatame); }
   .ex-grupos small { font-size: 12px; opacity: .8; }
+  .ex-grupos:empty { display: none; }
+  .ex-tags { grid-column: 1; display: flex; flex-wrap: wrap; gap: 4px; }
+  .ex-tags span { padding: 1px 8px; border-radius: 999px; background: var(--tatame-suave); color: var(--tatame-tinta); font-size: 12px; font-weight: 700; }
   .ex-item small .ex-sem-video { color: var(--tinta-2); }
   .ex-item .conv-estado.desativado { background: color-mix(in srgb, var(--erro) 12%, var(--papel)); color: var(--erro); }
-  dialog.ex-dialog { width: min(560px, calc(100vw - 32px)); }
-  .ex-form { display: grid; gap: 14px; }
-  .ex-form label, .ex-form legend { display: grid; gap: 6px; font-size: 14px; font-weight: 700; }
-  .ex-form fieldset { margin: 0; padding: 0; border: 0; display: grid; gap: 6px; }
-  .ex-form legend { padding: 0; margin-bottom: 6px; }
-  .ex-linha { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-  .ex-niveis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
-  @media (max-width: 560px) { .ex-linha { grid-template-columns: 1fr 1fr; } .ex-linha label:first-child { grid-column: 1 / -1; } .ex-niveis { grid-template-columns: 1fr 1fr; } }
-  .ex-form .ex-dica { margin: -8px 0 0; color: var(--tinta-2); font-size: 13px; font-weight: 400; }
-  .ex-form .excluir-entendi { padding-top: 0; }
+  /* Janela do exercício: tela cheia no celular; no computador, centralizada e grande. Topo e rodapé fixos, o meio rola. */
+  dialog.ex-dialog {
+    width: min(720px, calc(100vw - 48px)); height: min(860px, 90dvh); max-width: none; max-height: none; padding: 0;
+    border: 1px solid var(--fio); border-radius: 18px; background: var(--papel); color: var(--tinta); overflow: hidden;
+  }
+  dialog.ex-dialog::backdrop { background: rgba(10, 12, 16, .55); }
+  @media (max-width: 720px) {
+    dialog.ex-dialog { width: 100vw; height: 100dvh; margin: 0; border: 0; border-radius: 0; }
+  }
+  .ex-corpo, .ex-form { height: 100%; }
+  .ex-form { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
+  .ex-topo {
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    padding: calc(14px + env(safe-area-inset-top, 0px)) 16px 12px 20px; border-bottom: 1px solid var(--fio);
+  }
+  .ex-topo h2 { margin: 0; font-size: 24px; }
+  .ex-topo .excluir-fechar { margin: 0 -8px 0 0; }
+  .ex-meio { overflow-y: auto; overscroll-behavior: contain; display: grid; align-content: start; gap: 16px; padding: 18px 20px 24px; }
+  .ex-rodape {
+    display: grid; grid-template-columns: 1fr 2fr; gap: 10px;
+    padding: 12px 20px calc(12px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--fio); background: var(--papel);
+  }
+  .ex-rodape .btn, .ex-rodape .btn-sec { min-height: 52px; font-size: 16px; }
+  /* Campos: todos com a mesma altura, borda, raio e fonte, com o rótulo acima. */
+  .ex-campo, .ex-form legend { display: grid; gap: 6px; font-size: 14px; font-weight: 700; color: var(--tinta); }
+  .ex-filtros input, .ex-form input:not([type="checkbox"]):not([type="radio"]), .ex-form select, .ex-form textarea {
+    width: 100%; min-height: 48px; padding: 0 12px; border: 1px solid var(--fio); border-radius: 10px; background: var(--gi); color: var(--tinta); font: inherit; font-size: 16px; font-weight: 400;
+  }
+  .ex-form select { appearance: none; padding-right: 36px; cursor: pointer;
+    background-image: linear-gradient(45deg, transparent 50%, var(--tinta-2) 50%), linear-gradient(135deg, var(--tinta-2) 50%, transparent 50%);
+    background-position: calc(100% - 18px) 21px, calc(100% - 13px) 21px; background-size: 5px 5px; background-repeat: no-repeat; }
+  .ex-form textarea { min-height: 96px; padding: 12px; resize: vertical; line-height: 1.4; }
+  .ex-form input:focus-visible, .ex-form select:focus-visible, .ex-form textarea:focus-visible { outline: 2px solid var(--tatame-tinta); outline-offset: 1px; }
+  .ex-form fieldset { margin: 0; padding: 0; border: 0; min-width: 0; }
+  .ex-form legend { padding: 0; margin-bottom: 8px; }
+  .ex-bloco { display: grid; gap: 10px; }
+  .ex-grade2 { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; }
+  .ex-grade-dose { display: grid; grid-template-columns: 1fr auto 1fr 1.4fr 1.2fr; align-items: end; gap: 10px; }
+  .ex-vezes { padding-bottom: 12px; font-size: 20px; font-weight: 800; color: var(--tinta-2); }
+  .ex-lado { grid-column: 1 / -1; }
+  @media (max-width: 560px) {
+    .ex-grade-dose { grid-template-columns: 1fr auto 1fr; }
+    .ex-grade-dose .ex-campo:nth-of-type(3), .ex-grade-dose .ex-campo:nth-of-type(4) { grid-column: span 3; }
+  }
+  .ex-niveis { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; }
+  @media (max-width: 560px) { .ex-niveis { grid-template-columns: 1fr; } }
+  .ex-nivel legend { font-weight: 600; color: var(--tinta-2); margin-bottom: 6px; }
+  /* Alta / Média / Baixa: botões de escolha única, como um seletor segmentado. */
+  .ex-seg { display: grid; grid-template-columns: repeat(3, 1fr); padding: 4px; gap: 4px; border: 1px solid var(--fio); border-radius: 12px; background: var(--gi); }
+  .ex-seg label { position: relative; }
+  .ex-seg input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+  .ex-seg span { display: grid; place-items: center; min-height: 40px; border-radius: 8px; font-size: 14px; font-weight: 700; color: var(--tinta-2); }
+  .ex-seg input:checked + span { background: var(--tatame); color: var(--sobre-tatame); }
+  .ex-seg input:focus-visible + span { outline: 2px solid var(--tatame-tinta); outline-offset: 1px; }
+  .ex-objs { display: flex; flex-wrap: wrap; gap: 8px; }
+  .ex-objs label { position: relative; }
+  .ex-objs input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+  .ex-objs span { display: inline-flex; align-items: center; min-height: 40px; padding: 0 14px; border: 1px solid var(--fio); border-radius: 999px; font-size: 14px; font-weight: 600; color: var(--tinta-2); background: var(--papel); }
+  .ex-objs input:checked + span { border-color: var(--tatame); background: var(--tatame-suave); color: var(--tatame-tinta); }
+  .ex-objs input:focus-visible + span { outline: 2px solid var(--tatame-tinta); outline-offset: 2px; }
+  .ex-form .ex-dica { margin: -6px 0 0; color: var(--tinta-2); font-size: 13px; font-weight: 400; }
+  .ex-bloco .ex-dica { margin: 0; }
+  .ex-form .excluir-entendi { padding-top: 0; min-height: 40px; align-items: center; }
   .ex-form .excluir-entendi input { accent-color: var(--tatame); }
   .ex-aviso { margin: 0; padding: 12px 14px; border-radius: 12px; background: var(--tatame-suave); color: var(--tinta); font-size: 14px; }
   .btn-peq { min-height: 40px; padding: 0 12px; border-radius: 10px; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
@@ -572,7 +626,7 @@
     --tinta: #f4f6fb; --faixa: #000000; --fita: #f2f4f7; --fita-vazia: #2c2f35;
     --erro: #ff6b6b; --sobre-erro: #0b0d10; --feito-suave: #12301f; --feito-tinta: #6ee7a0;
     --recorde: #fbbf24; --recorde-suave: #33270a; --recorde-tinta: #fcd34d; --selo-tinta: #07080c;
-    --muay: #ffc23d; --surf: #ff5cc8;
+    --muay: #ffc23d; --surf: #ff5cc8; --futebol: #7da667; --futvolei: #9260da;
     --sombra: 0 14px 34px rgba(0, 0, 0, .55), 0 2px 6px rgba(0, 0, 0, .4), inset 0 1px 0 rgba(255, 255, 255, .05);
     color-scheme: dark;
   }
@@ -734,6 +788,8 @@
           <li><i style="background:var(--bike)"></i>Cardio</li>
           <li><i style="background:var(--muay)"></i>Muay Thai</li>
           <li><i style="background:var(--surf)"></i>Surf</li>
+          <li><i style="background:var(--futebol)"></i>Futebol</li>
+          <li><i style="background:var(--futvolei)"></i>Futvôlei</li>
         </ul>
         <div class="grafico" id="g1"></div>
         <div class="tabela-rolagem" id="g1-tabela" hidden></div>
@@ -921,6 +977,7 @@
           <label class="sr" for="ex-busca">Buscar exercício</label>
           <input id="ex-busca" type="search" autocomplete="off" placeholder="Buscar pelo nome ou outro nome">
           <div class="ex-grupos" id="ex-grupos" role="group" aria-label="Filtrar por grupo"></div>
+          <div class="ex-grupos" id="ex-objs-filtro" role="group" aria-label="Filtrar por objetivo"></div>
         </div>
         <div class="cartao lista-cartao" id="ex-lista"><p class="vazio">Carregando…</p></div>
       </section>
@@ -935,8 +992,8 @@
 <dialog class="modal-excluir" id="conv-excluir-dialog" aria-labelledby="conv-excluir-title">
   <div class="excluir-corpo" id="conv-excluir-body"></div>
 </dialog>
-<dialog class="modal-excluir ex-dialog" id="ex-dialog" aria-labelledby="ex-title">
-  <div class="excluir-corpo" id="ex-body"></div>
+<dialog class="ex-dialog" id="ex-dialog" aria-labelledby="ex-title">
+  <div class="ex-corpo" id="ex-body"></div>
 </dialog>
 <dialog class="modal-excluir" id="excluir-dialog" aria-labelledby="excluir-title">
   <div class="excluir-corpo" id="excluir-body"></div>
@@ -975,8 +1032,9 @@
     t5: { nome: 'Treino 5', selo: '5', grupo: 'musc' }, t6: { nome: 'Treino 6', selo: '6', grupo: 'musc' }, jiu: { nome: 'Jiu Jitsu', selo: 'J', grupo: 'jiu' },
     bike: { nome: 'Cardio', selo: 'C', grupo: 'bike' }, muay: { nome: 'Muay Thai', selo: 'M', grupo: 'muay' },
     surf: { nome: 'Surf', selo: 'S', grupo: 'surf' },
+    futebol: { nome: 'Futebol', selo: 'F', grupo: 'futebol' }, futvolei: { nome: 'Futvôlei', selo: 'V', grupo: 'futvolei' },
   };
-  const GRUPOS = [['musc', 'Musculação'], ['jiu', 'Jiu Jitsu'], ['bike', 'Cardio'], ['muay', 'Muay Thai'], ['surf', 'Surf']];
+  const GRUPOS = [['musc', 'Musculação'], ['jiu', 'Jiu Jitsu'], ['bike', 'Cardio'], ['muay', 'Muay Thai'], ['surf', 'Surf'], ['futebol', 'Futebol'], ['futvolei', 'Futvôlei']];
   const CURTOS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
   const ORDEM_SEMANA = [1, 2, 3, 4, 5, 6, 0];
 
@@ -1380,7 +1438,7 @@
       tile('Usuários ativos', `${m.ativos}<small> de ${total}</small>`, { longo: rotuloPeriodo, curto: '', d: a && delta(m.ativos, a.ativos),
         info: `Quantas pessoas abriram o app ou fizeram check-in pelo menos uma vez no período. O número menor é o total de cadastrados. ${compara}` }),
       tile('Check-ins', fmtNum(m.checkins), { longo: rotuloPeriodo, curto: '', d: a && delta(m.checkins, a.checkins),
-        info: `Total de check-ins feitos no período, somando todos os usuários e tipos de treino (musculação, Jiu Jitsu, cardio, muay thai e surf), inclusive os registrados depois. ${compara}` }),
+        info: `Total de check-ins feitos no período, somando todos os usuários e tipos de treino (musculação, Jiu Jitsu, cardio, muay thai, surf, futebol e futvôlei), inclusive os registrados depois. ${compara}` }),
       // Num dia só, "por semana" multiplicaria o dia por 7; com Hoje o card mostra os treinos por usuário.
       ehHoje
         ? tile('Treinos por usuário', fmtNum(m.treinosPorUsuario, 1), { longo: 'por usuário ativo, hoje', curto: 'por ativo', d: a && delta(um(m.treinosPorUsuario), um(a.treinosPorUsuario)),
@@ -1517,7 +1575,7 @@
     const noBalde = (d, h, b) => d >= b.ini && d <= b.fim && (!porHora || h === b.hora);
     const serie1 = lista.map((b) => {
       const cks = dados.checkins.filter((c) => noBalde(diaDeCheckin(c), horaDeCheckin(c), b));
-      const v = { musc: 0, jiu: 0, bike: 0, muay: 0, surf: 0 };
+      const v = Object.fromEntries(GRUPOS.map(([g]) => [g, 0]));
       cks.forEach((c) => { v[TIPOS[c.tipo] ? TIPOS[c.tipo].grupo : 'musc'] += 1; });
       return { ...b, v, total: cks.length };
     });
@@ -1537,7 +1595,7 @@
     }
     $('g2-nota').textContent = `Ativo: abriu o app ou fez check-in ${unidade === 'hora' ? 'na hora' : unidade === 'semana' ? 'na semana' : 'no dia'}.`;
     const cadaUn = porHora ? 'cada hora de hoje' : `cada ${unidade} do período`;
-    $('info-g1').textContent = `Quantos check-ins foram feitos em ${cadaUn}, somando todos os usuários. Cada cor é um tipo de treino: musculação, Jiu Jitsu, cardio, muay thai e surf. Passe o dedo ou o mouse numa barra para ver os números, ou toque em Ver tabela.${unidade === 'semana' ? ' Em períodos longos, cada barra soma uma semana, de segunda a domingo.' : ''}`;
+    $('info-g1').textContent = `Quantos check-ins foram feitos em ${cadaUn}, somando todos os usuários. Cada cor é um tipo de treino: musculação, Jiu Jitsu, cardio, muay thai, surf, futebol e futvôlei. Passe o dedo ou o mouse numa barra para ver os números, ou toque em Ver tabela.${unidade === 'semana' ? ' Em períodos longos, cada barra soma uma semana, de segunda a domingo.' : ''}`;
     $('info-g2').textContent = `Quantas pessoas diferentes usaram o app em ${cadaUn}: abriram o app ou fizeram check-in. Cada pessoa conta uma vez por barra, mesmo que use o app várias vezes.${porHora ? ' Os horários seguem o relógio do seu aparelho.' : ''}`;
     barras($('g1'), serie1, { empilhado: true, rotulo: 'check-ins' });
     barras($('g2'), serie2, { empilhado: false, rotulo: 'usuários ativos' });
@@ -2466,9 +2524,12 @@
   const NIVEIS_EX = [['hipertrofia', 'Hipertrofia'], ['forca', 'Força'], ['explosao', 'Explosão'], ['mobilidade', 'Mobilidade']];
   const ROTULO_NIVEL = { alta: 'Alta', media: 'Média', baixa: 'Baixa' };
   const chaveEx = (t) => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
-  const exs = { lista: null, erro: '', busca: '', grupo: 'todos', atual: null };
+  const exs = { lista: null, erro: '', busca: '', grupo: 'todos', obj: 'todos', atual: null, jornadas: [] };
   async function carregarExercicios() {
-    const r = await sb.rpc('admin_exercicios');
+    // Objetivos (tabela jornadas): para marcar e filtrar os exercícios por objetivo.
+    const [r, jr] = await Promise.all([sb.rpc('admin_exercicios'), sb.from('jornadas').select('id, dados, ordem, ativo').then((x) => x, () => ({ error: true }))]);
+    exs.jornadas = jr.error ? [] : (jr.data || []).filter((j) => j && j.id && j.dados && j.dados.nome)
+      .sort((a, b) => (a.ordem || 0) - (b.ordem || 0)).map((j) => ({ id: j.id, nome: j.dados.nome }));
     if (r.error) {
       exs.lista = null;
       exs.erro = /admin_exercicios|schema cache|does not exist/.test(r.error.message || '') ? 'sem-sql' : r.error.message;
@@ -2501,49 +2562,107 @@
     const conta = (g) => todos.filter((e) => g === 'todos' || e.grupo === g).length;
     $('ex-grupos').innerHTML = ['todos', ...GRUPOS_EX].filter((g) => g === 'todos' || conta(g)).map((g) => `
       <button type="button" data-ex-grupo="${g}" aria-pressed="${exs.grupo === g}">${g === 'todos' ? 'Todos' : esc(rotuloGrupoEx(g))} <small>${conta(g)}</small></button>`).join('');
+    const nomeObj = (id) => (exs.jornadas.find((j) => j.id === id) || { nome: id }).nome;
+    const contaObj = (id) => todos.filter((e) => (e.objetivos || []).includes(id)).length;
+    $('ex-objs-filtro').innerHTML = exs.jornadas.length ? ['todos', ...exs.jornadas.map((j) => j.id)].map((id) => `
+      <button type="button" data-ex-obj="${esc(id)}" aria-pressed="${exs.obj === id}">${id === 'todos' ? 'Todos os objetivos' : esc(nomeObj(id))} <small>${id === 'todos' ? todos.length : contaObj(id)}</small></button>`).join('') : '';
     const busca = chaveEx(exs.busca);
     const itens = todos
-      .filter((e) => (exs.grupo === 'todos' || e.grupo === exs.grupo) && (!busca || [e.nome, ...(e.variacoes || []), ...(e.nomes_antigos || [])].some((n) => chaveEx(n).includes(busca))))
+      .filter((e) => (exs.grupo === 'todos' || e.grupo === exs.grupo) && (exs.obj === 'todos' || (e.objetivos || []).includes(exs.obj)) && (!busca || [e.nome, ...(e.variacoes || []), ...(e.nomes_antigos || [])].some((n) => chaveEx(n).includes(busca))))
       .sort((a, b) => (b.ativo - a.ativo) || GRUPOS_EX.indexOf(a.grupo) - GRUPOS_EX.indexOf(b.grupo) || a.nome.localeCompare(b.nome, 'pt-BR'));
     lista.innerHTML = itens.length ? itens.map((e) => `
       <div class="conv-item ex-item">
         <b>${esc(e.nome)}${e.ativo ? '' : ' <span class="conv-estado desativado">Desativado</span>'}</b>
         <small>${esc(rotuloGrupoEx(e.grupo))} · ${esc(e.dose)} · PSE ${e.pse} · ${e.video_id ? 'com vídeo' : '<span class="ex-sem-video">sem vídeo</span>'} · ${e.usos ? `em ${e.usos} ${e.usos === 1 ? 'conta' : 'contas'}` : 'em nenhum treino'}${(e.nomes_antigos || []).length ? ` · antes: ${esc(e.nomes_antigos.join(', '))}` : ''}</small>
+        ${(e.objetivos || []).length ? `<span class="ex-tags">${e.objetivos.map((id) => `<span>${esc(nomeObj(id))}</span>`).join('')}</span>` : ''}
         <span class="conv-botoes"><button class="btn-peq sec" type="button" data-ex-editar="${esc(e.nome)}" aria-label="Editar ${esc(e.nome)}">Editar</button></span>
       </div>`).join('') : '<p class="vazio">Nenhum exercício com esse nome neste grupo.</p>';
+  }
+  // Séries no padrão do app: "3×10", "2–3×12 / lado", "3×30 s", "3×1 min", "3×12 totais". O que não cabe nisso
+  // (ex.: "8×20 s forte / 40 s leve") fica em "Outro formato".
+  const RE_DOSE = /^(\d{1,2}(?:–\d{1,2})?)×(\d{1,3}(?:–\d{1,3})?)(?: (s|min))?( \/ lado)?(?: (totais|válidas?))?$/;
+  const traco = (t) => String(t || '').trim().replace(/\s*[-–]\s*/g, '–');
+  function lerDose(d) {
+    const m = RE_DOSE.exec(String(d || '').trim());
+    return m ? { series: m[1], valor: m[2], unidade: m[3] || 'rep', lado: !!m[4], conta: (m[5] || '').replace(/^válida$/, 'válidas') } : null;
+  }
+  function montarDose({ series, valor, unidade, lado, conta }) {
+    const n = traco(series), v = traco(valor);
+    if (!/^\d{1,2}(–\d{1,2})?$/.test(n) || !/^\d{1,3}(–\d{1,3})?$/.test(v)) return null;
+    return `${n}×${v}${unidade === 's' ? ' s' : unidade === 'min' ? ' min' : ''}${lado ? ' / lado' : ''}${conta ? ` ${conta}` : ''}`;
+  }
+  // Nome no padrão: sem espaços sobrando e com a primeira letra maiúscula (o resto como digitado, por causa das siglas).
+  const padronizarNome = (t) => { const n = String(t || '').trim().replace(/\s+/g, ' '); return n ? n[0].toLocaleUpperCase('pt-BR') + n.slice(1) : ''; };
+  function doseDoForm() {
+    if ($('ex-dose-livre').checked) return $('ex-dose').value.trim().replace(/\s+/g, ' ');
+    return montarDose({ series: $('ex-series').value, valor: $('ex-valor').value, unidade: $('ex-unidade').value, lado: $('ex-lado').checked, conta: $('ex-conta').value });
+  }
+  function mostrarDose() {
+    const livre = $('ex-dose-livre').checked;
+    $('ex-dose-campos').hidden = livre;
+    $('ex-dose-texto').hidden = !livre;
+    const d = doseDoForm();
+    $('ex-dose-previa').textContent = d ? `No app: ${d}` : 'Preencha as séries e as repetições ou o tempo (ex.: 3 e 10, ou 2–3 e 10–15).';
   }
   function abrirExercicio(nome) {
     const e = nome ? exs.lista.find((x) => x.nome === nome) : null;
     if (nome && !e) return;
     exs.atual = e;
-    const v = e || { nome: '', grupo: exs.grupo !== 'todos' ? exs.grupo : '', dose: '3×10', pse: 8, hipertrofia: 'baixa', forca: 'baixa', explosao: 'baixa', mobilidade: 'baixa', explicacao: '', variacoes: [], ativo: true, video_id: '' };
+    const v = e || { nome: '', grupo: exs.grupo !== 'todos' ? exs.grupo : '', dose: '3×10', pse: 8, hipertrofia: 'baixa', forca: 'baixa', explosao: 'baixa', mobilidade: 'baixa', explicacao: '', variacoes: [], objetivos: [], ativo: true, video_id: '' };
     const opcoes = (lista, sel) => lista.map(([val, rot]) => `<option value="${esc(val)}"${val === sel ? ' selected' : ''}>${esc(rot)}</option>`).join('');
+    const dose = lerDose(v.dose);
+    const d = dose || { series: '3', valor: '10', unidade: 'rep', lado: false, conta: '' };
+    const pses = [...new Set([4, 5, 6, 7, 8, 9, 10, Number(v.pse) || 8])].sort((a, b) => a - b);
+    const nivel = ([k, rot]) => `
+          <fieldset class="ex-nivel"><legend>${rot}</legend>
+            <div class="ex-seg">${Object.entries(ROTULO_NIVEL).map(([val, r]) => `<label><input type="radio" name="ex-${k}" value="${val}"${v[k] === val ? ' checked' : ''}><span>${r}</span></label>`).join('')}</div>
+          </fieldset>`;
+    const objs = exs.jornadas || [];
     $('ex-body').innerHTML = `
       <form class="ex-form" id="ex-form" novalidate>
-        <div class="excluir-topo"><h2 id="ex-title">${e ? 'Editar exercício' : 'Novo exercício'}</h2>
+        <div class="ex-topo"><h2 id="ex-title">${e ? 'Editar exercício' : 'Novo exercício'}</h2>
           <button class="excluir-fechar" type="button" data-ex-fechar aria-label="Fechar">${ICON.xis}</button></div>
-        <label>Nome<input id="ex-nome" maxlength="80" autocomplete="off" value="${esc(v.nome)}" required></label>
-        ${e && (e.nomes_antigos || []).length ? `<p class="ex-dica">Antes chamado: ${esc(e.nomes_antigos.join(', '))}</p>` : ''}
-        <div class="ex-linha">
-          <label>Grupo<select id="ex-grupo">${v.grupo ? '' : '<option value="">Escolha</option>'}${opcoes(GRUPOS_EX.map((g) => [g, rotuloGrupoEx(g)]), v.grupo)}</select></label>
-          <label>Séries sugeridas<input id="ex-dose" maxlength="30" autocomplete="off" value="${esc(v.dose)}" placeholder="3×10"></label>
-          <label>PSE<input id="ex-pse" type="number" min="1" max="10" step="1" inputmode="numeric" value="${v.pse}"></label>
+        <div class="ex-meio">
+          <label class="ex-campo">Nome<input id="ex-nome" maxlength="80" autocomplete="off" value="${esc(v.nome)}" required></label>
+          ${e && (e.nomes_antigos || []).length ? `<p class="ex-dica">Antes chamado: ${esc(e.nomes_antigos.join(', '))}</p>` : ''}
+          <div class="ex-grade2">
+            <label class="ex-campo">Grupo<select id="ex-grupo">${v.grupo ? '' : '<option value="">Escolha</option>'}${opcoes(GRUPOS_EX.map((g) => [g, rotuloGrupoEx(g)]), v.grupo)}</select></label>
+            <label class="ex-campo">PSE<select id="ex-pse">${opcoes(pses.map((n) => [String(n), String(n)]), String(v.pse))}</select></label>
+          </div>
+          <fieldset class="ex-bloco"><legend>Séries sugeridas</legend>
+            <div class="ex-grade-dose" id="ex-dose-campos">
+              <label class="ex-campo">Séries<input id="ex-series" inputmode="numeric" maxlength="5" autocomplete="off" value="${esc(d.series)}" placeholder="3"></label>
+              <span class="ex-vezes" aria-hidden="true">×</span>
+              <label class="ex-campo">Repetições ou tempo<input id="ex-valor" inputmode="numeric" maxlength="7" autocomplete="off" value="${esc(d.valor)}" placeholder="10"></label>
+              <label class="ex-campo">Unidade<select id="ex-unidade">${opcoes([['rep', 'repetições'], ['s', 'segundos'], ['min', 'minutos']], d.unidade)}</select></label>
+              <label class="ex-campo">Contagem<select id="ex-conta">${opcoes([['', 'normal'], ['totais', 'totais'], ['válidas', 'válidas']], d.conta)}</select></label>
+              <label class="excluir-entendi ex-lado"><input type="checkbox" id="ex-lado"${d.lado ? ' checked' : ''}><span>Por lado</span></label>
+            </div>
+            <label class="ex-campo" id="ex-dose-texto" hidden>Outro formato<input id="ex-dose" maxlength="30" autocomplete="off" value="${esc(v.dose)}"></label>
+            <p class="ex-dica" id="ex-dose-previa" aria-live="polite"></p>
+            <label class="excluir-entendi"><input type="checkbox" id="ex-dose-livre"${dose ? '' : ' checked'}><span>Outro formato (texto livre)</span></label>
+          </fieldset>
+          <fieldset class="ex-bloco"><legend>Níveis</legend>
+            <div class="ex-niveis">${NIVEIS_EX.map(nivel).join('')}</div>
+          </fieldset>
+          <fieldset class="ex-bloco"><legend>Objetivos (opcional)</legend>
+            <p class="ex-dica">Marque se o exercício combina com algum objetivo. No app, aparece em "Do meu objetivo" para quem escolheu esse objetivo.</p>
+            <div class="ex-objs">${objs.length ? objs.map((j) => `<label><input type="checkbox" name="ex-obj" value="${esc(j.id)}"${(v.objetivos || []).includes(j.id) ? ' checked' : ''}><span>${esc(j.nome)}</span></label>`).join('') : '<span class="ex-dica">Nenhum objetivo no banco.</span>'}</div>
+          </fieldset>
+          <label class="ex-campo">Explicação<textarea id="ex-why" maxlength="400" rows="3" placeholder="Para que serve e o que trabalha (aparece no app, abaixo dos níveis)">${esc(v.explicacao)}</textarea></label>
+          <label class="ex-campo">Outros nomes<input id="ex-var" autocomplete="off" value="${esc((v.variacoes || []).join(', '))}" placeholder="Separe por vírgula (ex.: Agachamento com barra)"></label>
+          <p class="ex-dica">A busca do app acha o exercício por eles.</p>
+          <label class="ex-campo">Vídeo do YouTube<input id="ex-video" autocomplete="off" inputmode="url" value="${esc(v.video_id || '')}" placeholder="Link ou código do vídeo (opcional)"></label>
+          <label class="excluir-entendi"><input type="checkbox" id="ex-ativo"${v.ativo ? ' checked' : ''}><span>Ativo: aparece para escolher nos treinos</span></label>
+          <p class="ex-aviso" id="ex-aviso" hidden></p>
+          <p class="excluir-erro" id="ex-erro" role="alert" hidden></p>
         </div>
-        <fieldset><legend>Níveis</legend>
-          <div class="ex-niveis">${NIVEIS_EX.map(([k, rot]) => `<label>${rot}<select id="ex-${k}">${opcoes(Object.entries(ROTULO_NIVEL), v[k])}</select></label>`).join('')}</div>
-        </fieldset>
-        <label>Explicação<textarea id="ex-why" maxlength="400" rows="3" placeholder="Para que serve e o que trabalha (aparece no app, abaixo dos níveis)">${esc(v.explicacao)}</textarea></label>
-        <label>Outros nomes<input id="ex-var" autocomplete="off" value="${esc((v.variacoes || []).join(', '))}" placeholder="Separe por vírgula (ex.: Agachamento com barra)"></label>
-        <p class="ex-dica">A busca do app acha o exercício por eles.</p>
-        <label>Vídeo do YouTube<input id="ex-video" autocomplete="off" inputmode="url" value="${esc(v.video_id || '')}" placeholder="Link ou código do vídeo (opcional)"></label>
-        <label class="excluir-entendi"><input type="checkbox" id="ex-ativo"${v.ativo ? ' checked' : ''}><span>Ativo: aparece para escolher nos treinos</span></label>
-        <p class="ex-aviso" id="ex-aviso" hidden></p>
-        <p class="excluir-erro" id="ex-erro" role="alert" hidden></p>
-        <div class="excluir-acoes">
-          <button class="btn" type="submit" id="ex-salvar">${e ? 'Salvar' : 'Criar exercício'}</button>
+        <div class="ex-rodape">
           <button class="btn-sec" type="button" data-ex-fechar>Cancelar</button>
+          <button class="btn" type="submit" id="ex-salvar">${e ? 'Salvar' : 'Criar exercício'}</button>
         </div>
       </form>`;
+    mostrarDose();
     avisoExercicio();
     $('ex-dialog').showModal();
     if (!e) $('ex-nome').focus();
@@ -2554,37 +2673,53 @@
     const aviso = $('ex-aviso');
     if (!e || !e.usos) { aviso.hidden = true; return; }
     const quem = `${e.usos} ${e.usos === 1 ? 'conta tem' : 'contas têm'} este exercício nos treinos`;
-    const nome = $('ex-nome').value.trim().replace(/\s+/g, ' ');
+    const nome = padronizarNome($('ex-nome').value);
     const partes = [];
-    if (nome && nome !== e.nome) partes.push(`${quem}. Elas continuam com ele, com o nome de antes e as cargas salvas; quem escolher agora vê o nome novo.`);
+    if (nome && nome !== e.nome) partes.push(`${quem}. O nome novo aparece no treino delas, e as cargas e o histórico continuam ligados.`);
     if (!$('ex-ativo').checked && e.ativo) partes.push(`${partes.length ? 'E desativado, ele' : `${quem}. Desativado, ele`} sai da lista de escolha, mas continua nos treinos de quem já o tem.`);
     aviso.textContent = partes.join(' ');
     aviso.hidden = !partes.length;
   }
-  $('ex-dialog').addEventListener('input', (ev) => { if (ev.target.id === 'ex-nome' || ev.target.id === 'ex-ativo') avisoExercicio(); });
+  $('ex-dialog').addEventListener('input', (ev) => {
+    if (ev.target.id === 'ex-nome' || ev.target.id === 'ex-ativo') avisoExercicio();
+    if (/^ex-(series|valor|unidade|conta|lado|dose|dose-livre)$/.test(ev.target.id)) mostrarDose();
+  });
+  $('ex-dialog').addEventListener('change', (ev) => {
+    if (/^ex-(unidade|conta|lado|dose-livre)$/.test(ev.target.id)) mostrarDose();
+    if (ev.target.id === 'ex-dose-livre' && ev.target.checked && !$('ex-dose').value.trim()) $('ex-dose').value = doseDoForm() || '';
+  });
+  // Ao sair do campo, o nome e os outros nomes já aparecem no padrão.
+  $('ex-dialog').addEventListener('focusout', (ev) => {
+    if (ev.target.id === 'ex-nome') { ev.target.value = padronizarNome(ev.target.value); avisoExercicio(); }
+    if (ev.target.id === 'ex-var') ev.target.value = ev.target.value.split(',').map(padronizarNome).filter(Boolean).join(', ');
+    if (ev.target.id === 'ex-series' || ev.target.id === 'ex-valor') { ev.target.value = traco(ev.target.value); mostrarDose(); }
+  });
   $('ex-dialog').addEventListener('click', (ev) => {
     if (ev.target === $('ex-dialog') || ev.target.closest('[data-ex-fechar]')) $('ex-dialog').close();
   });
   $('ex-dialog').addEventListener('submit', async (ev) => {
     ev.preventDefault();
     const e = exs.atual;
-    const erro = (msg) => { $('ex-erro').textContent = msg; $('ex-erro').hidden = !msg; };
-    const nome = $('ex-nome').value.trim().replace(/\s+/g, ' ');
+    const erro = (msg) => { $('ex-erro').textContent = msg; $('ex-erro').hidden = !msg; if (msg) $('ex-erro').scrollIntoView({ block: 'nearest' }); };
+    const nome = padronizarNome($('ex-nome').value);
     const grupo = $('ex-grupo').value;
     const pse = Number($('ex-pse').value);
+    const dose = doseDoForm();
     const video = codigoVideo($('ex-video').value);
-    const variacoes = [...new Set($('ex-var').value.split(',').map((x) => x.trim().replace(/\s+/g, ' ')).filter(Boolean))];
+    const variacoes = [...new Set($('ex-var').value.split(',').map(padronizarNome).filter(Boolean))];
+    const objetivos = [...document.querySelectorAll('input[name="ex-obj"]:checked')].map((x) => x.value);
     if (!nome) return erro('Informe o nome do exercício.');
     const repetido = exs.lista.find((x) => x !== e && chaveEx(x.nome) === chaveEx(nome));
     if (repetido) return erro(`Já existe um exercício com esse nome: ${repetido.nome}.`);
     if (!grupo) return erro('Escolha o grupo do exercício.');
-    if (!(pse >= 1 && pse <= 10 && Number.isInteger(pse))) return erro('A PSE vai de 1 a 10.');
+    if (!dose) return erro($('ex-dose-livre').checked ? 'Escreva as séries sugeridas.' : 'Confira as séries: use números, como 3 e 10, ou faixas, como 2–3 e 10–15.');
+    if (dose.length > 30) return erro('As séries sugeridas têm até 30 letras.');
     if (video === null) return erro('Não reconheci o vídeo: cole o link do YouTube ou o código de 11 letras.');
     if (variacoes.length > 20 || variacoes.some((x) => x.length > 80)) return erro('Use até 20 outros nomes, cada um com até 80 letras.');
     erro('');
     const p = {
-      nome, grupo, dose: $('ex-dose').value.trim() || '3×10', pse, explicacao: $('ex-why').value.trim(), variacoes, ativo: $('ex-ativo').checked, video_id: video,
-      ...Object.fromEntries(NIVEIS_EX.map(([k]) => [k, $(`ex-${k}`).value])),
+      nome, grupo, dose, pse, explicacao: $('ex-why').value.trim(), variacoes, objetivos, ativo: $('ex-ativo').checked, video_id: video,
+      ...Object.fromEntries(NIVEIS_EX.map(([k]) => [k, (document.querySelector(`input[name="ex-${k}"]:checked`) || {}).value || 'baixa'])),
     };
     const botao = $('ex-salvar');
     botao.disabled = true; botao.textContent = 'Salvando…';
@@ -2599,6 +2734,8 @@
   });
   $('ex-busca').addEventListener('input', (ev) => { exs.busca = ev.target.value; renderExercicios(); });
   document.addEventListener('click', (ev) => {
+    const ob = ev.target.closest('[data-ex-obj]');
+    if (ob) { exs.obj = ob.dataset.exObj; return renderExercicios(); }
     const g = ev.target.closest('[data-ex-grupo]');
     if (g) { exs.grupo = g.dataset.exGrupo; return renderExercicios(); }
     const ed = ev.target.closest('[data-ex-editar]');

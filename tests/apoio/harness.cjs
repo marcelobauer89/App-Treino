@@ -122,7 +122,7 @@ function catalogo() {
   delete require.cache[require.resolve('../../supabase/gerar-catalogo.cjs')];
   const c = require('../../supabase/gerar-catalogo.cjs');
   return {
-    exercicios: c.exercicios.map((e) => ({ ...e, variacoes: [...e.variacoes], nomes_antigos: [], ativo: true })),
+    exercicios: c.exercicios.map((e) => ({ ...e, variacoes: [...e.variacoes], objetivos: [...e.objetivos], nomes_antigos: [], ativo: true })),
     jornadas: c.jornadas.map((j) => ({ ...JSON.parse(JSON.stringify(j)), ativo: true })),
   };
 }
