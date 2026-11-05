@@ -116,4 +116,14 @@ async function salvarEditor(p) {
     await p.waitForTimeout(120);
   }
 }
-module.exports = { RAIZ, APOIO, SAIDA, servidor, novaPagina, banco, store, prontos, gravacoes, voce, escolherBV, salvarEditor, PAGINA };
+// Catálogo do banco (tabelas exercicios e jornadas) igual à carga inicial do schema.sql, para os testes que o usam.
+// Sem ele no banco falso, o app fica com a cópia que vem no index.html (como antes de rodar o SQL).
+function catalogo() {
+  delete require.cache[require.resolve('../../supabase/gerar-catalogo.cjs')];
+  const c = require('../../supabase/gerar-catalogo.cjs');
+  return {
+    exercicios: c.exercicios.map((e) => ({ ...e, variacoes: [...e.variacoes], nomes_antigos: [], ativo: true })),
+    jornadas: c.jornadas.map((j) => ({ ...JSON.parse(JSON.stringify(j)), ativo: true })),
+  };
+}
+module.exports = { catalogo, RAIZ, APOIO, SAIDA, servidor, novaPagina, banco, store, prontos, gravacoes, voce, escolherBV, salvarEditor, PAGINA };

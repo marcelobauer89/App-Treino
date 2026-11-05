@@ -188,6 +188,10 @@
     .aba-longo { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
     .aba-curto { display: inline; }
   }
+  /* Celular estreito: as 6 abas ainda cabem numa linha. */
+  @media (max-width: 400px) {
+    .abas [role="tab"] { padding: 0 2px; font-size: 13px; gap: 4px; }
+  }
   .abas [role="tab"][aria-selected="true"] { color: var(--tatame-tinta); border-bottom-color: var(--tatame); }
   .aba-alerta {
     min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--erro); color: #fff;
@@ -532,6 +536,30 @@
   .conv-estado.pedido { background: var(--tatame-suave); color: var(--tatame-tinta); }
   .conv-pessoa { padding: 0; border: 0; background: none; font: inherit; font-weight: 700; color: var(--tatame-tinta); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; overflow-wrap: anywhere; text-align: left; }
   .conv-pessoa:focus-visible { outline: 2px solid var(--tatame-tinta); outline-offset: 2px; border-radius: 4px; }
+  /* Exercícios (catálogo do app) */
+  .ex-filtros { display: grid; gap: 10px; margin-bottom: 12px; }
+  .ex-filtros input, .ex-form input:not([type="checkbox"]), .ex-form select, .ex-form textarea {
+    width: 100%; min-height: 48px; padding: 0 12px; border: 1px solid var(--fio); border-radius: 10px; background: var(--gi); color: var(--tinta); font: inherit; font-size: 16px;
+  }
+  .ex-form textarea { min-height: 88px; padding: 10px 12px; resize: vertical; }
+  .ex-grupos { display: flex; flex-wrap: wrap; gap: 6px; }
+  .ex-grupos button { min-height: 36px; padding: 0 12px; border: 1px solid var(--fio); border-radius: 999px; background: var(--papel); color: var(--tinta-2); font-size: 14px; font-weight: 600; }
+  .ex-grupos button[aria-pressed="true"] { border-color: var(--tatame); background: var(--tatame); color: var(--sobre-tatame); }
+  .ex-grupos small { font-size: 12px; opacity: .8; }
+  .ex-item small .ex-sem-video { color: var(--tinta-2); }
+  .ex-item .conv-estado.desativado { background: color-mix(in srgb, var(--erro) 12%, var(--papel)); color: var(--erro); }
+  dialog.ex-dialog { width: min(560px, calc(100vw - 32px)); }
+  .ex-form { display: grid; gap: 14px; }
+  .ex-form label, .ex-form legend { display: grid; gap: 6px; font-size: 14px; font-weight: 700; }
+  .ex-form fieldset { margin: 0; padding: 0; border: 0; display: grid; gap: 6px; }
+  .ex-form legend { padding: 0; margin-bottom: 6px; }
+  .ex-linha { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .ex-niveis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+  @media (max-width: 560px) { .ex-linha { grid-template-columns: 1fr 1fr; } .ex-linha label:first-child { grid-column: 1 / -1; } .ex-niveis { grid-template-columns: 1fr 1fr; } }
+  .ex-form .ex-dica { margin: -8px 0 0; color: var(--tinta-2); font-size: 13px; font-weight: 400; }
+  .ex-form .excluir-entendi { padding-top: 0; }
+  .ex-form .excluir-entendi input { accent-color: var(--tatame); }
+  .ex-aviso { margin: 0; padding: 12px 14px; border-radius: 12px; background: var(--tatame-suave); color: var(--tinta); font-size: 14px; }
   .btn-peq { min-height: 40px; padding: 0 12px; border-radius: 10px; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
   .btn-peq.prim { border: 0; background: var(--tatame); color: var(--sobre-tatame); }
   .btn-peq.sec { border: 1.5px solid var(--fio); background: var(--papel); color: var(--tinta); }
@@ -677,6 +705,7 @@
       <button type="button" role="tab" id="tab-saude" data-aba="saude" aria-controls="aba-saude" aria-selected="false" tabindex="-1"><span class="aba-longo">Saúde do app</span><span class="aba-curto" aria-hidden="true">Saúde</span><span class="aba-alerta" id="alerta-saude" hidden></span></button>
       <button type="button" role="tab" id="tab-emails" data-aba="emails" aria-controls="aba-emails" aria-selected="false" tabindex="-1">E-mails</button>
       <button type="button" role="tab" id="tab-convites" data-aba="convites" aria-controls="aba-convites" aria-selected="false" tabindex="-1">Convites<span class="aba-alerta" id="alerta-convites" hidden></span></button>
+      <button type="button" role="tab" id="tab-exercicios" data-aba="exercicios" aria-controls="aba-exercicios" aria-selected="false" tabindex="-1"><span class="aba-longo">Exercícios</span><span class="aba-curto" aria-hidden="true">Exerc.</span></button>
     </div>
 
     <div role="tabpanel" id="aba-geral" aria-labelledby="tab-geral">
@@ -876,6 +905,26 @@
         <div class="cartao lista-cartao" id="utilizados-lista"></div>
       </section>
     </div>
+
+    <div role="tabpanel" id="aba-exercicios" aria-labelledby="tab-exercicios" hidden>
+      <section class="bloco" aria-labelledby="ex-titulo">
+        <div class="bloco-topo">
+          <div class="titulo-info">
+            <h2 id="ex-titulo">Exercícios</h2>
+            <button class="info" type="button" data-info="info-ex" aria-expanded="false" aria-controls="info-ex" aria-label="Como funciona: exercícios"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button>
+          </div>
+          <button class="btn" type="button" id="ex-novo">Novo exercício</button>
+        </div>
+        <p class="info-txt" id="info-ex" role="note" hidden>A biblioteca que aparece no app para montar os treinos. O que você muda aqui vale na hora para todos, sem publicar o app. Os treinos de quem já usa não mudam: renomear guarda o nome antigo (o exercício continua nos treinos, com as cargas) e desativar só tira o exercício da lista de escolha. "Em N contas" conta quem tem o exercício nos treinos, incluindo o plano pronto.</p>
+        <p class="nota" id="ex-resumo" style="margin:-4px 0 12px"></p>
+        <div class="ex-filtros">
+          <label class="sr" for="ex-busca">Buscar exercício</label>
+          <input id="ex-busca" type="search" autocomplete="off" placeholder="Buscar pelo nome ou outro nome">
+          <div class="ex-grupos" id="ex-grupos" role="group" aria-label="Filtrar por grupo"></div>
+        </div>
+        <div class="cartao lista-cartao" id="ex-lista"><p class="vazio">Carregando…</p></div>
+      </section>
+    </div>
   </div>
 </main>
 
@@ -885,6 +934,9 @@
 
 <dialog class="modal-excluir" id="conv-excluir-dialog" aria-labelledby="conv-excluir-title">
   <div class="excluir-corpo" id="conv-excluir-body"></div>
+</dialog>
+<dialog class="modal-excluir ex-dialog" id="ex-dialog" aria-labelledby="ex-title">
+  <div class="excluir-corpo" id="ex-body"></div>
 </dialog>
 <dialog class="modal-excluir" id="excluir-dialog" aria-labelledby="excluir-title">
   <div class="excluir-corpo" id="excluir-body"></div>
@@ -1078,6 +1130,7 @@
     render();
     if (primeira) entrarEmCascata();
     ligarOnline();
+    carregarExercicios();
   }
 
   // Primeira abertura: os blocos da aba visível entram um depois do outro (sem movimento, se o sistema pedir).
@@ -1855,7 +1908,7 @@
   }
 
   // ---------- Abas ----------
-  const ABAS = ['geral', 'usuarios', 'saude', 'emails', 'convites'];
+  const ABAS = ['geral', 'usuarios', 'saude', 'emails', 'convites', 'exercicios'];
   let aba = ABAS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'geral';
   // Gráficos são desenhados na largura real, então são redesenhados ao aparecer.
   function renderVisivel() {
@@ -2398,6 +2451,155 @@
     const col = e.target.value;
     ordem = { col, dir: col === 'nome' ? 1 : -1 };
     render();
+  });
+
+
+  // ---------- Exercícios (catálogo do app: tabela exercicios) ----------
+  // Lê e grava pelas funções admin_exercicios e admin_salvar_exercicio. Os treinos das contas guardam só o nome:
+  // renomear guarda o nome antigo (o app continua achando o exercício) e desativar só tira da lista de escolha.
+  const GRUPOS_EX = ['Mobilidade', 'Core', 'Explosivos', 'Pernas', 'Costas', 'Peito', 'Ombros', 'Braços', 'Pescoço', 'Cardio'];
+  const rotuloGrupoEx = (g) => ({ Core: 'Core e abdômen' }[g] || g);
+  const NIVEIS_EX = [['hipertrofia', 'Hipertrofia'], ['forca', 'Força'], ['explosao', 'Explosão'], ['mobilidade', 'Mobilidade']];
+  const ROTULO_NIVEL = { alta: 'Alta', media: 'Média', baixa: 'Baixa' };
+  const chaveEx = (t) => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+  const exs = { lista: null, erro: '', busca: '', grupo: 'todos', atual: null };
+  async function carregarExercicios() {
+    const r = await sb.rpc('admin_exercicios');
+    if (r.error) {
+      exs.lista = null;
+      exs.erro = /admin_exercicios|schema cache|does not exist/.test(r.error.message || '') ? 'sem-sql' : r.error.message;
+    } else { exs.lista = r.data || []; exs.erro = ''; }
+    renderExercicios();
+  }
+  // Link do YouTube (watch, youtu.be, shorts, embed) ou só o código de 11 letras. '' = sem vídeo; null = inválido.
+  function codigoVideo(t) {
+    const v = String(t || '').trim();
+    if (!v) return '';
+    if (/^[\w-]{11}$/.test(v)) return v;
+    const m = v.match(/(?:youtu\.be\/|[?&]v=|\/shorts\/|\/embed\/|\/live\/)([\w-]{11})(?![\w-])/);
+    return m ? m[1] : null;
+  }
+  function renderExercicios() {
+    const lista = $('ex-lista');
+    $('ex-novo').disabled = !exs.lista;
+    if (!exs.lista) {
+      $('ex-resumo').textContent = '';
+      $('ex-grupos').innerHTML = '';
+      lista.innerHTML = `<p class="vazio">${exs.erro === 'sem-sql' ? 'Os exercícios ainda não estão no banco: rode de novo o supabase/schema.sql no Supabase. Enquanto isso, o app usa a lista que vem com ele.'
+        : exs.erro ? `Não foi possível carregar os exercícios. ${esc(exs.erro)}` : 'Carregando…'}</p>`;
+      return;
+    }
+    const todos = exs.lista;
+    const ativos = todos.filter((e) => e.ativo).length;
+    const comVideo = todos.filter((e) => e.ativo && e.video_id).length;
+    const desativados = todos.length - ativos;
+    $('ex-resumo').textContent = `${ativos} ${ativos === 1 ? 'exercício ativo' : 'exercícios ativos'} · ${comVideo} com vídeo${desativados ? ` · ${desativados} ${desativados === 1 ? 'desativado' : 'desativados'}` : ''}`;
+    const conta = (g) => todos.filter((e) => g === 'todos' || e.grupo === g).length;
+    $('ex-grupos').innerHTML = ['todos', ...GRUPOS_EX].filter((g) => g === 'todos' || conta(g)).map((g) => `
+      <button type="button" data-ex-grupo="${g}" aria-pressed="${exs.grupo === g}">${g === 'todos' ? 'Todos' : esc(rotuloGrupoEx(g))} <small>${conta(g)}</small></button>`).join('');
+    const busca = chaveEx(exs.busca);
+    const itens = todos
+      .filter((e) => (exs.grupo === 'todos' || e.grupo === exs.grupo) && (!busca || [e.nome, ...(e.variacoes || []), ...(e.nomes_antigos || [])].some((n) => chaveEx(n).includes(busca))))
+      .sort((a, b) => (b.ativo - a.ativo) || GRUPOS_EX.indexOf(a.grupo) - GRUPOS_EX.indexOf(b.grupo) || a.nome.localeCompare(b.nome, 'pt-BR'));
+    lista.innerHTML = itens.length ? itens.map((e) => `
+      <div class="conv-item ex-item">
+        <b>${esc(e.nome)}${e.ativo ? '' : ' <span class="conv-estado desativado">Desativado</span>'}</b>
+        <small>${esc(rotuloGrupoEx(e.grupo))} · ${esc(e.dose)} · PSE ${e.pse} · ${e.video_id ? 'com vídeo' : '<span class="ex-sem-video">sem vídeo</span>'} · ${e.usos ? `em ${e.usos} ${e.usos === 1 ? 'conta' : 'contas'}` : 'em nenhum treino'}${(e.nomes_antigos || []).length ? ` · antes: ${esc(e.nomes_antigos.join(', '))}` : ''}</small>
+        <span class="conv-botoes"><button class="btn-peq sec" type="button" data-ex-editar="${esc(e.nome)}" aria-label="Editar ${esc(e.nome)}">Editar</button></span>
+      </div>`).join('') : '<p class="vazio">Nenhum exercício com esse nome neste grupo.</p>';
+  }
+  function abrirExercicio(nome) {
+    const e = nome ? exs.lista.find((x) => x.nome === nome) : null;
+    if (nome && !e) return;
+    exs.atual = e;
+    const v = e || { nome: '', grupo: exs.grupo !== 'todos' ? exs.grupo : '', dose: '3×10', pse: 8, hipertrofia: 'baixa', forca: 'baixa', explosao: 'baixa', mobilidade: 'baixa', explicacao: '', variacoes: [], ativo: true, video_id: '' };
+    const opcoes = (lista, sel) => lista.map(([val, rot]) => `<option value="${esc(val)}"${val === sel ? ' selected' : ''}>${esc(rot)}</option>`).join('');
+    $('ex-body').innerHTML = `
+      <form class="ex-form" id="ex-form" novalidate>
+        <div class="excluir-topo"><h2 id="ex-title">${e ? 'Editar exercício' : 'Novo exercício'}</h2>
+          <button class="excluir-fechar" type="button" data-ex-fechar aria-label="Fechar">${ICON.xis}</button></div>
+        <label>Nome<input id="ex-nome" maxlength="80" autocomplete="off" value="${esc(v.nome)}" required></label>
+        ${e && (e.nomes_antigos || []).length ? `<p class="ex-dica">Antes chamado: ${esc(e.nomes_antigos.join(', '))}</p>` : ''}
+        <div class="ex-linha">
+          <label>Grupo<select id="ex-grupo">${v.grupo ? '' : '<option value="">Escolha</option>'}${opcoes(GRUPOS_EX.map((g) => [g, rotuloGrupoEx(g)]), v.grupo)}</select></label>
+          <label>Séries sugeridas<input id="ex-dose" maxlength="30" autocomplete="off" value="${esc(v.dose)}" placeholder="3×10"></label>
+          <label>PSE<input id="ex-pse" type="number" min="1" max="10" step="1" inputmode="numeric" value="${v.pse}"></label>
+        </div>
+        <fieldset><legend>Níveis</legend>
+          <div class="ex-niveis">${NIVEIS_EX.map(([k, rot]) => `<label>${rot}<select id="ex-${k}">${opcoes(Object.entries(ROTULO_NIVEL), v[k])}</select></label>`).join('')}</div>
+        </fieldset>
+        <label>Explicação<textarea id="ex-why" maxlength="400" rows="3" placeholder="Para que serve e o que trabalha (aparece no app, abaixo dos níveis)">${esc(v.explicacao)}</textarea></label>
+        <label>Outros nomes<input id="ex-var" autocomplete="off" value="${esc((v.variacoes || []).join(', '))}" placeholder="Separe por vírgula (ex.: Agachamento com barra)"></label>
+        <p class="ex-dica">A busca do app acha o exercício por eles.</p>
+        <label>Vídeo do YouTube<input id="ex-video" autocomplete="off" inputmode="url" value="${esc(v.video_id || '')}" placeholder="Link ou código do vídeo (opcional)"></label>
+        <label class="excluir-entendi"><input type="checkbox" id="ex-ativo"${v.ativo ? ' checked' : ''}><span>Ativo: aparece para escolher nos treinos</span></label>
+        <p class="ex-aviso" id="ex-aviso" hidden></p>
+        <p class="excluir-erro" id="ex-erro" role="alert" hidden></p>
+        <div class="excluir-acoes">
+          <button class="btn" type="submit" id="ex-salvar">${e ? 'Salvar' : 'Criar exercício'}</button>
+          <button class="btn-sec" type="button" data-ex-fechar>Cancelar</button>
+        </div>
+      </form>`;
+    avisoExercicio();
+    $('ex-dialog').showModal();
+    if (!e) $('ex-nome').focus();
+  }
+  // Avisos de renomear e desativar um exercício que está nos treinos de alguém.
+  function avisoExercicio() {
+    const e = exs.atual;
+    const aviso = $('ex-aviso');
+    if (!e || !e.usos) { aviso.hidden = true; return; }
+    const quem = `${e.usos} ${e.usos === 1 ? 'conta tem' : 'contas têm'} este exercício nos treinos`;
+    const nome = $('ex-nome').value.trim().replace(/\s+/g, ' ');
+    const partes = [];
+    if (nome && nome !== e.nome) partes.push(`${quem}. Elas continuam com ele, com o nome de antes e as cargas salvas; quem escolher agora vê o nome novo.`);
+    if (!$('ex-ativo').checked && e.ativo) partes.push(`${partes.length ? 'E desativado, ele' : `${quem}. Desativado, ele`} sai da lista de escolha, mas continua nos treinos de quem já o tem.`);
+    aviso.textContent = partes.join(' ');
+    aviso.hidden = !partes.length;
+  }
+  $('ex-dialog').addEventListener('input', (ev) => { if (ev.target.id === 'ex-nome' || ev.target.id === 'ex-ativo') avisoExercicio(); });
+  $('ex-dialog').addEventListener('click', (ev) => {
+    if (ev.target === $('ex-dialog') || ev.target.closest('[data-ex-fechar]')) $('ex-dialog').close();
+  });
+  $('ex-dialog').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const e = exs.atual;
+    const erro = (msg) => { $('ex-erro').textContent = msg; $('ex-erro').hidden = !msg; };
+    const nome = $('ex-nome').value.trim().replace(/\s+/g, ' ');
+    const grupo = $('ex-grupo').value;
+    const pse = Number($('ex-pse').value);
+    const video = codigoVideo($('ex-video').value);
+    const variacoes = [...new Set($('ex-var').value.split(',').map((x) => x.trim().replace(/\s+/g, ' ')).filter(Boolean))];
+    if (!nome) return erro('Informe o nome do exercício.');
+    const repetido = exs.lista.find((x) => x !== e && chaveEx(x.nome) === chaveEx(nome));
+    if (repetido) return erro(`Já existe um exercício com esse nome: ${repetido.nome}.`);
+    if (!grupo) return erro('Escolha o grupo do exercício.');
+    if (!(pse >= 1 && pse <= 10 && Number.isInteger(pse))) return erro('A PSE vai de 1 a 10.');
+    if (video === null) return erro('Não reconheci o vídeo: cole o link do YouTube ou o código de 11 letras.');
+    if (variacoes.length > 20 || variacoes.some((x) => x.length > 80)) return erro('Use até 20 outros nomes, cada um com até 80 letras.');
+    erro('');
+    const p = {
+      nome, grupo, dose: $('ex-dose').value.trim() || '3×10', pse, explicacao: $('ex-why').value.trim(), variacoes, ativo: $('ex-ativo').checked, video_id: video,
+      ...Object.fromEntries(NIVEIS_EX.map(([k]) => [k, $(`ex-${k}`).value])),
+    };
+    const botao = $('ex-salvar');
+    botao.disabled = true; botao.textContent = 'Salvando…';
+    const { error } = await sb.rpc('admin_salvar_exercicio', { p_nome_atual: e ? e.nome : null, p });
+    if (error) {
+      botao.disabled = false; botao.textContent = e ? 'Salvar' : 'Criar exercício';
+      return erro(/admin_salvar_exercicio|schema cache/.test(error.message || '') ? 'Para editar os exercícios, rode de novo o supabase/schema.sql no Supabase.' : error.message);
+    }
+    $('ex-dialog').close();
+    toast(e ? (e.ativo && !p.ativo ? `${nome} desativado.` : `${nome} salvo. Já vale no app.`) : `${nome} criado. Já aparece no app.`);
+    await carregarExercicios();
+  });
+  $('ex-busca').addEventListener('input', (ev) => { exs.busca = ev.target.value; renderExercicios(); });
+  document.addEventListener('click', (ev) => {
+    const g = ev.target.closest('[data-ex-grupo]');
+    if (g) { exs.grupo = g.dataset.exGrupo; return renderExercicios(); }
+    const ed = ev.target.closest('[data-ex-editar]');
+    if (ed) return abrirExercicio(ed.dataset.exEditar);
+    if (ev.target.closest('#ex-novo')) return abrirExercicio(null);
   });
 
   // Os gráficos são desenhados na largura real; redesenha quando a janela muda.

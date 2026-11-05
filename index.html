@@ -2266,17 +2266,16 @@
   const GRUPOS_EX = ['Mobilidade', 'Core', 'Explosivos', 'Pernas', 'Costas', 'Peito', 'Ombros', 'Braços', 'Pescoço', 'Cardio'];
   // Cada exercício aparece uma vez só: nomes iguais (sem diferenciar maiúsculas e acentos) ficam com o primeiro.
   const chaveExercicio = (nome) => nome.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
-  const BIBLIOTECA = [...Object.values(PLANO_PADRAO).flatMap((t) => t.exercicios), ...EXERCICIOS_EXTRAS]
+  const BIBLIOTECA_APP = [...Object.values(PLANO_PADRAO).flatMap((t) => t.exercicios), ...EXERCICIOS_EXTRAS]
     .filter((ex, i, todos) => todos.findIndex((o) => chaveExercicio(o.nome) === chaveExercicio(ex.nome)) === i)
     .map((ex) => ({ ...ex, variacoes: VARIACOES[ex.nome] || [] }))
     .sort((a, b) => GRUPOS_EX.indexOf(a.grupo) - GRUPOS_EX.indexOf(b.grupo) || a.nome.localeCompare(b.nome, 'pt-BR'));
-  const exDaBiblioteca = (nome) => BIBLIOTECA.find((ex) => ex.nome === nome);
 
   // Jornadas prontas: a pessoa escolhe uma e recebe os treinos e uma semana sugerida (README → "Jornadas prontas").
   // Exercícios por nome da biblioteca, com a dose e a PSE da jornada. semana: dia (Date.getDay()) → treinos.
   // Seleção, ordem e textos próprios do OSS (não reproduzem nenhuma planilha de terceiros).
   const exJ = (nome, dose, pse) => ({ nome, dose, pse });
-  const JORNADAS = [
+  const JORNADAS_APP = [
     {
       id: 'jiu', nome: 'Jiu Jitsu', resumo: 'Força que vai para o tatame.',
       nivel: 'Intermediário', dias: 3, tempo: '50–60 min', equipamento: 'Academia',
@@ -2403,7 +2402,96 @@
       },
     },
   ];
-  const jornadaPorId = (id) => JORNADAS.find((j) => j.id === id) || null;
+  const jornadaPorIdApp = (id) => JORNADAS_APP.find((j) => j.id === id) || null;
+
+  // ---------- Catálogo (exercícios e objetivos) ----------
+  // Vem do banco (tabelas exercicios e jornadas, editadas no painel → Exercícios) e fica guardado no aparelho,
+  // para abrir rápido e sem internet. A cópia acima (BIBLIOTECA_APP e JORNADAS_APP) é a reserva enquanto o banco
+  // não tem o catálogo (supabase/schema.sql ainda não rodado) e gera a carga inicial (supabase/gerar-catalogo.cjs).
+  // Os treinos das contas guardam só nome, dose e PSE: um exercício renomeado continua sendo achado pelo nome antigo
+  // (nomes_antigos) e um desativado sai da lista de escolha, mas segue completo nos treinos de quem já o tem.
+  const CHAVE_CATALOGO = 'bauer-catalogo';
+  const NIVEIS = ['alta', 'media', 'baixa'];
+  let BIBLIOTECA = BIBLIOTECA_APP; // para escolher: só os ativos
+  let JORNADAS = JORNADAS_APP; // para escolher: só os ativos
+  let catalogo = null; // { porNome, antigos, jornadas } quando veio do banco (ou da cópia guardada dele)
+  let catalogoDoBanco = false;
+  function exDaBiblioteca(nome) {
+    if (catalogo) { const ex = catalogo.porNome.get(nome) || catalogo.antigos.get(nome); if (ex) return ex; }
+    return BIBLIOTECA_APP.find((ex) => ex.nome === nome) || null;
+  }
+  // Nome de hoje no catálogo (para um exercício salvo com um nome antigo).
+  const nomeAtual = (nome) => (exDaBiblioteca(nome) || { nome }).nome;
+  const jornadaPorId = (id) => (catalogo && catalogo.jornadas.find((j) => j.id === id)) || jornadaPorIdApp(id);
+  const listaTextos = (v, max) => (Array.isArray(v) ? v.map((x) => limpar(x, 80)).filter(Boolean).slice(0, max) : []);
+  function exercicioDoBanco(r) {
+    const nome = r && limpar(r.nome, 80);
+    if (!nome) return null;
+    const nivel = (v) => (NIVEIS.includes(v) ? v : 'baixa');
+    const pse = Number(r.pse);
+    return {
+      nome, grupo: GRUPOS_EX.includes(r.grupo) ? r.grupo : '', dose: limpar(r.dose, 30) || '3×10', pse: pse >= 1 && pse <= 10 ? Math.round(pse) : 8,
+      H: nivel(r.hipertrofia), M: nivel(r.mobilidade), F: nivel(r.forca), E: nivel(r.explosao), why: String(r.explicacao ?? '').trim().slice(0, 400),
+      variacoes: listaTextos(r.variacoes, 20), nomesAntigos: listaTextos(r.nomes_antigos, 20), ativo: r.ativo !== false,
+    };
+  }
+  function jornadaDoBanco(r) {
+    const d = r && r.dados;
+    const id = r && limpar(r.id, 30);
+    if (!id || !d || typeof d !== 'object' || !limpar(d.nome, 40)) return null;
+    const texto = (v, max) => String(v ?? '').trim().slice(0, max);
+    const treinos = {};
+    for (let n = 1; n <= MAX_TREINOS; n++) {
+      const t = d.treinos && d.treinos[n];
+      const exercicios = t && Array.isArray(t.exercicios) ? t.exercicios.filter((e) => e && e.nome).slice(0, MAX_EXERCICIOS)
+        .map((e) => ({ nome: limpar(e.nome, 80), dose: limpar(e.dose, 30), pse: Number(e.pse) || 8 })) : [];
+      if (!exercicios.length) continue;
+      treinos[n] = {
+        nome: limpar(t.nome, 40) || `Treino ${n}`, subtitulo: limpar(t.subtitulo, 60), objetivo: texto(t.objetivo, 400), esperado: texto(t.esperado, 600),
+        impacto_jiu: texto(t.impacto_jiu, 400), impacto_fisico: texto(t.impacto_fisico, 400), exercicios,
+      };
+    }
+    if (!Object.keys(treinos).length) return null;
+    const semana = {};
+    for (const [dia, tipos] of Object.entries(d.semana && typeof d.semana === 'object' ? d.semana : {})) {
+      if (/^[0-6]$/.test(dia) && Array.isArray(tipos)) semana[dia] = tipos.filter((x) => /^t[1-6]$/.test(x) && treinos[x.slice(1)]);
+    }
+    return {
+      id, nome: limpar(d.nome, 40), resumo: texto(d.resumo, 120), nivel: texto(d.nivel, 40), dias: Number(d.dias) || Object.keys(semana).length,
+      tempo: texto(d.tempo, 30), equipamento: texto(d.equipamento, 120), semana, treinos, ativo: r.ativo !== false, ordem: Number(r.ordem) || 0,
+    };
+  }
+  // Usa o catálogo que veio do banco. Sem nenhum exercício ativo (tabela vazia ou com problema), fica a cópia do app.
+  function aplicarCatalogo(dados) {
+    const exs = (dados && Array.isArray(dados.exercicios) ? dados.exercicios : []).map(exercicioDoBanco).filter(Boolean)
+      .sort((a, b) => GRUPOS_EX.indexOf(a.grupo) - GRUPOS_EX.indexOf(b.grupo) || a.nome.localeCompare(b.nome, 'pt-BR'));
+    if (!exs.some((e) => e.ativo)) return false;
+    const porNome = new Map(exs.map((e) => [e.nome, e]));
+    const antigos = new Map();
+    exs.forEach((e) => e.nomesAntigos.forEach((n) => { if (!porNome.has(n) && !antigos.has(n)) antigos.set(n, e); }));
+    const jornadas = (Array.isArray(dados.jornadas) ? dados.jornadas : []).map(jornadaDoBanco).filter(Boolean).sort((a, b) => a.ordem - b.ordem);
+    catalogo = { porNome, antigos, jornadas };
+    BIBLIOTECA = exs.filter((e) => e.ativo);
+    const ativas = jornadas.filter((j) => j.ativo);
+    JORNADAS = ativas.length ? ativas : JORNADAS_APP;
+    catalogoDoBanco = true;
+    return true;
+  }
+  // Busca o catálogo no banco. Sem as tabelas (SQL ainda não rodado) ou sem internet, segue com o que já tem.
+  async function carregarCatalogo() {
+    try {
+      const [e, j] = await Promise.all([sb.from('exercicios').select('*'), sb.from('jornadas').select('*')]);
+      if (e.error || !Array.isArray(e.data) || !e.data.length) return;
+      const dados = { exercicios: e.data, jornadas: j.error ? [] : j.data || [] };
+      if (aplicarCatalogo(dados)) { try { localStorage.setItem(CHAVE_CATALOGO, JSON.stringify(dados)); } catch (_) {} }
+    } catch (_) {}
+  }
+  // Vídeo da execução: pelo nome salvo no treino, pelo nome de hoje no catálogo ou por um nome antigo dele.
+  function videoDe(nome) {
+    if (VIDEOS[nome]) return VIDEOS[nome];
+    const ex = exDaBiblioteca(nome);
+    return (ex && [ex.nome, ...(ex.nomesAntigos || [])].map((n) => VIDEOS[n]).find(Boolean)) || '';
+  }
 
   // Treinos da conta: os montados em "Meus treinos" (perfis.treinos) ou, sem eles, o plano pronto.
   // No banco vão só nome, dose e PSE de cada exercício; níveis, grupo e explicação vêm da biblioteca.
@@ -2424,7 +2512,8 @@
   function exercicioCompleto(e) {
     const base = exDaBiblioteca(e.nome) || { nome: limpar(e.nome, 80), grupo: '', H: 'baixa', M: 'baixa', F: 'baixa', E: 'baixa', why: '' };
     const pse = Number(e.pse);
-    return { ...base, dose: limpar(e.dose, 30) || base.dose || '3×10', pse: pse >= 1 && pse <= 10 ? Math.round(pse) : base.pse || 8 };
+    // O nome fica o salvo no treino (as cargas e o histórico usam ele), mesmo que o exercício tenha sido renomeado.
+    return { ...base, nome: base.nome === e.nome ? base.nome : limpar(e.nome, 80), dose: limpar(e.dose, 30) || base.dose || '3×10', pse: pse >= 1 && pse <= 10 ? Math.round(pse) : base.pse || 8 };
   }
   const qtdExercicios = (n) => `${n} ${n === 1 ? 'exercício' : 'exercícios'}`;
   const nomesDos = (exs) => exs.map((e) => e.nome).join('|');
@@ -2438,7 +2527,7 @@
       if (!exercicios.length) continue;
       treinos[n] = { nome: limpar(t.nome, 40) || `Treino ${n}`, subtitulo: limpar(t.subtitulo, 60), exercicios };
       // O texto "Sobre o treino" do plano pronto (ou de uma jornada) só vale enquanto os exercícios forem os mesmos.
-      const p = JORNADAS.map((j) => j.treinos[n]).find((x) => x && nomesDos(x.exercicios) === nomesDos(exercicios));
+      const p = [...(catalogo ? catalogo.jornadas : []), ...JORNADAS_APP].map((j) => j.treinos[n]).find((x) => x && nomesDos(x.exercicios) === nomesDos(exercicios));
       if (p) {
         const { objetivo, esperado, impacto_jiu, impacto_fisico } = p;
         Object.assign(treinos[n], { objetivo, esperado, impacto_jiu, impacto_fisico });
@@ -2450,7 +2539,12 @@
   const treinosParaSalvar = (treinos) => Object.fromEntries(Object.entries(treinos).map(([id, t]) => [id, {
     nome: t.nome, subtitulo: t.subtitulo, exercicios: t.exercicios.map(({ nome, dose, pse }) => ({ nome, dose, pse })),
   }]));
+  // Plano pronto (contas sem treinos próprios): a lista de exercícios é sempre a do app, e não muda quando o objetivo
+  // Jiu Jitsu é editado no banco; os detalhes de cada exercício vêm do catálogo.
+  const planoPronto = () => (catalogoDoBanco && montarTreinos(treinosParaSalvar(PLANO_PADRAO))) || PLANO_PADRAO;
   const mesmoQuePadrao = (treinos) => JSON.stringify(treinosParaSalvar(treinos)) === JSON.stringify(treinosParaSalvar(PLANO_PADRAO));
+  // Cópia guardada no aparelho: o app já abre com ela, antes de o banco responder.
+  try { const g = JSON.parse(localStorage.getItem(CHAVE_CATALOGO) || 'null'); if (g) aplicarCatalogo(g); } catch (_) {}
 
   // ---------- Perfil e configurações (vêm do Supabase depois do login) ----------
   // Temporizador de descanso (perfis.temporizador): ligado por padrão; a pessoa pode desligar em Você → Temporizador.
@@ -2892,6 +2986,8 @@
       sb.from('cargas').select('*').order('data'),
       // Vídeos dos exercícios: só vêm para quem o administrador liberou. Sem a função (schema antigo), sem vídeos.
       sb.rpc('meus_videos').then((r) => r, () => ({ error: true })),
+      // Catálogo de exercícios e objetivos (antes de montar os treinos da conta).
+      carregarCatalogo(),
     ]);
     if (p.error || c.error) throw p.error || c.error;
     // Fotos nos check-ins: liga quando a coluna checkins.foto existe (o schema.sql cria junto o bucket).
@@ -2917,7 +3013,7 @@
     if (!perfil.nome.trim() && nomeGoogle) { perfil.nome = nomeGoogle; salvarPerfil({ nome: nomeGoogle }); }
     const proprios = montarTreinos(linha.treinos);
     treinosDaConta = !!proprios;
-    TREINOS = proprios || PLANO_PADRAO;
+    TREINOS = proprios || planoPronto();
     atualizarTipos();
     if (!TREINOS[estado.treino]) estado.treino = Object.keys(TREINOS)[0];
     let ocultaNoAparelho = false;
@@ -3705,7 +3801,7 @@
   }
 
   function exercicioHTML(ex, i) {
-    const id = VIDEOS[ex.nome];
+    const id = videoDe(ex.nome);
     const graus = DIMS.map(({ k, label }) => `
       <div>
         <dt>${label}</dt>
@@ -3720,7 +3816,7 @@
           </div>
         </div>`;
     const info = `
-        <p class="ex-why">${ex.why}</p>
+        <p class="ex-why">${esc(ex.why)}</p>
         <dl class="graus">${graus}</dl>`;
     // Com vídeo, o cartão vira um carrossel: deslizando para o lado aparece a execução.
     // O nome fica fora do carrossel, sempre visível nos dois painéis.
@@ -4389,7 +4485,7 @@
       ${exs.length ? `<ol class="ed-exs">${exs.map((ex, i) => `
         <li class="ed-ex" data-ed-pos="${i}">
           <button class="ed-alca" type="button" data-ed-alca="${i}" aria-label="Mover ${esc(ex.nome)}, posição ${i + 1} de ${exs.length}. Arraste, ou use as setas do teclado." aria-describedby="ed-dica-ordem">${ICON_ALCA}</button>
-          <span class="ed-ex-nome"><b><span class="ed-num">${pad(i + 1)}</span>${esc(ex.nome)}</b><small>${esc(ex.grupo ? rotuloGrupo(ex.grupo) : 'Exercício')}${VIDEOS[ex.nome] ? ' · com vídeo' : ''}</small></span>
+          <span class="ed-ex-nome"><b><span class="ed-num">${pad(i + 1)}</span>${esc(ex.nome)}</b><small>${esc(ex.grupo ? rotuloGrupo(ex.grupo) : 'Exercício')}${videoDe(ex.nome) ? ' · com vídeo' : ''}</small></span>
           <button class="ed-icone" type="button" data-ed-remover="${i}" aria-label="Tirar ${esc(ex.nome)} do treino">${ICON_X}</button>
           <div class="ed-ex-campos">
             <label>Séries<input type="text" value="${esc(ex.dose)}" maxlength="30" data-ed-dose="${i}" aria-label="${esc(ex.nome)}: séries e repetições"></label>
@@ -4421,7 +4517,7 @@
     const doGrupo = (ex) => busca.length >= 3 && (BUSCA_GRUPO[ex.grupo] || []).some((p) => p.startsWith(busca));
     const achou = (ex) => !busca || doGrupo(ex) || [ex.nome, ...ex.variacoes].some((n) => semAcento(n).includes(busca));
     const itens = BIBLIOTECA.filter((ex) => (ed.grupo === 'todos' || ex.grupo === ed.grupo) && achou(ex));
-    const noTreino = new Set(t.exercicios.map((ex) => ex.nome));
+    const noTreino = new Set(t.exercicios.map((ex) => nomeAtual(ex.nome)));
     $('ed-contagem').textContent = `${t.exercicios.length} de ${MAX_EXERCICIOS} no ${t.nome || `Treino ${ed.sel}`} · ${itens.length} ${itens.length === 1 ? 'exercício' : 'exercícios'} na lista`;
     $('ed-bib').innerHTML = itens.length ? itens.map((ex) => {
       const dentro = noTreino.has(ex.nome);
@@ -4429,7 +4525,7 @@
       return `
       <li><button class="ed-bib-item" type="button" data-ed-add="${esc(ex.nome)}" aria-pressed="${dentro}">
         <b>${esc(ex.nome)}</b>
-        <small>${esc(rotuloGrupo(ex.grupo))} · ${esc(ex.dose)} · PSE ${ex.pse}${destaque.length ? ` · alta ${lista(destaque)}` : ''}${VIDEOS[ex.nome] ? ' · vídeo' : ''}</small>
+        <small>${esc(rotuloGrupo(ex.grupo))} · ${esc(ex.dose)} · PSE ${ex.pse}${destaque.length ? ` · alta ${lista(destaque)}` : ''}${videoDe(ex.nome) ? ' · vídeo' : ''}</small>
         ${ex.variacoes.length ? `<small class="ed-tambem">Também: ${esc(ex.variacoes.join(', '))}</small>` : ''}
         <span class="ed-marca" aria-hidden="true">${dentro ? ICON_CHECK : ICON_MAIS}</span>
       </button></li>`;
@@ -4450,7 +4546,7 @@
     const antes = Object.keys(TREINOS);
     // Cópia do que existia antes de salvar, para Desfazer agora ou restaurar depois.
     treinosAnterior = fotoDosTreinos();
-    TREINOS = montarTreinos(valor) || PLANO_PADRAO;
+    TREINOS = montarTreinos(valor) || planoPronto();
     treinosDaConta = !!valor;
     atualizarTipos();
     // Treinos iguais aos de uma jornada voltam a ser ela; senão a jornada continua, agora personalizada.
@@ -4506,7 +4602,7 @@
     if (!foto) return;
     treinosAnterior = fotoDosTreinos();
     const valor = mesmoQuePadrao(foto.treinos) ? null : montarTreinos(foto.treinos) && foto.treinos;
-    TREINOS = montarTreinos(valor) || PLANO_PADRAO;
+    TREINOS = montarTreinos(valor) || planoPronto();
     treinosDaConta = !!valor;
     jornada = jornadaPorId(foto.jornada) ? foto.jornada : null;
     atualizarTipos();
@@ -4661,7 +4757,7 @@
     if ((b = alvo('[data-ed-grupo]'))) { ed.grupo = b.dataset.edGrupo; return renderEditor(); }
     if ((b = alvo('[data-ed-add]'))) {
       const nome = b.dataset.edAdd;
-      const k = t.exercicios.findIndex((ex) => ex.nome === nome);
+      const k = t.exercicios.findIndex((ex) => nomeAtual(ex.nome) === nome);
       if (k >= 0) t.exercicios.splice(k, 1);
       else if (t.exercicios.length >= MAX_EXERCICIOS) return toast(`Cada treino tem até ${MAX_EXERCICIOS} exercícios.`);
       else t.exercicios.push({ ...exDaBiblioteca(nome) });
@@ -4912,7 +5008,7 @@
     if (!j) return;
     treinosAnterior = fotoDosTreinos();
     const valor = mesmoQuePadrao(j.treinos) ? null : treinosParaSalvar(j.treinos);
-    TREINOS = montarTreinos(valor) || PLANO_PADRAO;
+    TREINOS = montarTreinos(valor) || planoPronto();
     treinosDaConta = !!valor;
     jornada = j.id;
     atualizarTipos();
@@ -5026,7 +5122,7 @@
         <span>Não mostrar esta mensagem de novo</span>
       </label>`;
   function abrirNovidade() {
-    const comVideo = BIBLIOTECA.filter((ex) => VIDEOS[ex.nome]).length;
+    const comVideo = BIBLIOTECA.filter((ex) => videoDe(ex.nome)).length;
     const item = (txt) => `<li>${ICON_CHECK}<span>${txt}</span></li>`;
     // Conta nova com o plano pronto escolhe uma jornada; quem já montou os treinos vê a versão "Baita atualização!".
     if (novidade.contaNova && !treinosDaConta) return abrirJornadas('boas-vindas');

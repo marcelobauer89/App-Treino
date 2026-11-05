@@ -147,7 +147,7 @@ Cada pessoa pode montar até 6 treinos (t1 a t6), com até 15 exercícios cada, 
 - **Biblioteca:** 136 exercícios, sem repetição. O grupo Core aparece como "Core e abdômen", e buscar "abdominal", "abdômen" ou "barriga" mostra o grupo inteiro. São os 22 do plano pronto mais os das fichas de treino em PDF. Variações do mesmo movimento com outro equipamento (halter ou barra) entram uma vez só; os outros nomes delas (`VARIACOES`) servem para a busca.
 - **Vídeos dos exercícios:** só para quem o administrador libera (veja "Vídeos liberados por usuário").
 - **O que a pessoa ajusta:** nome e foco de cada treino, séries/repetições e PSE. A ordem dos exercícios muda arrastando a alça ⠿ de cada cartão (no teclado, setas para cima e para baixo na alça); o botão flutuante "Adicionar exercício" abre a biblioteca.
-- **No banco:** a coluna `perfis.treinos` guarda só nome, séries e PSE de cada exercício. Os níveis, o grupo e a explicação vêm da biblioteca no `index.html`, pelo nome.
+- **No banco:** a coluna `perfis.treinos` guarda só nome, séries e PSE de cada exercício. Os níveis, o grupo e a explicação vêm do catálogo (veja "Catálogo de exercícios e objetivos"), pelo nome.
 - **Quem já usa o app:** continua no plano pronto (coluna vazia) até salvar outra coisa. Ao abrir o app, aparece o aviso **"Baita atualização!"**, com "Personalizar meus treinos" ou "Manter meu treino atual". Ele volta a cada abertura (inclusive ao voltar para o app depois de 30 min em segundo plano) até a pessoa marcar **"Não mostrar esta mensagem de novo"**.
 - **Conta nova:** escolhe uma **jornada pronta** ou "Montar do zero" (veja abaixo).
 - **O aviso no banco:** a última resposta fica em `perfis.novidade_treinos` e o "não mostrar mais" em `perfis.novidade_oculta`. Sem essa coluna (schema antigo), o aviso aparece do mesmo jeito e o "não mostrar mais" fica guardado só no aparelho.
@@ -169,7 +169,7 @@ Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 a t6 nos check-i
 
 ### Jornadas prontas
 
-- **O que são:** conjuntos de treinos prontos com uma semana sugerida, na constante `JORNADAS` do `index.html`:
+- **O que são:** conjuntos de treinos prontos com uma semana sugerida, na tabela `jornadas` do banco (a cópia de reserva fica na constante `JORNADAS_APP` do `index.html`):
   - Jiu Jitsu: o plano pronto de sempre;
   - Hipertrofia: 4 treinos;
   - Força e potência: A, B e Cardio;
@@ -187,6 +187,20 @@ Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 a t6 nos check-i
 - **Monitoramento:** os eventos `jornadas_abertas` e `jornada_escolhida` alimentam o card "Objetivos escolhidos".
 - **De onde veio:** as jornadas foram montadas com seleção, ordem, doses e textos próprios, usando planilhas de treino só como referência de método. Ao criar uma jornada nova, não copie a sequência nem os textos de nenhuma planilha.
 
+## Catálogo de exercícios e objetivos
+
+- **Onde fica:** no banco, nas tabelas `exercicios` (a biblioteca) e `jornadas` (os objetivos prontos). Quem entra no app lê; só administradores mudam.
+- **Editar os exercícios:** no monitoramento, aba **Exercícios**. Dá para buscar, filtrar por grupo, criar, editar (nome, grupo, séries, PSE, níveis, explicação, outros nomes e vídeo do YouTube, colando o link) e desativar. Vale na hora para todos, sem publicar o app. Cada exercício mostra em quantas contas está.
+- **Quem já usa não perde nada:** os treinos das contas guardam só nome, séries e PSE, e mudar o catálogo não mexe neles.
+  - **Renomear:** o nome antigo fica em `nomes_antigos`. O app continua achando o exercício por ele, com vídeo, cargas e recordes, e o painel avisa quantas contas usam antes de salvar.
+  - **Desativar:** o exercício sai da lista de escolha, mas continua completo nos treinos de quem já o tem. Não há como apagar.
+  - **Plano pronto:** quem nunca montou treino continua com a mesma lista de exercícios, com os detalhes do catálogo.
+- **Objetivos:** por enquanto, mudam só por SQL (a edição pelo painel vem depois).
+- **No aparelho:** o app guarda uma cópia do catálogo e abre com ela. Sem as tabelas (SQL ainda não rodado) ou sem internet, usa a cópia ou a lista que vem no `index.html` (`BIBLIOTECA_APP` e `JORNADAS_APP`).
+- **Como ligar:** rode de novo o `supabase/schema.sql`. Ele cria as tabelas e carrega os 136 exercícios e os 4 objetivos. Rodar de novo não duplica, não traz de volta um exercício renomeado e não desfaz o que foi mudado no painel.
+- **Carga inicial:** é gerada da lista do `index.html` por `node supabase/gerar-catalogo.cjs` (o teste confere com `--conferir`). Ao mudar a lista do código, rode o gerador.
+- **Exercícios mandados em lista:** viram um SQL de `insert into public.exercicios ...`, rodado primeiro no projeto de testes e depois no de produção.
+
 ## Vídeos liberados por usuário
 
 - **Como liberar:** no monitoramento, abra a ficha da pessoa na aba **Usuários** e toque em **Liberar vídeos** (ou **Tirar vídeos**). Quem está liberado aparece com a etiqueta "Vídeos" na tabela.
@@ -195,7 +209,7 @@ Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 a t6 nos check-i
 - **Como ligar (uma vez por projeto):**
   1. Rode o `supabase/schema.sql`.
   2. Rode a carga dos vídeos (um SQL com `insert into public.videos_exercicios ...`). Esse arquivo não fica no repositório: peça a ele a quem mantém o app.
-- **Adicionar ou trocar um vídeo:** no SQL Editor, `insert into public.videos_exercicios (exercicio, video_id) values ('Nome do exercício', 'idDoYouTube') on conflict (exercicio) do update set video_id = excluded.video_id;`. O nome tem que ser igual ao da biblioteca.
+- **Adicionar ou trocar um vídeo:** no monitoramento → Exercícios, no campo "Vídeo do YouTube" do exercício (cola o link). Ou no SQL Editor, `insert into public.videos_exercicios (exercicio, video_id) values ('Nome do exercício', 'idDoYouTube') on conflict (exercicio) do update set video_id = excluded.video_id;`. O nome tem que ser igual ao da biblioteca.
 
 ## Convites (acesso só para convidados)
 
@@ -389,6 +403,7 @@ Os testes do app, do painel e do resumo por e-mail ficam em `tests/` e rodam em 
 - **cargas:** os pesos registrados na ficha, por dia e treino. Salvar um peso não abre check-in.
 - **eventos:** uso do app (telas, recursos, erros), para o dashboard de monitoramento.
 - **admins:** contas que podem ver o dashboard de monitoramento.
+- **exercicios** e **jornadas:** o catálogo (biblioteca de exercícios e objetivos prontos), igual para todos e editado no monitoramento.
 - **emails_enviados:** registro dos resumos semanais enviados (quem e de qual semana), para não mandar o mesmo duas vezes. A opção de receber fica em `perfis.emails_resumo`.
 - O app funciona online: cada alteração vai para o Supabase na hora. Se a gravação falhar, o app avisa e recarrega os dados do servidor.
 - No primeiro login em cada aparelho, os check-ins e configurações que estavam salvos só no navegador (versões anteriores do app) são enviados para a conta.
