@@ -782,7 +782,7 @@
             <button class="info" type="button" data-info="info-sumiu" aria-expanded="false" aria-controls="info-sumiu" aria-label="Como funciona: quem sumiu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button>
           </div>
         </div>
-        <p class="info-txt" id="info-sumiu" role="note" hidden>Quem fez check-in nas últimas 4 semanas, mas está há 7 dias ou mais sem check-in. Conta o último check-in, não a última vez que abriu o app. Quem treinava mais vezes por semana aparece primeiro. Não muda com o período escolhido.</p>
+        <p class="info-txt" id="info-sumiu" role="note" hidden>Possíveis churn: quem usou o app nas últimas 4 semanas, mas está há 7 dias ou mais sem usar. Qualquer uso conta (fazer check-in, registrar pesos ou só abrir o app), então quem registra pesos sem fazer check-in não aparece aqui. Quem usava o app mais dias por semana aparece primeiro. Não muda com o período escolhido.</p>
         <div class="lista-cartao lista-interna" id="sumiu-lista"></div>
       </section>
       <section class="bloco cartao" aria-labelledby="evoluiu-titulo">
@@ -1290,22 +1290,26 @@
     return { base: base.length, voltaram: voltaram.length };
   }
 
-  // Quem sumiu: treinou nos últimos 28 dias, mas não nos últimos 7 (relativo a hoje, não ao período).
-  function sumidos() {
+  // Quem sumiu (possíveis churn): usou o app nos últimos 28 dias, mas não nos últimos 7 (relativo a hoje, não ao período).
+  // Uso é qualquer atividade (diasAtivos: check-ins, eventos do app e o último acesso), não só o check-in:
+  // quem abriu o app ou registrou pesos sem fazer check-in não sumiu.
+  function sumidos(ativosMap) {
     const fim = hoje();
     const lim7 = somarDias(fim, -6), lim28 = somarDias(fim, -27);
     let base = 0;
     const lista = [];
     dados.usuarios.forEach((u) => {
       if (u.id === meuId) return;
-      const meus = dados.checkins.filter((c) => c.usuario_id === u.id && diaDeCheckin(c) <= fim);
-      const recentes = meus.filter((c) => diaDeCheckin(c) >= lim28);
+      const dias = [...(ativosMap.get(u.id) || [])].filter((d) => d <= fim).sort();
+      const recentes = dias.filter((d) => d >= lim28);
       if (!recentes.length) return;
       base += 1;
-      if (recentes.some((c) => diaDeCheckin(c) >= lim7)) return;
-      const ultimo = meus.reduce((a, c) => (diaDeCheckin(c) > diaDeCheckin(a) ? c : a));
-      // Ritmo antes de sumir: check-ins por semana nas 3 semanas entre 28 e 8 dias atrás.
-      lista.push({ u, ultimo, dias: diasEntre(diaDeCheckin(ultimo), fim), ritmo: recentes.length / 3 });
+      if (recentes.some((d) => d >= lim7)) return;
+      const ultimoUso = dias[dias.length - 1];
+      const meus = dados.checkins.filter((c) => c.usuario_id === u.id && diaDeCheckin(c) <= fim);
+      const ultimo = meus.length ? meus.reduce((a, c) => (diaDeCheckin(c) > diaDeCheckin(a) ? c : a)) : null;
+      // Ritmo antes de sumir: dias de uso por semana nas 3 semanas entre 28 e 8 dias atrás.
+      lista.push({ u, ultimo, ultimoUso, dias: diasEntre(ultimoUso, fim), ritmo: recentes.length / 3 });
     });
     lista.sort((a, b) => b.ritmo - a.ritmo || b.dias - a.dias);
     return { base, lista };
@@ -1321,7 +1325,7 @@
     const ativosMap = diasAtivos();
     renderKpis(j, ativosMap);
     renderGraficos(j, ativosMap);
-    renderListasGeral(j);
+    renderListasGeral(j, ativosMap);
     renderTreinos(j);
     renderJornadas(j);
     renderUsuarios(j, ativosMap);
@@ -1361,7 +1365,7 @@
     const m = metricas(j, ativosMap);
     const a = j.anterior ? metricas(j.anterior, ativosMap) : null;
     const r = retencao(ativosMap);
-    const s = sumidos();
+    const s = sumidos(ativosMap);
     const rec = recordesDe(j), recAnt = j.anterior ? recordesDe(j.anterior) : null;
     const pessoasRec = new Set(rec.map((e) => e.usuario_id)).size;
     const total = dados.usuarios.length;
@@ -1390,22 +1394,22 @@
         { longo: r.base ? `${r.voltaram} de ${r.base} que usaram na semana anterior` : 'sem uso na semana anterior', largo: true,
           info: 'Das pessoas que usaram o app entre 8 e 14 dias atrás, quantas voltaram a usar nos últimos 7 dias. Mostra se o app está segurando os usuários. Não muda com o período escolhido.' }),
       tile('Sumiram', s.base ? `${s.lista.length}<small> de ${s.base}</small>` : '—',
-        { longo: s.base ? 'sem check-in há 7 dias ou mais' : 'ninguém treinou nas últimas 4 semanas', curto: 'sem check-in há 7+ dias',
-          info: 'Pessoas que fizeram check-in nas últimas 4 semanas, mas nenhum nos últimos 7 dias. O número menor é quem treinou nas últimas 4 semanas. A lista está em "Quem sumiu", mais abaixo. Não muda com o período escolhido.' }),
+        { longo: s.base ? 'sem usar o app há 7 dias ou mais' : 'ninguém usou o app nas últimas 4 semanas', curto: 'sem usar há 7+ dias',
+          info: 'Possíveis churn: pessoas que usaram o app nas últimas 4 semanas, mas não abriram nem registraram nada nos últimos 7 dias (check-in, pesos ou só abrir o app contam como uso). O número menor é quem usou o app nas últimas 4 semanas. A lista está em "Quem sumiu", mais abaixo. Não muda com o período escolhido.' }),
       tile('Recordes', fmtNum(rec.length), { longo: `de ${pessoasRec} ${pessoasRec === 1 ? 'pessoa' : 'pessoas'}`, curto: `${pessoasRec} ${pessoasRec === 1 ? 'pessoa' : 'pessoas'}`, d: recAnt && delta(rec.length, recAnt.length),
         info: `Vezes em que alguém superou o próprio peso máximo num exercício no período (o primeiro peso registrado não conta). Os pesos não aparecem no painel. Quem mais evoluiu está mais abaixo. ${compara}` }),
     ].join('');
   }
 
-  function renderListasGeral(j) {
-    const s = sumidos();
+  function renderListasGeral(j, ativosMap = diasAtivos()) {
+    const s = sumidos(ativosMap);
     $('sumiu-lista').innerHTML = s.lista.length ? s.lista.map((x) => `<div class="item-lista">
         <button class="item-topo" type="button" data-abrir-usuario="${x.u.id}">
           <span class="item-titulo">${esc(x.u.nome || x.u.email)}</span>
           <span class="item-num">${x.dias}<small>dias</small></span>
-          <span class="item-sub">último check-in ${relativo(diaDeCheckin(x.ultimo))} (${esc((TIPOS[x.ultimo.tipo] || {}).nome || x.ultimo.tipo)}) · treinava ${fmtNum(x.ritmo, Number.isInteger(x.ritmo) ? 0 : 1)}× por semana</span>
+          <span class="item-sub">último uso ${relativo(x.ultimoUso)} · ${x.ultimo ? `último check-in ${relativo(diaDeCheckin(x.ultimo))} (${esc((TIPOS[x.ultimo.tipo] || {}).nome || x.ultimo.tipo)})` : 'nunca fez check-in'} · usava o app ${fmtNum(x.ritmo, Number.isInteger(x.ritmo) ? 0 : 1)}× por semana</span>
         </button></div>`).join('')
-      : `<p class="vazio">${s.base ? 'Ninguém sumiu: todo mundo que treinava fez check-in nos últimos 7 dias.' : 'Ninguém treinou nas últimas 4 semanas.'}</p>`;
+      : `<p class="vazio">${s.base ? 'Ninguém sumiu: todo mundo que usava o app usou nos últimos 7 dias.' : 'Ninguém usou o app nas últimas 4 semanas.'}</p>`;
     // Ranking de recordes no período.
     const rec = recordesDe(j);
     const porPessoa = new Map();
