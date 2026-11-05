@@ -326,7 +326,19 @@ Toda **sexta-feira às 9h** (Brasília), cada pessoa recebe no e-mail um resumo 
 - a comparação com a semana anterior;
 - os recordes da semana.
 
-Quem não treinou recebe uma versão de incentivo. **Não recebem:** quem nunca usou o app, quem ainda não foi liberado (convite ou pedido de acesso pendente) e quem está há 4 semanas ou mais sem abrir o app. Quem volta a abrir o app volta a receber na sexta seguinte. A prévia (abaixo) vai sempre, para testar.
+Quem não treinou recebe uma versão de incentivo.
+
+**"E aí, sumiu?"**: quem está no card "Quem sumiu" do monitoramento (usou o app nas últimas 4 semanas, mas não nos últimos 7 dias) recebe, no lugar do resumo, um e-mail para voltar. Ele mostra:
+- há quantos dias a pessoa não aparece;
+- quantos treinos fez no mês e o ritmo por semana antes de sumir;
+- o último treino, com o nome dado por ela;
+- os recordes do mês;
+- o que está na semana dela para o dia;
+- uma dica para retomar.
+
+O botão leva ao app. O envio conta como o resumo da semana (não repete), e a resposta da função traz `voltas` (quantos foram assim). Para ver a versão de volta na prévia de qualquer pessoa, mande `"volta": true` junto com `"previa"`.
+
+**Não recebem:** quem nunca usou o app, quem ainda não foi liberado (convite ou pedido de acesso pendente) e quem está há 4 semanas ou mais sem abrir o app. Quem volta a abrir o app volta a receber na sexta seguinte. A prévia (abaixo) vai sempre, para testar.
 
 O envio sai do seu Gmail, pela Edge Function `supabase/functions/resumo-semanal/index.ts`, e um agendamento do próprio Supabase a dispara.
 

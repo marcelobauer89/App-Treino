@@ -299,5 +299,55 @@ ok(res.status === 400, 'id inválido: 400');
   ok(c2.length === 1 && c2[0].para === 'sumiu@x.com', 'prévia vai mesmo para quem sumiu');
 }
 
+// ---------- "E aí, sumiu?" (quem está no card Quem sumiu do painel) ----------
+{
+  const hoje = '2026-10-23'; // sexta
+  const Z = '88888888-8888-8888-8888-888888888888';
+  const base = { id: Z, nome: 'Bia Souza', email: 'bia@x.com', dias_jiu: [], emails_resumo: true, acessos: 9, liberado: true,
+    semana: [[], ['t1'], [], [], ['jiu'], ['t2'], []], treinos: { 1: { nome: 'Treino A', subtitulo: 'Peito' }, 2: { nome: 'Treino B', subtitulo: 'Pernas' } } };
+  const ck = (t, d) => ({ usuario_id: Z, tipo: t, inicio: `${d}T19:00:00` });
+  const hist = [ck('t1', '2026-09-28'), ck('jiu', '2026-10-01'), ck('t2', '2026-10-03'), ck('t1', '2026-10-06'), ck('jiu', '2026-10-09'), ck('t2', '2026-10-14')];
+  const bia = { ...base, ultimo_acesso: '2026-10-14T22:00:00Z' }; // 14/10 19h em Brasília: 9 dias sem usar
+  ok(F.sumiu(bia, hist, hoje), 'sem usar há 9 dias (último uso nas últimas 4 semanas): sumiu');
+  ok(!F.sumiu({ ...bia, ultimo_acesso: '2026-10-21T12:00:00Z' }, hist, hoje), 'abriu o app há 2 dias (sem check-in): não sumiu');
+  ok(!F.sumiu(bia, [...hist, ck('t1', '2026-10-18')], hoje), 'check-in há 5 dias: não sumiu');
+  ok(!F.sumiu({ ...bia, ultimo_acesso: '2026-09-20T12:00:00Z' }, [], hoje), 'sem usar há mais de 4 semanas: fora (já não recebe o resumo)');
+  ok(F.sumiu({ ...bia, ultimo_acesso: '2026-10-16T12:00:00Z' }, [], hoje) && !F.sumiu({ ...bia, ultimo_acesso: '2026-10-17T12:00:00Z' }, [], hoje), 'limite: 7 dias sem usar sumiu; 6 não');
+  const v = F.montarVolta(bia, hist, [{ usuario_id: Z, dados: { exercicio: 'Supino' }, criado_em: '' }, { usuario_id: Z, dados: { exercicio: 'Agachamento' }, criado_em: '' }], hoje);
+  ok(v.nome === 'Bia' && v.diasSemUsar === 9 && v.treinos === 6 && v.porSemana === 2, 'dados: 9 dias, 6 treinos no mês, 2 por semana antes', JSON.stringify(v));
+  ok(v.ultimo && v.ultimo.nome === 'Treino B (Pernas)' && v.ultimo.dias === 9, 'último treino com o nome montado pela pessoa', JSON.stringify(v.ultimo));
+  ok(v.hoje.map((t) => t.nome).join() === 'Treino B (Pernas)' && v.recordes.join() === 'Supino,Agachamento', 'treino de hoje (sexta) e recordes do mês');
+  const ev = F.montarEmailVolta(v, { app: 'https://app.test/', sair: 'https://fn.test/?sair=x&t=y', pixel: 'https://fn.test/p' });
+  ok(ev.assunto === 'E aí, Bia, sumiu? Bora voltar hoje 💪', 'assunto do e-mail de volta', ev.assunto);
+  ok(ev.html.includes('E aí, Bia, sumiu? 👀') && ev.html.includes('Faz 9 dias que você não aparece no app') && ev.html.includes('Que tal voltar hoje?')
+    && ev.html.includes('6 treinos, 2 por semana') && ev.html.includes('Seu último treino foi <b>Treino B (Pernas)</b>, há 9 dias')
+    && ev.html.includes('Você bateu 2 recordes neste mês') && ev.html.includes('Hoje na sua semana') && ev.html.includes('Voltar a treinar hoje →')
+    && ev.html.includes('Não quero mais receber') && ev.html.includes('https://fn.test/p'), 'HTML com os dados de incentivo, o botão e o descadastro');
+  ok(ev.texto.includes('Faz 9 dias') && ev.texto.includes('Recordes neste mês: Supino, Agachamento') && ev.texto.includes('https://fn.test/?sair=x&t=y'), 'versão texto');
+  // Sem nenhum treino no mês (só abriu o app): mensagem para o primeiro check-in.
+  const v0 = F.montarVolta({ ...bia, semana: null, nome: '' }, [], [], hoje);
+  const e0 = F.montarEmailVolta(v0, { app: 'a', sair: 's' });
+  ok(e0.assunto === 'E aí, sumiu? Bora voltar hoje 💪' && e0.html.includes('primeiro check-in hoje') && !e0.html.includes('Seu último treino') && !e0.html.includes('Hoje na sua semana'), 'sem treinos no mês e sem nome');
+  const fs2 = await import('node:fs');
+  fs2.writeFileSync('previa-volta.html', ev.html);
+
+  // Envio: quem está no card recebe a versão de volta; os outros, o resumo de sempre.
+  const dbV = novoBanco();
+  dbV.tabelas.perfis.push(bia);
+  dbV.tabelas.checkins.push(...hist);
+  dbV.tabelas.eventos.push({ usuario_id: Z, tipo: 'recorde', dados: { exercicio: 'Supino' }, criado_em: '2026-10-02T10:00:00-03:00' });
+  const { h: hV, caixa: cV } = criar(dbV);
+  let rv = await (await hV(post({ simular: true }))).json();
+  const simBia = rv.simulacao.find((x) => x.email === 'bia@x.com');
+  ok(simBia && simBia.versao === 'volta' && !rv.simulacao.find((x) => x.email === 'ana@x.com').versao, 'simular marca quem recebe a versão de volta', JSON.stringify(simBia));
+  rv = await (await hV(post({ enviar: true }))).json();
+  const mB = cV.find((m) => m.para === 'bia@x.com'), mA = cV.find((m) => m.para === 'ana@x.com');
+  ok(mB && mB.assunto.startsWith('E aí, Bia, sumiu?') && mB.html.includes('Você bateu 1 recorde neste mês') && mA && mA.assunto.startsWith('Semana nova') && rv.voltas === 1, 'envio: Bia recebe "E aí, sumiu?", Ana o resumo', `${mB && mB.assunto} | ${mA && mA.assunto} | ${rv.voltas}`);
+  ok(dbV.tabelas.emails_enviados.some((e) => e.usuario_id === Z && e.tipo === 'resumo_semanal' && e.referencia === '2026-10-22'), 'registrado como o resumo da semana (não repete)');
+  const { h: hP, caixa: cP } = criar(novoBanco());
+  await hP(post({ previa: 'ana@x.com', volta: true }));
+  ok(cP.length === 1 && cP[0].assunto === 'E aí, Ana, sumiu? Bora voltar hoje 💪', 'prévia da versão de volta para qualquer pessoa (volta: true)', cP[0] && cP[0].assunto);
+}
+
 console.log(fails ? `\n${fails} FALHA(S)` : '\nTUDO OK');
 process.exit(fails ? 1 : 0);

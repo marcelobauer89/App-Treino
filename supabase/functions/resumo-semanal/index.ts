@@ -68,7 +68,7 @@ export function periodo(agora: Date) {
 }
 
 // ---------- Cálculo do resumo (mesma regra do painel de monitoramento) ----------
-type Perfil = { id: string; nome: string; email: string; semana: unknown; dias_jiu: number[] | null; liberado?: boolean | null; ultimo_acesso?: string | null };
+type Perfil = { id: string; nome: string; email: string; semana: unknown; dias_jiu: number[] | null; liberado?: boolean | null; ultimo_acesso?: string | null; treinos?: unknown };
 
 // Quem não recebe o resumo e por quê: não liberado (convite ou pedido pendente) ou 4 semanas sem abrir o app.
 export const SEMANAS_SEM_ABRIR = 4;
@@ -123,6 +123,49 @@ export function montarResumo(u: Perfil, checkins: Checkin[], recordes: Recorde[]
   };
 }
 export type Resumo = ReturnType<typeof montarResumo>;
+
+// ---------- "E aí, sumiu?": a versão do e-mail para quem parou de usar o app ----------
+// Mesma regra do card "Quem sumiu" do painel: usou o app nas últimas 4 semanas, mas não nos últimos 7 dias
+// (contando hoje). Uso = abrir o app (perfis.ultimo_acesso) ou fazer check-in. Quem está há 4 semanas ou mais
+// sem abrir já fica de fora do resumo (motivoParaNaoEnviar).
+const diasEntre = (a: string, b: string) => Math.round((Date.parse(`${b}T12:00:00Z`) - Date.parse(`${a}T12:00:00Z`)) / 864e5);
+export function ultimoUso(u: Perfil, checkins: Checkin[], hoje: string): string | null {
+  const dias = checkins.filter((c) => c.usuario_id === u.id).map((c) => String(c.inicio).slice(0, 10)).filter((d) => d <= hoje);
+  if (u.ultimo_acesso) dias.push(hojeEm(new Date(u.ultimo_acesso)));
+  return dias.length ? dias.sort().pop()! : null;
+}
+export function sumiu(u: Perfil, checkins: Checkin[], hoje: string): boolean {
+  const d = ultimoUso(u, checkins, hoje);
+  return !!d && d < somarDias(hoje, -6) && d >= somarDias(hoje, -27);
+}
+// Nome de um tipo de check-in: o do treino montado pela pessoa (perfis.treinos) ou o padrão.
+function nomeDoTipo(u: Perfil, t: string): string {
+  const n = /^t([1-6])$/.exec(t);
+  const proprio = n && u.treinos && typeof u.treinos === 'object' ? (u.treinos as Record<string, { nome?: string; subtitulo?: string }>)[n[1]] : null;
+  if (proprio && proprio.nome) return `${String(proprio.nome).slice(0, 40)}${proprio.subtitulo ? ` (${String(proprio.subtitulo).slice(0, 60)})` : ''}`;
+  return (TIPOS[t] || TIPOS.t1).nome;
+}
+export function montarVolta(u: Perfil, checkins: Checkin[], recordes: Recorde[], hoje: string) {
+  const dia = (c: Checkin) => String(c.inicio).slice(0, 10);
+  const ini = somarDias(hoje, -28);
+  const meus = checkins.filter((c) => c.usuario_id === u.id && dia(c) >= ini && dia(c) < hoje).sort((a, b) => (a.inicio < b.inicio ? -1 : 1));
+  const uso = ultimoUso(u, checkins, hoje) || somarDias(hoje, -7);
+  const ultimo = meus[meus.length - 1];
+  const semana = Array.isArray(u.semana) && u.semana.length === 7 ? (u.semana as string[][]) : null;
+  const deHoje = semana ? (semana[diaDaSemana(hoje)] || []).filter((t) => TIPOS[t]) : [];
+  return {
+    nome: (u.nome || '').trim().split(/\s+/)[0] || '',
+    diasSemUsar: diasEntre(uso, hoje),
+    treinos: meus.length,
+    // Ritmo antes de sumir: treinos por semana nas 3 semanas entre 28 e 8 dias atrás (como no painel).
+    porSemana: Math.round((meus.filter((c) => dia(c) < somarDias(hoje, -7)).length / 3) * 10) / 10,
+    ultimo: ultimo ? { nome: nomeDoTipo(u, ultimo.tipo), tipo: ultimo.tipo, dias: diasEntre(dia(ultimo), hoje) } : null,
+    recordes: [...new Set(recordes.filter((r) => r.usuario_id === u.id && r.dados && r.dados.exercicio).map((r) => String(r.dados!.exercicio)))],
+    hoje: deHoje.map((t) => ({ tipo: t, nome: nomeDoTipo(u, t) })),
+    planejadas: planejadasPorSemana(u),
+  };
+}
+export type Volta = ReturnType<typeof montarVolta>;
 
 // ---------- E-mail (HTML com estilos inline, em tabelas, e versão em texto) ----------
 const esc = (s: unknown) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
@@ -281,6 +324,86 @@ export function montarEmail(r: Resumo, links: { app: string; sair: string; pixel
   return { assunto: assunto(r), html, texto };
 }
 
+export function assuntoVolta(v: Volta): string {
+  return `E aí${v.nome ? `, ${v.nome}` : ''}, sumiu? Bora voltar hoje 💪`;
+}
+export function montarEmailVolta(v: Volta, links: { app: string; sair: string; pixel?: string }) {
+  const fonte = "font-family:Archivo,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
+  const LARANJA = '#c2410c', LARANJA_SUAVE = '#fff1e8';
+  const fmt = (n: number) => String(n).replace('.', ',');
+  const numero = (valor: string, rotulo: string) => `<td align="center" style="padding:0 4px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate"><tr>
+    <td align="center" style="border:1px solid ${COR.fio};border-top:4px solid ${LARANJA};border-radius:10px;padding:12px 4px">
+      <div style="font-size:24px;line-height:1.1;font-weight:800;color:${COR.tinta}">${valor}</div>
+      <div style="font-size:12px;color:${COR.tinta2}">${rotulo}</div></td></tr></table></td>`;
+  const numeros = [
+    v.treinos ? numero(String(v.treinos), v.treinos === 1 ? 'treino no mês' : 'treinos no mês') : '',
+    v.porSemana ? numero(`${fmt(v.porSemana)}×`, 'por semana antes') : '',
+    numero(String(v.diasSemUsar), 'dias longe do app'),
+  ].filter(Boolean);
+  const incentivo = v.treinos
+    ? `Nas últimas 4 semanas você fez ${plural(v.treinos, 'treino', 'treinos')}${v.porSemana ? `, ${fmt(v.porSemana)} por semana` : ''}. Esse ritmo é seu, e quanto antes voltar, mais fácil retomar.`
+    : 'Você já deu o primeiro passo abrindo o app. Que tal fazer o primeiro check-in hoje?';
+  const ultimo = v.ultimo ? `<p style="margin:16px 0 0;font-size:15px;line-height:1.5;color:${COR.tinta}">🕒 Seu último treino foi <b>${esc(v.ultimo.nome)}</b>, há ${plural(v.ultimo.dias, 'dia', 'dias')}.</p>` : '';
+  const recordes = v.recordes.length ? `
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:16px;border-collapse:separate"><tr>
+      <td style="background:${COR.ambarSuave};border-radius:12px;padding:14px 16px">
+        <p style="margin:0 0 4px;font-size:15px;font-weight:800;color:${COR.ambar}">🏆 ${v.recordes.length === 1 ? 'Você bateu 1 recorde' : `Você bateu ${v.recordes.length} recordes`} neste mês</p>
+        <p style="margin:0;font-size:14px;color:${COR.tinta}">${esc(v.recordes.slice(0, 4).join(', '))}${v.recordes.length > 4 ? ` e mais ${v.recordes.length - 4}` : ''}. Não deixa a carga cair!</p>
+      </td></tr></table>` : '';
+  const hoje = v.hoje.length ? `
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:16px;border-collapse:separate"><tr>
+      <td style="background:${COR.azulSuave};border-radius:12px;padding:14px 16px">
+        <p style="margin:0 0 6px;font-size:12px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:${COR.tinta2}">Hoje na sua semana</p>
+        ${v.hoje.map((t) => `<p style="margin:4px 0 0;font-size:16px;font-weight:700;color:${COR.tinta}"><span style="display:inline-block;width:22px;height:22px;line-height:22px;border-radius:6px;background:${corDoTipo(t.tipo)};color:${COR.selo};font-size:12px;font-weight:800;text-align:center;margin-right:8px">${esc((TIPOS[t.tipo] || TIPOS.t1).selo)}</span>${esc(t.nome)}</p>`).join('')}
+      </td></tr></table>` : '';
+  const html = `<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light"><meta name="supported-color-schemes" content="light"><title>${esc(assuntoVolta(v))}</title></head>
+<body style="margin:0;padding:0;background:${COR.fundo};${fonte}">
+<div style="display:none;max-height:0;overflow:hidden">${esc(`Faz ${plural(v.diasSemUsar, 'dia', 'dias')} que você não aparece. Um treino hoje já coloca você de volta no ritmo.`)}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${COR.fundo};border-collapse:collapse"><tr><td align="center" style="padding:20px 10px">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;border-collapse:separate">
+    <tr><td style="background:${LARANJA};border-radius:16px 16px 0 0;padding:22px 22px 20px">
+      <p style="margin:0;font-size:12px;font-weight:800;letter-spacing:2px;color:#ffd9c2">GESTÃO DE TREINOS</p>
+      <p style="margin:6px 0 0;font-size:26px;line-height:1.2;font-weight:800;color:#ffffff">E aí${v.nome ? `, ${esc(v.nome)}` : ''}, sumiu? 👀</p>
+      <p style="margin:4px 0 0;font-size:15px;color:#ffe6d6">Faz ${plural(v.diasSemUsar, 'dia', 'dias')} que você não aparece no app.</p>
+    </td></tr>
+    <tr><td style="background:#ffffff;border:1px solid ${COR.fio};border-top:0;border-radius:0 0 16px 16px;padding:22px 22px 26px">
+      <p style="margin:0;font-size:18px;line-height:1.4;font-weight:700;color:${COR.tinta}">Que tal voltar hoje? 💪</p>
+      <p style="margin:8px 0 0;font-size:15px;line-height:1.55;color:${COR.tinta2}">${esc(incentivo)}</p>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:18px;border-collapse:collapse;table-layout:fixed;margin-left:-4px"><tr>${numeros.join('')}</tr></table>
+      ${ultimo}${recordes}${hoje}
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:16px;border-collapse:separate"><tr>
+        <td style="background:${LARANJA_SUAVE};border-radius:12px;padding:14px 16px;font-size:14px;line-height:1.5;color:${COR.tinta}">
+          <b>Dica para voltar:</b> não precisa compensar o tempo parado. Um treino leve hoje e o check-in já colocam você de volta na semana.
+        </td></tr></table>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:24px;border-collapse:separate"><tr>
+        <td align="center" style="background:${LARANJA};border-radius:12px"><a href="${esc(links.app)}" style="display:block;padding:16px 20px;font-size:16px;font-weight:800;color:#ffffff;text-decoration:none">Voltar a treinar hoje →</a></td>
+      </tr></table>
+    </td></tr>
+    <tr><td style="padding:16px 6px 0;font-size:12px;line-height:1.5;color:${COR.tinta2};text-align:center">
+      Você recebe este e-mail porque o resumo semanal está ligado no app (Você → Notificações).
+      Registramos se ele foi aberto e se o botão foi tocado, para melhorar o resumo.<br>
+      <a href="${esc(links.sair)}" style="color:${COR.azulTinta}">Não quero mais receber</a>
+      ${links.pixel ? `<img src="${esc(links.pixel)}" width="1" height="1" alt="" style="display:block;width:1px;height:1px;border:0;margin:0 auto">` : ''}
+    </td></tr>
+  </table>
+</td></tr></table>
+</body></html>`;
+  const texto = [
+    `E aí${v.nome ? `, ${v.nome}` : ''}, sumiu?`, '',
+    `Faz ${plural(v.diasSemUsar, 'dia', 'dias')} que você não aparece no app. Que tal voltar hoje?`, '',
+    incentivo,
+    v.ultimo ? `Seu último treino foi ${v.ultimo.nome}, há ${plural(v.ultimo.dias, 'dia', 'dias')}.` : '',
+    v.recordes.length ? `Recordes neste mês: ${v.recordes.join(', ')}. Não deixa a carga cair!` : '',
+    v.hoje.length ? `Hoje na sua semana: ${v.hoje.map((t) => t.nome).join(', ')}` : '',
+    'Dica: não precisa compensar o tempo parado. Um treino leve hoje e o check-in já colocam você de volta na semana.',
+    '', `Voltar a treinar: ${links.app}`, '',
+    `Não quer mais receber o resumo semanal? ${links.sair}`,
+  ].filter((l, i, a) => l !== '' || a[i - 1] !== '').join('\n');
+  return { assunto: assuntoVolta(v), html, texto };
+}
+
 // ---------- Assinatura do link de descadastro (HMAC-SHA256 do id com o RESUMO_TOKEN) ----------
 export async function assinar(id: string, segredo: string): Promise<string> {
   const chave = await crypto.subtle.importKey('raw', new TextEncoder().encode(segredo), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
@@ -423,28 +546,33 @@ export function criarHandler({ db, enviar, env, agora = () => new Date() }: Deps
       previa: String(q.get('previa') || lido.previa || '').trim().toLowerCase(),
       simular: sim(q.get('simular')) || sim(lido.simular),
       enviar: sim(q.get('enviar')) || sim(lido.enviar),
+      // Prévia da versão "E aí, sumiu?" para qualquer pessoa (para conferir o e-mail).
+      volta: sim(q.get('volta')) || sim(lido.volta),
     };
     const modo = corpo.previa ? 'previa' : corpo.simular ? 'simular' : corpo.enviar ? 'envio' : '';
     if (!modo) return json({ erro: 'diga o que fazer: enviar, previa ou simular', recebido: texto.slice(0, 200) }, 400);
 
     const p = periodo(agora());
-    const perfisQ = db.from('perfis').select('id, nome, email, semana, dias_jiu, emails_resumo, acessos, liberado, ultimo_acesso');
+    const perfisQ = db.from('perfis').select('id, nome, email, semana, dias_jiu, emails_resumo, acessos, liberado, ultimo_acesso, treinos');
     const { data: perfis, error: e1 } = corpo.previa
       ? await perfisQ.ilike('email', corpo.previa.replace(/[\\%_]/g, '\\$&')) // sem diferenciar maiúsculas
       : await perfisQ.eq('emails_resumo', true).gt('acessos', 0);
     if (e1) return json({ erro: e1.message }, 500);
     if (corpo.previa && !perfis.length) return json({ erro: 'e-mail não encontrado entre os usuários' }, 404);
 
+    // Check-ins das últimas 4 semanas: o resumo usa as 2 últimas; o "E aí, sumiu?", as 4.
     const { data: checkins, error: e2 } = await db.from('checkins').select('usuario_id, tipo, inicio')
-      .gte('inicio', `${p.antIni}T00:00:00`).lt('inicio', `${p.hoje}T00:00:00`);
+      .gte('inicio', `${somarDias(p.hoje, -28)}T00:00:00`).lt('inicio', `${p.hoje}T00:00:00`);
     const { data: recordes, error: e3 } = await db.from('eventos').select('usuario_id, dados, criado_em').eq('tipo', 'recorde')
       .gte('criado_em', `${p.ini}T00:00:00-03:00`).lt('criado_em', `${p.hoje}T00:00:00-03:00`);
+    const { data: recordes28, error: e5 } = await db.from('eventos').select('usuario_id, dados, criado_em').eq('tipo', 'recorde')
+      .gte('criado_em', `${somarDias(p.hoje, -28)}T00:00:00-03:00`).lt('criado_em', `${p.hoje}T00:00:00-03:00`);
     const { data: jaEnviados, error: e4 } = await db.from('emails_enviados').select('usuario_id').eq('tipo', TIPO).eq('referencia', p.fim);
-    const erro = e2 || e3 || e4;
+    const erro = e2 || e3 || e4 || e5;
     if (erro) return json({ erro: erro.message }, 500);
     const enviados = new Set((jaEnviados || []).map((x: { usuario_id: string }) => x.usuario_id));
 
-    const resultado = { modo, periodo: { ini: p.ini, fim: p.fim }, enviados: 0, pulados: 0, ignorados: {} as Record<string, number>, falhas: [] as { email: string; erro: string }[], simulacao: [] as unknown[] };
+    const resultado = { modo, periodo: { ini: p.ini, fim: p.fim }, enviados: 0, voltas: 0, pulados: 0, ignorados: {} as Record<string, number>, falhas: [] as { email: string; erro: string }[], simulacao: [] as unknown[] };
     for (const u of perfis as Perfil[]) {
       if (!u.email || (!corpo.previa && enviados.has(u.id))) { resultado.pulados += 1; continue; }
       const motivo = corpo.previa ? null : motivoParaNaoEnviar(u, p.hoje);
@@ -453,13 +581,15 @@ export function criarHandler({ db, enviar, env, agora = () => new Date() }: Deps
         if (corpo.simular) resultado.simulacao.push({ email: u.email, fora: motivo });
         continue;
       }
+      const volta = (corpo.previa && corpo.volta) || sumiu(u, checkins || [], p.hoje);
       const r = montarResumo(u, checkins || [], recordes || [], p);
       const sair = `${env.FUNCAO_URL}?sair=${u.id}&t=${await assinar(u.id, env.RESUMO_TOKEN)}`;
       // Na prévia não há envio registrado, então abertura e clique não contam (referência "previa").
       const ref = corpo.previa ? 'previa' : p.fim;
       const rastro = async (acao: string) => `${env.FUNCAO_URL}?${acao}=${u.id}&ref=${ref}&t=${await assinar(`${acao}:${u.id}:${ref}`, env.RESUMO_TOKEN)}`;
-      const email = montarEmail(r, { app: await rastro('clique'), sair, pixel: await rastro('aberto') });
-      if (corpo.simular) { resultado.simulacao.push({ email: u.email, assunto: email.assunto, treinos: r.total, aderencia: Math.round(r.aderencia * 100) }); continue; }
+      const lnk = { app: await rastro('clique'), sair, pixel: await rastro('aberto') };
+      const email = volta ? montarEmailVolta(montarVolta(u, checkins || [], recordes28 || [], p.hoje), lnk) : montarEmail(r, lnk);
+      if (corpo.simular) { resultado.simulacao.push({ email: u.email, assunto: email.assunto, treinos: r.total, aderencia: Math.round(r.aderencia * 100), ...(volta ? { versao: 'volta' } : {}) }); continue; }
       try {
         await enviar({ para: u.email, ...email, sair });
         if (!corpo.previa) {
@@ -467,6 +597,7 @@ export function criarHandler({ db, enviar, env, agora = () => new Date() }: Deps
           if (error) console.warn('registro do envio falhou', u.id, error.message);
         }
         resultado.enviados += 1;
+        if (volta) resultado.voltas += 1;
       } catch (e) {
         resultado.falhas.push({ email: u.email, erro: String((e as Error)?.message || e) });
       }
