@@ -121,7 +121,7 @@ const ADM = {
       await p.click('[data-alternar="g1"]');
       ok(await p.locator('#g1-tabela').isVisible() && await p.locator('#g1').isHidden(), 'ver tabela');
       const linha20 = await p.locator('#g1-tabela tr', { hasText: '20' }).first().innerText();
-      ok(/1\s+0\s+0\s+0\s+0\s+1/.test(linha20.replace(/\t/g, ' ')), 'tabela: 20/out 1 musc', linha20);
+      ok(/1\s+0\s+0\s+0\s+0\s+0\s+0\s+1/.test(linha20.replace(/\t/g, ' ')), 'tabela: 20/out 1 musc', linha20);
       await p.click('[data-alternar="g1"]');
       // situações
       await p.click('#tab-usuarios'); 

@@ -20,7 +20,7 @@ const abrir = (b, extra, op = {}) => H.novaPagina(b, { viewport: op.viewport || 
   // Dados: todo exercício das jornadas existe na biblioteca, sem repetir no treino, e cabe nas regras do banco.
   let p = await abrir(b, { perfis: [{ ...NOVA, novidade_oculta: '2026-10-01T00:00:00Z' }], checkins: [{ id: 'c0', usuario_id: 'u1', tipo: 'jiu', inicio: '2026-10-01T19:00:00', fim: '2026-10-01T20:00:00', sem_horario: false, obs: '', retroativo: false, series: {} }] });
   const html = fs.readFileSync(H.RAIZ + '/index.html', 'utf8');
-  const bloco = html.slice(html.indexOf('const JORNADAS = ['), html.indexOf('const jornadaPorId'));
+  const bloco = html.slice(html.indexOf('const JORNADAS_APP = ['), html.indexOf('const jornadaPorIdApp'));
   const nomes = [...bloco.matchAll(/exJ\('([^']+)'/g)].map((m) => m[1]);
   // Os nomes da biblioteca saem do próprio HTML (PLANO_PADRAO + EXERCICIOS_EXTRAS).
   const nomesBib = new Set([...html.slice(html.indexOf('const PLANO_PADRAO'), html.indexOf('const chaveExercicio')).matchAll(/\{ nome: '([^']+)', grupo:/g)].map((m) => m[1]));

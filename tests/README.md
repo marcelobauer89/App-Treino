@@ -27,9 +27,10 @@ Para o banco no computador: `tests/sql/rodar.sh` (com `PGHOST`, `PGPORT`, `PGUSE
 - `apoio/harness.cjs`: abre o app com o Supabase falso, as fontes locais e os dados do teste.
 - `apoio/mock-supabase.js`: o Supabase falso, guardado no `localStorage` da página. Simula as tabelas, as funções do banco, a falta de colunas ou funções (schema antigo), as falhas de rede e o limite de 1.000 linhas por chamada (`maxLinhas`).
 - `apoio/videos-exemplo.json`: ids de vídeo **inventados**. A lista real fica só no banco (`videos_exercicios`) e nunca entra aqui.
+- `H.catalogo()` (em `apoio/harness.cjs`): o catálogo do banco (exercícios e objetivos) igual à carga inicial do schema.sql, para pôr no banco falso. Sem ele, o app usa a lista que vem no index.html, como antes de rodar o SQL.
 - `apoio/plano-padrao.txt`: cópia do plano pronto, para garantir que ele não muda sem querer.
 - `edge/`: testes do resumo semanal (`supabase/functions/resumo-semanal/index.ts`), sem servidor e sem enviar e-mail.
-- `sql/`: aplica o `supabase/schema.sql` duas vezes num Postgres comum (com o mínimo do Supabase em `supabase-falso.sql`) e confere as regras de acesso como o app usa o banco (`verificacoes.sql`): o que cada pessoa pode salvar, o que só o administrador faz, a lista de vídeos fechada e os tipos de check-in aceitos.
+- `sql/`: aplica o `supabase/schema.sql` duas vezes num Postgres comum (com o mínimo do Supabase em `supabase-falso.sql`) e confere as regras de acesso como o app usa o banco (`verificacoes.sql`): o que cada pessoa pode salvar, o que só o administrador faz, a lista de vídeos fechada, os tipos de check-in aceitos e o catálogo (só o administrador muda; renomear guarda o nome antigo; rodar o schema.sql de novo não mexe nos treinos e nas cargas das contas).
 
 ## Regras
 

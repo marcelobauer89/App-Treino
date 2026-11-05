@@ -70,6 +70,8 @@
     --bike: #1baf7a;
     --muay: #eda100;
     --surf: #c84aa4;
+    --futebol: #a2bc75;
+    --futvolei: #8494d6;
     --selo-tinta: #0b0d10;
     --display: "Archivo", "Arial Narrow", system-ui, sans-serif;
     --texto: "Archivo", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -85,7 +87,7 @@
       --feito-suave: #12301f; --feito-tinta: #6ee7a0;
       --recorde: #fbbf24; --recorde-suave: #33270a; --recorde-tinta: #fcd34d;
       --faixa: #000000; --fita: #f2f4f7; --fita-vazia: #2c2f35; --erro: #ff6b6b; --sobre-erro: #0b0d10;
-      --musc: #3987e5; --jiu: #d95926; --bike: #199e70; --muay: #c98500; --surf: #c84aa4;
+      --musc: #3987e5; --jiu: #d95926; --bike: #199e70; --muay: #c98500; --surf: #c84aa4; --futebol: #8f9a4f; --futvolei: #7679bb;
       color-scheme: dark;
     }
   }
@@ -95,7 +97,7 @@
     --feito-suave: #12301f; --feito-tinta: #6ee7a0;
     --recorde: #fbbf24; --recorde-suave: #33270a; --recorde-tinta: #fcd34d;
     --faixa: #000000; --fita: #f2f4f7; --fita-vazia: #2c2f35; --erro: #ff6b6b; --sobre-erro: #0b0d10;
-    --musc: #3987e5; --jiu: #d95926; --bike: #199e70; --muay: #c98500; --surf: #c84aa4;
+    --musc: #3987e5; --jiu: #d95926; --bike: #199e70; --muay: #c98500; --surf: #c84aa4; --futebol: #8f9a4f; --futvolei: #7679bb;
     color-scheme: dark;
   }
 
@@ -324,6 +326,8 @@
   .selo.bike { background: var(--bike); }
   .selo.muay { background: var(--muay); }
   .selo.surf { background: var(--surf); }
+  .selo.futebol { background: var(--futebol); }
+  .selo.futvolei { background: var(--futvolei); }
   .selo.grande { width: 30px; height: 30px; border-radius: 8px; font-size: 16px; }
 
   /* Navegação inferior e barra de treino em andamento */
@@ -671,6 +675,8 @@
   .seg i.on.bike { background: var(--bike); }
   .seg i.on.muay { background: var(--muay); }
   .seg i.on.surf { background: var(--surf); }
+  .seg i.on.futebol { background: var(--futebol); }
+  .seg i.on.futvolei { background: var(--futvolei); }
   .meta-valor, .barra-valor { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
   .barra { display: grid; grid-template-columns: 112px minmax(0, 1fr) 28px; gap: 12px; align-items: center; font-size: 15px; }
   .barra-trilho { height: 10px; border-radius: 5px; background: var(--gi); overflow: hidden; }
@@ -680,6 +686,8 @@
   .barra-trilho i.bike { background: var(--bike); }
   .barra-trilho i.muay { background: var(--muay); }
   .barra-trilho i.surf { background: var(--surf); }
+  .barra-trilho i.futebol { background: var(--futebol); }
+  .barra-trilho i.futvolei { background: var(--futvolei); }
 
   .cal { padding: 12px; background: var(--papel); border: 1px solid var(--fio); border-radius: 14px; }
   .cal-topo { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
@@ -1241,7 +1249,7 @@
     --tinta: #f4f6fb; --faixa: #000000; --fita: #f2f4f7; --fita-vazia: #2c2f35;
     --erro: #ff6b6b; --sobre-erro: #0b0d10; --feito-suave: #12301f; --feito-tinta: #6ee7a0;
     --recorde: #fbbf24; --recorde-suave: #33270a; --recorde-tinta: #fcd34d; --selo-tinta: #07080c;
-    --muay: #ffc23d; --surf: #ff5cc8;
+    --muay: #ffc23d; --surf: #ff5cc8; --futebol: #7da667; --futvolei: #9260da;
     --sombra: 0 14px 34px rgba(0, 0, 0, .55), 0 2px 6px rgba(0, 0, 0, .4), inset 0 1px 0 rgba(255, 255, 255, .05);
     color-scheme: dark;
   }
@@ -1313,7 +1321,7 @@
     --gi: #f1ecff; --papel: #ffffff; --fio: #e6e0f2; --tinta: #1e1036; --tinta-2: #554668;
     --tatame: #6d28d9; --tatame-forte: #5b21b6; --tatame-tinta: #6d28d9; --tatame-suave: #ede9fe; --sobre-tatame: #ffffff;
     --checkin: #22d3ee; --checkin-forte: #06b6d4; --sobre-checkin: #082f49;
-    --musc: #2563eb; --jiu: #c2410c; --bike: #047857; --muay: #a16207; --surf: #be185d;
+    --musc: #2563eb; --jiu: #c2410c; --bike: #047857; --muay: #a16207; --surf: #be185d; --futebol: #4d7c0f; --futvolei: #0e7490;
     --selo-tinta: #ffffff;
     --erro: #c62828; --sobre-erro: #ffffff; --feito-suave: #e7f8ee; --feito-tinta: #166534;
     --recorde: #b45309; --recorde-suave: #fef3c7; --recorde-tinta: #92400e; --fita: #1e1036; --fita-vazia: #ddd6ee;
@@ -1418,11 +1426,15 @@
   html[data-estilo] :is(.seg i.on.bike, .barra-trilho i.bike) { color: var(--bike); }
   html[data-estilo] :is(.seg i.on.muay, .barra-trilho i.muay) { color: var(--muay); }
   html[data-estilo] :is(.seg i.on.surf, .barra-trilho i.surf) { color: var(--surf); }
+  html[data-estilo] :is(.seg i.on.futebol, .barra-trilho i.futebol) { color: var(--futebol); }
+  html[data-estilo] :is(.seg i.on.futvolei, .barra-trilho i.futvolei) { color: var(--futvolei); }
   html[data-estilo] .selo.musc { box-shadow: 0 0 8px var(--musc); }
   html[data-estilo] .selo.jiu { box-shadow: 0 0 8px var(--jiu); }
   html[data-estilo] .selo.bike { box-shadow: 0 0 8px var(--bike); }
   html[data-estilo] .selo.muay { box-shadow: 0 0 8px var(--muay); }
   html[data-estilo] .selo.surf { box-shadow: 0 0 8px var(--surf); }
+  html[data-estilo] .selo.futebol { box-shadow: 0 0 8px var(--futebol); }
+  html[data-estilo] .selo.futvolei { box-shadow: 0 0 8px var(--futvolei); }
 
   /* Escolha do estilo: uma amostra de cada (fundo, destaque e check-in) */
   .estilos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
@@ -1543,7 +1555,7 @@
         <li><span class="ponteira" data-nivel="1" aria-hidden="true"><i></i><i></i><i></i></span>Baixa ou secundária</li>
       </ul>
       <p>PSE é a percepção subjetiva de esforço; o 10 fica reservado ao tatame. Use a carga que respeite a técnica e a recuperação.</p>
-      <p>A semana se monta em Você: arraste os treinos, o Jiu Jitsu, o muay thai, o surf e o cardio para os dias (até 2 por dia). O padrão é Treino 2 na segunda, Treino 1 na quarta, Treino 3 na sexta, jiu na terça e na quinta e cardio no sábado.</p>
+      <p>A semana se monta em Você: arraste os treinos, o Jiu Jitsu, o muay thai, o surf, o futebol, o futvôlei e o cardio para os dias (até 2 por dia). O padrão é Treino 2 na segunda, Treino 1 na quarta, Treino 3 na sexta, jiu na terça e na quinta e cardio no sábado.</p>
       <p>Check-ins e cargas ficam salvos na sua conta e aparecem em qualquer aparelho em que você entrar.</p>
       <p>Adaptação prática do PDF enviado. Não substitui avaliação de um profissional de educação física ou nutrição, especialmente se houver dor ou lesão.</p>
     </footer>
@@ -1579,6 +1591,8 @@
         <li><span class="selo jiu" aria-hidden="true">J</span><span>Jiu Jitsu</span></li>
         <li><span class="selo muay" aria-hidden="true">M</span><span>Muay Thai</span></li>
         <li><span class="selo surf" aria-hidden="true">S</span><span>Surf</span></li>
+        <li><span class="selo futebol" aria-hidden="true">F</span><span>Futebol</span></li>
+        <li><span class="selo futvolei" aria-hidden="true">V</span><span>Futvôlei</span></li>
         <li><span class="selo bike" aria-hidden="true">C</span><span>Cardio</span></li>
       </ul>
     </div>
@@ -1866,6 +1880,9 @@
   const SUPABASE_URL = window.AMBIENTE.url;
   const SUPABASE_KEY = window.AMBIENTE.chave;
   const configurado = /^https:\/\//.test(SUPABASE_URL) && !SUPABASE_URL.includes('SEU-PROJETO') && !SUPABASE_KEY.startsWith('SUA-');
+
+  // Atividades além da musculação, na ordem em que aparecem (check-in, semana, Dashboard).
+  const ATIVIDADES = ['jiu', 'muay', 'surf', 'futebol', 'futvolei', 'bike'];
 
   // ---------- Dados (do PDF) ----------
   // Níveis: 'alta' | 'media' | 'baixa'
@@ -2266,17 +2283,16 @@
   const GRUPOS_EX = ['Mobilidade', 'Core', 'Explosivos', 'Pernas', 'Costas', 'Peito', 'Ombros', 'Braços', 'Pescoço', 'Cardio'];
   // Cada exercício aparece uma vez só: nomes iguais (sem diferenciar maiúsculas e acentos) ficam com o primeiro.
   const chaveExercicio = (nome) => nome.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
-  const BIBLIOTECA = [...Object.values(PLANO_PADRAO).flatMap((t) => t.exercicios), ...EXERCICIOS_EXTRAS]
+  const BIBLIOTECA_APP = [...Object.values(PLANO_PADRAO).flatMap((t) => t.exercicios), ...EXERCICIOS_EXTRAS]
     .filter((ex, i, todos) => todos.findIndex((o) => chaveExercicio(o.nome) === chaveExercicio(ex.nome)) === i)
     .map((ex) => ({ ...ex, variacoes: VARIACOES[ex.nome] || [] }))
     .sort((a, b) => GRUPOS_EX.indexOf(a.grupo) - GRUPOS_EX.indexOf(b.grupo) || a.nome.localeCompare(b.nome, 'pt-BR'));
-  const exDaBiblioteca = (nome) => BIBLIOTECA.find((ex) => ex.nome === nome);
 
   // Jornadas prontas: a pessoa escolhe uma e recebe os treinos e uma semana sugerida (README → "Jornadas prontas").
   // Exercícios por nome da biblioteca, com a dose e a PSE da jornada. semana: dia (Date.getDay()) → treinos.
   // Seleção, ordem e textos próprios do OSS (não reproduzem nenhuma planilha de terceiros).
   const exJ = (nome, dose, pse) => ({ nome, dose, pse });
-  const JORNADAS = [
+  const JORNADAS_APP = [
     {
       id: 'jiu', nome: 'Jiu Jitsu', resumo: 'Força que vai para o tatame.',
       nivel: 'Intermediário', dias: 3, tempo: '50–60 min', equipamento: 'Academia',
@@ -2403,7 +2419,130 @@
       },
     },
   ];
-  const jornadaPorId = (id) => JORNADAS.find((j) => j.id === id) || null;
+  const jornadaPorIdApp = (id) => JORNADAS_APP.find((j) => j.id === id) || null;
+
+  // ---------- Catálogo (exercícios e objetivos) ----------
+  // Vem do banco (tabelas exercicios e jornadas, editadas no painel → Exercícios) e fica guardado no aparelho,
+  // para abrir rápido e sem internet. A cópia acima (BIBLIOTECA_APP e JORNADAS_APP) é a reserva enquanto o banco
+  // não tem o catálogo (supabase/schema.sql ainda não rodado) e gera a carga inicial (supabase/gerar-catalogo.cjs).
+  // Os treinos das contas guardam só nome, dose e PSE: um exercício renomeado continua sendo achado pelo nome antigo
+  // (nomes_antigos) e um desativado sai da lista de escolha, mas segue completo nos treinos de quem já o tem.
+  const CHAVE_CATALOGO = 'bauer-catalogo';
+  const NIVEIS = ['alta', 'media', 'baixa'];
+  let BIBLIOTECA = BIBLIOTECA_APP; // para escolher: só os ativos
+  let JORNADAS = JORNADAS_APP; // para escolher: só os ativos
+  let catalogo = null; // { porNome, antigos, jornadas } quando veio do banco (ou da cópia guardada dele)
+  let catalogoDoBanco = false;
+  function exDaBiblioteca(nome) {
+    if (catalogo) { const ex = catalogo.porNome.get(nome) || catalogo.antigos.get(nome); if (ex) return ex; }
+    return BIBLIOTECA_APP.find((ex) => ex.nome === nome) || null;
+  }
+  // Objetivo da conta para o filtro "Do meu objetivo" do editor: só quando há exercícios marcados para ele no catálogo.
+  function objetivoDoEditor() {
+    const j = jornada && jornadaPorId(jornada);
+    return j && BIBLIOTECA.some((ex) => (ex.objetivos || []).includes(j.id)) ? j : null;
+  }
+  // Nome de hoje no catálogo (para um exercício salvo com um nome antigo).
+  const nomeAtual = (nome) => (exDaBiblioteca(nome) || { nome }).nome;
+  // Nome para mostrar: o de hoje no catálogo.
+  const nomeDe = (ex) => ex.rotulo || nomeAtual(ex.nome);
+  const jornadaPorId = (id) => (catalogo && catalogo.jornadas.find((j) => j.id === id)) || jornadaPorIdApp(id);
+  const listaTextos = (v, max) => (Array.isArray(v) ? v.map((x) => limpar(x, 80)).filter(Boolean).slice(0, max) : []);
+  function exercicioDoBanco(r) {
+    const nome = r && limpar(r.nome, 80);
+    if (!nome) return null;
+    const nivel = (v) => (NIVEIS.includes(v) ? v : 'baixa');
+    const pse = Number(r.pse);
+    return {
+      nome, grupo: GRUPOS_EX.includes(r.grupo) ? r.grupo : '', dose: limpar(r.dose, 30) || '3×10', pse: pse >= 1 && pse <= 10 ? Math.round(pse) : 8,
+      H: nivel(r.hipertrofia), M: nivel(r.mobilidade), F: nivel(r.forca), E: nivel(r.explosao), why: String(r.explicacao ?? '').trim().slice(0, 400),
+      variacoes: listaTextos(r.variacoes, 20), nomesAntigos: listaTextos(r.nomes_antigos, 20), objetivos: listaTextos(r.objetivos, 20), ativo: r.ativo !== false,
+    };
+  }
+  function jornadaDoBanco(r) {
+    const d = r && r.dados;
+    const id = r && limpar(r.id, 30);
+    if (!id || !d || typeof d !== 'object' || !limpar(d.nome, 40)) return null;
+    const texto = (v, max) => String(v ?? '').trim().slice(0, max);
+    const treinos = {};
+    for (let n = 1; n <= MAX_TREINOS; n++) {
+      const t = d.treinos && d.treinos[n];
+      const exercicios = t && Array.isArray(t.exercicios) ? t.exercicios.filter((e) => e && e.nome).slice(0, MAX_EXERCICIOS)
+        .map((e) => ({ nome: limpar(e.nome, 80), dose: limpar(e.dose, 30), pse: Number(e.pse) || 8 })) : [];
+      if (!exercicios.length) continue;
+      treinos[n] = {
+        nome: limpar(t.nome, 40) || `Treino ${n}`, subtitulo: limpar(t.subtitulo, 60), objetivo: texto(t.objetivo, 400), esperado: texto(t.esperado, 600),
+        impacto_jiu: texto(t.impacto_jiu, 400), impacto_fisico: texto(t.impacto_fisico, 400), exercicios,
+      };
+    }
+    if (!Object.keys(treinos).length) return null;
+    const semana = {};
+    for (const [dia, tipos] of Object.entries(d.semana && typeof d.semana === 'object' ? d.semana : {})) {
+      if (/^[0-6]$/.test(dia) && Array.isArray(tipos)) semana[dia] = tipos.filter((x) => /^t[1-6]$/.test(x) && treinos[x.slice(1)]);
+    }
+    return {
+      id, nome: limpar(d.nome, 40), resumo: texto(d.resumo, 120), nivel: texto(d.nivel, 40), dias: Number(d.dias) || Object.keys(semana).length,
+      tempo: texto(d.tempo, 30), equipamento: texto(d.equipamento, 120), semana, treinos, ativo: r.ativo !== false, ordem: Number(r.ordem) || 0,
+    };
+  }
+  // Usa o catálogo que veio do banco. Sem nenhum exercício ativo (tabela vazia ou com problema), fica a cópia do app.
+  function aplicarCatalogo(dados) {
+    const exs = (dados && Array.isArray(dados.exercicios) ? dados.exercicios : []).map(exercicioDoBanco).filter(Boolean)
+      .sort((a, b) => GRUPOS_EX.indexOf(a.grupo) - GRUPOS_EX.indexOf(b.grupo) || a.nome.localeCompare(b.nome, 'pt-BR'));
+    if (!exs.some((e) => e.ativo)) return false;
+    const porNome = new Map(exs.map((e) => [e.nome, e]));
+    const antigos = new Map();
+    exs.forEach((e) => e.nomesAntigos.forEach((n) => { if (!porNome.has(n) && !antigos.has(n)) antigos.set(n, e); }));
+    const jornadas = (Array.isArray(dados.jornadas) ? dados.jornadas : []).map(jornadaDoBanco).filter(Boolean).sort((a, b) => a.ordem - b.ordem);
+    catalogo = { porNome, antigos, jornadas };
+    BIBLIOTECA = exs.filter((e) => e.ativo);
+    const ativas = jornadas.filter((j) => j.ativo);
+    JORNADAS = ativas.length ? ativas : JORNADAS_APP;
+    catalogoDoBanco = true;
+    return true;
+  }
+  // Busca o catálogo no banco. Sem as tabelas (SQL ainda não rodado) ou sem internet, segue com o que já tem.
+  // Devolve true quando o catálogo mudou desde a última vez.
+  let catalogoEm = 0, catalogoJson = '';
+  async function carregarCatalogo() {
+    try {
+      catalogoEm = Date.now();
+      const [e, j] = await Promise.all([sb.from('exercicios').select('*'), sb.from('jornadas').select('*')]);
+      if (e.error || !Array.isArray(e.data) || !e.data.length) return false;
+      const dados = { exercicios: e.data, jornadas: j.error ? [] : j.data || [] };
+      const json = JSON.stringify(dados);
+      if (json === catalogoJson) return false;
+      if (!aplicarCatalogo(dados)) return false;
+      catalogoJson = json;
+      try { localStorage.setItem(CHAVE_CATALOGO, json); } catch (_) {}
+      return true;
+    } catch (_) { return false; }
+  }
+  // Ao voltar para o app (ou abrir o editor), busca o catálogo de novo, no máximo a cada 2 min: o que o administrador
+  // mudou no painel (nome, explicação, níveis, vídeo) aparece nos cartões sem fechar o app. Séries e PSE são da pessoa.
+  async function atualizarCatalogo({ forcar = false } = {}) {
+    if (!usuario || !sb || (!forcar && Date.now() - catalogoEm < 120000)) return;
+    if (!(await carregarCatalogo())) return;
+    TREINOS = treinosDaConta ? montarTreinos(treinosParaSalvar(TREINOS)) || TREINOS : planoPronto();
+    // Com uma janela aberta (pesos, editor, check-in), redesenha depois, para não mexer no que a pessoa está fazendo.
+    if (document.querySelector('dialog[open]')) { catalogoPendente = true; return; }
+    redesenharCatalogo();
+  }
+  let catalogoPendente = false;
+  // Redesenho adiado: quando a última janela aberta fecha.
+  document.addEventListener('close', () => { if (catalogoPendente && !document.querySelector('dialog[open]')) redesenharCatalogo(); }, true);
+  function redesenharCatalogo() {
+    catalogoPendente = false;
+    renderTudo();
+    if (telaAtual() === 'dashboard') renderDashboard();
+    if (telaAtual() === 'voce') renderConfig();
+  }
+  // Vídeo da execução: pelo nome salvo no treino, pelo nome de hoje no catálogo ou por um nome antigo dele.
+  function videoDe(nome) {
+    if (VIDEOS[nome]) return VIDEOS[nome];
+    const ex = exDaBiblioteca(nome);
+    return (ex && [ex.nome, ...(ex.nomesAntigos || [])].map((n) => VIDEOS[n]).find(Boolean)) || '';
+  }
 
   // Treinos da conta: os montados em "Meus treinos" (perfis.treinos) ou, sem eles, o plano pronto.
   // No banco vão só nome, dose e PSE de cada exercício; níveis, grupo e explicação vêm da biblioteca.
@@ -2424,7 +2563,9 @@
   function exercicioCompleto(e) {
     const base = exDaBiblioteca(e.nome) || { nome: limpar(e.nome, 80), grupo: '', H: 'baixa', M: 'baixa', F: 'baixa', E: 'baixa', why: '' };
     const pse = Number(e.pse);
-    return { ...base, dose: limpar(e.dose, 30) || base.dose || '3×10', pse: pse >= 1 && pse <= 10 ? Math.round(pse) : base.pse || 8 };
+    // O nome fica o salvo no treino (as cargas e o histórico usam ele, como chave); na tela aparece o rotulo,
+    // o nome de hoje no catálogo (um exercício renomeado no painel aparece com o nome novo).
+    return { ...base, nome: base.nome === e.nome ? base.nome : limpar(e.nome, 80), rotulo: base.nome || limpar(e.nome, 80), dose: limpar(e.dose, 30) || base.dose || '3×10', pse: pse >= 1 && pse <= 10 ? Math.round(pse) : base.pse || 8 };
   }
   const qtdExercicios = (n) => `${n} ${n === 1 ? 'exercício' : 'exercícios'}`;
   const nomesDos = (exs) => exs.map((e) => e.nome).join('|');
@@ -2438,7 +2579,7 @@
       if (!exercicios.length) continue;
       treinos[n] = { nome: limpar(t.nome, 40) || `Treino ${n}`, subtitulo: limpar(t.subtitulo, 60), exercicios };
       // O texto "Sobre o treino" do plano pronto (ou de uma jornada) só vale enquanto os exercícios forem os mesmos.
-      const p = JORNADAS.map((j) => j.treinos[n]).find((x) => x && nomesDos(x.exercicios) === nomesDos(exercicios));
+      const p = [...(catalogo ? catalogo.jornadas : []), ...JORNADAS_APP].map((j) => j.treinos[n]).find((x) => x && nomesDos(x.exercicios) === nomesDos(exercicios));
       if (p) {
         const { objetivo, esperado, impacto_jiu, impacto_fisico } = p;
         Object.assign(treinos[n], { objetivo, esperado, impacto_jiu, impacto_fisico });
@@ -2450,7 +2591,12 @@
   const treinosParaSalvar = (treinos) => Object.fromEntries(Object.entries(treinos).map(([id, t]) => [id, {
     nome: t.nome, subtitulo: t.subtitulo, exercicios: t.exercicios.map(({ nome, dose, pse }) => ({ nome, dose, pse })),
   }]));
+  // Plano pronto (contas sem treinos próprios): a lista de exercícios é sempre a do app, e não muda quando o objetivo
+  // Jiu Jitsu é editado no banco; os detalhes de cada exercício vêm do catálogo.
+  const planoPronto = () => (catalogoDoBanco && montarTreinos(treinosParaSalvar(PLANO_PADRAO))) || PLANO_PADRAO;
   const mesmoQuePadrao = (treinos) => JSON.stringify(treinosParaSalvar(treinos)) === JSON.stringify(treinosParaSalvar(PLANO_PADRAO));
+  // Cópia guardada no aparelho: o app já abre com ela, antes de o banco responder.
+  try { const g = JSON.parse(localStorage.getItem(CHAVE_CATALOGO) || 'null'); if (g) aplicarCatalogo(g); } catch (_) {}
 
   // ---------- Perfil e configurações (vêm do Supabase depois do login) ----------
   // Temporizador de descanso (perfis.temporizador): ligado por padrão; a pessoa pode desligar em Você → Temporizador.
@@ -2506,7 +2652,7 @@
   let estiloNaConta = false;
 
   // Semana do usuário: para cada dia (índice de Date.getDay(), 0 = domingo), até 2 atividades
-  // entre os treinos ('t1' a 't6'), 'jiu', 'muay', 'surf' e 'bike'. Dia vazio é descanso.
+  // entre os treinos ('t1' a 't6'), 'jiu', 'muay', 'surf', 'futebol', 'futvolei' e 'bike'. Dia vazio é descanso.
   const CURTOS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
   const NOMES_DIA = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
   const ORDEM_SEMANA = [1, 2, 3, 4, 5, 6, 0];
@@ -2529,7 +2675,7 @@
   function validarSemana(s) {
     if (!Array.isArray(s) || s.length !== 7) return null;
     return s.map((d) => (Array.isArray(d)
-      ? [...new Set(d.filter((t) => ehTreino(t) || t === 'jiu' || t === 'muay' || t === 'surf' || t === 'bike'))].slice(0, 2)
+      ? [...new Set(d.filter((t) => ehTreino(t) || ATIVIDADES.includes(t)))].slice(0, 2)
       : []));
   }
   function planoDoDia(i) {
@@ -2537,11 +2683,11 @@
     const tipoTreino = tipos.find(ehTreino);
     const treino = tipoTreino ? tipoTreino.slice(1) : undefined;
     const grupos = [...new Set(tipos.map((t) => (ehTreino(t) ? 'musc' : t)))];
-    const notaDe = (t) => (ehTreino(t) ? TREINOS[t.slice(1)].subtitulo || 'musculação' : t === 'jiu' ? 'aula de jiu' : t === 'muay' ? 'aula de muay thai' : t === 'surf' ? 'sessão de surf' : 'cardio leve');
+    const notaDe = (t) => (ehTreino(t) ? TREINOS[t.slice(1)].subtitulo || 'musculação' : t === 'jiu' ? 'aula de jiu' : t === 'muay' ? 'aula de muay thai' : t === 'surf' ? 'sessão de surf' : t === 'futebol' ? 'jogo de futebol' : t === 'futvolei' ? 'jogo de futvôlei' : 'cardio leve');
     let titulo = 'Descanso', nota = 'Recuperação';
     if (tipos.length === 1) {
       titulo = nomeAtividade(tipos[0]);
-      nota = tipos[0] === 'jiu' ? 'Prioridade técnica' : tipos[0] === 'muay' ? 'Aula de muay thai' : tipos[0] === 'surf' ? 'Sessão de surf' : tipos[0] === 'bike' ? '20–40 min, intensidade leve' : notaDe(tipos[0]);
+      nota = tipos[0] === 'jiu' ? 'Prioridade técnica' : tipos[0] === 'muay' ? 'Aula de muay thai' : tipos[0] === 'surf' ? 'Sessão de surf' : tipos[0] === 'futebol' ? 'Jogo de futebol' : tipos[0] === 'futvolei' ? 'Jogo de futvôlei' : tipos[0] === 'bike' ? '20–40 min, intensidade leve' : notaDe(tipos[0]);
     } else if (tipos.length) {
       titulo = tipos.map(nomeAtividade).join(' + ');
       nota = tipos.map(notaDe).join(', ');
@@ -2555,6 +2701,8 @@
     jiu: { nome: 'Jiu Jitsu', selo: 'J', grupo: 'jiu' },
     muay: { nome: 'Muay Thai', selo: 'M', grupo: 'muay' },
     surf: { nome: 'Surf', selo: 'S', grupo: 'surf' },
+    futebol: { nome: 'Futebol', selo: 'F', grupo: 'futebol' },
+    futvolei: { nome: 'Futvôlei', selo: 'V', grupo: 'futvolei' },
     // A chave 'bike' fica no banco (check-ins e semana já salvos); na tela o tipo se chama Cardio.
     bike: { nome: 'Cardio', selo: 'C', grupo: 'bike' },
   };
@@ -2563,10 +2711,10 @@
     for (let n = 1; n <= MAX_TREINOS; n++) {
       TIPOS[`t${n}`] = { nome: TREINOS[n] ? TREINOS[n].nome : `Treino ${n}`, selo: String(n), grupo: 'musc', treino: String(n) };
     }
-    ORDEM_TIPOS = [...Object.keys(TREINOS).map((n) => `t${n}`), 'jiu', 'muay', 'surf', 'bike'];
+    ORDEM_TIPOS = [...Object.keys(TREINOS).map((n) => `t${n}`), ...ATIVIDADES];
   }
   atualizarTipos();
-  const DURACAO_PADRAO = { musc: 60, jiu: 60, muay: 60, surf: 90, bike: 30 };
+  const DURACAO_PADRAO = { musc: 60, jiu: 60, muay: 60, surf: 90, futebol: 90, futvolei: 90, bike: 30 };
 
   const FOCOS = [
     { id: 'todos', label: 'Todos' },
@@ -2804,6 +2952,7 @@
       presencaDesde = new Date().toISOString();
       if (escondidoEm && Date.now() - escondidoEm >= NOVA_ABERTURA_MS) mostrarNovidadeSeFaltar();
       escondidoEm = null;
+      atualizarCatalogo();
       return marcarPresenca();
     }
     escondidoEm = Date.now();
@@ -2892,6 +3041,8 @@
       sb.from('cargas').select('*').order('data'),
       // Vídeos dos exercícios: só vêm para quem o administrador liberou. Sem a função (schema antigo), sem vídeos.
       sb.rpc('meus_videos').then((r) => r, () => ({ error: true })),
+      // Catálogo de exercícios e objetivos (antes de montar os treinos da conta).
+      carregarCatalogo(),
     ]);
     if (p.error || c.error) throw p.error || c.error;
     // Fotos nos check-ins: liga quando a coluna checkins.foto existe (o schema.sql cria junto o bucket).
@@ -2917,7 +3068,7 @@
     if (!perfil.nome.trim() && nomeGoogle) { perfil.nome = nomeGoogle; salvarPerfil({ nome: nomeGoogle }); }
     const proprios = montarTreinos(linha.treinos);
     treinosDaConta = !!proprios;
-    TREINOS = proprios || PLANO_PADRAO;
+    TREINOS = proprios || planoPronto();
     atualizarTipos();
     if (!TREINOS[estado.treino]) estado.treino = Object.keys(TREINOS)[0];
     let ocultaNoAparelho = false;
@@ -3050,8 +3201,15 @@
   // Cargas de um exercício em dias anteriores a `antesDe`, em qualquer treino: em "Meus treinos" o
   // exercício pode mudar de treino e o histórico vai junto. [{ data, series }], do mais recente ao mais antigo.
   const TIPOS_MUSC = ['t1', 't2', 't3', 't4', 't5', 't6'];
+  // Pesos de um exercício no dia: pelo nome salvo ou por outro nome do mesmo exercício no catálogo (renomeado).
+  function seriesDe(pesos, nome) {
+    if (temCarga(pesos[nome])) return pesos[nome];
+    const atual = nomeAtual(nome);
+    const k = Object.keys(pesos).find((x) => x !== nome && temCarga(pesos[x]) && nomeAtual(x) === atual);
+    return k ? pesos[k] : pesos[nome];
+  }
   const historicoDe = (nome, antesDe) => TIPOS_MUSC
-    .flatMap((t) => datasDoTreino(t).filter((d) => d < antesDe).map((d) => ({ data: d, series: pesosDoDia(d, t)[nome] })))
+    .flatMap((t) => datasDoTreino(t).filter((d) => d < antesDe).map((d) => ({ data: d, series: seriesDe(pesosDoDia(d, t), nome) })))
     .filter((r) => temCarga(r.series))
     .sort((a, b) => b.data.localeCompare(a.data));
   // Pesos do dia anterior mais recente com carga no exercício (pré-preenchimento, RF-14).
@@ -3225,7 +3383,7 @@
           <input id="kg-${n}" type="text" inputmode="decimal" autocomplete="off" placeholder="kg"
             enterkeyhint="${n < total - 1 ? 'next' : 'done'}"
             data-ex="${esc(ex.nome)}" data-serie="${n}" data-campo="carga" value="${carga != null ? fmtKg(carga) : ''}"
-            aria-label="${esc(ex.nome)}: carga da série ${n + 1} (kg)" aria-describedby="log-erro">
+            aria-label="${esc(nomeDe(ex))}: carga da série ${n + 1} (kg)" aria-describedby="log-erro">
           <span class="selo-recorde" hidden>${ICON_TROFEU}Novo recorde</span>
         </div>`;
     }).join('');
@@ -3281,7 +3439,7 @@
     $('log-body').innerHTML = `
       <div class="modal-head">
         <div>
-          <h3 id="log-title">${ex.nome}</h3>
+          <h3 id="log-title">${esc(nomeDe(ex))}</h3>
           ${deOutroDia}
           <p class="ex-dose"><span>${ex.dose}</span><span class="pse">PSE ${ex.pse}</span></p>
         </div>
@@ -3311,7 +3469,7 @@
     registrarEvento('exercicio_concluido', { ...evento, sem_peso: false, com_carga: temCarga(pesosDoDia(logCtx.data, logCtx.tipo)[ex.nome]) });
     const rec = recordeNoDia(logCtx.tipo, ex.nome, logCtx.data);
     if (rec && rec.kg > logCtx.maxAoAbrir) {
-      toast(`Novo recorde em ${ex.nome}: ${fmtKg(rec.kg)} kg (antes ${fmtKg(rec.antes)} kg).`);
+      toast(`Novo recorde em ${nomeDe(ex)}: ${fmtKg(rec.kg)} kg (antes ${fmtKg(rec.antes)} kg).`);
       registrarEvento('recorde', { treino: logCtx.tipo, exercicio: ex.nome });
     }
     logDialog.close();
@@ -3705,7 +3863,7 @@
   }
 
   function exercicioHTML(ex, i) {
-    const id = VIDEOS[ex.nome];
+    const id = videoDe(ex.nome);
     const graus = DIMS.map(({ k, label }) => `
       <div>
         <dt>${label}</dt>
@@ -3715,21 +3873,21 @@
         <div class="ex-topo">
           <span class="ex-num">${pad(i + 1)}</span>
           <div>
-            <h3>${ex.nome}</h3>
+            <h3>${esc(nomeDe(ex))}</h3>
             <p class="ex-dose"><span>${ex.dose}</span><span class="pse" title="Percepção subjetiva de esforço">PSE ${ex.pse}</span></p>
           </div>
         </div>`;
     const info = `
-        <p class="ex-why">${ex.why}</p>
+        <p class="ex-why">${esc(ex.why)}</p>
         <dl class="graus">${graus}</dl>`;
     // Com vídeo, o cartão vira um carrossel: deslizando para o lado aparece a execução.
     // O nome fica fora do carrossel, sempre visível nos dois painéis.
     const corpo = !id ? topo + info : `${topo}
-        <div class="ex-slides" data-ex="${i}" role="group" aria-label="${esc(ex.nome)}: informações e vídeo">
+        <div class="ex-slides" data-ex="${i}" role="group" aria-label="${esc(nomeDe(ex))}: informações e vídeo">
           <div class="ex-slide">${info}</div>
-          <div class="ex-slide ex-video" data-video="${id}" data-nome="${esc(ex.nome)}">
+          <div class="ex-slide ex-video" data-video="${id}" data-nome="${esc(nomeDe(ex))}">
             <div class="video-quadro">
-              <img src="https://i.ytimg.com/vi/${id}/hqdefault.jpg" alt="Execução: ${esc(ex.nome)}" loading="lazy">
+              <img src="https://i.ytimg.com/vi/${id}/hqdefault.jpg" alt="Execução: ${esc(nomeDe(ex))}" loading="lazy">
               <span class="video-play" aria-hidden="true">${ICON_PLAY}</span>
             </div>
             <a class="video-link" href="https://www.youtube.com/shorts/${id}" target="_blank" rel="noopener">${ICON_PLAY} Abrir no YouTube</a>
@@ -3933,6 +4091,8 @@
       linha('Jiu Jitsu', 'jiu', 'jiu', conta('jiu'), planejado('jiu')) +
       linha('Muay Thai', 'muay', 'muay', conta('muay'), planejado('muay')) +
       linha('Surf', 'surf', 'surf', conta('surf'), planejado('surf')) +
+      // Futebol e futvôlei aparecem quando estão na semana ou tiveram check-in.
+      ['futebol', 'futvolei'].filter((g) => conta(g) || planejado(g)).map((g) => linha(TIPOS[g].nome, g, g, conta(g), planejado(g))).join('') +
       linha('Cardio', 'bike', 'bike', conta('bike'), planejado('bike'));
   }
 
@@ -3994,9 +4154,9 @@
               : '<span class="kg sem">sem registro</span>';
           // Check-in encerrado: tocar no exercício abre o painel para corrigir os pesos daquele dia.
           return c.fim
-            ? `<li><button class="ck-ex-btn" type="button" data-editar-ex="${i}" data-ex-ck="${c.id}" aria-label="Editar ${esc(ex.nome)}">
-                <span>${ex.nome}</span>${valor}${ICON_LAPIS}</button></li>`
-            : `<li><span>${ex.nome}</span>${valor}</li>`;
+            ? `<li><button class="ck-ex-btn" type="button" data-editar-ex="${i}" data-ex-ck="${c.id}" aria-label="Editar ${esc(nomeDe(ex))}">
+                <span>${esc(nomeDe(ex))}</span>${valor}${ICON_LAPIS}</button></li>`
+            : `<li><span>${esc(nomeDe(ex))}</span>${valor}</li>`;
         }).join('')}</ul>`);
       } else {
         partes.push('<p class="ck-obs">Nenhum exercício registrado neste dia.</p>');
@@ -4046,7 +4206,7 @@
     const { ano, mes } = mesExibido;
     const prefixo = `${ano}-${pad(mes + 1)}`;
     const doMes = checkins.filter((c) => dataDe(c).startsWith(prefixo));
-    const tipos = [...new Set([...ORDEM_TIPOS, ...doMes.map((c) => c.tipo)])].sort((a, b) => [...TIPOS_MUSC, 'jiu', 'muay', 'surf', 'bike'].indexOf(a) - [...TIPOS_MUSC, 'jiu', 'muay', 'surf', 'bike'].indexOf(b));
+    const tipos = [...new Set([...ORDEM_TIPOS, ...doMes.map((c) => c.tipo)])].sort((a, b) => [...TIPOS_MUSC, ...ATIVIDADES].indexOf(a) - [...TIPOS_MUSC, ...ATIVIDADES].indexOf(b));
     const contagem = tipos.map((t) => [t, doMes.filter((c) => c.tipo === t).length]);
     const max = Math.max(1, ...contagem.map(([, n]) => n));
     $('tipos-titulo').textContent = `Por tipo em ${nomeMes(ano, mes)}`;
@@ -4354,7 +4514,7 @@
         </div>
         <input class="ed-busca" id="ed-busca" type="search" placeholder="Buscar exercício" autocomplete="off" value="${esc(ed.busca)}" aria-label="Buscar exercício">
         <div class="chips ed-grupos" role="group" aria-label="Filtrar por grupo">
-          ${['todos', ...GRUPOS_EX].map((g) => `<button class="chip" type="button" data-ed-grupo="${g}" aria-pressed="${ed.grupo === g}">${g === 'todos' ? 'Todos' : rotuloGrupo(g)}</button>`).join('')}
+          ${(objetivoDoEditor() ? ['todos', 'objetivo', ...GRUPOS_EX] : ['todos', ...GRUPOS_EX]).map((g) => `<button class="chip${g === 'objetivo' ? ' chip-objetivo' : ''}" type="button" data-ed-grupo="${g}" aria-pressed="${ed.grupo === g}">${g === 'todos' ? 'Todos' : g === 'objetivo' ? `Do meu objetivo (${esc(objetivoDoEditor().nome)})` : rotuloGrupo(g)}</button>`).join('')}
         </div>
         <p class="nota-campo" id="ed-contagem" aria-live="polite"></p>
         <ul class="ed-bib" id="ed-bib"></ul>
@@ -4388,12 +4548,12 @@
       <p class="sr-only" id="ed-anuncio" aria-live="polite"></p>
       ${exs.length ? `<ol class="ed-exs">${exs.map((ex, i) => `
         <li class="ed-ex" data-ed-pos="${i}">
-          <button class="ed-alca" type="button" data-ed-alca="${i}" aria-label="Mover ${esc(ex.nome)}, posição ${i + 1} de ${exs.length}. Arraste, ou use as setas do teclado." aria-describedby="ed-dica-ordem">${ICON_ALCA}</button>
-          <span class="ed-ex-nome"><b><span class="ed-num">${pad(i + 1)}</span>${esc(ex.nome)}</b><small>${esc(ex.grupo ? rotuloGrupo(ex.grupo) : 'Exercício')}${VIDEOS[ex.nome] ? ' · com vídeo' : ''}</small></span>
-          <button class="ed-icone" type="button" data-ed-remover="${i}" aria-label="Tirar ${esc(ex.nome)} do treino">${ICON_X}</button>
+          <button class="ed-alca" type="button" data-ed-alca="${i}" aria-label="Mover ${esc(nomeDe(ex))}, posição ${i + 1} de ${exs.length}. Arraste, ou use as setas do teclado." aria-describedby="ed-dica-ordem">${ICON_ALCA}</button>
+          <span class="ed-ex-nome"><b><span class="ed-num">${pad(i + 1)}</span>${esc(nomeDe(ex))}</b><small>${esc(ex.grupo ? rotuloGrupo(ex.grupo) : 'Exercício')}${videoDe(ex.nome) ? ' · com vídeo' : ''}</small></span>
+          <button class="ed-icone" type="button" data-ed-remover="${i}" aria-label="Tirar ${esc(nomeDe(ex))} do treino">${ICON_X}</button>
           <div class="ed-ex-campos">
-            <label>Séries<input type="text" value="${esc(ex.dose)}" maxlength="30" data-ed-dose="${i}" aria-label="${esc(ex.nome)}: séries e repetições"></label>
-            <label>PSE<select data-ed-pse="${i}" aria-label="${esc(ex.nome)}: PSE">${[4, 5, 6, 7, 8, 9, 10].map((n) => `<option${n === ex.pse ? ' selected' : ''}>${n}</option>`).join('')}</select></label>
+            <label>Séries<input type="text" value="${esc(ex.dose)}" maxlength="30" data-ed-dose="${i}" aria-label="${esc(nomeDe(ex))}: séries e repetições"></label>
+            <label>PSE<select data-ed-pse="${i}" aria-label="${esc(nomeDe(ex))}: PSE">${[4, 5, 6, 7, 8, 9, 10].map((n) => `<option${n === ex.pse ? ' selected' : ''}>${n}</option>`).join('')}</select></label>
           </div>
         </li>`).join('')}</ol>`
         : '<p class="ed-vazio">Nenhum exercício ainda. Toque em Adicionar exercício para escolher na biblioteca.</p>'}
@@ -4420,8 +4580,10 @@
     // E palavras do grupo: "abdominal", "abdômen" ou "barriga" mostram todo o Core e abdômen (a partir de 3 letras).
     const doGrupo = (ex) => busca.length >= 3 && (BUSCA_GRUPO[ex.grupo] || []).some((p) => p.startsWith(busca));
     const achou = (ex) => !busca || doGrupo(ex) || [ex.nome, ...ex.variacoes].some((n) => semAcento(n).includes(busca));
-    const itens = BIBLIOTECA.filter((ex) => (ed.grupo === 'todos' || ex.grupo === ed.grupo) && achou(ex));
-    const noTreino = new Set(t.exercicios.map((ex) => ex.nome));
+    const obj = objetivoDoEditor();
+    const doFiltro = (ex) => ed.grupo === 'todos' || (ed.grupo === 'objetivo' ? !!obj && (ex.objetivos || []).includes(obj.id) : ex.grupo === ed.grupo);
+    const itens = BIBLIOTECA.filter((ex) => doFiltro(ex) && achou(ex));
+    const noTreino = new Set(t.exercicios.map((ex) => nomeAtual(ex.nome)));
     $('ed-contagem').textContent = `${t.exercicios.length} de ${MAX_EXERCICIOS} no ${t.nome || `Treino ${ed.sel}`} · ${itens.length} ${itens.length === 1 ? 'exercício' : 'exercícios'} na lista`;
     $('ed-bib').innerHTML = itens.length ? itens.map((ex) => {
       const dentro = noTreino.has(ex.nome);
@@ -4429,7 +4591,7 @@
       return `
       <li><button class="ed-bib-item" type="button" data-ed-add="${esc(ex.nome)}" aria-pressed="${dentro}">
         <b>${esc(ex.nome)}</b>
-        <small>${esc(rotuloGrupo(ex.grupo))} · ${esc(ex.dose)} · PSE ${ex.pse}${destaque.length ? ` · alta ${lista(destaque)}` : ''}${VIDEOS[ex.nome] ? ' · vídeo' : ''}</small>
+        <small>${esc(rotuloGrupo(ex.grupo))} · ${esc(ex.dose)} · PSE ${ex.pse}${destaque.length ? ` · alta ${lista(destaque)}` : ''}${videoDe(ex.nome) ? ' · vídeo' : ''}</small>
         ${ex.variacoes.length ? `<small class="ed-tambem">Também: ${esc(ex.variacoes.join(', '))}</small>` : ''}
         <span class="ed-marca" aria-hidden="true">${dentro ? ICON_CHECK : ICON_MAIS}</span>
       </button></li>`;
@@ -4450,7 +4612,7 @@
     const antes = Object.keys(TREINOS);
     // Cópia do que existia antes de salvar, para Desfazer agora ou restaurar depois.
     treinosAnterior = fotoDosTreinos();
-    TREINOS = montarTreinos(valor) || PLANO_PADRAO;
+    TREINOS = montarTreinos(valor) || planoPronto();
     treinosDaConta = !!valor;
     atualizarTipos();
     // Treinos iguais aos de uma jornada voltam a ser ela; senão a jornada continua, agora personalizada.
@@ -4506,7 +4668,7 @@
     if (!foto) return;
     treinosAnterior = fotoDosTreinos();
     const valor = mesmoQuePadrao(foto.treinos) ? null : montarTreinos(foto.treinos) && foto.treinos;
-    TREINOS = montarTreinos(valor) || PLANO_PADRAO;
+    TREINOS = montarTreinos(valor) || planoPronto();
     treinosDaConta = !!valor;
     jornada = jornadaPorId(foto.jornada) ? foto.jornada : null;
     atualizarTipos();
@@ -4549,7 +4711,7 @@
     renderEditor();
     const alca = $('editor-body').querySelector(`[data-ed-alca="${para}"]`);
     if (alca) alca.focus({ preventScroll: true });
-    $('ed-anuncio').textContent = `${ex.nome} na posição ${para + 1} de ${exs.length}.`;
+    $('ed-anuncio').textContent = `${nomeDe(ex)} na posição ${para + 1} de ${exs.length}.`;
     return true;
   }
   let arrastoEx = null;
@@ -4661,7 +4823,7 @@
     if ((b = alvo('[data-ed-grupo]'))) { ed.grupo = b.dataset.edGrupo; return renderEditor(); }
     if ((b = alvo('[data-ed-add]'))) {
       const nome = b.dataset.edAdd;
-      const k = t.exercicios.findIndex((ex) => ex.nome === nome);
+      const k = t.exercicios.findIndex((ex) => nomeAtual(ex.nome) === nome);
       if (k >= 0) t.exercicios.splice(k, 1);
       else if (t.exercicios.length >= MAX_EXERCICIOS) return toast(`Cada treino tem até ${MAX_EXERCICIOS} exercícios.`);
       else t.exercicios.push({ ...exDaBiblioteca(nome) });
@@ -4797,7 +4959,7 @@
       <p class="resumo-enc">Seu treino de Jiu Jitsu e academia num lugar só.</p>
       <ul class="novidade-lista">
         ${item('<b>Treino do dia</b>: a ficha de hoje, com as cargas de cada série')}
-        ${item('<b>Check-in</b> de cada treino: musculação, Jiu Jitsu, muay thai, surf e cardio')}
+        ${item('<b>Check-in</b> de cada treino: musculação, Jiu Jitsu, muay thai, surf, futebol, futvôlei e cardio')}
         ${item('<b>Dashboard</b> com o calendário e o histórico dos seus treinos')}
         ${item('<b>Temporizador de descanso</b> entre as séries')}
         ${item('<b>Você</b>: treinos, semana, aparência e privacidade do seu jeito')}
@@ -4899,7 +5061,7 @@
   });
   jornadaDialog.addEventListener('cancel', (e) => { e.preventDefault(); if (jd && jd.modo !== 'boas-vindas' && jd.passo !== 'montando') fecharJornadas('fechou'); });
 
-  // Semana sugerida: tira os treinos da semana de agora e põe os da jornada, sem mexer em jiu, muay, surf e cardio.
+  // Semana sugerida: tira os treinos da semana de agora e põe os da jornada, sem mexer nas outras atividades (jiu, muay, surf, futebol, futvôlei e cardio).
   function semanaDaJornada(j) {
     const s = config.semana.map((d) => d.filter((t) => !ehTreino(t)));
     for (const [dia, tipos] of Object.entries(j.semana)) {
@@ -4912,7 +5074,7 @@
     if (!j) return;
     treinosAnterior = fotoDosTreinos();
     const valor = mesmoQuePadrao(j.treinos) ? null : treinosParaSalvar(j.treinos);
-    TREINOS = montarTreinos(valor) || PLANO_PADRAO;
+    TREINOS = montarTreinos(valor) || planoPronto();
     treinosDaConta = !!valor;
     jornada = j.id;
     atualizarTipos();
@@ -4958,14 +5120,14 @@
       return `
         <li class="mt-treino" data-mt-treino="${i}">
           <div class="mt-treino-topo">${seloHTML(`t${n}`)}<b>${esc(t.nome)}</b><span class="mt-estado" aria-hidden="true"><i class="mt-gira"></i>${ICON_CHECK}</span></div>
-          <ul>${mostra.map((e, k) => `<li style="--k:${k}">${esc(e.nome)}</li>`).join('')}${resto > 0 ? `<li class="mt-mais" style="--k:${mostra.length}">+${resto} exercício${resto > 1 ? 's' : ''}</li>` : ''}</ul>
+          <ul>${mostra.map((e, k) => `<li style="--k:${k}">${esc(nomeDe(e))}</li>`).join('')}${resto > 0 ? `<li class="mt-mais" style="--k:${mostra.length}">+${resto} exercício${resto > 1 ? 's' : ''}</li>` : ''}</ul>
         </li>`;
     }).join('');
     // Semana começando na segunda, como no Dashboard.
     const ordem = [1, 2, 3, 4, 5, 6, 0];
     const semana = ordem.map((d, k) => `
         <li class="mt-dia" style="--k:${k}"><small>${DIAS_LETRA[d]}</small><span>${config.semana[d].map((t) => (TIPOS[t] ? seloHTML(t) : '')).join('') || '<i class="mt-folga"></i>'}</span></li>`).join('');
-    const faiscas = Array.from({ length: 14 }, (_, k) => `<i style="--a:${k * (360 / 14)}deg;--c:var(${['--tatame', '--checkin', '--jiu', '--musc', '--bike', '--muay', '--surf'][k % 7]})"></i>`).join('');
+    const faiscas = Array.from({ length: 14 }, (_, k) => `<i style="--a:${k * (360 / 14)}deg;--c:var(${['--tatame', '--checkin', '--jiu', '--musc', '--bike', '--muay', '--surf', '--futebol', '--futvolei'][k % 9]})"></i>`).join('');
     $('jornada-body').innerHTML = `
       <div class="bv-montando" style="--prog:0">
         <div class="mt-anel">
@@ -5026,7 +5188,7 @@
         <span>Não mostrar esta mensagem de novo</span>
       </label>`;
   function abrirNovidade() {
-    const comVideo = BIBLIOTECA.filter((ex) => VIDEOS[ex.nome]).length;
+    const comVideo = BIBLIOTECA.filter((ex) => videoDe(ex.nome)).length;
     const item = (txt) => `<li>${ICON_CHECK}<span>${txt}</span></li>`;
     // Conta nova com o plano pronto escolhe uma jornada; quem já montou os treinos vê a versão "Baita atualização!".
     if (novidade.contaNova && !treinosDaConta) return abrirJornadas('boas-vindas');

@@ -30,7 +30,7 @@ const linhas = (p) => p.locator('#treinos-lista li').evaluateAll((ls) => ls.map(
     await p.goto(ADMIN); await p.waitForSelector('#painel:not([hidden])'); await p.waitForTimeout(300);
     ok(await p.locator('#treinos-titulo').isVisible() && (await p.locator('#treinos-titulo').textContent()) === 'Treinos mais feitos', `${tag}: card na visão geral`);
     let l = await linhas(p);
-    ok(l.map((x) => x.nome).join('|') === 'Musculação|Jiu Jitsu|Cardio|Surf|Muay Thai', `${tag}: ordem do mais feito ao menos (30 dias)`, l.map((x) => x.nome).join('|'));
+    ok(l.map((x) => x.nome).join('|') === 'Musculação|Jiu Jitsu|Cardio|Surf|Muay Thai|Futebol|Futvôlei', `${tag}: ordem do mais feito ao menos (30 dias)`, l.map((x) => x.nome).join('|'));
     ok(l[0].num === '545%' && l[1].num === '436%' && l[2].num === '19%' && l[4].num === '00%', `${tag}: números e porcentagens`, l.map((x) => x.num).join(' / '));
     ok(l[0].sub === '2 pessoas · Treino 1: 3 · Treino 2: 2' && l[1].sub === '3 pessoas' && l[2].sub === '1 pessoa' && l[4].sub === 'nenhum check-in', `${tag}: pessoas e detalhe da musculação`, l.map((x) => x.sub).join(' / '));
     ok(l[0].larg > l[1].larg && l[1].larg > l[2].larg && Math.abs(l[2].larg - l[3].larg) < 1 && l[4].larg === 0 && l[4].zerado, `${tag}: barras proporcionais, sem barra quando zero`, l.map((x) => Math.round(x.larg)).join(','));

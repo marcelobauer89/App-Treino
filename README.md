@@ -147,7 +147,7 @@ Cada pessoa pode montar até 6 treinos (t1 a t6), com até 15 exercícios cada, 
 - **Biblioteca:** 136 exercícios, sem repetição. O grupo Core aparece como "Core e abdômen", e buscar "abdominal", "abdômen" ou "barriga" mostra o grupo inteiro. São os 22 do plano pronto mais os das fichas de treino em PDF. Variações do mesmo movimento com outro equipamento (halter ou barra) entram uma vez só; os outros nomes delas (`VARIACOES`) servem para a busca.
 - **Vídeos dos exercícios:** só para quem o administrador libera (veja "Vídeos liberados por usuário").
 - **O que a pessoa ajusta:** nome e foco de cada treino, séries/repetições e PSE. A ordem dos exercícios muda arrastando a alça ⠿ de cada cartão (no teclado, setas para cima e para baixo na alça); o botão flutuante "Adicionar exercício" abre a biblioteca.
-- **No banco:** a coluna `perfis.treinos` guarda só nome, séries e PSE de cada exercício. Os níveis, o grupo e a explicação vêm da biblioteca no `index.html`, pelo nome.
+- **No banco:** a coluna `perfis.treinos` guarda só nome, séries e PSE de cada exercício. Os níveis, o grupo e a explicação vêm do catálogo (veja "Catálogo de exercícios e objetivos"), pelo nome.
 - **Quem já usa o app:** continua no plano pronto (coluna vazia) até salvar outra coisa. Ao abrir o app, aparece o aviso **"Baita atualização!"**, com "Personalizar meus treinos" ou "Manter meu treino atual". Ele volta a cada abertura (inclusive ao voltar para o app depois de 30 min em segundo plano) até a pessoa marcar **"Não mostrar esta mensagem de novo"**.
 - **Conta nova:** escolhe uma **jornada pronta** ou "Montar do zero" (veja abaixo).
 - **O aviso no banco:** a última resposta fica em `perfis.novidade_treinos` e o "não mostrar mais" em `perfis.novidade_oculta`. Sem essa coluna (schema antigo), o aviso aparece do mesmo jeito e o "não mostrar mais" fica guardado só no aparelho.
@@ -156,6 +156,11 @@ Cada pessoa pode montar até 6 treinos (t1 a t6), com até 15 exercícios cada, 
 - **Histórico de pesos:** a carga da última vez e os recordes seguem o exercício em qualquer treino.
 
 Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 a t6 nos check-ins e nas cargas e cria as colunas `treinos`, `novidade_treinos` e `novidade_oculta`.
+
+### Futebol e Futvôlei
+
+- Tipos de check-in `futebol` (selo F) e `futvolei` (selo V), cada um com cor própria e 90 min por padrão. Entram no check-in, na Minha semana, no Dashboard, no resumo semanal por e-mail e no monitoramento.
+- **Para ligar:** rode de novo o `supabase/schema.sql` (o banco passa a aceitar os dois tipos) e publique de novo a função `resumo-semanal`.
 
 ### Celebração do check-in
 
@@ -169,7 +174,7 @@ Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 a t6 nos check-i
 
 ### Jornadas prontas
 
-- **O que são:** conjuntos de treinos prontos com uma semana sugerida, na constante `JORNADAS` do `index.html`:
+- **O que são:** conjuntos de treinos prontos com uma semana sugerida, na tabela `jornadas` do banco (a cópia de reserva fica na constante `JORNADAS_APP` do `index.html`):
   - Jiu Jitsu: o plano pronto de sempre;
   - Hipertrofia: 4 treinos;
   - Força e potência: A, B e Cardio;
@@ -180,12 +185,30 @@ Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 a t6 nos check-i
   2. **Seus dados:** o aviso de privacidade, com Entendi (só se a política ainda não foi aceita; vem antes de qualquer escolha ser gravada);
   3. **Qual é o seu objetivo?:** os objetivos prontos ou Montar do zero (sair do editor sem salvar volta para a escolha).
 
-  Escolher grava os treinos (`perfis.treinos`), a semana sugerida (mantendo jiu, muay, surf e cardio) e a jornada (`perfis.jornada`), e encerra as boas-vindas.
+  Escolher grava os treinos (`perfis.treinos`), a semana sugerida (mantendo jiu, muay, surf, futebol, futvôlei e cardio) e a jornada (`perfis.jornada`), e encerra as boas-vindas.
 - **Quem já usa:** "Mudar meu objetivo", em Você → Meus treinos: "Escolher" marca o cartão e o rodapé mostra o **Confirmar**. Ao confirmar, a animação "Montando seus treinos" mostra os treinos e a semana se formando; ao salvar treinos alterados no editor, a mesma animação aparece como "Atualizando seus treinos". A versão de antes vai para `treinos_anterior`, e o "Desfazer" volta a ela. **Nenhum treino de quem já usa muda sozinho.**
 - **Personalizar:** depois de escolher, tudo continua editável. Meus treinos mostra "Jornada X" ou "X (personalizada)".
 - **No banco:** a coluna `perfis.jornada` guarda só o id da jornada. Sem ela (schema antigo), escolher funciona do mesmo jeito, sem o rótulo.
 - **Monitoramento:** os eventos `jornadas_abertas` e `jornada_escolhida` alimentam o card "Objetivos escolhidos".
 - **De onde veio:** as jornadas foram montadas com seleção, ordem, doses e textos próprios, usando planilhas de treino só como referência de método. Ao criar uma jornada nova, não copie a sequência nem os textos de nenhuma planilha.
+
+## Catálogo de exercícios e objetivos
+
+- **Onde fica:** no banco, nas tabelas `exercicios` (a biblioteca) e `jornadas` (os objetivos prontos). Quem entra no app lê; só administradores mudam.
+- **Editar os exercícios:** no monitoramento, aba **Exercícios**. Dá para buscar e, na janela do botão **Filtros**, filtrar por grupo, objetivo e situação (ativos, desativados, sem vídeo), que só valem ao tocar em **Filtrar**; criar, editar (nome, grupo, séries, PSE, níveis, explicação, outros nomes e vídeo do YouTube, colando o link) e desativar. Vale na hora para todos, sem publicar o app. Cada exercício mostra em quantas contas está.
+- **Quem já usa não perde nada:** os treinos das contas guardam só nome, séries e PSE, e mudar o catálogo não mexe neles.
+  - **Renomear:** o nome antigo fica em `nomes_antigos`. O app continua achando o exercício por ele, com vídeo, cargas e recordes, e o painel avisa quantas contas usam antes de salvar.
+  - **Desativar:** o exercício sai da lista de escolha, mas continua completo nos treinos de quem já o tem.
+  - **Excluir** (lixeira na lista ou no fim da edição): só um exercício que ninguém tem nos treinos (nem no plano pronto) e que não faz parte de um objetivo pronto; nos outros casos, o painel sugere desativar. O excluído sai junto com o vídeo, fica em `exercicios_excluidos` e não volta quando o `schema.sql` roda de novo (criar outro com o mesmo nome libera o nome).
+  - **Plano pronto:** quem nunca montou treino continua com a mesma lista de exercícios, com os detalhes do catálogo.
+- **O que muda para quem usa:** nome, explicação, níveis, grupo e vídeo mudados no painel aparecem no cartão do exercício de quem já o tem. O app busca o catálogo ao abrir e de novo ao voltar para ele (no máximo a cada 2 min). Séries e PSE continuam as do treino da pessoa. O nome salvo no treino segue como chave das cargas e do histórico, que continuam ligados depois de renomear.
+- **Campos do cadastro:** séries por campos (séries × repetições ou tempo, unidade, "/ lado", totais ou válidas), gerando sempre o formato do app (`3×10`, `2–3×12 / lado`, `3×30 s`); o que não cabe nisso vai em "Outro formato". PSE em lista (como no editor do app), níveis em botões e nome com a primeira letra maiúscula. No celular, a janela ocupa a tela toda.
+- **Objetivo do exercício (opcional):** marque um ou mais objetivos (coluna `exercicios.objetivos`). No app, quem tem objetivo vê o chip **"Do meu objetivo"** em "Adicionar exercício". A carga inicial marca cada exercício com os objetivos em que ele já aparece.
+- **Objetivos prontos:** por enquanto, mudam só por SQL (a edição pelo painel vem depois).
+- **No aparelho:** o app guarda uma cópia do catálogo e abre com ela. Sem as tabelas (SQL ainda não rodado) ou sem internet, usa a cópia ou a lista que vem no `index.html` (`BIBLIOTECA_APP` e `JORNADAS_APP`).
+- **Como ligar:** rode de novo o `supabase/schema.sql`. Ele cria as tabelas e carrega os 136 exercícios e os 4 objetivos. Rodar de novo não duplica, não traz de volta um exercício renomeado e não desfaz o que foi mudado no painel.
+- **Carga inicial:** é gerada da lista do `index.html` por `node supabase/gerar-catalogo.cjs` (o teste confere com `--conferir`). Ao mudar a lista do código, rode o gerador.
+- **Exercícios mandados em lista:** viram um SQL de `insert into public.exercicios ...`, rodado primeiro no projeto de testes e depois no de produção.
 
 ## Vídeos liberados por usuário
 
@@ -195,7 +218,7 @@ Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 a t6 nos check-i
 - **Como ligar (uma vez por projeto):**
   1. Rode o `supabase/schema.sql`.
   2. Rode a carga dos vídeos (um SQL com `insert into public.videos_exercicios ...`). Esse arquivo não fica no repositório: peça a ele a quem mantém o app.
-- **Adicionar ou trocar um vídeo:** no SQL Editor, `insert into public.videos_exercicios (exercicio, video_id) values ('Nome do exercício', 'idDoYouTube') on conflict (exercicio) do update set video_id = excluded.video_id;`. O nome tem que ser igual ao da biblioteca.
+- **Adicionar ou trocar um vídeo:** no monitoramento → Exercícios, no campo "Vídeo do YouTube" do exercício (cola o link). Ou no SQL Editor, `insert into public.videos_exercicios (exercicio, video_id) values ('Nome do exercício', 'idDoYouTube') on conflict (exercicio) do update set video_id = excluded.video_id;`. O nome tem que ser igual ao da biblioteca.
 
 ## Convites (acesso só para convidados)
 
@@ -254,7 +277,7 @@ O dashboard mostra:
 
 - **On-line agora**, ao vivo: quem está com o app aberto, em que tela (Treino, Dashboard ou Você) e há quanto tempo, com um ponto verde pulsando. O mesmo ponto aparece no avatar da lista e no detalhe.
 - **Números principais** do período (7, 30, 90 dias ou tudo), com a variação em relação ao período anterior: usuários ativos, check-ins, treinos por semana por usuário ativo, aderência ao plano (feito ÷ planejado na semana montada), quantos voltaram nesta semana, quantos sumiram e quantos recordes foram batidos.
-- **Quem sumiu**: quem fez check-in nas últimas 4 semanas, mas está há 7 dias ou mais sem check-in (conta o check-in, não a abertura do app), com o último treino e quantas vezes por semana treinava antes; quem treinava mais vem primeiro. Não muda com o período e não inclui o administrador logado.
+- **Quem sumiu** (possíveis churn): quem usou o app nas últimas 4 semanas, mas está há 7 dias ou mais sem usar. Qualquer uso conta: check-in, pesos registrados, eventos ou só abrir o app (quem registra pesos sem fazer check-in não aparece). Mostra há quantos dias está sem usar, o último uso, o último check-in (ou "nunca fez check-in") e quantos dias por semana usava antes; quem usava mais vem primeiro. Não muda com o período e não inclui o administrador logado.
 - **Quem mais evoluiu**: ranking de recordes pessoais no período (vezes em que a pessoa superou o próprio peso máximo num exercício; o primeiro peso não conta), com os exercícios de cada um. O painel não mostra os pesos. As regras das duas listas ficam no ícone "i" de cada cartão.
 - **Gráficos** de check-ins por dia (por tipo de treino) e de usuários ativos por dia, agrupados por semana em períodos longos, cada um com a opção de ver como tabela.
 - **Usuários**, com situação (Ativo até 7 dias sem usar, Em risco de 8 a 14, Inativo depois disso, Nunca usou), busca, ordenação e exportação em CSV.
@@ -389,6 +412,7 @@ Os testes do app, do painel e do resumo por e-mail ficam em `tests/` e rodam em 
 - **cargas:** os pesos registrados na ficha, por dia e treino. Salvar um peso não abre check-in.
 - **eventos:** uso do app (telas, recursos, erros), para o dashboard de monitoramento.
 - **admins:** contas que podem ver o dashboard de monitoramento.
+- **exercicios** e **jornadas:** o catálogo (biblioteca de exercícios e objetivos prontos), igual para todos e editado no monitoramento.
 - **emails_enviados:** registro dos resumos semanais enviados (quem e de qual semana), para não mandar o mesmo duas vezes. A opção de receber fica em `perfis.emails_resumo`.
 - O app funciona online: cada alteração vai para o Supabase na hora. Se a gravação falhar, o app avisa e recarrega os dados do servidor.
 - No primeiro login em cada aparelho, os check-ins e configurações que estavam salvos só no navegador (versões anteriores do app) são enviados para a conta.

@@ -65,6 +65,13 @@
       if (db.semFotos && this.tabela === 'checkins' && ((this.cols && /foto/.test(this.cols)) || (this.dados && [].concat(this.dados).some((r) => r && 'foto' in r)))) {
         gravar(db); return { data: null, error: { message: "column checkins.foto does not exist" } };
       }
+      // Catálogo (exercicios, jornadas): sem a lista no banco falso = SQL ainda não rodado (tabela não existe).
+      // falharCatalogo: a leitura falha (sem internet). Só leitura pela API, como no banco.
+      if (['exercicios', 'jornadas'].includes(this.tabela)) {
+        if (!Array.isArray(db[this.tabela])) { gravar(db); return { data: null, error: { code: 'PGRST205', message: `Could not find the table 'public.${this.tabela}' in the schema cache` } }; }
+        if (db.falharCatalogo) { gravar(db); return { data: null, error: { message: 'TypeError: Failed to fetch' } }; }
+        if (this.op !== 'select') { gravar(db); return { data: null, error: { code: '42501', message: `permission denied for table ${this.tabela}` } }; }
+      }
       const casa = (r) => this.filtros.every(([c, v]) => r[c] === v);
       const linhas = db[this.tabela];
       if (this.op === 'select') {
@@ -327,6 +334,61 @@
               ['usuarios', 'checkins', 'eventos'].forEach((t) => { a[t] = (a[t] || []).filter((x) => (x.usuario_id || x.id) !== args.alvo); });
               db.contasExcluidas = (db.contasExcluidas || []).concat(args.alvo);
               gravar(db); return { data: null, error: null };
+            }
+            // Catálogo pelo painel: db.exercicios (como a tabela), vídeos em db.videos e uso em admin.usos = { nome: n }.
+            if (nome === 'admin_excluir_exercicio') {
+              const a = db.admin || {}; const eu = db.sessao && db.sessao.user.id;
+              if (!(a.ids || []).includes(eu)) { gravar(db); return { data: null, error: { message: 'Acesso restrito a administradores.' } }; }
+              const e = (db.exercicios || []).find((x) => x.nome === args.p_nome);
+              const usos = (a.usos || {})[args.p_nome] || 0;
+              const obj = (db.jornadas || []).find((j) => Object.values(j.dados.treinos).some((t) => t.exercicios.some((x) => x.nome === args.p_nome)));
+              const erro = !e ? 'Exercício não encontrado.' : usos ? `Está nos treinos de ${usos} ${usos === 1 ? 'conta' : 'contas'}. Desative em vez de excluir.`
+                : obj ? `Faz parte do objetivo pronto ${obj.dados.nome}. Desative em vez de excluir.` : null;
+              if (!erro) { db.exercicios = db.exercicios.filter((x) => x !== e); db.videos = (db.videos || []).filter((v) => v.exercicio !== args.p_nome); db.log.push(`admin_excluir_exercicio:${args.p_nome}`); }
+              gravar(db); return { data: null, error: erro ? { message: erro } : null };
+            }
+            if (nome === 'admin_exercicios' || nome === 'admin_salvar_exercicio') {
+              const a = db.admin || {}; const eu = db.sessao && db.sessao.user.id;
+              if (!(a.ids || []).includes(eu)) { gravar(db); return { data: null, error: { code: '42501', message: 'acesso restrito' } }; }
+              if (!Array.isArray(db.exercicios)) { gravar(db); return { data: null, error: { message: `Could not find the function public.${nome} in the schema cache` } }; }
+              db.videos = db.videos || [];
+              const chave = (t) => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+              if (nome === 'admin_exercicios') {
+                const data = db.exercicios.map((e) => ({ ...e, video_id: (db.videos.find((v) => v.exercicio === e.nome) || {}).video_id || null, usos: (a.usos || {})[e.nome] || 0 }))
+                  .sort((x, y) => x.nome.localeCompare(y.nome));
+                gravar(db); return { data, error: null };
+              }
+              const p = args.p || {}; const atual = args.p_nome_atual || null;
+              let n = String(p.nome || '').trim().replace(/\s+/g, ' ');
+              n = n ? n[0].toUpperCase() + n.slice(1) : n;
+              const video = String(p.video_id || '').trim();
+              let erro = null;
+              const outro = db.exercicios.find((e) => chave(e.nome) === chave(n) && e.nome !== atual);
+              const antigo = db.exercicios.find((e) => e.nome !== atual && (e.nomes_antigos || []).some((x) => chave(x) === chave(n)));
+              if (!n || n.length > 80) erro = 'Informe o nome do exercício (até 80 letras).';
+              else if (outro) erro = `Já existe um exercício com esse nome: ${outro.nome}.`;
+              else if (antigo) erro = `Esse nome já foi do exercício ${antigo.nome}. Escolha outro.`;
+              else if (video && !/^[\w-]{11}$/.test(video)) erro = 'Vídeo inválido: use o link ou o código de 11 letras do YouTube.';
+              else if (a.falharSalvarExercicio) erro = 'falha simulada';
+              if (erro) { gravar(db); return { data: null, error: { message: erro } }; }
+              const campos = { nome: n, grupo: p.grupo, dose: p.dose || '3×10', pse: Number(p.pse) || 8, hipertrofia: p.hipertrofia || 'baixa', mobilidade: p.mobilidade || 'baixa',
+                forca: p.forca || 'baixa', explosao: p.explosao || 'baixa', explicacao: String(p.explicacao || '').trim(), variacoes: p.variacoes || [], ativo: p.ativo !== false, atualizado_em: new Date().toISOString() };
+              if ('objetivos' in p) campos.objetivos = p.objetivos || [];
+              if (!atual) db.exercicios.push({ objetivos: [], ...campos, nomes_antigos: [] });
+              else {
+                const e = db.exercicios.find((x) => x.nome === atual);
+                if (!e) { gravar(db); return { data: null, error: { message: 'Exercício não encontrado.' } }; }
+                let antigos = (e.nomes_antigos || []).filter((x) => x !== n);
+                if (n !== atual && !antigos.includes(atual)) antigos = [...antigos, atual];
+                Object.assign(e, campos, { nomes_antigos: antigos });
+                if (n !== atual) db.videos.forEach((v) => { if (v.exercicio === atual) v.exercicio = n; });
+              }
+              if ('video_id' in p) {
+                db.videos = db.videos.filter((v) => v.exercicio !== n);
+                if (video) db.videos.push({ exercicio: n, video_id: video });
+              }
+              db.log.push(`admin_salvar_exercicio:${atual || ''}>${n}`);
+              gravar(db); return { data: n, error: null };
             }
             if (nome === 'eh_admin' || nome.startsWith('admin_')) {
               gravar(db);
