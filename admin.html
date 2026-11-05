@@ -1025,7 +1025,7 @@
     <div class="ex-filtro-bloco"><b>Situação</b><div class="ex-grupos" id="ex-sit-filtro" role="group" aria-label="Filtrar por situação"></div></div>
     <div class="ex-filtros-acoes">
       <button class="btn-sec" type="button" id="ex-limpar">Limpar</button>
-      <button class="btn" type="button" id="ex-filtros-ver" data-ex-filtros-fechar>Ver exercícios</button>
+      <button class="btn" type="button" id="ex-filtros-ver">Filtrar</button>
     </div>
   </div>
 </dialog>
@@ -2601,26 +2601,14 @@
     const comVideo = todos.filter((e) => e.ativo && e.video_id).length;
     const desativados = todos.length - ativos;
     $('ex-resumo').textContent = `${ativos} ${ativos === 1 ? 'exercício ativo' : 'exercícios ativos'} · ${comVideo} com vídeo${desativados ? ` · ${desativados} ${desativados === 1 ? 'desativado' : 'desativados'}` : ''}`;
-    const conta = (g) => todos.filter((e) => g === 'todos' || e.grupo === g).length;
-    $('ex-grupos').innerHTML = ['todos', ...GRUPOS_EX].filter((g) => g === 'todos' || conta(g)).map((g) => `
-      <button type="button" data-ex-grupo="${g}" aria-pressed="${exs.grupo === g}">${g === 'todos' ? 'Todos' : esc(rotuloGrupoEx(g))} <small>${conta(g)}</small></button>`).join('');
+    renderFiltros();
     const nomeObj = (id) => (exs.jornadas.find((j) => j.id === id) || { nome: id }).nome;
-    const contaObj = (id) => todos.filter((e) => (e.objetivos || []).includes(id)).length;
-    $('ex-objs-filtro').innerHTML = exs.jornadas.length ? ['todos', ...exs.jornadas.map((j) => j.id)].map((id) => `
-      <button type="button" data-ex-obj="${esc(id)}" aria-pressed="${exs.obj === id}">${id === 'todos' ? 'Todos' : esc(nomeObj(id))} <small>${id === 'todos' ? todos.length : contaObj(id)}</small></button>`).join('') : '';
-    $('ex-objs-bloco').hidden = !exs.jornadas.length;
-    $('ex-sit-filtro').innerHTML = [['todos', 'Todos', todos.length], ['ativos', 'Ativos', ativos], ['desativados', 'Desativados', desativados], ['sem-video', 'Sem vídeo', todos.filter((e) => !e.video_id).length]].map(([k, r, n]) => `
-      <button type="button" data-ex-sit="${k}" aria-pressed="${exs.sit === k}">${r} <small>${n}</small></button>`).join('');
     const nFiltros = ['grupo', 'obj', 'sit'].filter((k) => exs[k] !== 'todos').length;
     $('ex-filtros-n').hidden = !nFiltros;
     $('ex-filtros-n').textContent = nFiltros;
     $('ex-filtrar').setAttribute('aria-label', nFiltros ? `Filtros (${nFiltros} ${nFiltros === 1 ? 'ativo' : 'ativos'})` : 'Filtros');
-    const busca = chaveEx(exs.busca);
-    const itens = todos
-      .filter((e) => (exs.grupo === 'todos' || e.grupo === exs.grupo) && (exs.obj === 'todos' || (e.objetivos || []).includes(exs.obj))
-        && (exs.sit === 'todos' || (exs.sit === 'ativos' ? e.ativo : exs.sit === 'desativados' ? !e.ativo : !e.video_id)) && (!busca || [e.nome, ...(e.variacoes || []), ...(e.nomes_antigos || [])].some((n) => chaveEx(n).includes(busca))))
+    const itens = filtrarExercicios(exs)
       .sort((a, b) => (b.ativo - a.ativo) || GRUPOS_EX.indexOf(a.grupo) - GRUPOS_EX.indexOf(b.grupo) || a.nome.localeCompare(b.nome, 'pt-BR'));
-    $('ex-filtros-ver').textContent = `Ver ${itens.length} ${itens.length === 1 ? 'exercício' : 'exercícios'}`;
     lista.innerHTML = itens.length ? itens.map((e) => `
       <div class="conv-item ex-item">
         <b>${esc(e.nome)}${e.ativo ? '' : ' <span class="conv-estado desativado">Desativado</span>'}</b>
@@ -2628,6 +2616,32 @@
         ${(e.objetivos || []).length ? `<span class="ex-tags">${e.objetivos.map((id) => `<span>${esc(nomeObj(id))}</span>`).join('')}</span>` : ''}
         <span class="conv-botoes"><button class="excluir-btn editar-btn" type="button" data-ex-editar="${esc(e.nome)}" aria-label="Editar ${esc(e.nome)}" title="Editar exercício">${ICON.lapis}</button><button class="excluir-btn" type="button" data-ex-apagar="${esc(e.nome)}" aria-label="Excluir ${esc(e.nome)}" title="Excluir exercício">${ICON.lixeira}</button></span>
       </div>`).join('') : '<p class="vazio">Nenhum exercício com esse nome neste grupo.</p>';
+  }
+  // Exercícios que passam nos filtros f ({ grupo, obj, sit }) e na busca.
+  function filtrarExercicios(f) {
+    const busca = chaveEx(exs.busca);
+    return (exs.lista || []).filter((e) => (f.grupo === 'todos' || e.grupo === f.grupo) && (f.obj === 'todos' || (e.objetivos || []).includes(f.obj))
+      && (f.sit === 'todos' || (f.sit === 'ativos' ? e.ativo : f.sit === 'desativados' ? !e.ativo : !e.video_id))
+      && (!busca || [e.nome, ...(e.variacoes || []), ...(e.nomes_antigos || [])].some((n) => chaveEx(n).includes(busca))));
+  }
+  // Janela de filtros: as escolhas ficam num rascunho e só valem ao tocar em Filtrar (fechar descarta).
+  function renderFiltros() {
+    if (!exs.lista) return;
+    const f = exs.rascunho || exs;
+    const todos = exs.lista;
+    const conta = (g) => todos.filter((e) => g === 'todos' || e.grupo === g).length;
+    $('ex-grupos').innerHTML = ['todos', ...GRUPOS_EX].filter((g) => g === 'todos' || conta(g)).map((g) => `
+      <button type="button" data-ex-grupo="${g}" aria-pressed="${f.grupo === g}">${g === 'todos' ? 'Todos' : esc(rotuloGrupoEx(g))} <small>${conta(g)}</small></button>`).join('');
+    const nomeObj = (id) => (exs.jornadas.find((j) => j.id === id) || { nome: id }).nome;
+    const contaObj = (id) => todos.filter((e) => (e.objetivos || []).includes(id)).length;
+    $('ex-objs-filtro').innerHTML = exs.jornadas.length ? ['todos', ...exs.jornadas.map((j) => j.id)].map((id) => `
+      <button type="button" data-ex-obj="${esc(id)}" aria-pressed="${f.obj === id}">${id === 'todos' ? 'Todos' : esc(nomeObj(id))} <small>${id === 'todos' ? todos.length : contaObj(id)}</small></button>`).join('') : '';
+    $('ex-objs-bloco').hidden = !exs.jornadas.length;
+    const ativos = todos.filter((e) => e.ativo).length;
+    $('ex-sit-filtro').innerHTML = [['todos', 'Todos', todos.length], ['ativos', 'Ativos', ativos], ['desativados', 'Desativados', todos.length - ativos], ['sem-video', 'Sem vídeo', todos.filter((e) => !e.video_id).length]].map(([k, r, n]) => `
+      <button type="button" data-ex-sit="${k}" aria-pressed="${f.sit === k}">${r} <small>${n}</small></button>`).join('');
+    const n = filtrarExercicios(f).length;
+    $('ex-filtros-ver').textContent = `Filtrar · ${n} ${n === 1 ? 'exercício' : 'exercícios'}`;
   }
   // Séries no padrão do app: "3×10", "2–3×12 / lado", "3×30 s", "3×1 min", "3×12 totais". O que não cabe nisso
   // (ex.: "8×20 s forte / 40 s leve") fica em "Outro formato".
@@ -2868,21 +2882,36 @@
   });
   $('ex-busca').addEventListener('input', (ev) => { exs.busca = ev.target.value; renderExercicios(); });
   document.addEventListener('click', (ev) => {
-    if (ev.target.closest('#ex-filtrar')) return $('ex-filtros-dialog').showModal();
+    if (ev.target.closest('#ex-filtrar')) {
+      exs.rascunho = { grupo: exs.grupo, obj: exs.obj, sit: exs.sit };
+      renderFiltros();
+      return $('ex-filtros-dialog').showModal();
+    }
+    if (ev.target.closest('#ex-filtros-ver')) {
+      Object.assign(exs, exs.rascunho || {});
+      $('ex-filtros-dialog').close();
+      return renderExercicios();
+    }
     if (ev.target === $('ex-filtros-dialog') || ev.target.closest('[data-ex-filtros-fechar]')) return $('ex-filtros-dialog').close();
-    if (ev.target.closest('#ex-limpar')) { Object.assign(exs, { grupo: 'todos', obj: 'todos', sit: 'todos' }); return renderExercicios(); }
+    if (!exs.rascunho) return cliqueLista(ev);
+    if (ev.target.closest('#ex-limpar')) { Object.assign(exs.rascunho, { grupo: 'todos', obj: 'todos', sit: 'todos' }); return renderFiltros(); }
     const st = ev.target.closest('[data-ex-sit]');
-    if (st) { exs.sit = st.dataset.exSit; return renderExercicios(); }
+    if (st) { exs.rascunho.sit = st.dataset.exSit; return renderFiltros(); }
     const ob = ev.target.closest('[data-ex-obj]');
-    if (ob) { exs.obj = ob.dataset.exObj; return renderExercicios(); }
+    if (ob) { exs.rascunho.obj = ob.dataset.exObj; return renderFiltros(); }
     const g = ev.target.closest('[data-ex-grupo]');
-    if (g) { exs.grupo = g.dataset.exGrupo; return renderExercicios(); }
+    if (g) { exs.rascunho.grupo = g.dataset.exGrupo; return renderFiltros(); }
+    return cliqueLista(ev);
+  });
+  // Fechar a janela sem Filtrar descarta as escolhas.
+  $('ex-filtros-dialog').addEventListener('close', () => { exs.rascunho = null; });
+  function cliqueLista(ev) {
     const ap = ev.target.closest('[data-ex-apagar]');
     if (ap) return abrirApagar(ap.dataset.exApagar);
     const ed = ev.target.closest('[data-ex-editar]');
     if (ed) return abrirExercicio(ed.dataset.exEditar);
     if (ev.target.closest('#ex-novo')) return abrirExercicio(null);
-  });
+  }
 
   // Os gráficos são desenhados na largura real; redesenha quando a janela muda.
   let timerTamanho = null, larguraAnterior = innerWidth;

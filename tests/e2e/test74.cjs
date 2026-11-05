@@ -46,14 +46,21 @@ const linhas = (p) => p.locator('#ex-lista .ex-item b').allInnerTexts();
     ok(await p.locator('#ex-filtros-dialog[open]').count() === 1 && await p.locator('#ex-grupos').isVisible(), `${tag}: botão Filtros abre os filtros numa janela`);
     await p.locator('#ex-filtros-dialog').screenshot({ path: `${H.SAIDA}/admin-exercicios-filtros-${tag}.png` });
     await p.click('[data-ex-grupo="Pescoço"]'); await p.waitForTimeout(80);
-    ok((await p.locator('#ex-filtros-n').innerText()) === '1' && /^Ver \d+ exercícios?$/.test((await p.locator('#ex-filtros-ver').innerText()).trim()), `${tag}: botão mostra quantos filtros estão ativos e a janela, quantos exercícios`, await p.locator('#ex-filtros-ver').innerText());
+    ok((await linhas(p)).length === 136 && await p.locator('#ex-filtros-n').isHidden() && /^Filtrar · 3 exercícios$/.test((await p.locator('#ex-filtros-ver').innerText()).trim()), `${tag}: escolher na janela não filtra ainda (o botão mostra quantos vão ficar)`, await p.locator('#ex-filtros-ver').innerText());
+    await p.click('#ex-filtros-ver'); await p.waitForTimeout(80);
     const pescoco = await linhas(p);
-    ok(pescoco.length >= 1 && pescoco.length < 10, `${tag}: filtro por grupo`, pescoco.join('|'));
+    ok(await p.locator('#ex-filtros-dialog[open]').count() === 0 && pescoco.length === 3 && (await p.locator('#ex-filtros-n').innerText()) === '1', `${tag}: Filtrar aplica, fecha e mostra 1 filtro ativo`, pescoco.join('|'));
+    // Fechar sem Filtrar descarta a escolha.
+    await p.click('#ex-filtrar'); await p.click('[data-ex-sit="sem-video"]'); await p.keyboard.press('Escape'); await p.waitForTimeout(80);
+    ok((await linhas(p)).join('|') === pescoco.join('|'), `${tag}: fechar sem Filtrar não muda a lista`);
+    await p.click('#ex-filtrar');
+    ok(await p.getAttribute('[data-ex-sit="todos"]', 'aria-pressed') === 'true' && await p.getAttribute('[data-ex-grupo="Pescoço"]', 'aria-pressed') === 'true', `${tag}: reabrir mostra os filtros aplicados`);
     await p.click('#ex-limpar'); await p.waitForTimeout(80);
-    ok(await p.locator('#ex-filtros-n').isHidden(), `${tag}: Limpar filtros`);
-    await p.click('[data-ex-sit="sem-video"]'); await p.waitForTimeout(80);
+    ok((await linhas(p)).length === 3, `${tag}: Limpar só vale depois de Filtrar`);
+    await p.click('[data-ex-sit="sem-video"]'); await p.click('#ex-filtros-ver'); await p.waitForTimeout(80);
     ok((await linhas(p)).length === 135 && !(await linhas(p)).includes('Puxada'), `${tag}: filtro sem vídeo`, String((await linhas(p)).length));
-    await p.click('#ex-limpar'); await p.click('#ex-filtros-ver'); await p.waitForTimeout(80);
+    await p.click('#ex-filtrar'); await p.click('#ex-limpar'); await p.click('#ex-filtros-ver'); await p.waitForTimeout(80);
+    ok(await p.locator('#ex-filtros-n').isHidden() && (await linhas(p)).length === 136, `${tag}: Limpar e Filtrar volta a lista inteira`);
 
     // Editar a Puxada: renomear avisa quem usa; o vídeo vai por link.
     await p.click('[data-ex-editar="Puxada"]'); await p.waitForTimeout(120);
@@ -98,10 +105,10 @@ const linhas = (p) => p.locator('#ex-lista .ex-item b').allInnerTexts();
     const novo = db.exercicios.find((e) => e.nome === 'Remada no anel');
     ok(novo && novo.grupo === 'Peito' && novo.dose === '3×12 / lado' && novo.pse === 7 && novo.forca === 'alta' && novo.variacoes.join('|') === 'Remada nas argolas|Remada no TRX' && novo.objetivos.join('|') === 'forca' && novo.ativo, `${tag}: cria com todos os campos no padrão`, JSON.stringify(novo));
     ok(/Força e potência/.test(await txt(p, '#ex-lista .ex-item:has(b:text-is("Remada no anel"))')), `${tag}: lista mostra o objetivo`);
-    await p.click('#ex-filtrar'); await p.click('[data-ex-obj="forca"]'); await p.waitForTimeout(80);
+    await p.click('#ex-filtrar'); await p.click('[data-ex-obj="forca"]'); await p.click('#ex-filtros-ver'); await p.waitForTimeout(80);
     const daForca = await linhas(p);
     ok(daForca.includes('Remada no anel') && daForca.includes('Deadlift') && !daForca.includes('Escorpião'), `${tag}: filtro por objetivo`, String(daForca.length));
-    await p.click('#ex-limpar'); await p.click('#ex-filtros-ver'); await p.waitForTimeout(80);
+    await p.click('#ex-filtrar'); await p.click('#ex-limpar'); await p.click('#ex-filtros-ver'); await p.waitForTimeout(80);
     // Formato que não cabe nos campos (texto livre) abre em "Outro formato" e continua igual.
     await p.click('[data-ex-editar="Cardio curto intervalado"]'); await p.waitForTimeout(120);
     ok(await p.isChecked('#ex-dose-livre') && await p.locator('#ex-dose').isVisible() && await p.locator('#ex-dose-campos').isHidden(), `${tag}: formato livre abre em "Outro formato"`, await p.inputValue('#ex-dose'));
