@@ -188,6 +188,10 @@
     .aba-longo { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
     .aba-curto { display: inline; }
   }
+  /* Celular estreito: as 6 abas ainda cabem numa linha. */
+  @media (max-width: 400px) {
+    .abas [role="tab"] { padding: 0 4px; font-size: 13.5px; }
+  }
   .abas [role="tab"][aria-selected="true"] { color: var(--tatame-tinta); border-bottom-color: var(--tatame); }
   .aba-alerta {
     min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--erro); color: #fff;

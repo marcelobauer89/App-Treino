@@ -49,9 +49,9 @@ const ADM = {
     // abas
     const nomes = [];
     for (const t of await p.locator('[role="tab"]').all()) nomes.push((await t.evaluate((e) => e.querySelector('.aba-longo') ? e.querySelector('.aba-longo').textContent : e.textContent)).trim());
-    ok(nomes.join('|') .replace(/\d+$/, '') === 'Visão geral|Usuários|Saúde do app|E-mails|Convites', `${tag}: 4 abas`, nomes.join('|'));
+    ok(nomes.join('|').replace(/Convites\d*/, 'Convites') === 'Visão geral|Usuários|Saúde do app|E-mails|Convites|Exercícios', `${tag}: 6 abas`, nomes.join('|'));
     const vis = await p.locator('[role="tab"]').evaluateAll((ts) => ts.map((t) => { const r = t.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth; }));
-    ok(vis.every(Boolean), `${tag}: as 4 abas cabem na tela`);
+    ok(vis.every(Boolean), `${tag}: as 6 abas cabem na tela`);
     if (viewport.width < 720) ok(await p.locator('#tab-geral .aba-curto').isVisible() && (await p.getByRole('tab', { name: 'Visão geral' }).count()) === 1, `${tag}: rótulo curto no celular, nome completo acessível`);
     ok(await p.locator('#aba-geral').isVisible() && await p.locator('#aba-usuarios').isHidden() && await p.locator('#tab-geral').getAttribute('aria-selected') === 'true', `${tag}: começa na visão geral`);
     ok(await txt(p, '#alerta-saude') === '3' && (await p.locator('#alerta-saude').getAttribute('aria-label')) === '3 erros críticos nas últimas 24 horas', `${tag}: bolinha com 3 erros em 24 h`, await txt(p, '#alerta-saude'));
@@ -60,7 +60,7 @@ const ADM = {
     await p.locator('#tab-usuarios').focus(); await p.keyboard.press('ArrowRight');
     ok(await p.locator('#aba-saude').isVisible() && await p.evaluate(() => document.activeElement.id) === 'tab-saude', `${tag}: seta para a direita troca de aba`);
     await p.keyboard.press('End');
-    ok(await p.locator('#aba-convites').isVisible(), `${tag}: End vai para a última`);
+    ok(await p.locator('#aba-exercicios').isVisible(), `${tag}: End vai para a última`);
     await p.keyboard.press('Home');
     ok(await p.locator('#aba-geral').isVisible() && (await p.evaluate(() => location.hash)) === '', `${tag}: Home volta à primeira`);
     // Saúde, 7 dias
