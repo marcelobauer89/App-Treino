@@ -1,6 +1,6 @@
 ## PRD — App Bauer: Jiu Jitsu + Hipertrofia
 
-2026-11-05 · @Bauer
+2026-11-06 · @Bauer
 
 ### Visão geral
 
@@ -419,7 +419,9 @@ Pendências e cuidados:
    - catálogo de exercícios e objetivos no banco, com a aba Exercícios no monitoramento (busca, filtros numa janela, criar, editar com campos no padrão do app, renomear, desativar, excluir, vídeo por link e objetivos por exercício), refletido nos cartões de quem já usa sem mexer nos treinos;
    - chip "Do meu objetivo" ao adicionar exercício;
    - futebol e futvôlei como atividades;
-   - "Quem sumiu" no monitoramento só com os possíveis churn (sem usar o app há 7 dias ou mais).
+   - "Quem sumiu" no monitoramento só com os possíveis churn (sem usar o app há 7 dias ou mais);
+   - resumo semanal "E aí, sumiu?" para quem parou de usar o app;
+   - legenda do calendário só com as atividades da semana de cada pessoa (e as que tiveram check-in no mês).
 2. **MVP (web, grupo de amigos):**
    - PWA responsiva com modo offline;
    - onboarding com peso e alvo, semana e fase, peso e proteína;
