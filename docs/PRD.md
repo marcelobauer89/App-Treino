@@ -1,23 +1,26 @@
-## PRD — App Bauer: Jiu Jitsu + Hipertrofia
+## PRD — OSS: o hub das suas atividades físicas
 
 2026-11-06 · @Bauer
 
 ### Visão geral
 
-O App Bauer transforma o plano de 6 semanas "Jiu Jitsu + Hipertrofia" (hoje um PDF de 15 páginas) numa aplicação web responsiva, usada no navegador do celular, que diz o que treinar hoje, registra cargas e acompanha o peso rumo ao alvo. A primeira versão é compartilhada com um grupo fechado de amigos, cada um com sua conta, seus dados e seus alvos.
+O OSS é um hub para organizar e acompanhar todas as atividades físicas de uma pessoa num lugar só: musculação, Jiu Jitsu, muay thai, surf, futebol, futvôlei e cardio. É uma aplicação web responsiva, usada no navegador do celular, que monta a semana, diz o que fazer hoje, registra cargas e check-ins e mostra a evolução. Cada pessoa tem sua conta, seus dados e seus objetivos.
 
-**Problema.** O PDF repete as mesmas tabelas em 12 páginas, não registra cargas, não reorganiza a semana quando surge uma aula extra de Jiu Jitsu e deixa o controle de progresso numa tabela em branco para preencher à mão.
+O app nasceu do plano de 6 semanas "Jiu Jitsu + Hipertrofia" (um PDF de 15 páginas) e foi além dele. Esse plano virou um dos objetivos com treinos prontos, ao lado de Hipertrofia, Força e potência e Mobilidade e prevenção, e a semana passou a receber qualquer atividade que a pessoa pratique. A versão atual é compartilhada com um grupo fechado de amigos; a abertura ao público é o próximo passo.
 
-**Solução.** Um app que:
+**Problema.** Quem combina academia com um ou mais esportes espalha a rotina em vários lugares: ficha de academia em papel ou PDF, anotações do tatame, mensagens do grupo do futebol, memória. Nenhum desses lugares mostra a semana inteira, guarda a carga da última vez, avisa quando as atividades se atrapalham (pernas na véspera do tatame ou do jogo) nem diz se a pessoa está mantendo a frequência. O PDF original resumia o problema: repetia as mesmas tabelas em 12 páginas, não registrava cargas, não reorganizava a semana quando surgia uma atividade extra e deixava o progresso numa tabela em branco para preencher à mão.
+
+**Solução.** Um hub que:
 
 - Mostra a atividade do dia (treinos de musculação, Jiu Jitsu, muay thai, surf, futebol, futvôlei, cardio ou descanso) com base na semana que o próprio usuário monta.
+- Oferece treinos prontos por objetivo ou deixa a pessoa montar os próprios com a biblioteca de exercícios.
 - Registra a carga de cada série por exercício, pré-preenchida com a da última vez.
-- Faz check-in de cada treino (musculação, Jiu Jitsu, muay thai, surf, futebol, futvôlei ou cardio) por um botão fixo, quantas vezes for preciso no mesmo dia.
-- Mostra um Dashboard com calendário de check-ins, os treinos feitos em cada um e a semana comparada ao plano.
-- Aplica as regras do plano automaticamente: fase da semana, passada em 3×16 nas semanas 5–6, avisos de conflito na semana.
+- Faz check-in de qualquer atividade (musculação, Jiu Jitsu, muay thai, surf, futebol, futvôlei ou cardio) por um botão fixo, quantas vezes for preciso no mesmo dia.
+- Mostra um Dashboard com calendário de check-ins de todas as atividades, os treinos feitos em cada um e a semana comparada ao planejado.
+- Aplica as regras da semana e dos planos automaticamente: avisos de conflito, fase da semana e progressões do bloco de 6 semanas (como a passada em 3×16 nas semanas 5–6).
 - Acompanha peso médio semanal, % de gordura e proteína.
 
-**Objetivo do produto.** Fazer cada usuário completar as 6 semanas com aderência alta, perdendo gordura de forma gradual (no caso do Bauer, 76 → 74 kg) sem perder força nem desempenho no tatame.
+**Objetivo do produto.** Ajudar cada pessoa a manter a constância em todas as suas atividades, cumprindo a semana que planejou, evoluindo as cargas e acompanhando o próprio objetivo (ganhar massa, perder gordura, ganhar força, mobilidade ou render mais no esporte) num só lugar. No caso do Bauer, isso significa completar o bloco Jiu Jitsu + Hipertrofia perdendo gordura de forma gradual (76 → 74 kg) sem perder força nem desempenho no tatame.
 
 ### Estado atual do app
 
@@ -35,9 +38,9 @@ Ainda não existem: modo offline, onboarding com peso e alvo, semana/fase do blo
 
 ### Público-alvo e persona
 
-O MVP atende um grupo fechado: o Bauer, criador do plano e administrador do grupo, e amigos convidados por ele que treinam Jiu Jitsu e musculação. A abertura ao público fica para uma versão futura.
+O OSS é para quem combina musculação com um ou mais esportes (Jiu Jitsu, muay thai, surf, futebol, futvôlei, cardio) e quer ver a semana inteira num lugar só. O MVP atende um grupo fechado: o Bauer, criador do app e administrador do grupo, e amigos convidados por ele. A abertura ao público fica para uma versão futura.
 
-**Persona: Bauer, praticante de Jiu Jitsu em recomposição corporal**
+**Persona principal: Bauer, praticante de Jiu Jitsu e musculação em recomposição corporal**
 
 | Atributo | Valor |
 | --- | --- |
@@ -54,33 +57,34 @@ O MVP atende um grupo fechado: o Bauer, criador do plano e administrador do grup
 
 **Persona secundária: amigo convidado**
 
-Pratica Jiu Jitsu, tem peso e alvo próprios e recebe o link do app do Bauer. Quer seguir o mesmo plano sem montar nada, ver os próprios números e ter a segurança de que seus dados de corpo não ficam visíveis para o grupo sem sua permissão.
+Faz academia e pratica um ou mais esportes (Jiu Jitsu, futebol, surf, futvôlei...), tem objetivo, peso e alvo próprios e recebe o link do app do Bauer. Quer escolher treinos prontos para o seu objetivo sem montar nada, encaixar os esportes na semana, ver os próprios números e ter a segurança de que seus dados de corpo não ficam visíveis para o grupo sem sua permissão.
 
 ### Objetivos e métricas de sucesso
 
-O MVP é bem-sucedido se os usuários concluírem o bloco de 6 semanas registrando pelo menos 90% das sessões e atingirem o primeiro alvo de peso mantendo as cargas principais.
+O MVP é bem-sucedido se os usuários cumprirem a semana que montaram em todas as atividades, registrarem as cargas da musculação e usarem o app como o lugar único da rotina. Para quem segue o bloco Jiu Jitsu + Hipertrofia, vale também concluir as 6 semanas registrando pelo menos 90% das sessões e atingir o primeiro alvo de peso mantendo as cargas principais.
 
 | Métrica | Meta | Como medir |
 | --- | --- | --- |
 | Aderência à musculação | ≥ 90% das 18 sessões previstas | Check-ins de musculação ÷ sessões planejadas |
-| Aderência ao Jiu Jitsu | ≥ 10 de 12 aulas | Check-ins de Jiu Jitsu |
+| Aderência às outras atividades | ≥ 80% das atividades planejadas (Jiu Jitsu, muay thai, surf, futebol, futvôlei, cardio); no bloco do Bauer, ≥ 10 de 12 aulas de Jiu Jitsu | Check-ins de cada tipo ÷ vezes que ele aparece na semana montada |
+| Uso como hub (meta proposta) | ≥ 60% dos usuários ativos com check-in de 2 ou mais tipos de atividade no mês | Tipos distintos de check-in por usuário no mês |
 | Registro de cargas | ≥ 95% dos exercícios principais com carga registrada | Agachamento, deadlift, supino no chão, desenvolvimento, puxada, remada inversa, passada |
 | Peso médio semanal | Alvo individual (Bauer: 76 → 74 kg, ~0,3 kg/semana) | Média das pesagens da semana |
 | Força preservada | Carga dos exercícios principais igual ou maior que na semana 1 | Comparação semana 1 × semana 6 |
 | Tempo para registrar uma série | ≤ 5 s | Teste de usabilidade |
-| Uso do app | Acessos frequentes durante o bloco | Último acesso e quantidade de acessos por usuário, consultados no Supabase |
+| Uso do app | Acessos frequentes ao longo das semanas | Último acesso e quantidade de acessos por usuário, consultados no Supabase |
 
-Métricas do grupo (metas propostas): ≥ 70% dos amigos convidados criam conta e ≥ 50% concluem as 6 semanas.
+Métricas do grupo (metas propostas): ≥ 70% dos amigos convidados criam conta e ≥ 50% seguem usando o app depois de 6 semanas.
 
 ### Escopo do MVP
 
-O MVP cobre um grupo de amigos convidados, cada um com conta e dados próprios, e um único bloco de 6 semanas. Hoje o app funciona online; o modo offline com sincronização segue no escopo do MVP.
+O MVP cobre um grupo de amigos convidados, cada um com conta e dados próprios, com a semana montada por atividade e os treinos prontos por objetivo; o bloco de 6 semanas Jiu Jitsu + Hipertrofia segue como plano com fases. Hoje o app funciona online; o modo offline com sincronização segue no escopo do MVP.
 
 **Dentro do escopo**
 
 - Contas individuais com login pela conta Google; convite por link ou código, gerado pelo administrador.
 - Dados de cada usuário separados e privados, guardados na nuvem; uso offline com sincronização.
-- Plano Bauer como modelo comum; cada usuário define peso, alvo e data de início.
+- Objetivos com treinos prontos (Jiu Jitsu, Hipertrofia, Força e potência, Mobilidade e prevenção); o plano Jiu Jitsu + Hipertrofia de 6 semanas segue como bloco com fases; cada usuário define peso, alvo e data de início.
 - Perfil do usuário (nome, e-mail, foto), tema claro/escuro e estilo das cores (RF-62).
 - Semana montada pelo usuário (até 2 atividades por dia), com a atividade do dia no topo da tela Treino.
 - Treinos personalizados: até 6 treinos montados com uma biblioteca de exercícios, ou o plano pronto (Treinos 1, 2 e 3).
@@ -428,7 +432,7 @@ Pendências e cuidados:
    - tela de progresso;
    - os demais requisitos P0 e P1 pendentes.
 3. **v1.1:** análise de recursos usados e da jornada dos usuários no monitoramento (RF-41), exportação CSV/PDF (incluindo o histórico de check-ins), gráficos de carga por exercício, lembretes por notificação web, aderência compartilhada opcional (RF-24).
-4. **v2 (nativo e público):** apps iOS e Android, publicação nas lojas, editor de planos, novos blocos após as 6 semanas, integração com Apple Saúde / Health Connect.
+4. **v2 (nativo e público):** abertura ao público como hub de atividades físicas, novas atividades (corrida, ciclismo, natação e outras) e treinos prontos para mais objetivos e esportes, apps iOS e Android, publicação nas lojas, editor de planos, novos blocos após as 6 semanas, integração com Apple Saúde / Health Connect.
 
 **Riscos**
 
@@ -456,6 +460,7 @@ Pendências e cuidados:
 **Questões em aberto**
 
 - Quantos amigos entram no grupo inicial?
+- A tela de entrada ainda diz "Exercícios de Jiu Jitsu e hipertrofia". Qual texto passa a apresentar o OSS como hub de atividades físicas?
 - ~~O acesso deve ser restrito a convidados (RF-02) ou basta o link?~~ Decidido: só convidados, com link por pessoa válido por 7 dias e pedido de acesso.
 - Os amigos podem ver o progresso uns dos outros ou cada um vê só o seu?
 - Todos seguem exatamente o plano do Bauer ou alguns precisam de variações?
