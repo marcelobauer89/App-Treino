@@ -1586,15 +1586,8 @@
         </button>
       </div>
       <div class="cal-grade" id="cal-grade"></div>
-      <ul class="legenda-cal" aria-label="Legenda do calendário">
-        <li><span class="selo musc" aria-hidden="true">1</span><span class="selo musc" aria-hidden="true">2</span><span class="selo musc" aria-hidden="true">3</span><span>Musculação</span></li>
-        <li><span class="selo jiu" aria-hidden="true">J</span><span>Jiu Jitsu</span></li>
-        <li><span class="selo muay" aria-hidden="true">M</span><span>Muay Thai</span></li>
-        <li><span class="selo surf" aria-hidden="true">S</span><span>Surf</span></li>
-        <li><span class="selo futebol" aria-hidden="true">F</span><span>Futebol</span></li>
-        <li><span class="selo futvolei" aria-hidden="true">V</span><span>Futvôlei</span></li>
-        <li><span class="selo bike" aria-hidden="true">C</span><span>Cardio</span></li>
-      </ul>
+      <!-- Preenchida em renderCalendario(): só o que está na semana da pessoa e o que teve check-in no mês. -->
+      <ul class="legenda-cal" id="legenda-cal" aria-label="Legenda do calendário"></ul>
     </div>
   </section>
   <section class="bloco" aria-labelledby="dia-titulo">
@@ -4120,6 +4113,23 @@
         </button>`;
     }).join('');
     $('cal-grade').innerHTML = cab + vazios + dias;
+    renderLegendaCal(`${ano}-${pad(mes + 1)}`);
+  }
+  // Legenda do calendário: só as atividades da semana montada pela pessoa e as que tiveram check-in no mês
+  // exibido (um check-in avulso nunca fica sem explicação). Musculação numa linha só, com os selos dos treinos.
+  function renderLegendaCal(prefixo) {
+    const usados = new Set([
+      ...config.semana.flat(),
+      ...checkins.filter((c) => dataDe(c).startsWith(prefixo)).map((c) => c.tipo),
+    ].filter((t) => TIPOS[t]));
+    const treinos = TIPOS_MUSC.filter((t) => usados.has(t));
+    const linhas = [];
+    if (treinos.length) {
+      linhas.push(`<li>${treinos.map((t) => seloHTML(t)).join('')}<span>${treinos.length === 1 ? esc(TIPOS[treinos[0]].nome) : 'Musculação'}</span></li>`);
+    }
+    ATIVIDADES.filter((t) => usados.has(t)).forEach((t) => linhas.push(`<li>${seloHTML(t)}<span>${esc(TIPOS[t].nome)}</span></li>`));
+    $('legenda-cal').innerHTML = linhas.join('');
+    $('legenda-cal').hidden = !linhas.length;
   }
 
   // Exercícios de um check-in de musculação: os do treino de hoje e os que tiveram peso no dia

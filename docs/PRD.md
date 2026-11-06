@@ -1,6 +1,6 @@
 ## PRD — App Bauer: Jiu Jitsu + Hipertrofia
 
-2026-11-05 · @Bauer
+2026-11-06 · @Bauer
 
 ### Visão geral
 
@@ -181,7 +181,7 @@ São 58 requisitos em 11 grupos; os marcados P0 bloqueiam o lançamento do MVP. 
 | RF-55 | Observações dos check-ins (podem revelar saúde) só com consentimento, sem perguntar no check-in: em Você → Privacidade, "Registrar observações nos check-ins" vem desligado; ligar é consentir e faz o campo Observação (opcional) aparecer no check-in e no encerrar. Desligar não pede confirmação: retira o consentimento e apaga as observações já registradas. A nota de recuperação (1–5) foi removida e as notas salvas, apagadas | P0 | Feito |
 | RF-56 | Baixar meus dados: Você → Privacidade gera `oss-meus-dados-AAAA-MM-DD.json` com perfil (sem a foto), preferências, consentimentos, treinos, semana, check-ins, cargas, registro de uso e e-mails enviados (função `meus_dados_extras()`) | P1 | Feito |
 | **Dashboard e calendário** |  |  |  |
-| RF-27 | Calendário mensal no Dashboard: cada dia mostra selos por tipo (1 a 6 para musculação, J para Jiu Jitsu, M para muay thai, S para surf, F para futebol, V para futvôlei, C para cardio); com mais de dois check-ins mostra o primeiro e "+N"; navegação entre meses até o mês atual | P0 | Feito |
+| RF-27 | Calendário mensal no Dashboard: cada dia mostra selos por tipo (1 a 6 para musculação, J para Jiu Jitsu, M para muay thai, S para surf, F para futebol, V para futvôlei, C para cardio); com mais de dois check-ins mostra o primeiro e "+N"; navegação entre meses até o mês atual. A legenda abaixo mostra só as atividades da semana montada pela pessoa e as que tiveram check-in no mês exibido (ex.: com Treino 1, Jiu Jitsu e Cardio na semana, só esses três; um check-in avulso entra só no mês dele); vários treinos de musculação ficam numa linha, com os selos de cada um | P0 | Feito |
 | RF-28 | Ao tocar num dia, listar os check-ins daquele dia em ordem de horário, com tipo, horário e duração; dia sem check-in orienta tocar em "Fazer check-in", que já usa o dia selecionado | P0 | Feito |
 | RF-29 | Ao abrir um check-in de musculação, mostrar a observação e cada exercício do treino com as cargas do dia por série; exercícios sem carga aparecem como "sem registro", e os marcados como Sem peso como "feito (sem peso)" ou "sem peso"; em check-ins encerrados, tocar num exercício abre o painel para corrigir os pesos (ou o "feito" sem peso) daquele dia | P0 | Feito |
 | RF-34 | Números do Dashboard: check-ins no total, check-ins, horas treinadas e dias com treino no mês | P1 | Feito |
@@ -419,7 +419,9 @@ Pendências e cuidados:
    - catálogo de exercícios e objetivos no banco, com a aba Exercícios no monitoramento (busca, filtros numa janela, criar, editar com campos no padrão do app, renomear, desativar, excluir, vídeo por link e objetivos por exercício), refletido nos cartões de quem já usa sem mexer nos treinos;
    - chip "Do meu objetivo" ao adicionar exercício;
    - futebol e futvôlei como atividades;
-   - "Quem sumiu" no monitoramento só com os possíveis churn (sem usar o app há 7 dias ou mais).
+   - "Quem sumiu" no monitoramento só com os possíveis churn (sem usar o app há 7 dias ou mais);
+   - resumo semanal "E aí, sumiu?" para quem parou de usar o app;
+   - legenda do calendário só com as atividades da semana de cada pessoa (e as que tiveram check-in no mês).
 2. **MVP (web, grupo de amigos):**
    - PWA responsiva com modo offline;
    - onboarding com peso e alvo, semana e fase, peso e proteína;
