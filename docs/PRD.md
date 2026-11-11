@@ -185,7 +185,7 @@ São 58 requisitos em 11 grupos; os marcados P0 bloqueiam o lançamento do MVP. 
 | RF-28 | Ao tocar num dia, listar os check-ins daquele dia em ordem de horário, com tipo, horário e duração; dia sem check-in orienta tocar em "Fazer check-in", que já usa o dia selecionado | P0 | Feito |
 | RF-29 | Ao abrir um check-in de musculação, mostrar a observação e cada exercício do treino com as cargas do dia por série; exercícios sem carga aparecem como "sem registro", e os marcados como Sem peso como "feito (sem peso)" ou "sem peso"; em check-ins encerrados, tocar num exercício abre o painel para corrigir os pesos (ou o "feito" sem peso) daquele dia | P0 | Feito |
 | RF-34 | Números do Dashboard: check-ins no total, check-ins, horas treinadas e dias com treino no mês | P1 | Feito |
-| RF-35 | "Esta semana" × plano (quantas vezes musculação, Jiu Jitsu, muay thai, surf, futebol, futvôlei e cardio aparecem na semana montada; cada tipo só aparece se estiver no plano ou tiver check-in na semana) e barras com a contagem de check-ins por tipo no mês exibido | P1 | Feito |
+| RF-35 | "Esta semana" × plano (quantas vezes musculação, Jiu Jitsu, muay thai, surf, futebol, futvôlei e cardio aparecem na semana montada; cada tipo só aparece se estiver no plano ou tiver check-in na semana) e barras com a contagem de check-ins por tipo no mês exibido ("Por tipo em novembro"), só com os tipos que estão na semana montada da pessoa ou que tiveram check-in no mês (sem nada, uma mensagem) | P1 | Feito |
 
 ### Modelo de dados
 
