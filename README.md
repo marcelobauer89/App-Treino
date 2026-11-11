@@ -169,6 +169,13 @@ Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 a t6 nos check-i
 - **Hora de subir a carga?:** os exercícios com a mesma carga máxima há 3 meses seguidos ou mais ("parado", com a sugestão de +2 kg até 20 kg e +2,5 kg acima) e os que caíram em relação ao mês anterior ("caiu"). Sem nenhum, a seção não aparece.
 - Usa os check-ins e as cargas que o app já carrega (o histórico inteiro da conta); não precisa de SQL. Para esconder a Evolução, troque `EVOLUCAO_LIGADA` para `false` no `index.html`.
 
+### Aviso de novidade (Evolução)
+
+- Ao abrir o app, quem já usa (conta nova vê as boas-vindas) vê o aviso **"Sua evolução, mês a mês"**: uma ilustração do atalho Resumo | Evolução com as colunas subindo, os três destaques (treinos mês a mês, quanto falta para o plano, pesos e hora de subir a carga), **Ver minha evolução** (abre Dashboard → Evolução) e **Agora não**.
+- Volta a cada abertura até a pessoa marcar **"Não mostrar esta novidade de novo"**, que grava `perfis.novidades_ocultas` (lista de avisos ocultos, serve para as próximas novidades) e uma cópia no navegador. Vem antes do aviso antigo dos treinos (um por abertura).
+- Eventos `novidade_evolucao` (viu, ver, depois, fechou e se ocultou) no Monitoramento.
+- **Para ligar o "não mostrar" no banco:** rode de novo o `supabase/schema.sql` (cria a coluna `novidades_ocultas`). Sem ele, a escolha vale só no aparelho.
+
 ### Futebol e Futvôlei
 
 - Tipos de check-in `futebol` (selo F) e `futvolei` (selo V), cada um com cor própria e 90 min por padrão. Entram no check-in, na Minha semana, no Dashboard, no resumo semanal por e-mail e no monitoramento.

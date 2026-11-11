@@ -21,7 +21,7 @@ const txt = async (p, s) => ((await p.locator(s).first().innerText()) || '').rep
     'bauer-perfil-v1': JSON.stringify({ nome: 'Bauer', email: 'velho@x.com', foto: '' }),
   };
   // Conta que já escondeu o aviso dos treinos personalizados neste aparelho.
-  const p = await H.novaPagina(b, { logado: false, local: { ...local, 'bauer-novidade-oculta-u1': '1' } });
+  const p = await H.novaPagina(b, { logado: false, local: { ...local, 'bauer-novidade-oculta-u1': '1', 'bauer-novidades-ocultas-u1': '["evolucao"]' } });
   await p.clock.install({ time: new Date('2026-10-21T10:00:00') });
   await p.goto(H.PAGINA);
   await p.waitForSelector('#entrar-google:not([hidden])');
