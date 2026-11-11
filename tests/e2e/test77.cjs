@@ -18,7 +18,7 @@ const CHECKINS = [
   ck('n1', 't1', '2026-11-02'), ck('n2', 'jiu', '2026-11-03'), ck('n3', 't2', '2026-11-04'), ck('n4', 'futebol', '2026-11-07', '09:00', '10:30'),
 ];
 const CARGAS = [
-  { usuario_id: 'u1', data: '2026-09-08', treino: 't1', series: { Puxada: [{ carga: 30 }] } },
+  { usuario_id: 'u1', data: '2026-09-08', treino: 't1', series: { Puxada: [{ carga: 30 }], 'Remada inversa': [{ carga: 10 }] } },
   { usuario_id: 'u1', data: '2026-10-05', treino: 't1', series: { Puxada: [{ carga: 35 }, { carga: 37.5 }], 'Remada inversa': [{ carga: 10 }] } },
   { usuario_id: 'u1', data: '2026-10-07', treino: 't2', series: { 'Supino no chão': [{ carga: 20 }] } },
   { usuario_id: 'u1', data: '2026-11-02', treino: 't1', series: { Puxada: [{ carga: 40 }], 'Remada inversa': [{ carga: 10 }] } },
@@ -61,11 +61,25 @@ const colunas = (p) => p.locator('.evo-col').evaluateAll((gs) => gs.map((g) => `
     ok(pz[0] && /^Puxada 🏆 40 kg ▲ 2,5 kg em relação a outubro/.test(pz[0]), `${tag}: Puxada subiu e é recorde (primeiro da lista)`, pz[0]);
     ok(pz.some((t) => /^Remada inversa 10 kg igual ao mês anterior/.test(t)) && pz.some((t) => /^Supino no chão 17,5 kg ▼ 2,5 kg/.test(t)) && pz.some((t) => /^Desenvolvimento 12 kg novo neste mês/.test(t)), `${tag}: igual, caiu e novo`, pz.join(' | '));
     ok(!pz.some((t) => /Desenvolvimento 🏆/.test(t)), `${tag}: primeiro registro não conta como recorde`);
+    // Quanto falta: novembro tem 21 treinos no plano (seg 5, ter 4, qua 4, qui 4, sex 4); 4 feitos; 20 dias contando hoje.
+    const falta = await txt(p, '#evo-falta');
+    ok(/^Faltam 17 treinos para fechar novembro com 100% do plano/.test(falta) && /4 de 21 treinos do plano feitos · 20 dias pela frente, contando hoje · no ritmo de agora, você fecha com 50%/.test(falta), `${tag}: quanto falta no mês`, falta);
+    ok((await txt(p, '#evo-quais-titulo')) === 'O que você treinou', `${tag}: título "O que você treinou"`);
+    // Seu plano no mês: o mais pulado primeiro.
+    const plano = (await p.locator('#evo-plano li').allInnerTexts()).map((t) => t.replace(/\s+/g, ' ').trim());
+    ok(plano.join(' | ') === 'C Cardio sexta 0 de 1 | J Jiu Jitsu terça e quinta 1 de 3 | 1 Treino 1 segunda 1 de 2 | 2 Treino 2 quarta 1 de 2', `${tag}: seu plano no mês, o mais pulado primeiro`, plano.join(' | '));
+    ok(await p.locator('#evo-plano li:first-child .seg i').count() === 1 && await p.locator('#evo-plano li:nth-child(2) .seg i.on').count() === 1, `${tag}: um tracinho por vez prevista`);
+    ok(/^💡 A quinta é o dia que você mais pula nos últimos 3 meses \(treinou em 1 de 9\)/.test(await txt(p, '#evo-dica')) && await p.getAttribute('#evo-dica a', 'href') === '#voce/semana', `${tag}: dica do dia que mais falha, com o atalho`, await txt(p, '#evo-dica'));
+    // Hora de subir a carga?: parado há 3 meses (com a sugestão) e o que caiu.
+    const par = (await p.locator('#evo-parados li').allInnerTexts()).map((t) => t.replace(/\s+/g, ' ').trim());
+    ok(par.length === 2 && /^Remada inversa parado 10 kg Mesma carga desde setembro \(3 meses, 3 treinos\)\. Se as séries estão fáceis, tente 12 kg\./.test(par[0]) && /^Supino no chão caiu 17,5 kg Abaixo dos 20 kg de outubro/.test(par[1]), `${tag}: hora de subir a carga`, par.join(' | '));
     await p.screenshot({ path: `${H.SAIDA}/evolucao-${tag}.png`, fullPage: true });
     // Tocar em outubro muda o resumo.
     await p.click('[data-evo-mes="2026-10"]'); await p.waitForTimeout(120);
     ok((await txt(p, '#evo-mes-titulo')) === 'Outubro de 2026' && /Treinos 6 ?▲ 3/.test(await txt(p, '#evo-numeros')), `${tag}: tocar em outubro mostra outubro`, await txt(p, '#evo-numeros'));
     ok(/Musculação 4 Treino 1 · 2×, Treino 2 · 2×/.test(await txt(p, '#evo-quais')), `${tag}: outubro, quais foram`);
+    ok(await p.locator('#evo-falta').isHidden() && await p.locator('#evo-dica').isHidden() && await p.locator('#evo-parados-bloco').isHidden(), `${tag}: mês passado sem "quanto falta", sem dica e sem parados`);
+    ok((await txt(p, '#evo-plano-quando')) === 'mês inteiro' && /^J Jiu Jitsu terça e quinta 1 de 9/.test(await txt(p, '#evo-plano li')), `${tag}: plano de outubro no mês inteiro`, await txt(p, '#evo-plano li'));
     // Tabela
     await p.click('#evo-tabela-btn'); await p.waitForTimeout(80);
     const tab = await txt(p, '#evo-tabela');
@@ -96,6 +110,7 @@ const colunas = (p) => p.locator('.evo-col').evaluateAll((gs) => gs.map((g) => `
     await p.click('[data-tela="dashboard"]'); await p.click('#dash-aba-evolucao'); await p.waitForTimeout(150);
     ok(/Faça o primeiro check-in/.test(await txt(p, '#evo-quais')) && /Nenhum peso registrado/.test(await txt(p, '#evo-pesos')), 'conta nova: mensagens');
     ok(await p.locator('[data-evo-nav="-1"]').isDisabled(), 'conta nova: sem meses para trás');
+    ok(await p.locator('#evo-parados-bloco').isHidden() && await p.locator('#evo-dica').isHidden(), 'conta nova: sem parados e sem dica');
     ok(!p.errs.length, 'conta nova: sem erros', p.errs.join(' | '));
     await p.context().close();
   }
