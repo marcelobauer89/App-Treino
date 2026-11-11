@@ -60,6 +60,8 @@ async function novaPagina(b, opcoes = {}) {
   db.perfis = (db.perfis || []).map((x) => ('videos_liberados' in x ? x : { ...x, videos_liberados: !opcoes.semVideos }));
   // Perfis sem o campo (testes antigos) já vêm com o aviso escondido; para testá-lo, defina novidade_oculta (null ou undefined = sem coluna).
   db.perfis = (db.perfis || []).map((x) => ('novidade_oculta' in x ? x : { ...x, novidade_oculta: PERFIL.novidade_oculta }));
+  // Perfis sem o campo (testes antigos) já esconderam o aviso da Evolução; para testá-lo, defina novidades_ocultas: [].
+  db.perfis = db.perfis.map((x) => ('novidades_ocultas' in x ? x : { ...x, novidades_ocultas: ['evolucao'] }));
   // Perfis sem o campo liberado (testes antigos) entram liberados; para testar convites, defina liberado: false.
   db.perfis = db.perfis.map((x) => ('liberado' in x ? x : { ...x, liberado: true }));
   // Testes antigos: política já aceita e consentimento de saúde dado (os campos aparecem como antes).

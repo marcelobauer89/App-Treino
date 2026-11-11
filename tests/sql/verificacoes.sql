@@ -23,10 +23,10 @@ set local role authenticated;
 do $$ begin perform set_config('request.jwt.claim.sub', '22222222-2222-2222-2222-222222222222', true); end $$;
 
 do $$ declare n int; begin
-  -- Pode salvar os próprios treinos, semana, objetivo e temporizador (o grant de jornada já faltou uma vez).
+  -- Pode salvar os próprios treinos, semana, objetivo, temporizador e novidades ocultas (o grant de jornada já faltou uma vez).
   update public.perfis set treinos = '{"1":{"nome":"Treino 1","subtitulo":"","exercicios":[{"nome":"Supino reto","dose":"3×10","pse":8}]}}',
     semana = '[[], ["t1"], ["jiu"], [], [], [], []]', jornada = 'hipertrofia', tema = 'escuro',
-    temporizador = '{"ativo":true,"segundos":60,"vibrar":true}'
+    temporizador = '{"ativo":true,"segundos":60,"vibrar":true}', novidades_ocultas = '{evolucao}'
     where id = auth.uid();
   get diagnostics n = row_count;
   if n <> 1 then raise exception 'FALHOU: a pessoa salva os próprios treinos, semana e objetivo (atualizou % linhas)', n; end if;
@@ -196,6 +196,7 @@ do $$ begin
   if (select count(*) from public.meus_videos()) <> 2 then raise exception 'FALHOU: liberada pelo admin, recebe os vídeos'; end if;
   if (select jornada from public.perfis where id = auth.uid()) <> 'hipertrofia' then raise exception 'FALHOU: o objetivo escolhido ficou salvo'; end if;
   if (select temporizador->>'segundos' from public.perfis where id = auth.uid()) <> '60' then raise exception 'FALHOU: o temporizador ficou salvo'; end if;
+  if not (select 'evolucao' = any(novidades_ocultas) from public.perfis where id = auth.uid()) then raise exception 'FALHOU: "não mostrar esta novidade" ficou salvo'; end if;
 end $$;
 
 rollback;

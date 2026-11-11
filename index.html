@@ -1006,6 +1006,27 @@
   .novidade-lista li { display: flex; gap: 10px; align-items: flex-start; font-size: 15px; }
   .novidade-lista svg { flex: 0 0 auto; margin-top: 3px; color: var(--checkin); }
   .novidade-acoes { display: grid; gap: 8px; }
+  /* Novidade da Evolução: ilustração (atalho do Dashboard + colunas subindo) e os três destaques */
+  .nov-evo-ilustra { display: grid; gap: 12px; padding: 14px; border: 1px solid var(--fio); border-radius: 14px; background: var(--gi); }
+  .nov-evo-onde { margin: 0; color: var(--tinta-2); font-size: 13px; font-weight: 700; text-align: center; }
+  .nov-evo-abas { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; padding: 3px; border: 1px solid var(--fio); border-radius: 10px; background: var(--papel); color: var(--tinta-2); font-size: 13px; font-weight: 700; text-align: center; }
+  .nov-evo-abas span { padding: 6px 0; border-radius: 7px; }
+  .nov-evo-abas .on { background: var(--tatame); color: var(--sobre-tatame); }
+  .nov-evo-ilustra svg { display: block; width: 100%; height: auto; max-height: 140px; overflow: visible; }
+  .nov-evo-ilustra .nev-mes { fill: var(--tinta-2); font-size: 11px; font-weight: 600; }
+  .nov-evo-ilustra .nev-tot { fill: var(--tinta); font-size: 12px; font-weight: 800; }
+  .nov-evo-ilustra .nev-sel { fill: var(--tatame-suave); }
+  .nov-evo-ilustra .nev-grade { stroke: var(--fio); stroke-width: 1; }
+  .nov-evo-ilustra .nev-sobe { fill: var(--feito-suave); }
+  .nov-evo-ilustra .nev-sobe-t { fill: var(--feito-tinta); font-size: 11px; font-weight: 800; }
+  @media (prefers-reduced-motion: no-preference) {
+    .nov-evo-ilustra .evo-barra { transform-box: fill-box; transform-origin: bottom; animation: evo-sobe .5s cubic-bezier(.2, .8, .3, 1) both; animation-delay: calc(150ms + var(--i) * 90ms); }
+  }
+  .nov-evo-lista { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+  .nov-evo-lista li { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 12px; align-items: center; }
+  .nov-evo-ic { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--tatame-suave); font-size: 20px; }
+  .nov-evo-lista b { display: block; font-size: 15px; }
+  .nov-evo-lista small { display: block; color: var(--tinta-2); font-size: 14px; line-height: 1.35; }
   /* Boas-vindas em etapas: cabeçalho fixo ao rolar (etapa e Voltar, etiqueta e título); botão principal à direita. */
   .bv-cabeca {
     position: sticky; top: 0; z-index: 2; display: grid; justify-items: start; gap: 12px;
@@ -1946,6 +1967,9 @@
 <dialog class="modal" id="ativ-dialog" aria-labelledby="ativ-title">
   <div class="modal-body" id="ativ-body"></div>
 </dialog>
+<dialog class="modal" id="novidade-evo-dialog" aria-labelledby="novidade-evo-title">
+  <div class="modal-body" id="novidade-evo-body"></div>
+</dialog>
 <dialog class="modal" id="novidade-dialog" aria-labelledby="novidade-title">
   <div class="modal-body" id="novidade-body"></div>
 </dialog>
@@ -2731,6 +2755,10 @@
   // "Não mostrar esta mensagem de novo" (perfis.novidade_oculta, com cópia no navegador para quando a coluna
   // ainda não existe no banco). perfis.novidade_treinos guarda a última resposta.
   let novidade = { disponivel: false, vista: true, contaNova: false };
+  // Avisos de novidade ocultos ("Não mostrar esta novidade de novo"): perfis.novidades_ocultas, com cópia no navegador
+  // para quando a coluna ainda não existe no banco.
+  let novidadesOcultas = new Set(['evolucao']);
+  const chaveNovidades = () => `bauer-novidades-ocultas-${usuario.id}`;
   const chaveNovidade = () => `bauer-novidade-oculta-${usuario.id}`;
   // Voltar ao app depois de 30 min em segundo plano conta como abrir de novo (no celular a página não recarrega).
   const NOVA_ABERTURA_MS = 30 * 60000;
@@ -3179,6 +3207,9 @@
     treinosAnterior = linha.treinos_anterior && linha.treinos_anterior.treinos ? linha.treinos_anterior : null;
     jornada = jornadaPorId(linha.jornada) ? linha.jornada : null;
     novidade = { disponivel: true, vista: !!linha.novidade_oculta || ocultaNoAparelho, contaNova: !(c.data || []).length && !cargas.length };
+    let ocultasNoAparelho = [];
+    try { ocultasNoAparelho = JSON.parse(localStorage.getItem(chaveNovidades()) || '[]'); } catch (_) {}
+    novidadesOcultas = new Set([...(Array.isArray(linha.novidades_ocultas) ? linha.novidades_ocultas : []), ...(Array.isArray(ocultasNoAparelho) ? ocultasNoAparelho : [])]);
     estiloNaConta = 'estilo' in linha;
     const semana = validarSemana(linha.semana);
     semanaDaConta = !!semana;
@@ -5625,8 +5656,11 @@
   // Aparece a cada abertura do app enquanto a pessoa não marcar "Não mostrar esta mensagem de novo"
   // (sem outra janela aberta por cima).
   const vaiVerBoasVindas = () => novidade.disponivel && !novidade.vista && novidade.contaNova && !treinosDaConta;
+  // A novidade mais recente (Evolução) vem antes do aviso antigo dos treinos; uma por abertura.
   function mostrarNovidadeSeFaltar() {
-    if (novidade.disponivel && !novidade.vista && !document.querySelector('dialog[open]')) abrirNovidade();
+    if (document.querySelector('dialog[open]')) return;
+    if (pedeNovidadeEvo()) abrirNovidadeEvo();
+    else if (novidade.disponivel && !novidade.vista) abrirNovidade();
   }
   // Sem a caixa marcada, o aviso volta na próxima vez que o app abrir.
   // Gravação silenciosa: num banco sem as colunas novas, o aviso continua funcionando pelo navegador.
@@ -5652,6 +5686,83 @@
     if (e.target === novidadeDialog || e.target.closest('[data-fechar]')) responderNovidade('fechou');
   });
   novidadeDialog.addEventListener('cancel', (e) => { e.preventDefault(); responderNovidade('fechou'); });
+
+  // ---------- Novidade: Evolução no Dashboard (até marcar "não mostrar mais") ----------
+  // Para quem já usa o app (conta nova vê as boas-vindas); volta a cada abertura até marcar a caixa.
+  const novidadeEvoDialog = $('novidade-evo-dialog');
+  const pedeNovidadeEvo = () => EVOLUCAO_LIGADA && novidade.disponivel && !novidade.contaNova && !novidadesOcultas.has('evolucao');
+  function ilustraNovidadeEvo() {
+    // Colunas de exemplo subindo mês a mês (musculação, jiu e cardio), com o último mês em destaque.
+    const meses = [['jul', 2, 1, 0], ['ago', 3, 1, 1], ['set', 3, 2, 0], ['out', 4, 2, 1], ['nov', 5, 2, 2]];
+    const W = 260, H = 132, base = 112, alto = 10, banda = W / meses.length, larg = 26;
+    const cols = meses.map(([m, mu, ji, bi], i) => {
+      const x = banda * i + (banda - larg) / 2;
+      let topo = base;
+      const partes = [['musc', mu], ['jiu', ji], ['bike', bi]].filter(([, n]) => n);
+      const segs = partes.map(([g, n], k) => {
+        const h = n * alto, y = topo - h;
+        topo = y;
+        const gap = k < partes.length - 1 ? 2 : 0;
+        return k === partes.length - 1
+          ? `<path class="evo-${g}" d="M${x},${y + h}V${y + 4}Q${x},${y} ${x + 4},${y}H${x + larg - 4}Q${x + larg},${y} ${x + larg},${y + 4}V${y + h}Z"/>`
+          : `<rect class="evo-${g}" x="${x}" y="${y + gap}" width="${larg}" height="${h - gap}"/>`;
+      }).join('');
+      const ult = i === meses.length - 1;
+      return `${ult ? `<rect class="nev-sel" x="${banda * i + 4}" y="0" width="${banda - 8}" height="${H}" rx="10"/>` : ''}
+        <g class="evo-barra" style="--i:${i}">${segs}</g>
+        <text class="nev-tot" x="${x + larg / 2}" y="${topo - 6}" text-anchor="middle">${mu + ji + bi}</text>
+        <text class="nev-mes" x="${x + larg / 2}" y="${H - 4}" text-anchor="middle"${ult ? ' style="font-weight:800"' : ''}>${m}</text>`;
+    }).join('');
+    return `<div class="nov-evo-ilustra" aria-hidden="true">
+        <p class="nov-evo-onde">No Dashboard, toque em Evolução</p>
+        <div class="nov-evo-abas"><span>Resumo</span><span class="on">Evolução</span></div>
+        <svg viewBox="0 -18 ${W} ${H + 18}" width="${W}" height="${H + 18}">
+          <line class="nev-grade" x1="0" x2="${W}" y1="${base}" y2="${base}"/>${cols}
+          <rect class="nev-sobe" x="${W - 54}" y="-18" width="50" height="18" rx="9"/><text class="nev-sobe-t" x="${W - 29}" y="-5" text-anchor="middle">▲ 2</text>
+        </svg>
+      </div>`;
+  }
+  function abrirNovidadeEvo() {
+    const item = (ic, titulo, txt) => `<li><span class="nov-evo-ic" aria-hidden="true">${ic}</span><span><b>${titulo}</b><small>${txt}</small></span></li>`;
+    $('novidade-evo-body').innerHTML = `
+      <div class="modal-head"><div><span class="novidade-selo">Novidade</span><h3 id="novidade-evo-title">Sua evolução, mês a mês</h3></div>${BOTAO_FECHAR}</div>
+      <p class="resumo-enc">Agora o Dashboard tem a aba Evolução: veja como você está indo e o que fazer para melhorar.</p>
+      ${ilustraNovidadeEvo()}
+      <ul class="nov-evo-lista">
+        ${item('📊', 'Seus treinos mês a mês', 'Quantos treinos, dias e horas, comparados ao mês anterior.')}
+        ${item('🎯', 'Quanto falta para o plano', 'O que a sua semana pedia, o que você já fez e o dia que mais falha.')}
+        ${item('🏋️', 'Seus pesos e a hora de subir a carga', 'Recordes de cada exercício e os que estão parados há meses.')}
+      </ul>
+      <p class="aviso">Já vem com todo o seu histórico: check-ins e pesos desde o começo.</p>
+      <div class="novidade-acoes">
+        <button class="modal-done" type="button" data-novidade-evo="ver">Ver minha evolução</button>
+        <button class="btn-sec" type="button" data-novidade-evo="depois">Agora não</button>
+      </div>
+      <label class="novidade-ocultar">
+        <input type="checkbox" id="novidade-evo-ocultar">
+        <span>Não mostrar esta novidade de novo</span>
+      </label>`;
+    novidadeEvoDialog.showModal();
+    registrarEvento('novidade_evolucao', { escolha: 'viu' });
+  }
+  function responderNovidadeEvo(escolha) {
+    const ocultou = $('novidade-evo-ocultar').checked;
+    if (ocultou) {
+      novidadesOcultas.add('evolucao');
+      try { localStorage.setItem(chaveNovidades(), JSON.stringify([...novidadesOcultas])); } catch (_) {}
+      // Gravação silenciosa: sem a coluna no banco, fica valendo a cópia do navegador.
+      sb.from('perfis').update({ novidades_ocultas: [...novidadesOcultas] }).eq('id', usuario.id).then(() => {}, () => {});
+    }
+    registrarEvento('novidade_evolucao', { escolha, ocultou });
+    novidadeEvoDialog.close();
+    if (escolha === 'ver') location.hash = '#dashboard/evolucao';
+  }
+  novidadeEvoDialog.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-novidade-evo]');
+    if (b) return responderNovidadeEvo(b.dataset.novidadeEvo);
+    if (e.target === novidadeEvoDialog || e.target.closest('[data-fechar]')) responderNovidadeEvo('fechou');
+  });
+  novidadeEvoDialog.addEventListener('cancel', (e) => { e.preventDefault(); responderNovidadeEvo('fechou'); });
 
   const NOMES_TEMA = { auto: 'Automático', claro: 'Claro', escuro: 'Escuro' };
   const NOMES_ESTILO = { padrao: 'Padrão', neon: 'Neon Tatame', brasa: 'Brasa', cyber: 'Cyber', ultra: 'Ultravioleta', gelo: 'Gelo', violeta: 'Violeta', miami: 'Miami', lua_de_sangue: 'Lua de Sangue' };

@@ -182,6 +182,9 @@ alter table public.perfis add constraint perfis_treinos_check check (public.trei
 alter table public.perfis add column if not exists novidade_treinos timestamptz;
 -- Quando a pessoa marcou "Não mostrar esta mensagem de novo". Vazio = o aviso aparece a cada abertura do app.
 alter table public.perfis add column if not exists novidade_oculta timestamptz;
+-- Avisos de novidade que a pessoa marcou "Não mostrar esta novidade de novo" (ex.: 'evolucao'). Vazio = mostra.
+alter table public.perfis add column if not exists novidades_ocultas text[] not null default '{}'
+  check (cardinality(novidades_ocultas) <= 50);
 -- Versão anterior dos treinos, gravada a cada vez que a pessoa salva em Meus treinos: { treinos, semana, em }.
 -- Serve para o "Desfazer" e para "Restaurar versão anterior".
 alter table public.perfis add column if not exists treinos_anterior jsonb
@@ -204,7 +207,7 @@ alter table public.perfis add column if not exists consentimento_saude_em timest
 -- Temporizador de descanso (Você → Temporizador): { ativo, segundos, vibrar }. Vazio = desligado.
 alter table public.perfis add column if not exists temporizador jsonb
   check (temporizador is null or (jsonb_typeof(temporizador) = 'object' and pg_column_size(temporizador) <= 500));
-grant update (id, nome, email, foto, tema, estilo, dias_jiu, semana, sem_peso, emails_resumo, treinos, novidade_treinos, novidade_oculta, treinos_anterior, jornada, temporizador, politica_versao, consentimento_saude, consentimento_saude_em) on public.perfis to authenticated;
+grant update (id, nome, email, foto, tema, estilo, dias_jiu, semana, sem_peso, emails_resumo, treinos, novidade_treinos, novidade_oculta, novidades_ocultas, treinos_anterior, jornada, temporizador, politica_versao, consentimento_saude, consentimento_saude_em) on public.perfis to authenticated;
 
 -- A nota de recuperação (1 a 5) saiu do app: a coluna e as notas já salvas são apagadas (LGPD: não guardar dado sem uso).
 -- Rode depois de publicar a versão do app sem a recuperação; a anterior ainda envia esse campo.
