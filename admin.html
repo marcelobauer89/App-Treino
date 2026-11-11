@@ -2061,6 +2061,7 @@
     excluir_conta: () => 'Abriu a opção de excluir a conta',
     convite_usado: (d) => ({ ok: 'Entrou com um convite', ja_liberado: 'Abriu um convite (já tinha acesso)', invalido: 'Tentou um código de convite inválido', usado: 'Tentou um convite já usado', expirado: 'Tentou um convite expirado', cancelado: 'Tentou um convite cancelado' }[d.resultado] || 'Tentou usar um convite'),
     acesso_pedido: () => 'Pediu acesso ao app',
+    novidade_evolucao: (d) => ({ viu: 'Viu o aviso da Evolução', ver: 'Abriu a Evolução pelo aviso', depois: 'Deixou o aviso da Evolução para depois', fechou: 'Fechou o aviso da Evolução' }[d.escolha] || 'Respondeu ao aviso da Evolução') + (d.ocultou ? ' e pediu para não mostrar mais' : ''),
     novidade_treinos: (d) => ({ viu: 'Viu o aviso dos treinos personalizados', personalizar: 'Quis personalizar os treinos', montar: 'Escolheu montar os treinos', manter: 'Manteve o treino atual', fechou: 'Fechou o aviso dos treinos personalizados' }[d.escolha] || 'Respondeu ao aviso dos treinos') + (d.ocultou ? ' e pediu para não mostrar mais' : ''),
     editor_treinos: () => 'Abriu Meus treinos',
     jornadas_abertas: (d) => (d.origem === 'boas-vindas' ? 'Viu os objetivos nas boas-vindas' : 'Abriu Mudar meu objetivo'),
