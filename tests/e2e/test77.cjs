@@ -24,8 +24,9 @@ const CARGAS = [
   { usuario_id: 'u1', data: '2026-11-02', treino: 't1', series: { Puxada: [{ carga: 40 }], 'Remada inversa': [{ carga: 10 }] } },
   { usuario_id: 'u1', data: '2026-11-04', treino: 't2', series: { 'Supino no chão': [{ carga: 17.5 }], Desenvolvimento: [{ carga: 12 }] } },
 ];
-async function abrir(b, { scheme = 'light', viewport = { width: 390, height: 844 }, checkins = CHECKINS, cargas = CARGAS, extra = {}, url = H.PAGINA } = {}) {
-  const p = await H.novaPagina(b, { scheme, viewport, checkins, extra: { perfis: [{ id: 'u1', nome: 'Pessoa Teste', email: 'pessoa@exemplo.com', foto: '', tema: 'auto', dias_jiu: [2, 4], semana: SEMANA }], cargas, ...extra } });
+// Por enquanto a Evolução só aparece no ambiente de desenvolvimento: os testes abrem o app como dev (prod: true abre como produção).
+async function abrir(b, { scheme = 'light', viewport = { width: 390, height: 844 }, checkins = CHECKINS, cargas = CARGAS, extra = {}, url = H.PAGINA, prod = false } = {}) {
+  const p = await H.novaPagina(b, { scheme, viewport, checkins, dev: !prod, semearDev: !prod, extra: { perfis: [{ id: 'u1', nome: 'Pessoa Teste', email: 'pessoa@exemplo.com', foto: '', tema: 'auto', dias_jiu: [2, 4], semana: SEMANA }], cargas, ...extra } });
   await p.clock.install({ time: new Date(AGORA) });
   await p.goto(url); await H.prontos(p); await p.waitForTimeout(250);
   return p;
@@ -109,6 +110,14 @@ const colunas = (p) => p.locator('.evo-col').evaluateAll((gs) => gs.map((g) => `
     const pz = (await p.locator('#evo-pesos li').allInnerTexts()).map((t) => t.replace(/\s+/g, ' ').trim());
     ok(pz.some((t) => /^Puxada frontal 🏆 42,5 kg ▲ 5 kg/.test(t)) && !pz.some((t) => /^Puxada \d/.test(t)), 'renomeado: nome novo e o histórico do nome antigo junto', pz.join(' | '));
     ok(!p.errs.length, 'renomeado: sem erros', p.errs.join(' | '));
+    await p.context().close();
+  }
+
+  // Produção: sem as abas; o endereço #dashboard/evolucao mostra o Resumo.
+  {
+    const p = await abrir(b, { prod: true, url: `${H.PAGINA}#dashboard/evolucao` });
+    ok(await p.locator('.dash-abas').isHidden() && await p.locator('#dash-resumo').isVisible() && await p.locator('#dash-evolucao').isHidden(), 'produção: sem a aba Evolução, abre no Resumo');
+    ok(!p.errs.length, 'produção: sem erros', p.errs.join(' | '));
     await p.context().close();
   }
 

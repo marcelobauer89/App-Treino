@@ -159,6 +159,8 @@ Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 a t6 nos check-i
 
 ### Evolução (Dashboard)
 
+> **Por enquanto só no ambiente de desenvolvimento (`/dev/`).** Em produção as abas ficam escondidas e o Dashboard mostra só o Resumo. Para liberar, troque `EVOLUCAO_LIGADA` para `true` no `index.html`.
+
 - **Onde:** no topo do Dashboard, a troca **Resumo | Evolução**. A escolhida fica no endereço (`#dashboard/evolucao`).
 - **Treinos por mês:** os últimos 6 meses em colunas empilhadas por tipo, com o total de cada mês. Tocar num mês mostra o resumo dele; o balão traz o detalhe; "Ver tabela" mostra os números. As setas andam de 6 em 6 meses, até o primeiro check-in.
 - **Resumo do mês:** treinos, dias com treino, horas e % do plano (pela semana montada; no mês atual, até hoje), cada um comparado ao mês anterior (▲/▼).
