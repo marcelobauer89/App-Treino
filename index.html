@@ -679,6 +679,7 @@
   .seg i.on.futvolei { background: var(--futvolei); }
   .meta-valor, .barra-valor { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
   .barra { display: grid; grid-template-columns: 112px minmax(0, 1fr) 28px; gap: 12px; align-items: center; font-size: 15px; }
+  .barras-vazio { color: var(--tinta-2); font-size: 14px; }
   .barra-trilho { height: 10px; border-radius: 5px; background: var(--gi); overflow: hidden; }
   .barra-trilho i { display: block; height: 100%; border-radius: 0 4px 4px 0; }
   .barra-trilho i.musc { background: var(--musc); }
@@ -4216,11 +4217,14 @@
     const { ano, mes } = mesExibido;
     const prefixo = `${ano}-${pad(mes + 1)}`;
     const doMes = checkins.filter((c) => dataDe(c).startsWith(prefixo));
-    const tipos = [...new Set([...ORDEM_TIPOS, ...doMes.map((c) => c.tipo)])].sort((a, b) => [...TIPOS_MUSC, ...ATIVIDADES].indexOf(a) - [...TIPOS_MUSC, ...ATIVIDADES].indexOf(b));
+    // Só os tipos que estão na semana montada pela pessoa ou que tiveram check-in no mês (como a legenda do calendário).
+    const ordem = [...TIPOS_MUSC, ...ATIVIDADES];
+    const tipos = [...new Set([...config.semana.flat(), ...doMes.map((c) => c.tipo)])].filter((t) => TIPOS[t])
+      .sort((a, b) => ordem.indexOf(a) - ordem.indexOf(b));
     const contagem = tipos.map((t) => [t, doMes.filter((c) => c.tipo === t).length]);
     const max = Math.max(1, ...contagem.map(([, n]) => n));
     $('tipos-titulo').textContent = `Por tipo em ${nomeMes(ano, mes)}`;
-    $('barras').innerHTML = contagem.map(([t, n]) => `
+    $('barras').innerHTML = !contagem.length ? '<li class="barras-vazio">Nenhum treino na sua semana nem check-in neste mês.</li>' : contagem.map(([t, n]) => `
       <li class="barra">
         <span class="barra-nome">${seloHTML(t)}${TIPOS[t].nome}</span>
         <span class="barra-trilho" aria-hidden="true">${n ? `<i class="${TIPOS[t].grupo}" style="width:${(n / max) * 100}%"></i>` : ''}</span>
