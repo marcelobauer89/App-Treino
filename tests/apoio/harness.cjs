@@ -66,12 +66,14 @@ async function novaPagina(b, opcoes = {}) {
   db.perfis = db.perfis.map((x) => ({ politica_versao: '2026-10-27', consentimento_saude: 'sim', ...x }));
   // A celebração do check-in fica desligada nos testes antigos; celebracao: true liga (test72).
   if (!opcoes.celebracao) await ctx.addInitScript(() => { window.__semCelebracao = true; });
-  await ctx.addInitScript(([db, local]) => {
+  // semearDev: true (com dev: true) já grava o banco falso e o "local" com o prefixo "dev:" do ambiente de desenvolvimento.
+  await ctx.addInitScript(([db, local, dev]) => {
     if (sessionStorage.getItem('semeado')) return;
-    localStorage.setItem('mock-supabase', JSON.stringify(db));
-    for (const [k, v] of Object.entries(local)) localStorage.setItem(k, v);
+    const pre = dev ? 'dev:' : '';
+    localStorage.setItem(`${pre}mock-supabase`, JSON.stringify(db));
+    for (const [k, v] of Object.entries(local)) localStorage.setItem(`${pre}${k}`, v);
     sessionStorage.setItem('semeado', '1');
-  }, [db, local]);
+  }, [db, local, !!opcoes.semearDev]);
   const p = await ctx.newPage();
   p.errs = [];
   p.on('pageerror', (e) => p.errs.push(e.message));

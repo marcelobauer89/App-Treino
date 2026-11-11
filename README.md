@@ -162,9 +162,12 @@ Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 a t6 nos check-i
 - **Onde:** no topo do Dashboard, a troca **Resumo | Evolução**. A escolhida fica no endereço (`#dashboard/evolucao`).
 - **Treinos por mês:** os últimos 6 meses em colunas empilhadas por tipo, com o total de cada mês. Tocar num mês mostra o resumo dele; o balão traz o detalhe; "Ver tabela" mostra os números. As setas andam de 6 em 6 meses, até o primeiro check-in.
 - **Resumo do mês:** treinos, dias com treino, horas e % do plano (pela semana montada; no mês atual, até hoje), cada um comparado ao mês anterior (▲/▼).
-- **Quais foram:** os tipos do mês, com quantas vezes fez cada treino de musculação.
+- **Quanto falta** (só no mês atual): quantos treinos faltam para fechar o mês com 100% do plano, com a barra do que já foi feito, os dias pela frente e o % no ritmo de agora.
+- **O que você treinou:** os tipos do mês, com quantas vezes fez cada treino de musculação.
+- **Seu plano no mês:** cada atividade da semana montada, com quantas vezes caiu no mês (até hoje, no mês atual) e quantas foram feitas, as mais puladas primeiro. No mês atual, uma dica 💡 aponta o dia da semana que mais falha nos últimos 3 meses (com plano em 3 dias ou mais e menos da metade feita) e leva à Minha semana.
 - **Seus pesos no mês:** a maior carga de cada exercício, a variação para o mês anterior, "novo" e 🏆 quando bateu recorde. Usa o nome de hoje no catálogo e junta os nomes antigos.
-- Usa os check-ins e as cargas que o app já carrega; não precisa de SQL.
+- **Hora de subir a carga?:** os exercícios com a mesma carga máxima há 3 meses seguidos ou mais ("parado", com a sugestão de +2 kg até 20 kg e +2,5 kg acima) e os que caíram em relação ao mês anterior ("caiu"). Sem nenhum, a seção não aparece.
+- Usa os check-ins e as cargas que o app já carrega (o histórico inteiro da conta); não precisa de SQL. Para esconder a Evolução, troque `EVOLUCAO_LIGADA` para `false` no `index.html`.
 
 ### Futebol e Futvôlei
 

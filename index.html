@@ -703,6 +703,19 @@
   .evo-lista .evo-nome { display: flex; align-items: center; gap: 8px; min-width: 0; font-weight: 700; }
   .evo-lista .evo-valor { font-weight: 800; font-variant-numeric: tabular-nums; text-align: right; }
   .evo-lista small { grid-column: 1 / -1; color: var(--tinta-2); font-size: 13px; }
+  .evo-falta { display: grid; gap: 8px; margin-top: 12px; padding: 12px 14px; background: var(--papel); border: 1px solid var(--fio); border-radius: 14px; }
+  .evo-falta strong { font-size: 16px; line-height: 1.3; }
+  .evo-falta p { margin: 0; color: var(--tinta-2); font-size: 14px; }
+  .evo-falta .barra-trilho { display: flex; height: 12px; }
+  .evo-falta .barra-trilho i { border-radius: 0; }
+  .evo-falta .barra-trilho i.feito { background: var(--tatame); }
+  .evo-falta .barra-trilho i.ate { background: var(--fio); }
+  .evo-plano .meta { grid-template-columns: minmax(0, 1fr) 96px 64px; }
+  .evo-plano .meta-nome small { display: block; color: var(--tinta-2); font-size: 13px; }
+  .evo-dica { margin: 8px 2px 0; color: var(--tinta-2); font-size: 14px; line-height: 1.45; }
+  .evo-dica b { color: var(--tinta); }
+  .evo-dica a { white-space: nowrap; }
+  .evo-aviso { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 999px; background: var(--recorde-suave); color: var(--recorde-tinta); font-size: 12px; font-weight: 800; }
   .evo-lista .evo-vazio-txt { display: block; padding: 6px 0; color: var(--tinta-2); font-size: 14px; border: 0; }
   .bloco { margin-top: 28px; }
   .bloco-topo { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 10px; }
@@ -1612,7 +1625,7 @@
   <div class="dash-topo">
     <h1>Dashboard</h1>
   </div>
-  <div class="dash-abas" role="tablist" aria-label="Visões do Dashboard">
+  <div class="dash-abas" role="tablist" aria-label="Visões do Dashboard" hidden>
     <button type="button" role="tab" id="dash-aba-resumo" data-dash-aba="resumo" aria-controls="dash-resumo" aria-selected="true">Resumo</button>
     <button type="button" role="tab" id="dash-aba-evolucao" data-dash-aba="evolucao" aria-controls="dash-evolucao" aria-selected="false" tabindex="-1">Evolução</button>
   </div>
@@ -1671,14 +1684,24 @@
     <section class="bloco" aria-labelledby="evo-mes-titulo">
       <div class="bloco-topo"><h2 class="secao" id="evo-mes-titulo"></h2><span id="evo-mes-comp"></span></div>
       <dl class="numeros evo-numeros" id="evo-numeros"></dl>
+      <div class="evo-falta" id="evo-falta" hidden></div>
     </section>
     <section class="bloco" aria-labelledby="evo-quais-titulo">
-      <div class="bloco-topo"><h2 class="secao" id="evo-quais-titulo">Quais foram</h2></div>
+      <div class="bloco-topo"><h2 class="secao" id="evo-quais-titulo">O que você treinou</h2></div>
       <ul class="evo-lista" id="evo-quais"></ul>
+    </section>
+    <section class="bloco evo-plano" id="evo-plano-bloco" aria-labelledby="evo-plano-titulo" hidden>
+      <div class="bloco-topo"><h2 class="secao" id="evo-plano-titulo">Seu plano no mês</h2><span id="evo-plano-quando"></span></div>
+      <ul class="metas" id="evo-plano"></ul>
+      <p class="evo-dica" id="evo-dica" hidden></p>
     </section>
     <section class="bloco" aria-labelledby="evo-pesos-titulo">
       <div class="bloco-topo"><h2 class="secao" id="evo-pesos-titulo">Seus pesos no mês</h2></div>
       <ul class="evo-lista" id="evo-pesos"></ul>
+    </section>
+    <section class="bloco" id="evo-parados-bloco" aria-labelledby="evo-parados-titulo" hidden>
+      <div class="bloco-topo"><h2 class="secao" id="evo-parados-titulo">Hora de subir a carga?</h2></div>
+      <ul class="evo-lista" id="evo-parados"></ul>
     </section>
   </div>
 </main>
@@ -4318,6 +4341,8 @@
   // Treinos por mês (colunas empilhadas por tipo, 6 meses por vez) e o resumo do mês escolhido: números com a
   // comparação com o mês anterior, quais treinos foram e as maiores cargas de cada exercício. Usa só os check-ins
   // e as cargas que o app já carrega.
+  // Evolução ligada para todos (dev e produção). Para esconder de novo, troque para false (ou só no dev: !!(window.AMBIENTE && window.AMBIENTE.dev)).
+  const EVOLUCAO_LIGADA = true;
   const GRUPOS_EVO = ['musc', ...ATIVIDADES];
   const NOMES_GRUPO = { musc: 'Musculação' };
   const nomeGrupo = (g) => NOMES_GRUPO[g] || TIPOS[g].nome;
@@ -4431,7 +4456,7 @@
       <div><dt>Dias com treino</dt><dd>${r.dias}${delta(r.dias, ant.dias)}</dd></div>
       <div><dt>Horas treinadas</dt><dd>${fmtNum(r.minutos / 60)}<small> h</small>${delta(Math.round(r.minutos / 6) / 10, Math.round(ant.minutos / 6) / 10, (n) => `${fmtNum(n)} h`)}</dd></div>
       <div><dt>Do plano</dt><dd>${pct(r.plano)}${r.plano !== null && ant.plano !== null ? delta(Math.round(r.plano * 100), Math.round(ant.plano * 100), (n) => `${n} p.p.`) : ''}</dd></div>`;
-    // Quais foram: por tipo, com os treinos de musculação.
+    // O que você treinou: por tipo, com os treinos de musculação.
     const grupos = GRUPOS_EVO.filter((g) => r.porGrupo[g]);
     $('evo-quais').innerHTML = grupos.length ? grupos.map((g) => {
       const treinos = g === 'musc' ? TIPOS_MUSC.filter((t) => r.porTipo[t]).map((t) => `${TIPOS[t].nome} · ${r.porTipo[t]}×`).join(', ') : '';
@@ -4451,6 +4476,99 @@
         <span class="evo-valor">${fmtKg(it.kg)} kg</span>
         <small>${it.dif === null ? 'novo neste mês' : it.dif === 0 ? 'igual ao mês anterior' : `${it.dif > 0 ? '▲' : '▼'} ${fmtKg(Math.abs(it.dif))} kg em relação a ${esc(nomeMesChave(somarMeses(evo.sel, -1)))}`}</small></li>`).join('')
       : '<li class="evo-vazio-txt">Nenhum peso registrado neste mês.</li>';
+    renderFaltaEvo(r);
+    renderPlanoEvo();
+    renderParadosEvo(noMes, antes);
+  }
+  const previstoNoDia = (a, m, d) => (config.semana[new Date(a, m - 1, d).getDay()] || []).filter((t) => TIPOS[t]);
+  // Quanto falta (só no mês atual): o plano do mês inteiro, o que já foi feito e o ritmo de agora.
+  function renderFaltaEvo(r) {
+    const caixa = $('evo-falta');
+    const [a, m] = evo.sel.split('-').map(Number);
+    const fimMes = new Date(a, m, 0).getDate();
+    let previsto = 0;
+    for (let d = 1; d <= fimMes; d++) previsto += previstoNoDia(a, m, d).length;
+    caixa.hidden = evo.sel !== hoje().slice(0, 7) || !previsto;
+    if (caixa.hidden) return;
+    const feitos = Math.min(r.total, previsto);
+    const faltam = previsto - feitos;
+    const dias = fimMes - Number(hoje().slice(8, 10)) + 1;
+    const atrasados = Math.max(0, Math.min(r.planejado, previsto) - feitos);
+    const nome = esc(nomeMesChave(evo.sel));
+    caixa.innerHTML = `<strong>${faltam ? `Faltam ${faltam} ${faltam === 1 ? 'treino' : 'treinos'} para fechar ${nome} com 100% do plano` : `Plano de ${nome} completo! 🎉`}</strong>
+      <span class="barra-trilho" aria-hidden="true"><i class="feito" style="width:${(feitos / previsto) * 100}%"></i><i class="ate" style="width:${(atrasados / previsto) * 100}%"></i></span>
+      <p>${feitos} de ${previsto} treinos do plano feitos${faltam ? ` · ${dias} ${dias === 1 ? 'dia' : 'dias'} pela frente, contando hoje` : ''}${faltam && r.plano !== null ? ` · no ritmo de agora, você fecha com ${Math.round(r.plano * 100)}%` : ''}</p>`;
+  }
+  // Seu plano no mês: cada atividade da semana montada, quantas vezes ela caiu no mês (até hoje, no mês atual)
+  // e quantas foram feitas; as mais puladas primeiro. No mês atual, a dica do dia da semana que mais falha.
+  function renderPlanoEvo() {
+    const atual = hoje().slice(0, 7);
+    const [a, m] = evo.sel.split('-').map(Number);
+    const ultimo = evo.sel === atual ? Number(hoje().slice(8, 10)) : new Date(a, m, 0).getDate();
+    const prev = {}, dias = {}, feitos = {};
+    for (let d = 1; d <= ultimo; d++) previstoNoDia(a, m, d).forEach((t) => {
+      prev[t] = (prev[t] || 0) + 1;
+      (dias[t] = dias[t] || new Set()).add(new Date(a, m - 1, d).getDay());
+    });
+    checkins.forEach((c) => { const d = dataDe(c); if (d.startsWith(evo.sel) && Number(d.slice(8, 10)) <= ultimo) feitos[c.tipo] = (feitos[c.tipo] || 0) + 1; });
+    const lista = new Intl.ListFormat('pt-BR', { type: 'conjunction' });
+    const itens = Object.keys(prev).map((t) => ({ t, prev: prev[t], feito: Math.min(prev[t], feitos[t] || 0), dias: [...dias[t]].sort((x, y) => ((x + 6) % 7) - ((y + 6) % 7)) }))
+      .sort((x, y) => x.feito / x.prev - y.feito / y.prev || y.prev - x.prev);
+    $('evo-plano-bloco').hidden = !itens.length || evo.sel > atual;
+    $('evo-plano-quando').textContent = evo.sel === atual ? 'até hoje' : 'mês inteiro';
+    $('evo-plano').innerHTML = itens.map((it) => `
+      <li class="meta"><span class="meta-nome">${seloHTML(it.t)}<span>${esc(nomeAtividade(it.t))}<small>${esc(lista.format(it.dias.map((d) => NOMES_DIA[d])))}</small></span></span>
+        <span class="seg" aria-hidden="true">${Array.from({ length: it.prev }, (_, i) => `<i class="${i < it.feito ? 'on ' : ''}${TIPOS[it.t].grupo}"></i>`).join('')}</span>
+        <span class="meta-valor">${it.feito} de ${it.prev}</span></li>`).join('');
+    // Dica: nos últimos 3 meses (até ontem, desde o primeiro check-in), o dia da semana com plano que menos teve treino.
+    const dica = $('evo-dica');
+    dica.hidden = true;
+    if (evo.sel !== atual || !checkins.length) return;
+    const comTreino = new Set(checkins.map(dataDe));
+    const inicio = checkins.map(dataDe).sort()[0];
+    const conta = Array.from({ length: 7 }, () => ({ plano: 0, feito: 0 }));
+    const dia = new Date(`${hoje()}T12:00:00`);
+    for (let i = 1; i <= 91; i++) {
+      dia.setDate(dia.getDate() - 1);
+      const iso = `${dia.getFullYear()}-${pad(dia.getMonth() + 1)}-${pad(dia.getDate())}`;
+      if (iso < inicio) break;
+      if (!(config.semana[dia.getDay()] || []).some((t) => TIPOS[t])) continue;
+      conta[dia.getDay()].plano += 1;
+      if (comTreino.has(iso)) conta[dia.getDay()].feito += 1;
+    }
+    const pior = conta.map((c, d) => ({ ...c, d })).filter((c) => c.plano >= 3 && c.feito / c.plano < 0.5)
+      .sort((x, y) => x.feito / x.plano - y.feito / y.plano || y.plano - x.plano)[0];
+    if (!pior) return;
+    dica.innerHTML = `💡 ${pior.d === 0 || pior.d === 6 ? 'O' : 'A'} <b>${NOMES_DIA[pior.d]}</b> é o dia que você mais pula nos últimos 3 meses (treinou em ${pior.feito} de ${pior.plano}). Que tal rever esse dia? <a class="link-btn" href="#voce/semana">Abrir Minha semana</a>`;
+    dica.hidden = false;
+  }
+  // Hora de subir a carga?: exercícios com a mesma carga máxima há 3 meses seguidos ou mais (com a sugestão de
+  // +2 kg até 20 kg e +2,5 kg acima) e os que caíram em relação ao mês anterior. Sem nenhum, a seção some.
+  function renderParadosEvo(noMes, antes) {
+    const cache = new Map();
+    const doMes = (k) => { if (!cache.has(k)) cache.set(k, maioresCargas((d) => d.startsWith(k))); return cache.get(k); };
+    const itens = [];
+    noMes.forEach((v, chave) => {
+      let meses = 1, ini = evo.sel;
+      for (let k = somarMeses(evo.sel, -1); meses < 36; k = somarMeses(k, -1)) {
+        const x = doMes(k).get(chave);
+        if (!x || x.kg !== v.kg) break;
+        meses += 1; ini = k;
+      }
+      if (meses >= 3) {
+        const treinos = cargas.filter((r) => r.data >= `${ini}-01` && r.data.slice(0, 7) <= evo.sel
+          && Object.entries(r.series || {}).some(([n, s]) => nomeAtual(n) === chave && maxDoDia(s) > 0)).length;
+        const sug = v.kg + (v.kg < 20 ? 2 : 2.5);
+        itens.push({ chave, kg: v.kg, tipo: 'parado', txt: `Mesma carga desde ${nomeMesChave(ini)} (${meses} meses, ${treinos} ${treinos === 1 ? 'treino' : 'treinos'}). Se as séries estão fáceis, tente ${fmtKg(sug)} kg.` });
+        return;
+      }
+      const a = antes.get(chave);
+      if (a && v.kg < a.kg) itens.push({ chave, kg: v.kg, tipo: 'caiu', txt: `Abaixo dos ${fmtKg(a.kg)} kg de ${nomeMesChave(somarMeses(evo.sel, -1))}. Vale conferir a técnica ou o descanso.` });
+    });
+    itens.sort((x, y) => (x.tipo === y.tipo ? x.chave.localeCompare(y.chave, 'pt-BR') : x.tipo === 'parado' ? -1 : 1));
+    $('evo-parados-bloco').hidden = !itens.length;
+    $('evo-parados').innerHTML = itens.map((it) => `
+      <li><span class="evo-nome">${esc(it.chave)} <span class="evo-aviso">${it.tipo}</span></span><span class="evo-valor">${fmtKg(it.kg)} kg</span><small>${esc(it.txt)}</small></li>`).join('');
   }
   function mostrarAbaDash(aba, { focar = false, url = true } = {}) {
     evo.aba = aba === 'evolucao' ? 'evolucao' : 'resumo';
@@ -4510,7 +4628,9 @@
   addEventListener('resize', () => { if (telaAtual() === 'dashboard' && evo.aba === 'evolucao') renderEvolucao(); });
 
   function renderDashboard() {
-    const aba = location.hash.slice(1).split('/')[1] === 'evolucao' ? 'evolucao' : 'resumo';
+    // Com EVOLUCAO_LIGADA desligada, as abas somem e o Dashboard mostra só o Resumo.
+    document.querySelector('.dash-abas').hidden = !EVOLUCAO_LIGADA;
+    const aba = EVOLUCAO_LIGADA && location.hash.slice(1).split('/')[1] === 'evolucao' ? 'evolucao' : 'resumo';
     if (aba !== evo.aba) mostrarAbaDash(aba, { url: false });
     if (evo.aba === 'evolucao') renderEvolucao();
     renderNumeros();
