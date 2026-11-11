@@ -4341,7 +4341,8 @@
   // Treinos por mês (colunas empilhadas por tipo, 6 meses por vez) e o resumo do mês escolhido: números com a
   // comparação com o mês anterior, quais treinos foram e as maiores cargas de cada exercício. Usa só os check-ins
   // e as cargas que o app já carrega.
-  const EVOLUCAO_LIGADA = !!(window.AMBIENTE && window.AMBIENTE.dev);
+  // Evolução ligada para todos (dev e produção). Para esconder de novo, troque para false (ou só no dev: !!(window.AMBIENTE && window.AMBIENTE.dev)).
+  const EVOLUCAO_LIGADA = true;
   const GRUPOS_EVO = ['musc', ...ATIVIDADES];
   const NOMES_GRUPO = { musc: 'Musculação' };
   const nomeGrupo = (g) => NOMES_GRUPO[g] || TIPOS[g].nome;
@@ -4627,8 +4628,7 @@
   addEventListener('resize', () => { if (telaAtual() === 'dashboard' && evo.aba === 'evolucao') renderEvolucao(); });
 
   function renderDashboard() {
-    // Por enquanto a Evolução só aparece no ambiente de desenvolvimento (/dev/). Para liberar em produção,
-    // troque EVOLUCAO_LIGADA para true.
+    // Com EVOLUCAO_LIGADA desligada, as abas somem e o Dashboard mostra só o Resumo.
     document.querySelector('.dash-abas').hidden = !EVOLUCAO_LIGADA;
     const aba = EVOLUCAO_LIGADA && location.hash.slice(1).split('/')[1] === 'evolucao' ? 'evolucao' : 'resumo';
     if (aba !== evo.aba) mostrarAbaDash(aba, { url: false });
