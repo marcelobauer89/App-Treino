@@ -157,6 +157,15 @@ Cada pessoa pode montar até 6 treinos (t1 a t6), com até 15 exercícios cada, 
 
 Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 a t6 nos check-ins e nas cargas e cria as colunas `treinos`, `novidade_treinos` e `novidade_oculta`.
 
+### Evolução (Dashboard)
+
+- **Onde:** no topo do Dashboard, a troca **Resumo | Evolução**. A escolhida fica no endereço (`#dashboard/evolucao`).
+- **Treinos por mês:** os últimos 6 meses em colunas empilhadas por tipo, com o total de cada mês. Tocar num mês mostra o resumo dele; o balão traz o detalhe; "Ver tabela" mostra os números. As setas andam de 6 em 6 meses, até o primeiro check-in.
+- **Resumo do mês:** treinos, dias com treino, horas e % do plano (pela semana montada; no mês atual, até hoje), cada um comparado ao mês anterior (▲/▼).
+- **Quais foram:** os tipos do mês, com quantas vezes fez cada treino de musculação.
+- **Seus pesos no mês:** a maior carga de cada exercício, a variação para o mês anterior, "novo" e 🏆 quando bateu recorde. Usa o nome de hoje no catálogo e junta os nomes antigos.
+- Usa os check-ins e as cargas que o app já carrega; não precisa de SQL.
+
 ### Futebol e Futvôlei
 
 - Tipos de check-in `futebol` (selo F) e `futvolei` (selo V), cada um com cor própria e 90 min por padrão. Entram no check-in, na Minha semana, no Dashboard, no resumo semanal por e-mail e no monitoramento.
