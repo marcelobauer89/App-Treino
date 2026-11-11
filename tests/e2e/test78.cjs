@@ -30,6 +30,14 @@ const aberto = (p) => p.locator('#novidade-evo-dialog[open]').count().then((n) =
     ok(await p.locator('#novidade-evo-ocultar').isVisible() && !(await p.locator('#novidade-evo-ocultar').isChecked()) && (await p.locator('#novidade-evo-body .novidade-ocultar').boundingBox()).height >= 44, `${tag}: caixa "não mostrar" desmarcada, alvo de 44 px`);
     const caixa = await p.locator('#novidade-evo-body').boundingBox();
     ok(caixa.width <= viewport.width && !(await p.evaluate(() => document.documentElement.scrollWidth > innerWidth)), `${tag}: cabe na tela`);
+    // Cabeçalho fixo: ao rolar a janela, o selo, o título e o X continuam no topo.
+    const topo = await p.evaluate(async () => {
+      const d = document.getElementById('novidade-evo-dialog');
+      d.scrollTop = d.scrollHeight; await new Promise((r) => setTimeout(r, 50));
+      return { rolou: d.scrollTop > 0, dif: Math.abs(document.querySelector('#novidade-evo-body > .modal-head').getBoundingClientRect().top - d.getBoundingClientRect().top) };
+    });
+    ok(!topo.rolou || topo.dif <= 2, `${tag}: cabeçalho fixo ao rolar`, JSON.stringify(topo));
+    ok(await p.locator('#novidade-evo-body [data-fechar]').isVisible(), `${tag}: X visível depois de rolar`);
     ok(!p.errs.length, `${tag}: sem erros`, p.errs.join(' | '));
     await p.context().close();
   }

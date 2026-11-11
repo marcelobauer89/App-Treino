@@ -1007,6 +1007,11 @@
   .novidade-lista svg { flex: 0 0 auto; margin-top: 3px; color: var(--checkin); }
   .novidade-acoes { display: grid; gap: 8px; }
   /* Novidade da Evolução: ilustração (atalho do Dashboard + colunas subindo) e os três destaques */
+  /* Avisos de novidade: cabeçalho (selo, título e X) fixo ao rolar. */
+  #novidade-evo-body > .modal-head, #novidade-body > .modal-head {
+    position: sticky; top: 0; z-index: 2; margin: -20px -16px 0; padding: 20px 16px 14px;
+    background: var(--papel); border-bottom: 1px solid var(--fio);
+  }
   .nov-evo-ilustra { display: grid; gap: 12px; padding: 14px; border: 1px solid var(--fio); border-radius: 14px; background: var(--gi); }
   .nov-evo-onde { margin: 0; color: var(--tinta-2); font-size: 13px; font-weight: 700; text-align: center; }
   .nov-evo-abas { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; padding: 3px; border: 1px solid var(--fio); border-radius: 10px; background: var(--papel); color: var(--tinta-2); font-size: 13px; font-weight: 700; text-align: center; }
