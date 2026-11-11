@@ -2048,6 +2048,7 @@
   const NOMES_EVENTO = {
     sessao: (d) => `Abriu o app${d.navegador ? ` (${d.navegador}, ${d.sistema}${d.instalado ? ', instalado' : ''})` : ''}`,
     tela: (d) => `Abriu a tela ${NOMES_TELA[d.tela] || d.tela}`,
+    evolucao_aberta: () => 'Abriu a Evolução (mês a mês) no Dashboard',
     exercicio_concluido: (d) => `Concluiu ${d.exercicio}${d.sem_peso ? ' (sem peso)' : ''}${d.origem === 'dash' ? ' pelo Dashboard' : ''}`,
     recorde: (d) => `Novo recorde em ${d.exercicio}`,
     checkin_criado: (d) => `Fez check-in de ${(TIPOS[d.tipo] || {}).nome || d.tipo}${d.retroativo ? ' (retroativo)' : ''}`,

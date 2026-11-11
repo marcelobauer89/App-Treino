@@ -659,6 +659,51 @@
     font-variant-numeric: tabular-nums;
   }
   .numeros dd small { font-family: var(--texto); font-stretch: 100%; font-size: 14px; font-weight: 500; color: var(--tinta-2); }
+  /* Dashboard → Resumo | Evolução (seletor segmentado) */
+  .dash-abas { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; margin: 0 0 18px; border: 1px solid var(--fio); border-radius: 12px; background: var(--papel); }
+  .dash-abas [role="tab"] { min-height: 40px; border: 0; border-radius: 8px; background: transparent; color: var(--tinta-2); font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; }
+  .dash-abas [role="tab"][aria-selected="true"] { background: var(--tatame); color: var(--sobre-tatame); }
+  /* Evolução */
+  .evo-topo { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .evo-cabeca { display: grid; justify-items: center; gap: 2px; text-align: center; }
+  .evo-cabeca h2 { margin: 0; }
+  .evo-cabeca span { color: var(--tinta-2); font-size: 13px; }
+  .evo-meses { position: relative; padding: 12px; background: var(--papel); border: 1px solid var(--fio); border-radius: 14px; }
+  .evo-grafico svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .evo-grafico .evo-grade { stroke: var(--fio); stroke-width: 1; }
+  .evo-grafico .evo-eixo { fill: var(--tinta-2); font-size: 12px; }
+  .evo-grafico .evo-total { fill: var(--tinta); font-size: 13px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .evo-grafico .evo-mes { fill: var(--tinta-2); font-size: 13px; font-weight: 600; }
+  .evo-grafico .evo-col[aria-pressed="true"] .evo-mes { fill: var(--tinta); font-weight: 800; }
+  .evo-grafico .evo-fundo { fill: transparent; }
+  .evo-grafico .evo-col[aria-pressed="true"] .evo-fundo { fill: var(--tatame-suave); }
+  .evo-grafico .evo-col { cursor: pointer; outline: none; }
+  .evo-grafico .evo-col:focus-visible .evo-fundo { stroke: var(--tatame-tinta); stroke-width: 2; }
+  .evo-grafico .evo-vazio { fill: var(--fio); }
+  .evo-musc { fill: var(--musc); } .evo-jiu { fill: var(--jiu); } .evo-muay { fill: var(--muay); } .evo-surf { fill: var(--surf); }
+  .evo-futebol { fill: var(--futebol); } .evo-futvolei { fill: var(--futvolei); } .evo-bike { fill: var(--bike); }
+  @media (prefers-reduced-motion: no-preference) {
+    .evo-grafico.entra .evo-barra { transform-box: fill-box; transform-origin: bottom; animation: evo-sobe .45s cubic-bezier(.2, .8, .3, 1) both; animation-delay: calc(var(--i) * 50ms); }
+    @keyframes evo-sobe { from { transform: scaleY(0); } }
+  }
+  .evo-balao { position: absolute; z-index: 3; max-width: 240px; padding: 8px 10px; border-radius: 10px; background: var(--tinta); color: var(--gi); font-size: 13px; line-height: 1.4; pointer-events: none; box-shadow: 0 6px 18px rgba(0, 0, 0, .2); }
+  .evo-legenda { margin-top: 8px; }
+  .evo-tabela-btn { margin-top: 8px; }
+  .evo-tabela { margin-top: 8px; overflow-x: auto; }
+  .evo-tabela table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+  .evo-tabela th, .evo-tabela td { padding: 6px 4px; border-bottom: 1px solid var(--fio); text-align: right; white-space: nowrap; }
+  .evo-tabela th:first-child, .evo-tabela td:first-child { text-align: left; }
+  .evo-numeros dd .delta { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 999px; font-family: var(--texto); font-stretch: 100%; font-size: 12px; font-weight: 800; vertical-align: middle; }
+  .delta.sobe { background: var(--feito-suave); color: var(--feito-tinta); }
+  .delta.desce { background: var(--recorde-suave); color: var(--recorde-tinta); }
+  .delta.igual { background: var(--gi); color: var(--tinta-2); }
+  .evo-lista { display: grid; gap: 0; margin: 0; padding: 4px 14px; list-style: none; background: var(--papel); border: 1px solid var(--fio); border-radius: 14px; }
+  .evo-lista li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; align-items: center; padding: 11px 0; border-bottom: 1px solid var(--fio); font-size: 15px; }
+  .evo-lista li:last-child { border-bottom: 0; }
+  .evo-lista .evo-nome { display: flex; align-items: center; gap: 8px; min-width: 0; font-weight: 700; }
+  .evo-lista .evo-valor { font-weight: 800; font-variant-numeric: tabular-nums; text-align: right; }
+  .evo-lista small { grid-column: 1 / -1; color: var(--tinta-2); font-size: 13px; }
+  .evo-lista .evo-vazio-txt { display: block; padding: 6px 0; color: var(--tinta-2); font-size: 14px; border: 0; }
   .bloco { margin-top: 28px; }
   .bloco-topo { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 10px; }
   .bloco-topo span { color: var(--tinta-2); font-size: 14px; text-align: right; }
@@ -1567,6 +1612,11 @@
   <div class="dash-topo">
     <h1>Dashboard</h1>
   </div>
+  <div class="dash-abas" role="tablist" aria-label="Visões do Dashboard">
+    <button type="button" role="tab" id="dash-aba-resumo" data-dash-aba="resumo" aria-controls="dash-resumo" aria-selected="true">Resumo</button>
+    <button type="button" role="tab" id="dash-aba-evolucao" data-dash-aba="evolucao" aria-controls="dash-evolucao" aria-selected="false" tabindex="-1">Evolução</button>
+  </div>
+  <div role="tabpanel" id="dash-resumo" aria-labelledby="dash-aba-resumo">
   <dl class="numeros" id="numeros"></dl>
   <section class="bloco" aria-labelledby="semana-atual-titulo">
     <div class="bloco-topo">
@@ -1599,6 +1649,38 @@
     <div class="bloco-topo"><h2 class="secao" id="tipos-titulo"></h2></div>
     <ul class="barras" id="barras"></ul>
   </section>
+  </div>
+  <!-- Evolução: os meses lado a lado (treinos por tipo) e o resumo do mês escolhido, com os pesos. -->
+  <div role="tabpanel" id="dash-evolucao" aria-labelledby="dash-aba-evolucao" hidden>
+    <section class="bloco evo-meses" aria-labelledby="evo-titulo">
+      <div class="evo-topo">
+        <button class="cal-nav" type="button" data-evo-nav="-1" aria-label="Meses anteriores">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <div class="evo-cabeca"><h2 class="secao" id="evo-titulo">Treinos por mês</h2><span id="evo-periodo"></span></div>
+        <button class="cal-nav" type="button" data-evo-nav="1" aria-label="Meses seguintes">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+      </div>
+      <div class="evo-grafico" id="evo-grafico"></div>
+      <div class="evo-balao" id="evo-balao" role="status" hidden></div>
+      <ul class="legenda-cal evo-legenda" id="evo-legenda" aria-label="Legenda do gráfico"></ul>
+      <button class="link-btn evo-tabela-btn" type="button" id="evo-tabela-btn" aria-expanded="false" aria-controls="evo-tabela">Ver tabela</button>
+      <div class="evo-tabela" id="evo-tabela" hidden></div>
+    </section>
+    <section class="bloco" aria-labelledby="evo-mes-titulo">
+      <div class="bloco-topo"><h2 class="secao" id="evo-mes-titulo"></h2><span id="evo-mes-comp"></span></div>
+      <dl class="numeros evo-numeros" id="evo-numeros"></dl>
+    </section>
+    <section class="bloco" aria-labelledby="evo-quais-titulo">
+      <div class="bloco-topo"><h2 class="secao" id="evo-quais-titulo">Quais foram</h2></div>
+      <ul class="evo-lista" id="evo-quais"></ul>
+    </section>
+    <section class="bloco" aria-labelledby="evo-pesos-titulo">
+      <div class="bloco-topo"><h2 class="secao" id="evo-pesos-titulo">Seus pesos no mês</h2></div>
+      <ul class="evo-lista" id="evo-pesos"></ul>
+    </section>
+  </div>
 </main>
 
 <main class="wrap" id="tela-voce" hidden>
@@ -4232,7 +4314,205 @@
       </li>`).join('');
   }
 
+  // ---------- Dashboard → Evolução (mês a mês) ----------
+  // Treinos por mês (colunas empilhadas por tipo, 6 meses por vez) e o resumo do mês escolhido: números com a
+  // comparação com o mês anterior, quais treinos foram e as maiores cargas de cada exercício. Usa só os check-ins
+  // e as cargas que o app já carrega.
+  const GRUPOS_EVO = ['musc', ...ATIVIDADES];
+  const NOMES_GRUPO = { musc: 'Musculação' };
+  const nomeGrupo = (g) => NOMES_GRUPO[g] || TIPOS[g].nome;
+  const chaveMes = (ano, mes) => `${ano}-${pad(mes + 1)}`;
+  const somarMeses = (chave, n) => { const [a, m] = chave.split('-').map(Number); const d = new Date(a, m - 1 + n, 1); return chaveMes(d.getFullYear(), d.getMonth()); };
+  const nomeMesChave = (chave) => { const [a, m] = chave.split('-').map(Number); return nomeMes(a, m - 1); };
+  const evo = { aba: 'resumo', fim: null, sel: null, tabela: false, animou: false };
+  // Maior carga de cada exercício num conjunto de dias (cargas registradas), juntando os nomes antigos do catálogo.
+  function maioresCargas(filtro) {
+    const m = new Map();
+    cargas.filter((r) => filtro(r.data)).forEach((r) => Object.entries(r.series || {}).forEach(([nome, series]) => {
+      if (config.semPeso.has(nome)) return;
+      const kg = maxDoDia(series);
+      if (kg <= 0) return;
+      const chave = nomeAtual(nome);
+      const atual = m.get(chave);
+      if (!atual || kg > atual.kg) m.set(chave, { kg, nome, data: r.data });
+    }));
+    return m;
+  }
+  function resumoDoMes(chave) {
+    const doMes = checkins.filter((c) => dataDe(c).startsWith(chave));
+    const porGrupo = Object.fromEntries(GRUPOS_EVO.map((g) => [g, 0]));
+    const porTipo = {};
+    doMes.forEach((c) => { porGrupo[TIPOS[c.tipo].grupo] += 1; porTipo[c.tipo] = (porTipo[c.tipo] || 0) + 1; });
+    // % do plano: o que a semana montada pede em cada dia do mês (até hoje, no mês atual), até 100%.
+    const [a, mm] = chave.split('-').map(Number);
+    const ultimo = Math.min(new Date(a, mm, 0).getDate(), chave === hoje().slice(0, 7) ? Number(hoje().slice(8, 10)) : 31);
+    let planejado = 0;
+    for (let d = 1; d <= ultimo; d++) planejado += (config.semana[new Date(a, mm - 1, d).getDay()] || []).length;
+    return {
+      chave, total: doMes.length, porGrupo, porTipo,
+      dias: new Set(doMes.map(dataDe)).size,
+      minutos: doMes.reduce((s, c) => s + (duracaoMin(c) || 0), 0),
+      planejado, plano: planejado ? Math.min(1, doMes.length / planejado) : null,
+    };
+  }
+  const primeiroMes = () => (checkins.length ? checkins.map(dataDe).sort()[0].slice(0, 7) : hoje().slice(0, 7));
+  function renderEvolucao() {
+    const atual = hoje().slice(0, 7);
+    if (!evo.fim) evo.fim = atual;
+    if (!evo.sel) evo.sel = atual;
+    const meses = Array.from({ length: 6 }, (_, i) => somarMeses(evo.fim, i - 5));
+    document.querySelector('[data-evo-nav="1"]').disabled = evo.fim >= atual;
+    document.querySelector('[data-evo-nav="-1"]').disabled = meses[0] <= primeiroMes();
+    const dados = meses.map(resumoDoMes);
+    const ano = (k) => k.slice(0, 4);
+    $('evo-periodo').textContent = `${nomeMesChave(meses[0]).slice(0, 3)}${ano(meses[0]) === ano(meses[5]) ? '' : ` de ${ano(meses[0])}`} a ${nomeMesChave(meses[5]).slice(0, 3)} de ${ano(meses[5])}`;
+    graficoMeses(dados);
+    const usados = GRUPOS_EVO.filter((g) => dados.some((d) => d.porGrupo[g]));
+    $('evo-legenda').innerHTML = usados.map((g) => `<li><span class="selo ${g}" aria-hidden="true">${g === 'musc' ? '' : TIPOS[g].selo}</span><span>${esc(nomeGrupo(g))}</span></li>`).join('');
+    $('evo-legenda').hidden = !usados.length;
+    $('evo-tabela').innerHTML = `<table><thead><tr><th scope="col">Mês</th>${usados.map((g) => `<th scope="col">${esc(nomeGrupo(g))}</th>`).join('')}<th scope="col">Total</th></tr></thead><tbody>
+      ${dados.map((d) => `<tr><th scope="row">${esc(capitalizar(nomeMesChave(d.chave)))} ${d.chave.slice(0, 4)}</th>${usados.map((g) => `<td>${d.porGrupo[g]}</td>`).join('')}<td><b>${d.total}</b></td></tr>`).join('')}</tbody></table>`;
+    $('evo-tabela').hidden = !evo.tabela;
+    renderMesEvolucao();
+  }
+  function graficoMeses(dados) {
+    const caixa = $('evo-grafico');
+    const W = Math.max(280, Math.round(caixa.clientWidth || 320)), H = 200, topo = 22, base = 26;
+    const max = Math.max(1, ...dados.map((d) => d.total));
+    // Grade discreta em números redondos.
+    const passo = max <= 4 ? 1 : max <= 10 ? 2 : max <= 20 ? 5 : 10;
+    const teto = Math.ceil(max / passo) * passo;
+    const alto = H - topo - base;
+    const y = (v) => topo + alto - (v / teto) * alto;
+    const banda = W / dados.length, larg = Math.min(40, banda * 0.56);
+    const grade = Array.from({ length: teto / passo + 1 }, (_, i) => i * passo)
+      .map((v) => `<line class="evo-grade" x1="0" x2="${W}" y1="${y(v)}" y2="${y(v)}"/>`).join('');
+    const cols = dados.map((d, i) => {
+      const x = banda * i + (banda - larg) / 2;
+      let acima = y(0);
+      const partes = GRUPOS_EVO.filter((g) => d.porGrupo[g]);
+      const segs = partes.map((g, k) => {
+        const h = (d.porGrupo[g] / teto) * alto;
+        const topoSeg = acima - h;
+        // 2 px de respiro entre os pedaços; o de cima tem as pontas arredondadas.
+        const hh = Math.max(1, h - (k < partes.length - 1 ? 2 : 0));
+        const yy = topoSeg + (k < partes.length - 1 ? 2 : 0);
+        acima = topoSeg;
+        const r = k === partes.length - 1 ? Math.min(4, hh / 2) : 0;
+        return r
+          ? `<path class="evo-${g}" d="M${x},${yy + hh}V${yy + r}Q${x},${yy} ${x + r},${yy}H${x + larg - r}Q${x + larg},${yy} ${x + larg},${yy + r}V${yy + hh}Z"/>`
+          : `<rect class="evo-${g}" x="${x}" y="${yy}" width="${larg}" height="${hh}"/>`;
+      }).join('');
+      const nome = nomeMesChave(d.chave);
+      const rotulo = `${capitalizar(nome)} de ${d.chave.slice(0, 4)}: ${d.total} ${d.total === 1 ? 'treino' : 'treinos'}${partes.length ? ` (${partes.map((g) => `${d.porGrupo[g]} ${nomeGrupo(g)}`).join(', ')})` : ''}`;
+      return `<g class="evo-col" role="button" tabindex="0" data-evo-mes="${d.chave}" aria-pressed="${d.chave === evo.sel}" aria-label="${esc(rotulo)}" data-balao="${esc(rotulo)}">
+        <rect class="evo-fundo" x="${banda * i + 2}" y="2" width="${banda - 4}" height="${H - 4}" rx="10"/>
+        <g class="evo-barra" style="--i:${i}">${segs || `<rect class="evo-vazio" x="${x}" y="${y(0) - 2}" width="${larg}" height="2"/>`}</g>
+        <text class="evo-total" x="${x + larg / 2}" y="${(d.total ? acima : y(0)) - 7}" text-anchor="middle">${d.total}</text>
+        <text class="evo-mes" x="${x + larg / 2}" y="${H - 8}" text-anchor="middle">${esc(nome.slice(0, 3))}</text>
+      </g>`;
+    }).join('');
+    caixa.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="group" aria-label="Treinos por mês, toque num mês para ver o resumo">${grade}${cols}</svg>`;
+    if (!evo.animou) { evo.animou = true; caixa.classList.add('entra'); setTimeout(() => caixa.classList.remove('entra'), 900); }
+  }
+  function renderMesEvolucao() {
+    const r = resumoDoMes(evo.sel);
+    const ant = resumoDoMes(somarMeses(evo.sel, -1));
+    const nome = capitalizar(nomeMesChave(evo.sel));
+    $('evo-mes-titulo').textContent = `${nome} de ${evo.sel.slice(0, 4)}`;
+    $('evo-mes-comp').textContent = `comparado a ${nomeMesChave(somarMeses(evo.sel, -1))}`;
+    const delta = (a, b, fmt = (n) => fmtNum(n)) => {
+      if (a === b) return '<span class="delta igual">=</span>';
+      return a > b ? `<span class="delta sobe">▲ ${fmt(a - b)}</span>` : `<span class="delta desce">▼ ${fmt(b - a)}</span>`;
+    };
+    const pct = (v) => (v === null ? '—' : `${Math.round(v * 100)}<small>%</small>`);
+    $('evo-numeros').innerHTML = `
+      <div><dt>Treinos</dt><dd>${r.total}${delta(r.total, ant.total)}</dd></div>
+      <div><dt>Dias com treino</dt><dd>${r.dias}${delta(r.dias, ant.dias)}</dd></div>
+      <div><dt>Horas treinadas</dt><dd>${fmtNum(r.minutos / 60)}<small> h</small>${delta(Math.round(r.minutos / 6) / 10, Math.round(ant.minutos / 6) / 10, (n) => `${fmtNum(n)} h`)}</dd></div>
+      <div><dt>Do plano</dt><dd>${pct(r.plano)}${r.plano !== null && ant.plano !== null ? delta(Math.round(r.plano * 100), Math.round(ant.plano * 100), (n) => `${n} p.p.`) : ''}</dd></div>`;
+    // Quais foram: por tipo, com os treinos de musculação.
+    const grupos = GRUPOS_EVO.filter((g) => r.porGrupo[g]);
+    $('evo-quais').innerHTML = grupos.length ? grupos.map((g) => {
+      const treinos = g === 'musc' ? TIPOS_MUSC.filter((t) => r.porTipo[t]).map((t) => `${TIPOS[t].nome} · ${r.porTipo[t]}×`).join(', ') : '';
+      return `<li><span class="evo-nome">${seloHTML(g === 'musc' ? (TIPOS_MUSC.find((t) => r.porTipo[t]) || 't1') : g)}${esc(nomeGrupo(g))}</span>
+        <span class="evo-valor">${r.porGrupo[g]}</span>${treinos ? `<small>${esc(treinos)}</small>` : ''}</li>`;
+    }).join('') : `<li class="evo-vazio-txt">${checkins.length ? `Nenhum treino em ${esc(nomeMesChave(evo.sel))}.` : 'Seus treinos vão aparecer aqui. Faça o primeiro check-in!'}</li>`;
+    // Pesos: maior carga de cada exercício no mês, a variação para o mês anterior e o recorde.
+    const noMes = maioresCargas((d) => d.startsWith(evo.sel));
+    const antes = maioresCargas((d) => d.startsWith(somarMeses(evo.sel, -1)));
+    const itens = [...noMes.entries()].map(([chave, v]) => {
+      const a = antes.get(chave);
+      const rec = recordeAntes(v.nome, `${evo.sel}-01`);
+      return { chave, kg: v.kg, dif: a ? v.kg - a.kg : null, recorde: !!rec && v.kg > rec.kg };
+    }).sort((x, y2) => (y2.dif ?? -Infinity) - (x.dif ?? -Infinity) || x.chave.localeCompare(y2.chave, 'pt-BR'));
+    $('evo-pesos').innerHTML = itens.length ? itens.map((it) => `
+      <li><span class="evo-nome">${esc(it.chave)}${it.recorde ? ' <span title="Recorde no mês" aria-label="Recorde no mês">🏆</span>' : ''}</span>
+        <span class="evo-valor">${fmtKg(it.kg)} kg</span>
+        <small>${it.dif === null ? 'novo neste mês' : it.dif === 0 ? 'igual ao mês anterior' : `${it.dif > 0 ? '▲' : '▼'} ${fmtKg(Math.abs(it.dif))} kg em relação a ${esc(nomeMesChave(somarMeses(evo.sel, -1)))}`}</small></li>`).join('')
+      : '<li class="evo-vazio-txt">Nenhum peso registrado neste mês.</li>';
+  }
+  function mostrarAbaDash(aba, { focar = false, url = true } = {}) {
+    evo.aba = aba === 'evolucao' ? 'evolucao' : 'resumo';
+    document.querySelectorAll('[data-dash-aba]').forEach((b) => {
+      const sel = b.dataset.dashAba === evo.aba;
+      b.setAttribute('aria-selected', String(sel)); b.tabIndex = sel ? 0 : -1;
+      if (sel && focar) b.focus();
+    });
+    $('dash-resumo').hidden = evo.aba !== 'resumo';
+    $('dash-evolucao').hidden = evo.aba !== 'evolucao';
+    if (url) history.replaceState(null, '', `#dashboard${evo.aba === 'evolucao' ? '/evolucao' : ''}`);
+    if (evo.aba === 'evolucao') { renderEvolucao(); if (url) registrarEvento('evolucao_aberta'); }
+  }
+  document.querySelector('.dash-abas').addEventListener('click', (e) => { const b = e.target.closest('[data-dash-aba]'); if (b) mostrarAbaDash(b.dataset.dashAba); });
+  document.querySelector('.dash-abas').addEventListener('keydown', (e) => {
+    if (!['ArrowLeft', 'ArrowRight'].includes(e.key)) return;
+    e.preventDefault(); mostrarAbaDash(evo.aba === 'resumo' ? 'evolucao' : 'resumo', { focar: true });
+  });
+  function escolherMesEvo(chave) { evo.sel = chave; document.querySelectorAll('.evo-col').forEach((g) => g.setAttribute('aria-pressed', String(g.dataset.evoMes === chave))); renderMesEvolucao(); }
+  $('dash-evolucao').addEventListener('click', (e) => {
+    const col = e.target.closest('[data-evo-mes]');
+    if (col) return escolherMesEvo(col.dataset.evoMes);
+    const nav = e.target.closest('[data-evo-nav]');
+    if (nav) {
+      evo.fim = somarMeses(evo.fim, Number(nav.dataset.evoNav) * 6);
+      if (evo.fim > hoje().slice(0, 7)) evo.fim = hoje().slice(0, 7);
+      if (evo.sel < somarMeses(evo.fim, -5) || evo.sel > evo.fim) evo.sel = evo.fim;
+      return renderEvolucao();
+    }
+    if (e.target.closest('#evo-tabela-btn')) {
+      evo.tabela = !evo.tabela;
+      $('evo-tabela').hidden = !evo.tabela;
+      $('evo-tabela-btn').setAttribute('aria-expanded', String(evo.tabela));
+      $('evo-tabela-btn').textContent = evo.tabela ? 'Esconder tabela' : 'Ver tabela';
+    }
+  });
+  $('dash-evolucao').addEventListener('keydown', (e) => {
+    const col = e.target.closest('[data-evo-mes]');
+    if (col && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); escolherMesEvo(col.dataset.evoMes); }
+  });
+  // Balão ao passar o mouse ou focar uma coluna.
+  function balaoEvo(col) {
+    const b = $('evo-balao');
+    if (!col) { b.hidden = true; return; }
+    b.textContent = col.dataset.balao;
+    b.hidden = false;
+    const caixa = document.querySelector('.evo-meses').getBoundingClientRect();
+    const r = col.querySelector('.evo-fundo').getBoundingClientRect();
+    const larg = b.offsetWidth;
+    b.style.left = `${Math.min(Math.max(8, r.left - caixa.left + r.width / 2 - larg / 2), caixa.width - larg - 8)}px`;
+    b.style.top = `${Math.max(4, r.top - caixa.top - b.offsetHeight + 8)}px`;
+  }
+  $('evo-grafico').addEventListener('mouseover', (e) => balaoEvo(e.target.closest('.evo-col')));
+  $('evo-grafico').addEventListener('mouseleave', () => balaoEvo(null));
+  $('evo-grafico').addEventListener('focusin', (e) => balaoEvo(e.target.closest('.evo-col')));
+  $('evo-grafico').addEventListener('focusout', () => balaoEvo(null));
+  addEventListener('resize', () => { if (telaAtual() === 'dashboard' && evo.aba === 'evolucao') renderEvolucao(); });
+
   function renderDashboard() {
+    const aba = location.hash.slice(1).split('/')[1] === 'evolucao' ? 'evolucao' : 'resumo';
+    if (aba !== evo.aba) mostrarAbaDash(aba, { url: false });
+    if (evo.aba === 'evolucao') renderEvolucao();
     renderNumeros();
     renderMetas();
     renderCalendario();
