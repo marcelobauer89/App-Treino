@@ -46,9 +46,8 @@ const ADMIN = H.PAGINA.replace('index.html', 'admin.html');
     ok(db.perfis[0].semana[3].includes('surf'), `${scheme}: surf salvo na quarta`, JSON.stringify(db.perfis[0].semana));
     await p.click('[data-tela="treino"]'); await p.waitForTimeout(150);
     ok(/Treino 1 \+ Surf/.test(await txt(p, '#atividade')), `${scheme}: título do dia`, await txt(p, '#atividade'));
-    await p.click('#semana-det > summary'); await p.waitForTimeout(80); // RF-69: a semana começa recolhida
+    await p.click('[data-tela="dashboard"]'); await p.waitForTimeout(150); await p.click('#semana-det > summary'); await p.waitForTimeout(80); // a semana fica no Dashboard, recolhida
     ok(/Surf/.test(await p.locator('#dias .dia.hoje .tag-feito').innerText().catch(() => '')), `${scheme}: dia marca surf como feito`, await txt(p, '#dias .dia.hoje'));
-    await p.click('[data-tela="dashboard"]'); await p.waitForTimeout(150);
     ok(/Surf 1 de 1/.test(await txt(p, '#metas')), `${scheme}: meta "1 de 1" com surf no plano`, await txt(p, '#metas'));
     ok(p.errs.length === 0, `${scheme}: sem erros no app`, p.errs.join(' | '));
     await p.context().close();

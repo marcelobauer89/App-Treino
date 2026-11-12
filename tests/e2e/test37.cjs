@@ -48,11 +48,10 @@ const ADMIN = H.PAGINA.replace('index.html', 'admin.html');
     ok(db.perfis[0].semana[3].includes('muay'), `${scheme}: muay thai salvo na quarta`, JSON.stringify(db.perfis[0].semana));
     await p.click('[data-tela="treino"]'); await p.waitForTimeout(150);
     ok(/Treino 1 \+ Muay Thai/.test(await txt(p, '#atividade')), `${scheme}: título do dia`, await txt(p, '#atividade'));
-    await p.click('#semana-det > summary'); await p.waitForTimeout(80); // RF-69: a semana começa recolhida
+    await p.click('[data-tela="dashboard"]'); await p.waitForTimeout(150); await p.click('#semana-det > summary'); await p.waitForTimeout(80); // a semana fica no Dashboard, recolhida
     const qua = p.locator('#dias .dia.hoje');
     ok(/Muay Thai/.test(await txt(p, '#dias .dia.hoje')) && /muay thai/i.test(await txt(p, '#dias .dia.hoje .dia-info')), `${scheme}: semana mostra muay thai planejado`, await txt(p, '#dias .dia.hoje'));
     ok(/Muay Thai/.test(await qua.locator('.tag-feito').innerText().catch(() => '')), `${scheme}: dia marca muay thai como feito`, await txt(p, '#dias .dia.hoje'));
-    await p.click('[data-tela="dashboard"]'); await p.waitForTimeout(150);
     ok(/Muay Thai 1 de 1/.test(await txt(p, '#metas')), `${scheme}: meta "1 de 1" com muay thai no plano`, await txt(p, '#metas'));
     await p.reload(); await H.prontos(p); await p.waitForTimeout(200);
     ok((await H.banco(p)).perfis[0].semana[3].includes('muay'), `${scheme}: semana com muay thai continua depois de recarregar`);
