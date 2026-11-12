@@ -50,6 +50,8 @@ async function novaPagina(b, opcoes = {}) {
     const html = (await resp.text()).replace("'https://mlovfgbndtpeczgnvivi.supabase.co'", destino);
     r.fulfill({ response: resp, body: html });
   });
+  // versao.json (publicado pelo GitHub Pages): vazio nos testes = atualização automática desligada (test79 testa).
+  await ctx.route(new RegExp(`^http://localhost:${PORTA}/versao\\.json`), (r) => r.fulfill({ contentType: 'application/json', body: '{}' }));
   // Função do resumo: chave pública das notificações (vazia = não configuradas).
   await ctx.route('https://teste.supabase.co/functions/v1/**', (r) => r.fulfill({ contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify({ chave: opcoes.vapid || null }) }));
   // Vídeos vêm do banco (meus_videos) para perfis com videos_liberados. Os testes antigos usam a lista guardada

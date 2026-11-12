@@ -3078,6 +3078,36 @@
   function marcarSessao() {
     try { localStorage.setItem(CHAVE_SESSAO, JSON.stringify({ id: usuario.id, visto: Date.now() })); } catch (_) {}
   }
+  // ---------- Atualização automática ----------
+  // O site publica versao.json com o commit de cada ambiente (.github/workflows/publicar.yml). Ao voltar para o app
+  // (no máximo a cada 2 min), se a versão mudou, o app recarrega sozinho quando for seguro: sem janela aberta, sem
+  // campo em edição e sem séries esperando gravar. Senão, tenta de novo ao fechar a janela ou na próxima volta.
+  // O check-in em andamento fica no banco e volta depois de recarregar. Sem o arquivo (local, testes), fica desligado.
+  let versaoCarregada = null, versaoNova = null, versaoEm = 0, atualizandoApp = false;
+  const lerVersao = () => fetch(`versao.json?t=${Date.now()}`, { cache: 'no-store' })
+    .then((r) => (r.ok ? r.json() : null))
+    .then((j) => (j && typeof j.versao === 'string' && j.versao ? j.versao : null))
+    .catch(() => null);
+  function guardarVersaoCarregada() { lerVersao().then((v) => { versaoCarregada = v; versaoEm = Date.now(); }); }
+  async function conferirVersao() {
+    if (!versaoCarregada || versaoNova || Date.now() - versaoEm < 120000) return atualizarApp();
+    versaoEm = Date.now();
+    const v = await lerVersao();
+    if (v && v !== versaoCarregada) versaoNova = v;
+    atualizarApp();
+  }
+  const podeAtualizar = () => !document.querySelector('dialog[open]') && !timersSeries.size
+    && !(document.activeElement && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName));
+  async function atualizarApp() {
+    if (!versaoNova || atualizandoApp || !podeAtualizar()) return;
+    atualizandoApp = true;
+    try { await fila; } catch (_) {}
+    registrarEvento('app_atualizado', { de: versaoCarregada.slice(0, 7), para: versaoNova.slice(0, 7) });
+    try { await enviarEventos(); } catch (_) {}
+    location.reload();
+  }
+  // Ao fechar qualquer janela (o evento "close" não sobe; pega na captura).
+  document.addEventListener('close', () => setTimeout(atualizarApp, 0), true);
   document.addEventListener('visibilitychange', () => {
     if (!usuario) return;
     if (document.visibilityState !== 'hidden') {
@@ -3085,6 +3115,7 @@
       if (escondidoEm && Date.now() - escondidoEm >= NOVA_ABERTURA_MS) mostrarNovidadeSeFaltar();
       escondidoEm = null;
       atualizarCatalogo();
+      conferirVersao();
       return marcarPresenca();
     }
     escondidoEm = Date.now();
@@ -6776,6 +6807,7 @@
       registrarEvento('sessao_perdida', { ...infoAparelho(), horas_desde: Math.round((Date.now() - anterior.visto) / 36e5) });
     }
     marcarSessao();
+    guardarVersaoCarregada();
     guardarTemaLocal();
     aplicarTema();
     esconderCarga();
