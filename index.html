@@ -203,6 +203,9 @@
   .ficha { margin-top: 24px; }
   .ficha-topo { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 12px; margin-bottom: 10px; }
   .ficha-topo span { color: var(--tinta-2); font-size: 14px; text-align: right; }
+  /* Sem o título "Ficha" na tela (fica para leitor de tela): o progresso do treino de hoje abre a lista. */
+  .ficha-topo:has(> h2.sr-only) { justify-content: flex-start; }
+  .ficha-topo #count { font-size: 15px; text-align: left; }
   .ficha-topo span b { color: var(--tinta); font-variant-numeric: tabular-nums; }
   /* Progresso do treino de hoje: enche a cada "Terminei o exercício" (gradiente de meta). */
   .ficha-prog { height: 8px; margin: -2px 0 14px; border-radius: 4px; background: var(--fio); overflow: hidden; }
@@ -1651,7 +1654,7 @@
 
     <section class="ficha" aria-labelledby="ficha-titulo">
       <div class="ficha-topo">
-        <h2 class="secao" id="ficha-titulo">Ficha</h2>
+        <h2 class="secao sr-only" id="ficha-titulo">Ficha</h2>
         <span id="count"></span>
       </div>
       <div class="ficha-prog" id="ficha-prog" role="progressbar" aria-label="Exercícios feitos hoje" aria-valuemin="0"><i></i></div>
