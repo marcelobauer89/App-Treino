@@ -61,6 +61,11 @@ jobs:
             mkdir _site/dev
             rsync -a --exclude .git --exclude .github --exclude tests desenvolvimento/ _site/dev/
           fi
+          # Versão publicada de cada ambiente: o app confere ao voltar e se atualiza sozinho quando muda.
+          printf '{"versao":"%s"}\n' "$(git -C producao rev-parse HEAD)" > _site/versao.json
+          if [ -d desenvolvimento ]; then
+            printf '{"versao":"%s"}\n' "$(git -C desenvolvimento rev-parse HEAD)" > _site/dev/versao.json
+          fi
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
