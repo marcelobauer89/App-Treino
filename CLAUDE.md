@@ -33,10 +33,19 @@ Se o conector do Notion não estiver disponível na sessão, avise na resposta q
 
 Os testes ficam em `tests/` (ver `tests/README.md`) e rodam em paralelo com `node tests/rodar.cjs`.
 
-- Antes de cada PR para a `dev`: rodar os testes da área mexida (e os que podem ser afetados) e só abrir o PR com eles verdes.
+- Testes locais antes do PR para a `dev` (para gastar menos tempo e tokens):
+  - mudança só de texto, estilo ou documentação: **nenhum teste local**; o GitHub confere no PR;
+  - outras mudanças: rodar **só os testes da área mexida** (`node tests/rodar.cjs testNN …`) e abrir o PR com eles verdes;
+  - **bateria completa local** só em mudança arriscada: login e abertura do app, avisos que aparecem ao abrir, `supabase/schema.sql` (mais `tests/sql/rodar.sh`) e o harness dos testes (`tests/apoio/`).
 - Cada PR para a `dev` ou a `main` roda os testes no GitHub (workflow **Testes**: app e painel, banco e e-mail). Fazer o merge só com os três verdes; se algum ficar vermelho, corrigir antes. Mudança no `supabase/schema.sql` precisa passar também no `tests/sql/rodar.sh`.
 - Teste novo de cada mudança vai para `tests/e2e/`, só com dados de exemplo (nunca nomes, e-mails ou ids de vídeo reais).
 - O dono quer acompanhar os testes **em tempo real, sempre**:
   - avisar quando começam, com o link para acompanhar quando for no GitHub;
   - mandar o resultado de cada teste (ou de cada parte, no GitHub) assim que sai;
   - no fim, mandar o resumo. Não esperar o fim para dar notícias.
+
+## Ritmo de entrega
+
+- Juntar os ajustes pedidos em sequência num PR só, em vez de um PR por ajuste. Quando o dono pedir dev e produção juntos, fazer os dois ciclos em seguida.
+- PRD (`docs/PRD.md`) e README: atualizar no mesmo PR da mudança, sem PR separado só de documentação.
+- Notion: atualizar só no merge de `dev` para `main` (ver "Backlog no Notion").
