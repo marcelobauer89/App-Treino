@@ -1,7 +1,7 @@
-// Melhorias de UX (Leis de UX, RF-69): progresso "X de N feitos" na Ficha, cartão de exercício enxuto, − e + na carga,
+// Melhorias de UX (Leis de UX, RF-69): progresso "X de N feitos" na Ficha, cartão de exercício enxuto, − e + de 0,5 kg na carga,
 // atividades da semana primeiro no check-in, semana recolhida no Treino, "Semanas seguidas no plano", Evolução comparando o
-// mesmo trecho do mês, botão de check-in que não cobre ações e, no painel, Quem sumiu no topo com WhatsApp, números em
-// destaque, tipos sem check-in numa linha só e Excluir conta só dentro da ficha do usuário.
+// mesmo trecho do mês, botão de check-in que não cobre ações, botões de Meus treinos do mesmo tamanho e, no painel, números
+// em destaque, Quem sumiu no fim da Visão geral (como antes), tipos sem check-in numa linha só e Excluir conta só na ficha.
 const { chromium } = require('playwright');
 const H = require('../apoio/harness.cjs');
 const ADMIN = H.PAGINA.replace('index.html', 'admin.html');
@@ -41,13 +41,13 @@ const CHECKINS = [...semana('2026-10-19'), ...semana('2026-10-26'), ...semana('2
     await primeiro.locator('.graus-det summary').click(); await p.waitForTimeout(80);
     ok(await primeiro.locator('.graus').isVisible(), `${scheme}: "Ver os 4 graus" abre os graus`);
 
-    // Carga: + e − de 2,5 kg, e o progresso sobe ao concluir.
+    // Carga: + e − de 0,5 kg, e o progresso sobe ao concluir.
     const comPeso = p.locator('#list > li.ex').nth(2);
     await comPeso.locator('[data-log]').click(); await p.waitForTimeout(150);
-    await p.click('[data-passo="2.5"][data-alvo="kg-0"]'); await p.click('[data-passo="2.5"][data-alvo="kg-0"]');
-    ok((await p.inputValue('#kg-0')) === '5', `${scheme}: + soma 2,5 kg duas vezes`, await p.inputValue('#kg-0'));
-    await p.click('[data-passo="-2.5"][data-alvo="kg-0"]');
-    ok((await p.inputValue('#kg-0')) === '2,5', `${scheme}: − tira 2,5 kg`, await p.inputValue('#kg-0'));
+    await p.click('[data-passo="0.5"][data-alvo="kg-0"]'); await p.click('[data-passo="0.5"][data-alvo="kg-0"]'); await p.click('[data-passo="0.5"][data-alvo="kg-0"]');
+    ok((await p.inputValue('#kg-0')) === '1,5', `${scheme}: + soma 0,5 kg a cada toque`, await p.inputValue('#kg-0'));
+    await p.click('[data-passo="-0.5"][data-alvo="kg-0"]');
+    ok((await p.inputValue('#kg-0')) === '1', `${scheme}: − tira 0,5 kg`, await p.inputValue('#kg-0'));
     await p.click('[data-concluir]'); await H.gravacoes(p);
     ok((await txt(p, '#count')) === `1 de ${n} feitos` && (await p.getAttribute('#ficha-prog', 'aria-valuenow')) === '1', `${scheme}: progresso sobe para 1 de ${n}`, await txt(p, '#count'));
 
@@ -90,6 +90,10 @@ const CHECKINS = [...semana('2026-10-19'), ...semana('2026-10-26'), ...semana('2
     await p.waitForTimeout(250);
     const comp = await txt(p, '#evo-mes-comp');
     ok(comp === '1 a 13 comparado a 1 a 13 de outubro', `${scheme}: Evolução compara 1 a 13 com 1 a 13`, comp);
+    // Meus treinos: os botões com o mesmo tamanho do "Personalizar meus treinos".
+    await H.voce(p, 'treinos');
+    const tam = await p.evaluate(() => ['editar-treinos', 'trocar-jornada'].map((id) => { const r = document.getElementById(id).getBoundingClientRect(); const c = getComputedStyle(document.getElementById(id)); return [Math.round(r.width), Math.round(r.height), c.fontSize]; }));
+    ok(JSON.stringify(tam[0]) === JSON.stringify(tam[1]), `${scheme}: Mudar meu objetivo do tamanho de Personalizar meus treinos`, JSON.stringify(tam));
     ok(!p.errs.length, `${scheme}: sem erros`, p.errs.join(' | '));
     await p.context().close();
   }
@@ -109,13 +113,12 @@ const CHECKINS = [...semana('2026-10-19'), ...semana('2026-10-26'), ...semana('2
     await p.goto(ADMIN); await p.waitForSelector('#painel:not([hidden])'); await p.waitForTimeout(300);
     const destaques = await p.locator('#kpis .kpi.destaque dt').evaluateAll((els) => els.map((e) => e.textContent.trim()));
     ok(destaques.length === 2 && /Aderência/.test(destaques[0]) && /Usuários ativos/.test(destaques[1]), 'painel: Aderência e Usuários ativos em destaque, primeiro', destaques.join(' | '));
+    // Quem sumiu continua como antes: no fim da Visão geral, depois dos gráficos, e sem botão extra.
     const ordem = await p.evaluate(() => {
-      const sumiu = document.getElementById('sumiu-titulo'), kpis = document.getElementById('kpis');
-      return !!(sumiu.compareDocumentPosition(kpis) & Node.DOCUMENT_POSITION_FOLLOWING);
+      const sumiu = document.getElementById('sumiu-titulo'), treinos = document.getElementById('treinos-titulo');
+      return !!(treinos.compareDocumentPosition(sumiu) & Node.DOCUMENT_POSITION_FOLLOWING);
     });
-    ok(ordem, 'painel: Quem sumiu antes dos números');
-    const link = await p.getAttribute('#sumiu-lista a.chamar', 'href').catch(() => '');
-    ok(/^https:\/\/wa\.me\/\?text=/.test(link || '') && decodeURIComponent(link).includes('Oi, Pessoa!'), 'painel: Chamar no WhatsApp com a mensagem pronta', link);
+    ok(ordem && /Pessoa Sumida/.test(await txt(p, '#sumiu-lista')) && !(await p.locator('#sumiu-lista a').count()), 'painel: Quem sumiu no fim da Visão geral, como antes');
     const zerados = await txt(p, '.rt-zerados');
     ok(/Sem check-in no período: .*Muay Thai/.test(zerados) && !/nenhum check-in/.test(await txt(p, '#treinos-lista')), 'painel: tipos sem check-in numa linha só', zerados);
     // Usuários: sem lixeira na tabela; Excluir conta dentro da ficha.

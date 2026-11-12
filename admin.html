@@ -649,8 +649,6 @@
   .btn-peq.sec { border: 1.5px solid var(--fio); background: var(--papel); color: var(--tinta); }
   .ranking-treinos .rt-zerados { display: block; color: var(--tinta-2); font-size: 13px; }
   #jornadas-lista > .vazio { padding: 6px 0; }
-  .btn-peq.chamar { display: inline-flex; align-items: center; gap: 6px; margin: 0 0 12px; text-decoration: none; border-color: var(--tatame); color: var(--tatame-tinta); }
-  .btn-peq.chamar svg { width: 16px; height: 16px; }
   .situacao.bloqueado { background: color-mix(in srgb, var(--erro) 12%, var(--papel)); color: var(--erro); }
   .det-acesso { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 
@@ -804,29 +802,6 @@
       </div>
       <div id="on-corpo"></div>
     </section>
-    <!-- Quem sumiu e quem mais evoluiu logo depois de On-line agora: é o que pede ação (posição serial). -->
-    <div class="graficos listas-geral">
-      <section class="bloco cartao" aria-labelledby="sumiu-titulo">
-        <div class="bloco-topo">
-          <div class="titulo-info">
-            <h2 id="sumiu-titulo">Quem sumiu</h2>
-            <button class="info" type="button" data-info="info-sumiu" aria-expanded="false" aria-controls="info-sumiu" aria-label="Como funciona: quem sumiu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button>
-          </div>
-        </div>
-        <p class="info-txt" id="info-sumiu" role="note" hidden>Possíveis churn: quem usou o app nas últimas 4 semanas, mas está há 7 dias ou mais sem usar. Qualquer uso conta (fazer check-in, registrar pesos ou só abrir o app), então quem registra pesos sem fazer check-in não aparece aqui. Quem usava o app mais dias por semana aparece primeiro. Não muda com o período escolhido.</p>
-        <div class="lista-cartao lista-interna" id="sumiu-lista"></div>
-      </section>
-      <section class="bloco cartao" aria-labelledby="evoluiu-titulo">
-        <div class="bloco-topo">
-          <div class="titulo-info">
-            <h2 id="evoluiu-titulo">Quem mais evoluiu</h2>
-            <button class="info" type="button" data-info="info-evoluiu" aria-expanded="false" aria-controls="info-evoluiu" aria-label="Como funciona: quem mais evoluiu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button>
-          </div>
-        </div>
-        <p class="info-txt" id="info-evoluiu" role="note" hidden>Recordes pessoais no período: quando alguém supera o próprio peso máximo num exercício (o primeiro peso registrado não conta). Mostra quem bateu mais recordes e em quais exercícios. Os pesos não aparecem aqui.</p>
-        <div class="lista-cartao lista-interna" id="evoluiu-lista"></div>
-      </section>
-    </div>
     <dl class="kpis" id="kpis"></dl>
 
     <div class="graficos">
@@ -885,6 +860,28 @@
         </div>
         <p class="info-txt" id="info-jornadas" role="note" hidden>Quantas pessoas escolheram cada objetivo (com os treinos prontos) no período, nas boas-vindas ou em Mudar meu objetivo. Quem escolheu mais de uma vez conta só na última escolha. "Na troca" mostra quantas vieram de Mudar meu objetivo, em Meus treinos.</p>
         <ol class="ranking-treinos" id="jornadas-lista" aria-label="Pessoas por objetivo escolhido"></ol>
+      </section>
+    </div>
+    <div class="graficos listas-geral">
+      <section class="bloco cartao" aria-labelledby="sumiu-titulo">
+        <div class="bloco-topo">
+          <div class="titulo-info">
+            <h2 id="sumiu-titulo">Quem sumiu</h2>
+            <button class="info" type="button" data-info="info-sumiu" aria-expanded="false" aria-controls="info-sumiu" aria-label="Como funciona: quem sumiu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button>
+          </div>
+        </div>
+        <p class="info-txt" id="info-sumiu" role="note" hidden>Possíveis churn: quem usou o app nas últimas 4 semanas, mas está há 7 dias ou mais sem usar. Qualquer uso conta (fazer check-in, registrar pesos ou só abrir o app), então quem registra pesos sem fazer check-in não aparece aqui. Quem usava o app mais dias por semana aparece primeiro. Não muda com o período escolhido.</p>
+        <div class="lista-cartao lista-interna" id="sumiu-lista"></div>
+      </section>
+      <section class="bloco cartao" aria-labelledby="evoluiu-titulo">
+        <div class="bloco-topo">
+          <div class="titulo-info">
+            <h2 id="evoluiu-titulo">Quem mais evoluiu</h2>
+            <button class="info" type="button" data-info="info-evoluiu" aria-expanded="false" aria-controls="info-evoluiu" aria-label="Como funciona: quem mais evoluiu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button>
+          </div>
+        </div>
+        <p class="info-txt" id="info-evoluiu" role="note" hidden>Recordes pessoais no período: quando alguém supera o próprio peso máximo num exercício (o primeiro peso registrado não conta). Mostra quem bateu mais recordes e em quais exercícios. Os pesos não aparecem aqui.</p>
+        <div class="lista-cartao lista-interna" id="evoluiu-lista"></div>
       </section>
     </div>
     </div>
@@ -1505,18 +1502,10 @@
           info: 'Das pessoas que usaram o app entre 8 e 14 dias atrás, quantas voltaram a usar nos últimos 7 dias. Mostra se o app está segurando os usuários. Não muda com o período escolhido.' }),
       tile('Sumiram', s.base ? `${s.lista.length}<small> de ${s.base}</small>` : '—',
         { longo: s.base ? 'sem usar o app há 7 dias ou mais' : 'ninguém usou o app nas últimas 4 semanas', curto: 'sem usar há 7+ dias',
-          info: 'Possíveis churn: pessoas que usaram o app nas últimas 4 semanas, mas não abriram nem registraram nada nos últimos 7 dias (check-in, pesos ou só abrir o app contam como uso). O número menor é quem usou o app nas últimas 4 semanas. A lista está em "Quem sumiu", logo acima. Não muda com o período escolhido.' }),
+          info: 'Possíveis churn: pessoas que usaram o app nas últimas 4 semanas, mas não abriram nem registraram nada nos últimos 7 dias (check-in, pesos ou só abrir o app contam como uso). O número menor é quem usou o app nas últimas 4 semanas. A lista está em "Quem sumiu", mais abaixo. Não muda com o período escolhido.' }),
       tile('Recordes', fmtNum(rec.length), { longo: `de ${pessoasRec} ${pessoasRec === 1 ? 'pessoa' : 'pessoas'}`, curto: `${pessoasRec} ${pessoasRec === 1 ? 'pessoa' : 'pessoas'}`, d: recAnt && delta(rec.length, recAnt.length),
-        info: `Vezes em que alguém superou o próprio peso máximo num exercício no período (o primeiro peso registrado não conta). Os pesos não aparecem no painel. Quem mais evoluiu está logo acima. ${compara}` }),
+        info: `Vezes em que alguém superou o próprio peso máximo num exercício no período (o primeiro peso registrado não conta). Os pesos não aparecem no painel. Quem mais evoluiu está mais abaixo. ${compara}` }),
     ].join('');
-  }
-
-  // "Chamar no WhatsApp": abre o WhatsApp com a mensagem pronta; o administrador escolhe o contato (Tesler).
-  const ICON_WHATS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21l1.7-5A8.5 8.5 0 1 1 8 19.3L3 21Z"/></svg>';
-  function linkChamar(u) {
-    const primeiro = String(u.nome || '').trim().split(/\s+/)[0];
-    const msg = `Oi${primeiro ? `, ${primeiro}` : ''}! Sentimos sua falta no treino. Bora voltar esta semana? O app está aqui: ${location.origin}${location.pathname.replace(/admin\.html$/, '')}`;
-    return `https://wa.me/?text=${encodeURIComponent(msg)}`;
   }
 
   function renderListasGeral(j, ativosMap = diasAtivos()) {
@@ -1526,8 +1515,7 @@
           <span class="item-titulo">${esc(x.u.nome || x.u.email)}</span>
           <span class="item-num">${x.dias}<small>dias</small></span>
           <span class="item-sub">último uso ${relativo(x.ultimoUso)} · ${x.ultimo ? `último check-in ${relativo(diaDeCheckin(x.ultimo))} (${esc((TIPOS[x.ultimo.tipo] || {}).nome || x.ultimo.tipo)})` : 'nunca fez check-in'} · usava o app ${fmtNum(x.ritmo, Number.isInteger(x.ritmo) ? 0 : 1)}× por semana</span>
-        </button>
-        <a class="btn-peq sec chamar" href="${linkChamar(x.u)}" target="_blank" rel="noopener">${ICON_WHATS}Chamar no WhatsApp</a></div>`).join('')
+        </button></div>`).join('')
       : `<p class="vazio">${s.base ? 'Ninguém sumiu: todo mundo que usava o app usou nos últimos 7 dias.' : 'Ninguém usou o app nas últimas 4 semanas.'}</p>`;
     // Ranking de recordes no período.
     const rec = recordesDe(j);
