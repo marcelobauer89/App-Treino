@@ -13,6 +13,7 @@ const sobra = { id: 'c-cali', usuario_id: 'u1', tipo: 'cali', inicio: '2026-11-0
   await p.goto(H.PAGINA); await H.prontos(p); await p.waitForTimeout(200);
   ok(!/Calistenia/.test(await p.locator('body').innerText()), 'app: nada de Calistenia na tela Treino');
   await p.click('#fab-checkin');
+  await p.locator('#form-body .mais-tipos summary').click().catch(() => {}); // RF-69: as outras atividades ficam recolhidas
   const opcoes = (await p.locator('#form-body .opcao').allInnerTexts()).join('|');
   ok(!/Calistenia/.test(opcoes) && /Surf/.test(opcoes), 'check-in sem a opção Calistenia', opcoes.replace(/\s+/g, ' '));
   await p.keyboard.press('Escape'); await p.waitForTimeout(100);

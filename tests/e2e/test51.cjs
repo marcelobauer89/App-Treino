@@ -138,7 +138,9 @@ const abrir = async (b, op = {}) => {
     await a.clock.install({ time: T });
     await a.goto(ADMIN + '#usuarios'); await a.waitForSelector('#painel:not([hidden])'); await a.waitForTimeout(300);
     ok(!a.reqs.some((u) => /storage/.test(u)) && !(await a.locator('img[src*="fotos-checkin"]').count()), 'painel não carrega nem mostra fotos');
-    await a.click('[data-excluir="u2"]'); await a.waitForSelector('#excluir-dialog[open]');
+    // RF-69: Excluir conta fica na ficha do usuário.
+    await a.click('#usuarios-corpo tr[data-usuario="u2"] [data-abrir]'); await a.waitForTimeout(200);
+    await a.click('#detalhe [data-excluir="u2"]'); await a.waitForSelector('#excluir-dialog[open]');
     await a.check('#excluir-entendi'); await a.click('#excluir-sim'); await a.waitForTimeout(500);
     const db = await H.banco(a);
     ok(!db.fotos['u2/k9.jpg'] && db.log.includes('storage:remove:fotos-checkin/u2/k9.jpg'), 'excluir usuário pelo painel apaga as fotos dele');

@@ -16,8 +16,10 @@ const ADMIN = H.PAGINA.replace('index.html', 'admin.html');
     await p.goto(H.PAGINA); await H.prontos(p); await p.waitForTimeout(200);
     // Check-in
     await p.click('#fab-checkin');
+    // RF-69: o que não está na semana nem foi feito há pouco fica em "Outras atividades", na mesma ordem.
+    await p.click('#form-body .mais-tipos summary');
     const opcoes = await p.locator('#form-body .opcao').allInnerTexts();
-    ok(opcoes.map((t) => t.replace(/\s+/g, '')).join('|').includes('JJiuJitsu|MMuayThai|SSurf|FFutebol|VFutvôlei|CCardio'), `${scheme}: Muay Thai no check-in, entre jiu e cardio`, opcoes.join('|'));
+    ok(opcoes.map((t) => t.replace(/\s+/g, '')).join('|').includes('JJiuJitsu|CCardio|MMuayThai|SSurf|FFutebol|VFutvôlei'), `${scheme}: Muay Thai no check-in, em Outras atividades`, opcoes.join('|'));
     await p.check('input[name="f-tipo"][value="muay"]', { force: true });
     ok((await p.inputValue('#f-dur')) === '60', `${scheme}: duração padrão 60 min`);
     await p.waitForTimeout(300); await p.screenshot({ path: `${H.SAIDA}/muay-form-${scheme}.png` });
@@ -30,7 +32,9 @@ const ADMIN = H.PAGINA.replace('index.html', 'admin.html');
     ok((await p.locator('.cal-dia.hoje .selo.muay').count()) === 1 && (await txt(p, '.cal-dia.hoje .selo.muay')) === 'M', `${scheme}: selo M no calendário`);
     ok(/Muay Thai/.test(await txt(p, '.legenda-cal')), `${scheme}: legenda do calendário`);
     ok(/Muay Thai 1 extra/.test(await txt(p, '#metas')), `${scheme}: "Esta semana" conta como extra (fora do plano)`, await txt(p, '#metas'));
-    ok(/Muay Thai 1/.test(await txt(p, '#barras')) && /^1 Treino 1/.test(await txt(p, '#barras')), `${scheme}: barras do mês, treinos primeiro`, await txt(p, '#barras'));
+    // RF-69: com a Evolução ligada, "Por tipo no mês" fica escondido no Resumo; as barras continuam montadas.
+    const barras = (await p.locator('#barras').textContent()).replace(/\s+/g, ' ').trim();
+    ok(/Muay Thai\s*1/.test(barras) && /^1\s*Treino 1/.test(barras), `${scheme}: barras do mês, treinos primeiro`, barras);
     await p.click('.ck-head'); await p.waitForTimeout(100);
     ok((await txt(p, '.ck-head')).includes('Muay Thai'), `${scheme}: detalhe do dia`);
     await p.screenshot({ path: `${H.SAIDA}/muay-dash-${scheme}.png`, fullPage: true });
@@ -44,6 +48,7 @@ const ADMIN = H.PAGINA.replace('index.html', 'admin.html');
     ok(db.perfis[0].semana[3].includes('muay'), `${scheme}: muay thai salvo na quarta`, JSON.stringify(db.perfis[0].semana));
     await p.click('[data-tela="treino"]'); await p.waitForTimeout(150);
     ok(/Treino 1 \+ Muay Thai/.test(await txt(p, '#atividade')), `${scheme}: título do dia`, await txt(p, '#atividade'));
+    await p.click('#semana-det > summary'); await p.waitForTimeout(80); // RF-69: a semana começa recolhida
     const qua = p.locator('#dias .dia.hoje');
     ok(/Muay Thai/.test(await txt(p, '#dias .dia.hoje')) && /muay thai/i.test(await txt(p, '#dias .dia.hoje .dia-info')), `${scheme}: semana mostra muay thai planejado`, await txt(p, '#dias .dia.hoje'));
     ok(/Muay Thai/.test(await qua.locator('.tag-feito').innerText().catch(() => '')), `${scheme}: dia marca muay thai como feito`, await txt(p, '#dias .dia.hoje'));
