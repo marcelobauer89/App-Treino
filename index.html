@@ -138,6 +138,8 @@
     background: var(--papel); color: var(--tatame-tinta); font-size: 14px; font-weight: 700;
   }
   .btn-sec:hover { background: var(--tatame-suave); }
+  /* Meus treinos: todos os botões com o tamanho do "Personalizar meus treinos". */
+  [data-pagina="treinos"] .cartao :is(.btn, .btn-sec) { width: 100%; min-height: 48px; font-size: 15px; }
   .status-ok { display: inline-flex; align-items: center; gap: 6px; color: var(--tatame-tinta); font-size: 15px; font-weight: 600; }
   .status-ok svg { flex: 0 0 auto; }
 
@@ -922,7 +924,7 @@
   .log-head h4 { margin: 0; font-size: 14px; font-weight: 700; white-space: nowrap; }
   .log-hint { margin-left: auto; font-size: 13px; color: var(--tinta-2); font-variant-numeric: tabular-nums; }
   .serie-row { display: grid; grid-template-columns: 56px 48px minmax(0, 1fr) 48px; gap: 4px 8px; align-items: center; }
-  /* − e + de 2,5 kg: subir ou baixar a carga sem abrir o teclado, com uma mão (lei de Fitts). */
+  /* − e + de 0,5 kg: subir ou baixar a carga sem abrir o teclado, com uma mão (lei de Fitts). */
   .kg-passo {
     min-height: 52px; border: 1px solid var(--fio); border-radius: 10px; background: var(--papel); color: var(--tatame-tinta);
     font-family: var(--display); font-size: 24px; font-weight: 800; line-height: 1;
@@ -3586,12 +3588,12 @@
       return `
         <div class="serie-row">
           <label for="kg-${n}">Série ${n + 1}</label>
-          <button class="kg-passo" type="button" data-passo="-2.5" data-alvo="kg-${n}" aria-label="Série ${n + 1}: menos 2,5 kg">−</button>
+          <button class="kg-passo" type="button" data-passo="-0.5" data-alvo="kg-${n}" aria-label="Série ${n + 1}: menos 0,5 kg">−</button>
           <input id="kg-${n}" type="text" inputmode="decimal" autocomplete="off" placeholder="kg"
             enterkeyhint="${n < total - 1 ? 'next' : 'done'}"
             data-ex="${esc(ex.nome)}" data-serie="${n}" data-campo="carga" value="${carga != null ? fmtKg(carga) : ''}"
             aria-label="${esc(nomeDe(ex))}: carga da série ${n + 1} (kg)" aria-describedby="log-erro">
-          <button class="kg-passo" type="button" data-passo="2.5" data-alvo="kg-${n}" aria-label="Série ${n + 1}: mais 2,5 kg">+</button>
+          <button class="kg-passo" type="button" data-passo="0.5" data-alvo="kg-${n}" aria-label="Série ${n + 1}: mais 0,5 kg">+</button>
           <span class="selo-recorde" hidden>${ICON_TROFEU}Novo recorde</span>
         </div>`;
     }).join('');
