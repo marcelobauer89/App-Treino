@@ -260,8 +260,15 @@
 
   /* Números principais */
   .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 0 0 28px; }
-  /* Visão geral com 7 números: no computador cabem 4 + 3 sem sobrar um cartão sozinho. */
-  @media (min-width: 721px) { #kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  /* Os dois números que dizem como o grupo está (Aderência e Usuários ativos) vêm primeiro e maiores (Von Restorff). */
+  .kpi.destaque { grid-column: span 2; border-color: color-mix(in srgb, var(--tatame) 45%, var(--fio)); }
+  .kpi.destaque .valor { font-size: 56px; }
+  /* Visão geral com 7 números no computador: os 2 em destaque dividem a primeira linha e os outros 5 a segunda. */
+  @media (min-width: 721px) {
+    #kpis { grid-template-columns: repeat(10, minmax(0, 1fr)); }
+    #kpis .kpi { grid-column: span 2; }
+    #kpis .kpi.destaque { grid-column: span 5; }
+  }
   .kpi { margin: 0; padding: 16px; background: var(--papel); border: 1px solid var(--fio); border-radius: 14px; display: grid; gap: 4px; align-content: start; }
   .kpi dt { font-size: 14px; color: var(--tinta-2); display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; }
   .kpi { position: relative; }
@@ -640,6 +647,10 @@
   .btn-peq { min-height: 40px; padding: 0 12px; border-radius: 10px; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
   .btn-peq.prim { border: 0; background: var(--tatame); color: var(--sobre-tatame); }
   .btn-peq.sec { border: 1.5px solid var(--fio); background: var(--papel); color: var(--tinta); }
+  .ranking-treinos .rt-zerados { display: block; color: var(--tinta-2); font-size: 13px; }
+  #jornadas-lista > .vazio { padding: 6px 0; }
+  .btn-peq.chamar { display: inline-flex; align-items: center; gap: 6px; margin: 0 0 12px; text-decoration: none; border-color: var(--tatame); color: var(--tatame-tinta); }
+  .btn-peq.chamar svg { width: 16px; height: 16px; }
   .situacao.bloqueado { background: color-mix(in srgb, var(--erro) 12%, var(--papel)); color: var(--erro); }
   .det-acesso { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 
@@ -793,6 +804,29 @@
       </div>
       <div id="on-corpo"></div>
     </section>
+    <!-- Quem sumiu e quem mais evoluiu logo depois de On-line agora: é o que pede ação (posição serial). -->
+    <div class="graficos listas-geral">
+      <section class="bloco cartao" aria-labelledby="sumiu-titulo">
+        <div class="bloco-topo">
+          <div class="titulo-info">
+            <h2 id="sumiu-titulo">Quem sumiu</h2>
+            <button class="info" type="button" data-info="info-sumiu" aria-expanded="false" aria-controls="info-sumiu" aria-label="Como funciona: quem sumiu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button>
+          </div>
+        </div>
+        <p class="info-txt" id="info-sumiu" role="note" hidden>Possíveis churn: quem usou o app nas últimas 4 semanas, mas está há 7 dias ou mais sem usar. Qualquer uso conta (fazer check-in, registrar pesos ou só abrir o app), então quem registra pesos sem fazer check-in não aparece aqui. Quem usava o app mais dias por semana aparece primeiro. Não muda com o período escolhido.</p>
+        <div class="lista-cartao lista-interna" id="sumiu-lista"></div>
+      </section>
+      <section class="bloco cartao" aria-labelledby="evoluiu-titulo">
+        <div class="bloco-topo">
+          <div class="titulo-info">
+            <h2 id="evoluiu-titulo">Quem mais evoluiu</h2>
+            <button class="info" type="button" data-info="info-evoluiu" aria-expanded="false" aria-controls="info-evoluiu" aria-label="Como funciona: quem mais evoluiu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button>
+          </div>
+        </div>
+        <p class="info-txt" id="info-evoluiu" role="note" hidden>Recordes pessoais no período: quando alguém supera o próprio peso máximo num exercício (o primeiro peso registrado não conta). Mostra quem bateu mais recordes e em quais exercícios. Os pesos não aparecem aqui.</p>
+        <div class="lista-cartao lista-interna" id="evoluiu-lista"></div>
+      </section>
+    </div>
     <dl class="kpis" id="kpis"></dl>
 
     <div class="graficos">
@@ -853,28 +887,6 @@
         <ol class="ranking-treinos" id="jornadas-lista" aria-label="Pessoas por objetivo escolhido"></ol>
       </section>
     </div>
-    <div class="graficos listas-geral">
-      <section class="bloco cartao" aria-labelledby="sumiu-titulo">
-        <div class="bloco-topo">
-          <div class="titulo-info">
-            <h2 id="sumiu-titulo">Quem sumiu</h2>
-            <button class="info" type="button" data-info="info-sumiu" aria-expanded="false" aria-controls="info-sumiu" aria-label="Como funciona: quem sumiu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button>
-          </div>
-        </div>
-        <p class="info-txt" id="info-sumiu" role="note" hidden>Possíveis churn: quem usou o app nas últimas 4 semanas, mas está há 7 dias ou mais sem usar. Qualquer uso conta (fazer check-in, registrar pesos ou só abrir o app), então quem registra pesos sem fazer check-in não aparece aqui. Quem usava o app mais dias por semana aparece primeiro. Não muda com o período escolhido.</p>
-        <div class="lista-cartao lista-interna" id="sumiu-lista"></div>
-      </section>
-      <section class="bloco cartao" aria-labelledby="evoluiu-titulo">
-        <div class="bloco-topo">
-          <div class="titulo-info">
-            <h2 id="evoluiu-titulo">Quem mais evoluiu</h2>
-            <button class="info" type="button" data-info="info-evoluiu" aria-expanded="false" aria-controls="info-evoluiu" aria-label="Como funciona: quem mais evoluiu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button>
-          </div>
-        </div>
-        <p class="info-txt" id="info-evoluiu" role="note" hidden>Recordes pessoais no período: quando alguém supera o próprio peso máximo num exercício (o primeiro peso registrado não conta). Mostra quem bateu mais recordes e em quais exercícios. Os pesos não aparecem aqui.</p>
-        <div class="lista-cartao lista-interna" id="evoluiu-lista"></div>
-      </section>
-    </div>
     </div>
 
     <div role="tabpanel" id="aba-usuarios" aria-labelledby="tab-usuarios" hidden>
@@ -911,7 +923,6 @@
               <th scope="col" data-col="checkins" class="num"><button type="button">Check-ins</button></th>
               <th scope="col" data-col="aderencia"><button type="button">Aderência</button></th>
               <th scope="col" data-col="treino"><button type="button">Último treino</button></th>
-              <th scope="col" class="acoes"><span class="sr">Excluir</span></th>
             </tr>
           </thead>
           <tbody id="usuarios-corpo"></tbody>
@@ -1447,11 +1458,11 @@
   // Card de número com ícone de informação; prefixo separa os ids de cada aba (k, s, e).
   function fabricaDeCards(prefixo) {
     let n = 0;
-    return (titulo, valor, { longo, curto = longo, d, largo = false, info }) => {
+    return (titulo, valor, { longo, curto = longo, d, largo = false, destaque = false, info }) => {
       n += 1;
       const id = `info-${prefixo}${n}`;
       return `
-      <div class="kpi${largo ? ' largo' : ''}"><dt>${titulo}<button class="info" type="button" data-info="${id}" aria-expanded="false" aria-controls="${id}" aria-label="Como funciona: ${titulo}">${ICON.info}</button></dt>
+      <div class="kpi${largo ? ' largo' : ''}${destaque ? ' destaque' : ''}"><dt>${titulo}<button class="info" type="button" data-info="${id}" aria-expanded="false" aria-controls="${id}" aria-label="Como funciona: ${titulo}">${ICON.info}</button></dt>
       <dd class="info-txt" id="${id}" role="note" hidden>${info}</dd>
       <dd><span class="valor">${valor}</span></dd>
       <dd class="ctx"><span class="longo">${longo}${d ? ' · ' : ''}</span><span class="curto">${curto}</span>${d || ''}</dd></div>`;
@@ -1476,7 +1487,10 @@
     const compara = periodo === 'tudo' ? 'No período Tudo não há comparação.' : ehHoje ? 'A seta compara com ontem.' : `A seta compara com os ${periodo} dias anteriores.`;
     const um = (v) => Math.round(v * 10) / 10;
     $('kpis').innerHTML = [
-      tile('Usuários ativos', `${m.ativos}<small> de ${total}</small>`, { longo: rotuloPeriodo, curto: '', d: a && delta(m.ativos, a.ativos),
+      tile('Aderência ao plano', m.aderencia === null ? '—' : `${fmtNum(m.aderencia * 100)}<small>%</small>`, { longo: ehHoje ? 'feito ÷ planejado para hoje' : 'feito ÷ planejado na semana montada', curto: 'do planejado', destaque: true,
+        d: a && m.aderencia !== null && a.aderencia !== null && delta(m.aderencia, a.aderencia, { pct: true }),
+        info: `Quanto do plano foi cumprido, em média, por quem usou o app. Para cada pessoa: check-ins ÷ treinos planejados ${ehHoje ? 'para hoje (o dia da semana na semana montada em Você ou, sem ela, a média da semana padrão)' : 'no período (pela semana montada em Você ou, sem ela, pela semana padrão)'}, com limite de 100%. Quem não tinha nada planejado${ehHoje ? ' hoje (dia de descanso)' : ''} não entra na média. ${periodo === 'tudo' ? 'No período Tudo não há comparação.' : `A seta mostra a diferença em pontos percentuais (p.p.) para ${ehHoje ? 'ontem' : 'o período anterior'}.`}` }),
+      tile('Usuários ativos', `${m.ativos}<small> de ${total}</small>`, { longo: rotuloPeriodo, curto: '', destaque: true, d: a && delta(m.ativos, a.ativos),
         info: `Quantas pessoas abriram o app ou fizeram check-in pelo menos uma vez no período. O número menor é o total de cadastrados. ${compara}` }),
       tile('Check-ins', fmtNum(m.checkins), { longo: rotuloPeriodo, curto: '', d: a && delta(m.checkins, a.checkins),
         info: `Total de check-ins feitos no período, somando todos os usuários e tipos de treino (musculação, Jiu Jitsu, cardio, muay thai, surf, futebol e futvôlei), inclusive os registrados depois. ${compara}` }),
@@ -1486,18 +1500,23 @@
           info: `Média de treinos de hoje de quem usou o app hoje: check-ins de hoje ÷ usuários ativos hoje. ${compara}` })
         : tile('Treinos por semana', fmtNum(m.treinosSemana, 1), { longo: 'por usuário ativo', curto: 'por ativo', d: a && delta(um(m.treinosSemana), um(a.treinosSemana)),
           info: `Média de treinos por semana de quem usou o app: check-ins do período ÷ usuários ativos ÷ semanas do período. ${compara}` }),
-      tile('Aderência ao plano', m.aderencia === null ? '—' : `${fmtNum(m.aderencia * 100)}<small>%</small>`, { longo: ehHoje ? 'feito ÷ planejado para hoje' : 'feito ÷ planejado na semana montada', curto: 'do planejado',
-        d: a && m.aderencia !== null && a.aderencia !== null && delta(m.aderencia, a.aderencia, { pct: true }),
-        info: `Quanto do plano foi cumprido, em média, por quem usou o app. Para cada pessoa: check-ins ÷ treinos planejados ${ehHoje ? 'para hoje (o dia da semana na semana montada em Você ou, sem ela, a média da semana padrão)' : 'no período (pela semana montada em Você ou, sem ela, pela semana padrão)'}, com limite de 100%. Quem não tinha nada planejado${ehHoje ? ' hoje (dia de descanso)' : ''} não entra na média. ${periodo === 'tudo' ? 'No período Tudo não há comparação.' : `A seta mostra a diferença em pontos percentuais (p.p.) para ${ehHoje ? 'ontem' : 'o período anterior'}.`}` }),
       tile('Voltaram nesta semana', r.base ? `${fmtNum(r.voltaram / r.base * 100)}<small>%</small>` : '—',
         { longo: r.base ? `${r.voltaram} de ${r.base} que usaram na semana anterior` : 'sem uso na semana anterior', largo: true,
           info: 'Das pessoas que usaram o app entre 8 e 14 dias atrás, quantas voltaram a usar nos últimos 7 dias. Mostra se o app está segurando os usuários. Não muda com o período escolhido.' }),
       tile('Sumiram', s.base ? `${s.lista.length}<small> de ${s.base}</small>` : '—',
         { longo: s.base ? 'sem usar o app há 7 dias ou mais' : 'ninguém usou o app nas últimas 4 semanas', curto: 'sem usar há 7+ dias',
-          info: 'Possíveis churn: pessoas que usaram o app nas últimas 4 semanas, mas não abriram nem registraram nada nos últimos 7 dias (check-in, pesos ou só abrir o app contam como uso). O número menor é quem usou o app nas últimas 4 semanas. A lista está em "Quem sumiu", mais abaixo. Não muda com o período escolhido.' }),
+          info: 'Possíveis churn: pessoas que usaram o app nas últimas 4 semanas, mas não abriram nem registraram nada nos últimos 7 dias (check-in, pesos ou só abrir o app contam como uso). O número menor é quem usou o app nas últimas 4 semanas. A lista está em "Quem sumiu", logo acima. Não muda com o período escolhido.' }),
       tile('Recordes', fmtNum(rec.length), { longo: `de ${pessoasRec} ${pessoasRec === 1 ? 'pessoa' : 'pessoas'}`, curto: `${pessoasRec} ${pessoasRec === 1 ? 'pessoa' : 'pessoas'}`, d: recAnt && delta(rec.length, recAnt.length),
-        info: `Vezes em que alguém superou o próprio peso máximo num exercício no período (o primeiro peso registrado não conta). Os pesos não aparecem no painel. Quem mais evoluiu está mais abaixo. ${compara}` }),
+        info: `Vezes em que alguém superou o próprio peso máximo num exercício no período (o primeiro peso registrado não conta). Os pesos não aparecem no painel. Quem mais evoluiu está logo acima. ${compara}` }),
     ].join('');
+  }
+
+  // "Chamar no WhatsApp": abre o WhatsApp com a mensagem pronta; o administrador escolhe o contato (Tesler).
+  const ICON_WHATS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21l1.7-5A8.5 8.5 0 1 1 8 19.3L3 21Z"/></svg>';
+  function linkChamar(u) {
+    const primeiro = String(u.nome || '').trim().split(/\s+/)[0];
+    const msg = `Oi${primeiro ? `, ${primeiro}` : ''}! Sentimos sua falta no treino. Bora voltar esta semana? O app está aqui: ${location.origin}${location.pathname.replace(/admin\.html$/, '')}`;
+    return `https://wa.me/?text=${encodeURIComponent(msg)}`;
   }
 
   function renderListasGeral(j, ativosMap = diasAtivos()) {
@@ -1507,7 +1526,8 @@
           <span class="item-titulo">${esc(x.u.nome || x.u.email)}</span>
           <span class="item-num">${x.dias}<small>dias</small></span>
           <span class="item-sub">último uso ${relativo(x.ultimoUso)} · ${x.ultimo ? `último check-in ${relativo(diaDeCheckin(x.ultimo))} (${esc((TIPOS[x.ultimo.tipo] || {}).nome || x.ultimo.tipo)})` : 'nunca fez check-in'} · usava o app ${fmtNum(x.ritmo, Number.isInteger(x.ritmo) ? 0 : 1)}× por semana</span>
-        </button></div>`).join('')
+        </button>
+        <a class="btn-peq sec chamar" href="${linkChamar(x.u)}" target="_blank" rel="noopener">${ICON_WHATS}Chamar no WhatsApp</a></div>`).join('')
       : `<p class="vazio">${s.base ? 'Ninguém sumiu: todo mundo que usava o app usou nos últimos 7 dias.' : 'Ninguém usou o app nas últimas 4 semanas.'}</p>`;
     // Ranking de recordes no período.
     const rec = recordesDe(j);
@@ -1547,7 +1567,9 @@
     const lista = $('treinos-lista');
     if (!cks.length) { lista.innerHTML = '<p class="vazio">Nenhum check-in no período.</p>'; return; }
     const maior = grupos[0].n;
-    lista.innerHTML = grupos.map((x) => {
+    // Tipos sem check-in no período viram uma linha só no fim (carga cognitiva), em vez de uma barra vazia cada.
+    const zerados = grupos.filter((x) => !x.n);
+    lista.innerHTML = grupos.filter((x) => x.n).map((x) => {
       const pct = Math.round(x.n / cks.length * 100);
       const treinos = [...x.porTreino.entries()].sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1))
         .map(([t, n]) => `${esc(TIPOS[t].nome)}: ${n}`).join(' · ');
@@ -1558,7 +1580,7 @@
           <span class="rt-num">${fmtNum(x.n)}<small>${pct}%</small></span>
           <span class="rt-sub">${sub}</span>
         </li>`;
-    }).join('');
+    }).join('') + (zerados.length ? `<li class="rt-zerados">Sem check-in no período: ${zerados.map((x) => x.nome).join(', ')}</li>` : '');
   }
 
   // Jornadas prontas escolhidas no período: a última escolha de cada pessoa, da mais escolhida para a menos.
@@ -1638,6 +1660,10 @@
     const cadaUn = porHora ? 'cada hora de hoje' : `cada ${unidade} do período`;
     $('info-g1').textContent = `Quantos check-ins foram feitos em ${cadaUn}, somando todos os usuários. Cada cor é um tipo de treino: musculação, Jiu Jitsu, cardio, muay thai, surf, futebol e futvôlei. Passe o dedo ou o mouse numa barra para ver os números, ou toque em Ver tabela.${unidade === 'semana' ? ' Em períodos longos, cada barra soma uma semana, de segunda a domingo.' : ''}`;
     $('info-g2').textContent = `Quantas pessoas diferentes usaram o app em ${cadaUn}: abriram o app ou fizeram check-in. Cada pessoa conta uma vez por barra, mesmo que use o app várias vezes.${porHora ? ' Os horários seguem o relógio do seu aparelho.' : ''}`;
+    // Legenda só com os tipos que tiveram check-in no período (menos ruído).
+    const usados = GRUPOS.filter(([g]) => serie1.some((x) => x.v[g]));
+    const legenda = document.querySelector('[aria-labelledby="g1-titulo"] .legenda');
+    legenda.innerHTML = (usados.length ? usados : GRUPOS).map(([g, nome]) => `<li><i style="background:var(--${g})"></i>${nome}</li>`).join('');
     barras($('g1'), serie1, { empilhado: true, rotulo: 'check-ins' });
     barras($('g2'), serie2, { empilhado: false, rotulo: 'usuários ativos' });
     $('g1-tabela').innerHTML = tabelaHTML(['Período', ...GRUPOS.map((g) => g[1]), 'Total'],
@@ -1655,7 +1681,7 @@
       el.innerHTML = `<p class="vazio-graf">Sem ${rotulo} neste período.</p>`;
       return;
     }
-    const W = Math.max(280, Math.round(el.clientWidth || 600)), H = 220, esq = 28, dir = 4, topo = 8, base = 24;
+    const W = Math.max(280, Math.round(el.clientWidth || 600)), H = 220, esq = 28, dir = 4, topo = empilhado ? 18 : 8, base = 24;
     const larg = (W - esq - dir) / serie.length;
     const bw = Math.max(2, Math.min(28, larg * 0.62));
     const passo = max <= 5 ? 1 : Math.ceil(max / 4);
@@ -1685,6 +1711,8 @@
         acum += s.v[g];
         out += barra(x, y0, y(acum), `var(--${g})`, k === segs.length - 1);
       });
+      // Total em cima de cada barra, quando cabe (lê-se o dia sem somar as cores).
+      if (s.total && larg >= 14) out += `<text class="eixo total-barra" x="${x + bw / 2}" y="${y(s.total) - 4}" text-anchor="middle">${s.total}</text>`;
       return out;
     }).join('');
     const resumo = `${rotulo} por ${serie.length > 1 ? 'período' : 'dia'}: máximo ${max}, total ${serie.reduce((a, s) => a + s.total, 0)}.`;
@@ -1782,10 +1810,7 @@
         <td data-rotulo="Check-ins" class="num">${fmtNum(l.checkins)}</td>
         <td data-rotulo="Aderência"><span class="barra-ader"><span aria-hidden="true"><i style="width:${Math.round((l.aderencia || 0) * 100)}%"></i></span>${pctAder(l.aderencia)}</span></td>
         <td data-rotulo="Último treino">${l.ultimoTreino ? fmtData(l.ultimoTreino) : '—'}</td>
-        <td class="cel-excluir">${l.u.id === meuId
-          ? `<button class="excluir-btn" type="button" disabled title="Esta é a sua conta: para excluí-la, use o app (Você → Excluir conta)" aria-label="Não é possível excluir a sua própria conta por aqui">${ICON.lixeira}</button>`
-          : `<button class="excluir-btn" type="button" data-excluir="${l.u.id}" aria-label="Excluir a conta de ${esc(l.u.nome || l.u.email)}" title="Excluir conta">${ICON.lixeira}</button>`}</td>
-      </tr>`).join('') : `<tr><td colspan="8" class="nenhum">${achados.length ? 'Ninguém fez check-in no período.' : q ? 'Nenhum usuário encontrado.' : 'Nenhum usuário cadastrado.'}</td></tr>`;
+      </tr>`).join('') : `<tr><td colspan="7" class="nenhum">${achados.length ? 'Ninguém fez check-in no período.' : q ? 'Nenhum usuário encontrado.' : 'Nenhum usuário cadastrado.'}</td></tr>`;
   }
   let linhasAtuais = [];
 
@@ -2194,6 +2219,14 @@
       <section class="det-sec" aria-labelledby="det-tempo">
         <h3 id="det-tempo">Atividade recente</h3>
         <div id="det-atividade"></div>
+      </section>
+      <!-- Excluir conta fica aqui, no fim da ficha, e não a um toque em cada linha da tabela (Fitts). -->
+      <section class="det-sec" aria-labelledby="det-excluir-t">
+        <h3 id="det-excluir-t">Excluir conta</h3>
+        ${u.id === meuId
+          ? '<p class="nota">Esta é a sua conta: para excluí-la, use o app (Você → Excluir conta).</p>'
+          : `<div class="det-acesso"><span class="nota" style="flex:1 1 200px">Apaga para sempre os check-ins, pesos, treinos e preferências de ${esc(u.nome || u.email)}.</span>
+          <button class="btn-peq perigo" type="button" data-excluir="${u.id}">Excluir conta</button></div>`}
       </section>`;
     renderAtividade();
     const dlg = $('detalhe');

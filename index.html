@@ -201,6 +201,10 @@
   .ficha { margin-top: 24px; }
   .ficha-topo { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 10px; }
   .ficha-topo span { color: var(--tinta-2); font-size: 14px; text-align: right; }
+  .ficha-topo span b { color: var(--tinta); font-variant-numeric: tabular-nums; }
+  /* Progresso do treino de hoje: enche a cada "Terminei o exercício" (gradiente de meta). */
+  .ficha-prog { height: 8px; margin: -2px 0 14px; border-radius: 4px; background: var(--fio); overflow: hidden; }
+  .ficha-prog i { display: block; height: 100%; width: var(--p, 0%); border-radius: 4px; background: var(--checkin); transition: width .35s ease; }
   .ficha-checkin { margin: 0 0 12px; }
   .ficha-checkin:empty { display: none; }
   .ficha-nota { margin: 0; color: var(--tinta-2); font-size: 14px; }
@@ -222,6 +226,11 @@
   }
   .ex-why { margin: 0; color: var(--tinta-2); font-size: 15px; max-width: 65ch; }
 
+  .ex-ultima { color: var(--tinta-2); font-size: 13px; font-variant-numeric: tabular-nums; }
+  .ex-altos { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; }
+  .ex-alto { padding: 2px 10px; border-radius: 999px; background: var(--tatame-suave); color: var(--tatame-tinta); font-size: 13px; font-weight: 700; }
+  .graus-det summary { display: inline-flex; align-items: center; min-height: 36px; cursor: pointer; color: var(--tinta-2); font-size: 13px; font-weight: 600; }
+  .graus-det[open] summary { margin-bottom: 6px; }
   .graus { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; margin: 0; }
   .graus dt { font-size: 13px; color: var(--tinta-2); }
   .graus dd { display: flex; align-items: center; gap: 8px; margin: 2px 0 0; font-size: 14px; font-weight: 600; }
@@ -294,6 +303,20 @@
   /* Semana */
   .semana { margin-top: 32px; }
   .semana h2 { margin-bottom: 10px; }
+  /* Semana recolhida: uma tira com os 7 dias (feito, hoje); a lista completa abre ao tocar (o Dashboard tem o detalhe). */
+  .semana-det > summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 4px 12px; }
+  .semana-det > summary::-webkit-details-marker { display: none; }
+  .semana-det > summary h2 { margin: 0; }
+  .semana-ver { grid-column: 1 / -1; color: var(--tatame-tinta); font-size: 14px; font-weight: 700; }
+  .semana-det[open] .semana-ver { display: none; }
+  .semana-det[open] > summary { margin-bottom: 10px; }
+  .semana-tira { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; margin: 0; padding: 0; list-style: none; justify-self: end; width: min(100%, 280px); }
+  .semana-tira li { display: grid; justify-items: center; gap: 2px; font-size: 11px; color: var(--tinta-2); }
+  .semana-tira i { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--fio); font-style: normal; font-size: 12px; font-weight: 800; }
+  .semana-tira .feito i { background: var(--checkin); border-color: var(--checkin); color: var(--sobre-checkin); }
+  .semana-tira .parcial i { border-color: var(--checkin); color: var(--checkin); }
+  .semana-tira .hoje i { box-shadow: 0 0 0 2px var(--tatame); }
+  .semana-tira .descanso i { border-style: dashed; }
   .dias { list-style: none; margin: 0; padding: 0; background: var(--papel); border: 1px solid var(--fio); border-radius: 14px; overflow: hidden; }
   .dia { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 12px; align-items: baseline; padding: 12px 16px; }
   .dia + .dia { border-top: 1px solid var(--fio); }
@@ -898,12 +921,18 @@
   .log-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 2px 8px; }
   .log-head h4 { margin: 0; font-size: 14px; font-weight: 700; white-space: nowrap; }
   .log-hint { margin-left: auto; font-size: 13px; color: var(--tinta-2); font-variant-numeric: tabular-nums; }
-  .serie-row { display: grid; grid-template-columns: 64px 1fr; gap: 4px 8px; align-items: center; }
+  .serie-row { display: grid; grid-template-columns: 56px 48px minmax(0, 1fr) 48px; gap: 4px 8px; align-items: center; }
+  /* − e + de 2,5 kg: subir ou baixar a carga sem abrir o teclado, com uma mão (lei de Fitts). */
+  .kg-passo {
+    min-height: 52px; border: 1px solid var(--fio); border-radius: 10px; background: var(--papel); color: var(--tatame-tinta);
+    font-family: var(--display); font-size: 24px; font-weight: 800; line-height: 1;
+  }
+  .kg-passo:active { background: var(--tatame-suave); }
   /* Recordes: troféu + texto (a cor não é o único sinal). */
   .log-recorde { display: flex; align-items: center; gap: 6px; margin: 0; font-size: 13px; color: var(--tinta-2); }
   .log-recorde svg { flex: 0 0 auto; color: var(--recorde); }
   .selo-recorde {
-    grid-column: 2; justify-self: start; display: inline-flex; align-items: center; gap: 4px;
+    grid-column: 2 / -1; justify-self: start; display: inline-flex; align-items: center; gap: 4px;
     padding: 2px 8px; border-radius: 999px; background: var(--recorde-suave); color: var(--recorde-tinta);
     font-size: 12.5px; font-weight: 700;
   }
@@ -950,6 +979,10 @@
     background: var(--papel); font-size: 15px; font-weight: 600;
   }
   .opcao input:checked + span { background: var(--tatame); border-color: var(--tatame); color: var(--sobre-tatame); }
+  .mais-tipos { margin-top: 8px; }
+  .mais-tipos summary { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; cursor: pointer; color: var(--tatame-tinta); font-size: 14px; font-weight: 700; }
+  .mais-tipos summary span { color: var(--tinta-2); font-weight: 600; }
+  .mais-tipos[open] summary { margin-bottom: 4px; }
   /* O selo azul do treino continua visível sobre o fundo azul da opção marcada. */
   .opcao input:checked + span .selo { box-shadow: 0 0 0 2px var(--sobre-tatame); }
   .opcao input:focus-visible + span { outline: 2px solid var(--tatame-tinta); outline-offset: 2px; }
@@ -1416,7 +1449,7 @@
     color-scheme: light;
   }
   html:root[data-estilo="violeta"] body { background: radial-gradient(120% 70% at 100% 0%, #7c3aed 0%, transparent 60%), linear-gradient(160deg, #5b21b6, #3b0f8c) fixed, #4c1d95; }
-  html:root[data-estilo="violeta"] :is(header.hoje, .ficha-topo, .bloco-topo, .sobre, .semana > h2.secao, .semana-nota, main > footer, .dash-topo, .voce-topo, .nav, .entrar-corpo, .carga-app) {
+  html:root[data-estilo="violeta"] :is(header.hoje, .ficha-topo, .bloco-topo, .sobre, .semana-det > summary, .semana-nota, main > footer, .dash-topo, .voce-topo, .nav, .entrar-corpo, .carga-app) {
     --tinta: #ffffff; --tinta-2: #ece6ff; --fio: rgba(255, 255, 255, .28); --tatame-tinta: #a5f3fc; --brilho: rgba(165, 243, 252, .35);
     --fita: #ffffff; --fita-vazia: rgba(255, 255, 255, .3);
     color: var(--tinta);
@@ -1623,14 +1656,21 @@
         <h2 class="secao" id="ficha-titulo">Ficha</h2>
         <span id="count"></span>
       </div>
+      <div class="ficha-prog" id="ficha-prog" role="progressbar" aria-label="Exercícios feitos hoje" aria-valuemin="0"><i></i></div>
       <div class="ficha-checkin" id="ficha-checkin"></div>
       <ol class="exercicios" id="list" aria-live="polite"></ol>
     </section>
 
     <section class="semana" aria-labelledby="semana-titulo">
-      <h2 class="secao" id="semana-titulo">Semana</h2>
-      <ol class="dias" id="dias"></ol>
-      <p class="semana-nota" id="semana-nota">Pernas fica na sexta para ter o fim de semana de recuperação e não pesar antes do jiu de terça.</p>
+      <details class="semana-det" id="semana-det">
+        <summary>
+          <h2 class="secao" id="semana-titulo">Semana</h2>
+          <ol class="semana-tira" id="semana-tira" aria-hidden="true"></ol>
+          <span class="semana-ver">Ver a semana</span>
+        </summary>
+        <ol class="dias" id="dias"></ol>
+        <p class="semana-nota" id="semana-nota">Pernas fica na sexta para ter o fim de semana de recuperação e não pesar antes do jiu de terça.</p>
+      </details>
     </section>
 
     <footer>
@@ -3546,10 +3586,12 @@
       return `
         <div class="serie-row">
           <label for="kg-${n}">Série ${n + 1}</label>
+          <button class="kg-passo" type="button" data-passo="-2.5" data-alvo="kg-${n}" aria-label="Série ${n + 1}: menos 2,5 kg">−</button>
           <input id="kg-${n}" type="text" inputmode="decimal" autocomplete="off" placeholder="kg"
             enterkeyhint="${n < total - 1 ? 'next' : 'done'}"
             data-ex="${esc(ex.nome)}" data-serie="${n}" data-campo="carga" value="${carga != null ? fmtKg(carga) : ''}"
             aria-label="${esc(nomeDe(ex))}: carga da série ${n + 1} (kg)" aria-describedby="log-erro">
+          <button class="kg-passo" type="button" data-passo="2.5" data-alvo="kg-${n}" aria-label="Série ${n + 1}: mais 2,5 kg">+</button>
           <span class="selo-recorde" hidden>${ICON_TROFEU}Novo recorde</span>
         </div>`;
     }).join('');
@@ -3747,6 +3789,24 @@
   const formDialog = $('form-dialog');
   let durTocada = false;
 
+  // Tipos do check-in: primeiro os da semana montada e os feitos nos últimos 60 dias; o resto fica em
+  // "Outras atividades" (lei de Hick: menos opções na frente).
+  function opcoesTipoHTML(tipo) {
+    const todos = ORDEM_TIPOS.includes(tipo) ? ORDEM_TIPOS : [tipo, ...ORDEM_TIPOS];
+    const limite = isoLocal(new Date(Date.now() - 60 * 86400000)).slice(0, 10);
+    const usados = new Set([tipo, ...config.semana.flat(), ...checkins.filter((c) => dataDe(c) >= limite).map((c) => c.tipo)]);
+    const opcao = (t) => `
+            <label class="opcao"><input type="radio" name="f-tipo" value="${t}"${t === tipo ? ' checked' : ''}><span>${seloHTML(t)}${TIPOS[t].nome}</span></label>`;
+    const principais = todos.filter((t) => usados.has(t));
+    const outras = todos.filter((t) => !usados.has(t));
+    if (!outras.length || principais.length < 2) return `<div class="opcoes">${todos.map(opcao).join('')}</div>`;
+    return `<div class="opcoes">${principais.map(opcao).join('')}</div>
+        <details class="mais-tipos">
+          <summary>Outras atividades <span>(${outras.length})</span></summary>
+          <div class="opcoes">${outras.map(opcao).join('')}</div>
+        </details>`;
+  }
+
   function abrirFormCheckin({ tipo = 'jiu', data = hoje(), editar = null } = {}) {
     let dur, inicio, obs = '';
     if (editar) {
@@ -3775,10 +3835,7 @@
       </div>
       <fieldset class="campo">
         <legend>Treino</legend>
-        <div class="opcoes">
-          ${(ORDEM_TIPOS.includes(tipo) ? ORDEM_TIPOS : [tipo, ...ORDEM_TIPOS]).map((t) => `
-            <label class="opcao"><input type="radio" name="f-tipo" value="${t}"${t === tipo ? ' checked' : ''}><span>${seloHTML(t)}${TIPOS[t].nome}</span></label>`).join('')}
-        </div>
+        ${opcoesTipoHTML(tipo)}
       </fieldset>
       <div class="campo">
         <label for="f-data">Data</label>
@@ -4035,17 +4092,27 @@
         <dt>${label}</dt>
         <dd>${ponteiraHTML(ex[k])}${NIVEL[ex[k]]}</dd>
       </div>`).join('');
+    // Cartão enxuto (carga cognitiva): só os graus altos como etiquetas; os 4 graus ficam em "Ver os 4 graus".
+    const altos = DIMS.filter(({ k }) => ex[k] === 'alta');
+    const etiquetas = altos.length
+      ? `<p class="ex-altos">${altos.map(({ label }) => `<span class="ex-alto">Alta ${label.toLowerCase()}</span>`).join('')}</p>` : '';
+    const ultima = !config.semPeso.has(ex.nome) && historicoDe(ex.nome, hoje())[0];
+    const ultimaKg = ultima ? maxDoDia(ultima.series) : 0;
     const topo = `
         <div class="ex-topo">
           <span class="ex-num">${pad(i + 1)}</span>
           <div>
             <h3>${esc(nomeDe(ex))}</h3>
-            <p class="ex-dose"><span>${ex.dose}</span><span class="pse" title="Percepção subjetiva de esforço">PSE ${ex.pse}</span></p>
+            <p class="ex-dose"><span>${ex.dose}</span><span class="pse" title="Percepção subjetiva de esforço">PSE ${ex.pse}</span>${ultimaKg ? `<span class="ex-ultima">Última vez ${fmtKg(ultimaKg)} kg</span>` : ''}</p>
           </div>
         </div>`;
     const info = `
         <p class="ex-why">${esc(ex.why)}</p>
-        <dl class="graus">${graus}</dl>`;
+        ${etiquetas}
+        <details class="graus-det">
+          <summary>Ver os 4 graus</summary>
+          <dl class="graus">${graus}</dl>
+        </details>`;
     // Com vídeo, o cartão vira um carrossel: deslizando para o lado aparece a execução.
     // O nome fica fora do carrossel, sempre visível nos dois painéis.
     const corpo = !id ? topo + info : `${topo}
@@ -4130,8 +4197,7 @@
     const foco = FOCOS.find((f) => f.id === estado.foco);
     const itens = estado.foco === 'todos' ? todos : todos.filter((ex) => ex[estado.foco] === 'alta');
 
-    $('count').textContent = `${itens.length} ${itens.length === 1 ? 'exercício' : 'exercícios'}` +
-      (estado.foco !== 'todos' ? ` com alta ${foco.label.toLowerCase()}` : '');
+    renderProgressoFicha(todos, estado.foco !== 'todos' ? `${itens.length} com alta ${foco.label.toLowerCase()} · ` : '');
 
     // Cartões que estavam mostrando o vídeo continuam nele depois de redesenhar a lista.
     const noVideo = treinoRenderizado === estado.treino
@@ -4151,13 +4217,33 @@
       if (observadorVideo) observadorVideo.observe(sl);
       else sl.dataset.visivel = '1';
     });
+    agendarFab();
   }
   let treinoRenderizado = null;
+
+  // Feito hoje: com carga registrada, ou marcado como feito quando é "sem peso".
+  function exFeitoHoje(ex) {
+    const salvo = pesosDoDia(hoje(), `t${estado.treino}`)[ex.nome] || [];
+    return temCarga(salvo) || (config.semPeso.has(ex.nome) && temFeito(salvo));
+  }
+  // "2 de 6 feitos" e a barra embaixo do título da Ficha (RF-69).
+  function renderProgressoFicha(todos = exerciciosDoTreino(), prefixo = '') {
+    const n = todos.length;
+    const feitos = todos.filter(exFeitoHoje).length;
+    $('count').innerHTML = `${esc(prefixo)}<b>${feitos} de ${n}</b> ${n === 1 ? 'feito' : 'feitos'}`;
+    const barra = $('ficha-prog');
+    barra.hidden = !n;
+    barra.style.setProperty('--p', `${n ? Math.round((feitos / n) * 100) : 0}%`);
+    barra.setAttribute('aria-valuemax', String(n));
+    barra.setAttribute('aria-valuenow', String(feitos));
+    barra.setAttribute('aria-valuetext', `${feitos} de ${n} exercícios feitos hoje`);
+  }
 
   function renderSemana() {
     const hojeIdx = new Date().getDay();
     const seg = segundaDe(hoje());
     const porData = agruparPorData();
+    const tira = [];
     $('dias').innerHTML = ORDEM_SEMANA.map((i, pos) => {
       const d = planoDoDia(i);
       const doDia = porData[somarDias(seg, pos)] || [];
@@ -4181,6 +4267,7 @@
         feito,
         extras.length ? `<span class="tag-extra">+ ${extras.map((c) => TIPOS[c.tipo].nome).join(', ')}</span>` : '',
       ].join('');
+      tira.push(`<li class="${[feitos.length && feitos.length === d.tipos.length ? 'feito' : feitos.length ? 'parcial' : '', i === hojeIdx ? 'hoje' : '', d.tipos.length ? '' : 'descanso'].join(' ').trim()}"><i>${feitos.length && feitos.length === d.tipos.length ? '✓' : ''}</i>${d.curto.charAt(0)}</li>`);
       return `
         <li class="dia${i === hojeIdx ? ' hoje' : ''}">
           <span class="dia-curto">${d.curto}</span>
@@ -4188,6 +4275,7 @@
           <div class="dia-tags">${tags}</div>
         </li>`;
     }).join('');
+    $('semana-tira').innerHTML = tira.join('');
     // A nota explica a semana padrão; com a semana mudada ela deixa de valer.
     $('semana-nota').hidden = treinosDaConta || JSON.stringify(config.semana) !== JSON.stringify(SEMANA_PADRAO);
   }
@@ -4218,6 +4306,21 @@
   let ckExpandido = null;
   let ckExcluindo = null;
 
+  // Semanas seguidas em que a pessoa fez pelo menos o que a semana montada pede. A semana atual entra quando já
+  // bateu o plano; senão a conta começa na anterior (a semana em andamento não quebra a sequência).
+  function semanasNoPlano() {
+    const plano = config.semana.flat().length;
+    if (!plano || !checkins.length) return 0;
+    const porSemana = new Map();
+    checkins.forEach((c) => { const s = segundaDe(dataDe(c)); porSemana.set(s, (porSemana.get(s) || 0) + 1); });
+    const primeira = segundaDe(checkins.map(dataDe).sort()[0]);
+    let seg = segundaDe(hoje());
+    if ((porSemana.get(seg) || 0) < plano) seg = somarDias(seg, -7);
+    let n = 0;
+    while (seg >= primeira && (porSemana.get(seg) || 0) >= plano && n < 520) { n += 1; seg = somarDias(seg, -7); }
+    return n;
+  }
+
   function renderNumeros() {
     const mesAtual = hoje().slice(0, 7);
     const noMes = checkins.filter((c) => dataDe(c).startsWith(mesAtual));
@@ -4226,7 +4329,7 @@
     const agora = new Date();
     const mes = nomeMes(agora.getFullYear(), agora.getMonth());
     $('numeros').innerHTML = `
-      <div><dt>Check-ins no total</dt><dd>${checkins.length}</dd></div>
+      <div class="num-destaque"><dt>Semanas seguidas no plano</dt><dd>${semanasNoPlano()}<small>${semanasNoPlano() === 1 ? ' semana' : ' semanas'}</small></dd></div>
       <div><dt>Check-ins em ${mes}</dt><dd>${noMes.length}</dd></div>
       <div><dt>Horas treinadas em ${mes}</dt><dd>${fmtNum(minutos / 60)}<small> h</small></dd></div>
       <div><dt>Dias com treino em ${mes}</dt><dd>${dias}<small>${dias === 1 ? ' dia' : ' dias'}</small></dd></div>`;
@@ -4430,14 +4533,15 @@
     }));
     return m;
   }
-  function resumoDoMes(chave) {
-    const doMes = checkins.filter((c) => dataDe(c).startsWith(chave));
+  // ate: só até esse dia do mês (para comparar o mês em andamento com o mesmo trecho do mês anterior).
+  function resumoDoMes(chave, ate = 31) {
+    const doMes = checkins.filter((c) => dataDe(c).startsWith(chave) && Number(dataDe(c).slice(8, 10)) <= ate);
     const porGrupo = Object.fromEntries(GRUPOS_EVO.map((g) => [g, 0]));
     const porTipo = {};
     doMes.forEach((c) => { porGrupo[TIPOS[c.tipo].grupo] += 1; porTipo[c.tipo] = (porTipo[c.tipo] || 0) + 1; });
     // % do plano: o que a semana montada pede em cada dia do mês (até hoje, no mês atual), até 100%.
     const [a, mm] = chave.split('-').map(Number);
-    const ultimo = Math.min(new Date(a, mm, 0).getDate(), chave === hoje().slice(0, 7) ? Number(hoje().slice(8, 10)) : 31);
+    const ultimo = Math.min(new Date(a, mm, 0).getDate(), chave === hoje().slice(0, 7) ? Number(hoje().slice(8, 10)) : 31, ate);
     let planejado = 0;
     for (let d = 1; d <= ultimo; d++) planejado += (config.semana[new Date(a, mm - 1, d).getDay()] || []).length;
     return {
@@ -4455,7 +4559,7 @@
     const meses = Array.from({ length: 6 }, (_, i) => somarMeses(evo.fim, i - 5));
     document.querySelector('[data-evo-nav="1"]').disabled = evo.fim >= atual;
     document.querySelector('[data-evo-nav="-1"]').disabled = meses[0] <= primeiroMes();
-    const dados = meses.map(resumoDoMes);
+    const dados = meses.map((k) => resumoDoMes(k));
     const ano = (k) => k.slice(0, 4);
     $('evo-periodo').textContent = `${nomeMesChave(meses[0]).slice(0, 3)}${ano(meses[0]) === ano(meses[5]) ? '' : ` de ${ano(meses[0])}`} a ${nomeMesChave(meses[5]).slice(0, 3)} de ${ano(meses[5])}`;
     graficoMeses(dados);
@@ -4509,10 +4613,15 @@
   }
   function renderMesEvolucao() {
     const r = resumoDoMes(evo.sel);
-    const ant = resumoDoMes(somarMeses(evo.sel, -1));
+    // Mês em andamento: compara com o mesmo trecho do mês anterior (1 a hoje), para não mostrar queda falsa no começo do mês.
+    const emAndamento = evo.sel === hoje().slice(0, 7);
+    const diaHoje = Number(hoje().slice(8, 10));
+    const ant = resumoDoMes(somarMeses(evo.sel, -1), emAndamento ? diaHoje : 31);
     const nome = capitalizar(nomeMesChave(evo.sel));
     $('evo-mes-titulo').textContent = `${nome} de ${evo.sel.slice(0, 4)}`;
-    $('evo-mes-comp').textContent = `comparado a ${nomeMesChave(somarMeses(evo.sel, -1))}`;
+    $('evo-mes-comp').textContent = emAndamento
+      ? `1 a ${diaHoje} comparado a 1 a ${diaHoje} de ${nomeMesChave(somarMeses(evo.sel, -1))}`
+      : `comparado a ${nomeMesChave(somarMeses(evo.sel, -1))}`;
     const delta = (a, b, fmt = (n) => fmtNum(n)) => {
       if (a === b) return '<span class="delta igual">=</span>';
       return a > b ? `<span class="delta sobe">▲ ${fmt(a - b)}</span>` : `<span class="delta desce">▼ ${fmt(b - a)}</span>`;
@@ -4705,6 +4814,9 @@
     renderCalendario();
     renderDia();
     renderBarras();
+    // Com a Evolução ligada, "Por tipo no mês" fica só lá ("O que você treinou"), sem repetir no Resumo.
+    $('tipos-titulo').closest('section').hidden = EVOLUCAO_LIGADA;
+    agendarFab();
   }
 
   // ---------- Render: Você ----------
@@ -5991,16 +6103,50 @@
     }
     abrirFormCheckin({ tipo: `t${estado.treino}` });
   });
-  // Encolhe ao rolar para baixo e volta a mostrar o texto ao rolar para cima.
-  let ultimoScroll = 0;
+  // Encolhe ao rolar para baixo e volta a mostrar o texto ao rolar para cima. Também fica só com o ícone quando,
+  // aberto, cobriria um botão, campo ou dia do calendário (lei de Fitts: a ação embaixo continua alcançável).
+  var ultimoScroll = 0, fabDescendo = false, fabLargura = 0, fabPedido = 0;
+  function fabCobreAcao(fab) {
+    const r = fab.getBoundingClientRect();
+    if (!r.width) return false;
+    const esquerda = r.right - Math.max(fabLargura, r.width);
+    for (const y of [r.top + 10, r.top + r.height / 2, r.bottom - 10]) {
+      for (let x = esquerda + 8; x <= r.right - 8; x += 20) {
+        const baixo = document.elementsFromPoint(x, y).find((el) => !fab.contains(el) && !el.closest('#fab-descanso, .nav, .ativo, .toast'));
+        if (baixo && baixo.closest('button, a[href], input, select, textarea, [role="button"], .cal-dia')) return true;
+      }
+    }
+    return false;
+  }
+  function ajustarFab() {
+    fabPedido = 0;
+    const fab = $('fab-checkin');
+    if (!fab.getClientRects().length) return; // escondido (position: fixed não tem offsetParent)
+    if (!fab.classList.contains('encolhido')) fabLargura = fab.offsetWidth;
+    fab.classList.toggle('encolhido', fabDescendo || fabCobreAcao(fab));
+  }
+  function agendarFab() { if (!fabPedido) fabPedido = requestAnimationFrame(ajustarFab); }
   window.addEventListener('scroll', () => {
     const y = window.scrollY;
-    if (Math.abs(y - ultimoScroll) < 8) return;
-    $('fab-checkin').classList.toggle('encolhido', y > ultimoScroll && y > 80);
-    ultimoScroll = y;
+    if (Math.abs(y - ultimoScroll) >= 8) {
+      fabDescendo = y > ultimoScroll && y > 80;
+      ultimoScroll = y;
+    }
+    agendarFab();
   }, { passive: true });
+  window.addEventListener('resize', agendarFab);
+  window.addEventListener('hashchange', () => setTimeout(agendarFab, 60));
 
   logDialog.addEventListener('click', (e) => {
+    const passo = e.target.closest('[data-passo]');
+    if (passo) {
+      const campo = $(passo.dataset.alvo);
+      const atual = Number(String(campo.value || campo.placeholder).replace(',', '.'));
+      const novo = Math.max(0, (Number.isFinite(atual) ? atual : 0) + Number(passo.dataset.passo));
+      campo.value = fmtKg(Math.round(novo * 100) / 100);
+      campo.dispatchEvent(new Event('input', { bubbles: true }));
+      return;
+    }
     if (e.target.closest('[data-concluir]')) return concluirLog();
     const desfazer = e.target.closest('[data-desfazer]');
     if (desfazer) { marcarFeito(desfazer.dataset.desfazer, false); return abrirLog(exAberto); }
@@ -6043,6 +6189,9 @@
     else {
       const b = $('list').querySelector(`[data-log="${exAberto}"]`);
       if (b) b.outerHTML = logBtnHTML(exerciciosDoTreino()[exAberto], exAberto);
+      const foco = FOCOS.find((f) => f.id === estado.foco);
+      const visiveis = estado.foco === 'todos' ? null : exerciciosDoTreino().filter((ex) => ex[estado.foco] === 'alta').length;
+      renderProgressoFicha(exerciciosDoTreino(), visiveis == null ? '' : `${visiveis} com alta ${foco.label.toLowerCase()} · `);
     }
     renderFichaCheckin();
   });

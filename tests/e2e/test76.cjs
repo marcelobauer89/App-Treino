@@ -6,7 +6,11 @@ let fails = 0;
 const ok = (c, l, x = '') => { if (!c) fails++; console.log(`${c ? 'PASS' : 'FAIL'} ${l}${x ? ' — ' + x : ''}`); };
 const AGORA = '2026-10-28T20:00:00'; // quarta-feira
 const PERFIL = { id: 'u1', nome: 'Pessoa Teste', email: 'pessoa@exemplo.com', foto: '', tema: 'auto', dias_jiu: [2, 4] };
-const barrasDoMes = (p) => p.locator('#barras .barra').allInnerTexts().then((ls) => ls.map((t) => t.replace(/\s+/g, ' ').trim().replace(/^\S+ /, '')));
+// RF-69: com a Evolução ligada, "Por tipo no mês" fica escondido no Resumo (as barras continuam montadas): lê o texto.
+const barrasDoMes = (p) => p.locator('#barras .barra').evaluateAll((ls) => ls.map((l) => {
+  const nome = [...l.querySelector('.barra-nome').childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join('').trim();
+  return `${nome} ${l.querySelector('.barra-valor').textContent.trim()}`;
+}));
 const itens = (p) => p.locator('#legenda-cal li').allInnerTexts().then((ls) => ls.map((t) => t.replace(/\s+/g, ' ').trim()));
 async function abrir(b, { scheme = 'light', semana, checkins = [] }) {
   const p = await H.novaPagina(b, { scheme, viewport: { width: 390, height: 844 }, checkins, extra: { perfis: [{ ...PERFIL, semana }] } });
@@ -55,7 +59,7 @@ const ck = (id, tipo, dia) => ({ id, usuario_id: 'u1', tipo, inicio: `${dia}T19:
   // 4. Semana vazia e mês sem check-in: legenda escondida.
   p = await abrir(b, { semana: [[], [], [], [], [], [], []] });
   ok(await p.locator('#legenda-cal').isHidden(), 'sem nada na semana nem no mês: legenda escondida');
-  ok(/Nenhum treino na sua semana nem check-in neste mês/.test(await p.locator('#barras').innerText()), 'sem nada: por tipo no mês com a mensagem');
+  ok(/Nenhum treino na sua semana nem check-in neste mês/.test(await p.locator('#barras').textContent()), 'sem nada: por tipo no mês com a mensagem');
   await p.context().close();
 
   // 5. Mudar a semana em Você atualiza a legenda ao voltar para o Dashboard.

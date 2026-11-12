@@ -21,7 +21,7 @@ const ok = (c, l, x = '') => { if (!c) fails++; console.log(`${c ? 'PASS' : 'FAI
       const r = await p.$$eval('#list .ex', (els) => els.map((li) => {
         const why = li.querySelector('.ex-why'), sl = li.querySelector('.ex-slides');
         const vis = (el) => { if (!el) return false; const a = el.getBoundingClientRect(), c = (sl || li).getBoundingClientRect(); return a.height > 0 && a.bottom <= c.bottom + 1; };
-        return { nome: li.querySelector('h3').textContent, why: vis(why), graus: vis(li.querySelector('.graus')), alt: sl ? sl.offsetHeight : -1 };
+        return { nome: li.querySelector('h3').textContent, why: vis(why), graus: vis(li.querySelector('.graus-det > summary') || li.querySelector('.graus')), alt: sl ? sl.offsetHeight : -1 };
       }));
       const ruins = r.filter((x) => !x.why || !x.graus);
       ok(r.length > 0 && !ruins.length, `${scheme}: Treino ${id} — explicação e níveis visíveis em todos os cartões`, ruins.map((x) => `${x.nome}(${x.alt})`).join(', '));

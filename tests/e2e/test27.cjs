@@ -74,11 +74,13 @@ const ADM = {
     const ctxs = await p.locator('#kpis .kpi .ctx').allInnerTexts();
     const larguraKpis = await p.locator('#kpis').evaluate((e) => e.getBoundingClientRect().width);
     if (viewport.width < 720) {
-      ok(mesma(caixas[0].y, caixas[1].y) && mesma(caixas[2].y, caixas[3].y) && caixas[2].y > caixas[0].y + 1 && caixas[0].x < caixas[1].x, `${tag}: números em 2 colunas`, JSON.stringify(caixas.slice(0, 4).map((c) => Math.round(c.y))));
+      // RF-69: Aderência e Usuários ativos vêm primeiro, cada um na linha inteira; os outros em 2 colunas.
+      ok(Math.abs(caixas[0].w - larguraKpis) < 1 && Math.abs(caixas[1].w - larguraKpis) < 1 && caixas[1].y > caixas[0].y + 1, `${tag}: 2 números em destaque na linha inteira`);
+      ok(mesma(caixas[2].y, caixas[3].y) && caixas[2].y > caixas[1].y + 1 && caixas[2].x < caixas[3].x, `${tag}: números em 2 colunas`, JSON.stringify(caixas.slice(0, 4).map((c) => Math.round(c.y))));
       ok(Math.abs(caixas[4].w - larguraKpis) < 1 && caixas[4].y > caixas[2].y, `${tag}: último card na linha inteira`);
-      ok(!/nos últimos/.test(ctxs.join(' ')) && /do planejado/.test(ctxs[3]) && !/semana montada/.test(ctxs[3]), `${tag}: textos curtos`, ctxs.join(' | ').replace(/\s+/g, ' '));
+      ok(!/nos últimos/.test(ctxs.join(' ')) && /do planejado/.test(ctxs[0]) && !/semana montada/.test(ctxs[0]), `${tag}: textos curtos`, ctxs.join(' | ').replace(/\s+/g, ' '));
       const kpisAlt = await p.locator('#kpis').evaluate((e) => e.getBoundingClientRect().height);
-      ok(kpisAlt < 520, `${tag}: 7 números ocupam menos de 520 px`, String(Math.round(kpisAlt)));
+      ok(kpisAlt < 680, `${tag}: 7 números ocupam menos de 680 px`, String(Math.round(kpisAlt)));
       // Cartão compacto
       await p.click('#tab-usuarios'); 
       const alts = await p.locator('#usuarios-corpo tr').evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().height)));
@@ -91,29 +93,29 @@ const ADM = {
       ok(sit.y < nome.y + nome.height && sit.x > nome.x, `${tag}: situação na linha do nome, à direita`);
       ok(await txt(p, '#usuarios-corpo tr:nth-child(4) .resumo-cel') === 'sem uso · 0 check-ins · 0% do plano', `${tag}: resumo de quem nunca usou`);
     } else {
-      ok(caixas.length === 7 && caixas.slice(0, 4).every((c) => mesma(c.y, caixas[0].y)) && caixas.slice(4).every((c) => mesma(c.y, caixas[4].y)) && caixas[4].y > caixas[0].y + 1,
-        `${tag}: 7 números em 2 linhas (4 + 3) no computador`, JSON.stringify(caixas.map((c) => Math.round(c.y))));
-      ok(/nos últimos 30 dias/.test(ctxs[0]) && /semana montada/.test(ctxs[3]), `${tag}: textos longos no computador`);
+      ok(caixas.length === 7 && mesma(caixas[0].y, caixas[1].y) && new Set(caixas.map((c) => Math.round(c.y))).size <= 2 && caixas[0].w > caixas[2].w * 1.5,
+        `${tag}: 7 números em 2 linhas no computador, os 2 primeiros maiores`, JSON.stringify(caixas.map((c) => Math.round(c.y))));
+      ok(/nos últimos 30 dias/.test(ctxs[1]) && /semana montada/.test(ctxs[0]), `${tag}: textos longos no computador`);
       await p.click('#tab-usuarios'); 
-      ok(await p.locator('#usuarios th').count() === 8 && await p.locator('#usuarios thead').isVisible() && await p.locator('#usuarios-corpo .resumo-cel').first().isHidden(), `${tag}: tabela intacta`);
+      ok(await p.locator('#usuarios th').count() === 7 && await p.locator('#usuarios thead').isVisible() && await p.locator('#usuarios-corpo .resumo-cel').first().isHidden(), `${tag}: tabela intacta`);
     }
     await p.click('#tab-geral'); 
     // "Tudo": sem período anterior, sem variação e sem "null"
     await p.click('[data-periodo="tudo"]');
     const kTudo = await p.locator('#kpis .kpi').allInnerTexts();
     ok(!kTudo.join(' ').includes('null') && await p.locator('#kpis .delta').count() === 0 && !kTudo.some((k) => /·\s*$/.test(k.trim())), `${tag}: Tudo sem null nem variação`, kTudo.join(' | ').replace(/\s+/g, ' '));
-    if (viewport.width >= 720) ok(/desde o início/.test(kTudo[0]), `${tag}: Tudo mostra "desde o início"`);
+    if (viewport.width >= 720) ok(/desde o início/.test(kTudo[1]), `${tag}: Tudo mostra "desde o início"`);
     await p.click('[data-periodo="30"]');
     if (scheme === 'light' && viewport.width === 375) {
       const k = await p.locator('#kpis .kpi').allInnerTexts();
-      ok(/2\s*de 4/.test(k[0]), 'ativos 30d = 2 de 4', k[0]);
-      ok(/^Check-ins\s*6/.test(k[1].trim()), 'check-ins 30d = 6', k[1]);
+      ok(/2\s*de 4/.test(k[1]), 'ativos 30d = 2 de 4', k[1]);
+      ok(/^Check-ins\s*6/.test(k[2].trim()), 'check-ins 30d = 6', k[2]);
       ok(/50%/.test(k[4]) && /1 de 2/.test(k[4]), 'retenção: 1 de 2', k[4]);
       ok(/Atualizado às \d\d:\d\d/.test(await txt(p, '#atualizado')), 'atualizado às');
       await p.click('[data-periodo="7"]');
       const k7 = await p.locator('#kpis .kpi').allInnerTexts();
-      ok(/1\s*de 4/.test(k7[0]) && /^Check-ins\s*2/.test(k7[1].trim()), '7 dias: 1 ativo, 2 check-ins', k7.slice(0, 2).join(' / '));
-      ok(/\d/.test(k7[1]) && await p.locator('#kpis .delta').count() >= 3, 'delta vs período anterior');
+      ok(/1\s*de 4/.test(k7[1]) && /^Check-ins\s*2/.test(k7[2].trim()), '7 dias: 1 ativo, 2 check-ins', k7.slice(1, 3).join(' / '));
+      ok(/\d/.test(k7[2]) && await p.locator('#kpis .delta').count() >= 3, 'delta vs período anterior');
       await p.click('[data-periodo="90"]');
       ok((await txt(p, '#g1-titulo')).includes('semana'), '90 dias agrupa por semana');
       await p.click('[data-periodo="30"]');

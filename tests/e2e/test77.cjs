@@ -49,9 +49,10 @@ const colunas = (p) => p.locator('.evo-col').evaluateAll((gs) => gs.map((g) => `
     ok(await p.locator('[data-evo-mes="2026-10"] .evo-barra [class^="evo-"]').count() === 3, `${tag}: outubro empilhado em 3 tipos`);
     const leg = await p.locator('#evo-legenda li').allInnerTexts();
     ok(leg.map((t) => t.trim().split('\n').pop().trim()).join('|') === 'Musculação|Jiu Jitsu|Futebol|Cardio', `${tag}: legenda só com os tipos dos meses`, leg.join('|'));
-    // Resumo de novembro, comparado a outubro.
+    // Resumo de novembro (mês em andamento), comparado ao mesmo trecho de outubro (1 a 11: 2 treinos em 2 dias), RF-69.
     const num = (await txt(p, '#evo-numeros')).replace(/(\d)([▲▼])/g, '$1 $2');
-    ok(/Treinos 4 ▼ 2/.test(num) && /Dias com treino 4 ▼ 2/.test(num), `${tag}: números de novembro com a comparação`, num);
+    ok(/Treinos 4 ▲ 2/.test(num) && /Dias com treino 4 ▲ 2/.test(num), `${tag}: números de novembro com a comparação`, num);
+    ok((await txt(p, '#evo-mes-comp')) === '1 a 11 comparado a 1 a 11 de outubro', `${tag}: compara o mesmo trecho do mês anterior`, await txt(p, '#evo-mes-comp'));
     // Plano em novembro até dia 11: seg 2,9 (t1) ter 3,10 (jiu) qua 4,11 (t2) qui 5 (jiu) sex 6 (bike) = 8 → 4/8 = 50%
     ok(/Do plano 50 %/.test(num.replace(/(\d)%/, '$1 %')), `${tag}: % do plano no mês atual (até hoje)`, num);
     const quais = await txt(p, '#evo-quais');

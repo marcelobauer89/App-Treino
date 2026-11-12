@@ -18,7 +18,8 @@ const ADM = {
   ],
   eventos: [], emails: [], convites: [],
 };
-const linhas = (p) => p.locator('#treinos-lista li').evaluateAll((ls) => ls.map((l) => ({
+// RF-69: tipos sem check-in não ganham linha própria; aparecem juntos em "Sem check-in no período".
+const linhas = (p) => p.locator('#treinos-lista li:not(.rt-zerados)').evaluateAll((ls) => ls.map((l) => ({
   nome: l.querySelector('.rt-nome').textContent.trim(), num: l.querySelector('.rt-num').textContent.replace(/\s+/g, ' ').trim(),
   sub: l.querySelector('.rt-sub').textContent.trim(), larg: l.querySelector('.rt-barra') ? l.querySelector('.rt-barra').getBoundingClientRect().width : 0, zerado: l.classList.contains('zerado') })));
 (async () => {
@@ -30,10 +31,12 @@ const linhas = (p) => p.locator('#treinos-lista li').evaluateAll((ls) => ls.map(
     await p.goto(ADMIN); await p.waitForSelector('#painel:not([hidden])'); await p.waitForTimeout(300);
     ok(await p.locator('#treinos-titulo').isVisible() && (await p.locator('#treinos-titulo').textContent()) === 'Treinos mais feitos', `${tag}: card na visão geral`);
     let l = await linhas(p);
-    ok(l.map((x) => x.nome).join('|') === 'Musculação|Jiu Jitsu|Cardio|Surf|Muay Thai|Futebol|Futvôlei', `${tag}: ordem do mais feito ao menos (30 dias)`, l.map((x) => x.nome).join('|'));
-    ok(l[0].num === '545%' && l[1].num === '436%' && l[2].num === '19%' && l[4].num === '00%', `${tag}: números e porcentagens`, l.map((x) => x.num).join(' / '));
-    ok(l[0].sub === '2 pessoas · Treino 1: 3 · Treino 2: 2' && l[1].sub === '3 pessoas' && l[2].sub === '1 pessoa' && l[4].sub === 'nenhum check-in', `${tag}: pessoas e detalhe da musculação`, l.map((x) => x.sub).join(' / '));
-    ok(l[0].larg > l[1].larg && l[1].larg > l[2].larg && Math.abs(l[2].larg - l[3].larg) < 1 && l[4].larg === 0 && l[4].zerado, `${tag}: barras proporcionais, sem barra quando zero`, l.map((x) => Math.round(x.larg)).join(','));
+    ok(l.map((x) => x.nome).join('|') === 'Musculação|Jiu Jitsu|Cardio|Surf', `${tag}: ordem do mais feito ao menos (30 dias)`, l.map((x) => x.nome).join('|'));
+    const zerados = (await p.locator('#treinos-lista .rt-zerados').textContent().catch(() => '')).trim();
+    ok(zerados === 'Sem check-in no período: Muay Thai, Futebol, Futvôlei', `${tag}: tipos sem check-in numa linha só`, zerados);
+    ok(l[0].num === '545%' && l[1].num === '436%' && l[2].num === '19%', `${tag}: números e porcentagens`, l.map((x) => x.num).join(' / '));
+    ok(l[0].sub === '2 pessoas · Treino 1: 3 · Treino 2: 2' && l[1].sub === '3 pessoas' && l[2].sub === '1 pessoa', `${tag}: pessoas e detalhe da musculação`, l.map((x) => x.sub).join(' / '));
+    ok(l[0].larg > l[1].larg && l[1].larg > l[2].larg && Math.abs(l[2].larg - l[3].larg) < 1, `${tag}: barras proporcionais`, l.map((x) => Math.round(x.larg)).join(','));
     const cores = await p.locator('#treinos-lista .rt-barra').evaluateAll((bs) => bs.map((x) => getComputedStyle(x).backgroundColor));
     ok(new Set(cores).size === 4, `${tag}: uma cor por tipo`, cores.join(' '));
     // info

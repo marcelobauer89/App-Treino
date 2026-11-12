@@ -15,6 +15,8 @@ const abrir = async (b, op = {}) => {
 // Novo check-in de um tipo numa data (início 07:00, para não sobrepor).
 async function checkin(p, tipo, data) {
   await p.click('#fab-checkin'); await p.waitForTimeout(100);
+  // RF-69: tipos fora da semana ficam em "Outras atividades", recolhido.
+  if (await p.locator(`.mais-tipos input[value="${tipo}"]`).count()) await p.click('.mais-tipos summary');
   await p.check(`input[name="f-tipo"][value="${tipo}"]`, { force: true });
   await p.fill('#f-data', data); await p.fill('#f-inicio', '07:00');
   await p.click('[data-salvar-form]'); await p.waitForTimeout(250);
