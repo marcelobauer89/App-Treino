@@ -1,4 +1,4 @@
-// Excluir conta: pelo app (Você → Excluir conta) e pelo monitoramento (lixeira em cada usuário).
+// Excluir conta: pelo app (Você → Excluir conta) e pelo monitoramento (na ficha do usuário, RF-69; antes, lixeira em cada linha).
 const { chromium } = require('playwright');
 const H = require('../apoio/harness.cjs');
 const ADMIN = H.PAGINA.replace('index.html', 'admin.html');
@@ -52,9 +52,14 @@ const CK = [{ id: 'c1', usuario_id: 'u1', tipo: 'jiu', inicio: '2026-10-20T19:00
     const a = await H.novaPagina(b, { scheme, viewport: vp, extra: { admin: JSON.parse(JSON.stringify(ADM)) } });
     await a.goto(ADMIN); await a.waitForSelector('#painel:not([hidden])'); await a.waitForTimeout(300);
     await a.click('#tab-usuarios').catch(() => {}); await a.waitForTimeout(200);
-    ok((await a.locator('#usuarios-corpo [data-excluir]').count()) === 2 && await a.locator('#usuarios-corpo tr[data-usuario="u1"] .excluir-btn').isDisabled(), `${scheme}: lixeira em cada usuário (a própria conta desligada)`);
-    await a.click('#usuarios-corpo [data-excluir="u2"]'); await a.waitForTimeout(300);
-    ok(!(await a.locator('#detalhe[open]').count()), `${scheme}: lixeira não abre o detalhe do usuário`);
+    ok((await a.locator('#usuarios-corpo [data-excluir], #usuarios-corpo .excluir-btn').count()) === 0, `${scheme}: sem lixeira nas linhas da tabela`);
+    // A própria conta: a ficha explica que se exclui pelo app.
+    await a.click('#usuarios-corpo tr[data-usuario="u1"] [data-abrir]'); await a.waitForTimeout(200);
+    ok(!(await a.locator('#detalhe [data-excluir]').count()) && /use o app/.test(await txt(a, '#detalhe')), `${scheme}: a própria conta não se exclui pelo painel`);
+    await a.keyboard.press('Escape'); await a.waitForTimeout(150);
+    await a.click('#usuarios-corpo tr[data-usuario="u2"] [data-abrir]'); await a.waitForTimeout(200);
+    await a.click('#detalhe [data-excluir="u2"]'); await a.waitForTimeout(300);
+    ok(await a.locator('#excluir-dialog[open]').count() === 1, `${scheme}: Excluir conta na ficha do usuário abre a confirmação`);
     const corpo = await txt(a, '#excluir-body');
     ok((await txt(a, '#excluir-title')) === 'Excluir a conta de Ana Souza?' && /check-ins/.test(corpo) && /Não dá para desfazer/.test(corpo) && /Se Ana entrar de novo/.test(corpo), `${scheme}: mesma confirmação, com o nome da pessoa`);
     ok(await a.locator('#excluir-sim').isDisabled(), `${scheme}: botão desligado até marcar "Entendi"`);
@@ -62,11 +67,12 @@ const CK = [{ id: 'c1', usuario_id: 'u1', tipo: 'jiu', inicio: '2026-10-20T19:00
     await a.screenshot({ path: `${H.SAIDA}/excluir-admin-${scheme}-${vp.width}.png` });
     await a.click('#excluir-sim'); await a.waitForTimeout(500);
     const db = await H.banco(a);
-    ok((db.contasExcluidas || []).includes('u2') && !(await a.locator('#usuarios-corpo tr[data-usuario="u2"]').count()), `${scheme}: Ana excluída e some da lista`);
+    ok((db.contasExcluidas || []).includes('u2') && !(await a.locator('#usuarios-corpo tr[data-usuario="u2"]').count()) && !(await a.locator('#detalhe[open]').count()), `${scheme}: Ana excluída, some da lista e a ficha fecha`);
     ok(/A conta de Ana Souza foi excluída/.test(await txt(a, '#toast')), `${scheme}: aviso de exclusão`);
     // Erro do servidor aparece na modal
     await a.evaluate(() => { const d = JSON.parse(localStorage.getItem('mock-supabase')); d.admin.falharExcluir = true; localStorage.setItem('mock-supabase', JSON.stringify(d)); });
-    await a.click('#usuarios-corpo [data-excluir="u3"]'); await a.check('#excluir-entendi'); await a.click('#excluir-sim'); await a.waitForTimeout(300);
+    await a.click('#usuarios-corpo tr[data-usuario="u3"] [data-abrir]'); await a.waitForTimeout(200);
+    await a.click('#detalhe [data-excluir="u3"]'); await a.check('#excluir-entendi'); await a.click('#excluir-sim'); await a.waitForTimeout(300);
     ok(/Não foi possível excluir: falha simulada/.test(await txt(a, '#excluir-erro')) && (await a.locator('#usuarios-corpo tr[data-usuario="u3"]').count()) === 1, `${scheme}: erro aparece na modal e nada é apagado`);
     await a.click('#excluir-body .btn-sec');
     ok(a.errs.length === 0, `${scheme}: painel sem erros`, a.errs.join(' | '));

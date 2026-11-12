@@ -30,15 +30,16 @@ const ADM = {
     await p.click('[data-periodo="hoje"]');
     ok(await p.locator('[data-periodo="hoje"]').getAttribute('aria-pressed') === 'true', `${tag}: Hoje pressionado`);
     const k = (await p.locator('#kpis .kpi').allInnerTexts()).map((t) => t.replace(/\s+/g, ' ').trim());
-    ok(/^Usuários ativos 3 de 3/.test(k[0]) && /2 mais que o período anterior/.test(k[0]), `${tag}: 3 ativos hoje, +2 vs ontem`, k[0]);
-    ok(/^Check-ins 3/.test(k[1]) && /2 mais/.test(k[1]), `${tag}: 3 check-ins, +2`, k[1]);
-    ok(/^Treinos por usuário 1,0/.test(k[2]) && !/semana/.test(k[2]), `${tag}: treinos por usuário`, k[2]);
-    ok(/^Aderência ao plano 100 ?%/.test(k[3]), `${tag}: aderência pelo plano do dia (descanso fora)`, k[3]);
-    if (viewport.width >= 720) ok(k[0].includes('hoje') && k[3].includes('planejado para hoje'), `${tag}: textos de hoje`);
-    await p.locator('#kpis .info').first().click();
-    ok((await txt(p, '#info-k1')).includes('A seta compara com ontem'), `${tag}: balão compara com ontem`);
-    await p.locator('#kpis .info').nth(3).click();
-    ok((await txt(p, '#info-k4')).includes('para hoje') && (await txt(p, '#info-k4')).includes('dia de descanso'), `${tag}: balão de aderência explica hoje`);
+    // RF-69: Aderência ao plano e Usuários ativos vêm primeiro.
+    ok(/^Usuários ativos 3 de 3/.test(k[1]) && /2 mais que o período anterior/.test(k[1]), `${tag}: 3 ativos hoje, +2 vs ontem`, k[1]);
+    ok(/^Check-ins 3/.test(k[2]) && /2 mais/.test(k[2]), `${tag}: 3 check-ins, +2`, k[2]);
+    ok(/^Treinos por usuário 1,0/.test(k[3]) && !/semana/.test(k[3]), `${tag}: treinos por usuário`, k[3]);
+    ok(/^Aderência ao plano 100 ?%/.test(k[0]), `${tag}: aderência pelo plano do dia (descanso fora)`, k[0]);
+    if (viewport.width >= 720) ok(k[1].includes('hoje') && k[0].includes('planejado para hoje'), `${tag}: textos de hoje`);
+    await p.locator('#kpis .info').nth(1).click();
+    ok((await txt(p, '#info-k2')).includes('A seta compara com ontem'), `${tag}: balão compara com ontem`);
+    await p.locator('#kpis .info').nth(0).click();
+    ok((await txt(p, '#info-k1')).includes('para hoje') && (await txt(p, '#info-k1')).includes('dia de descanso'), `${tag}: balão de aderência explica hoje`);
     await p.keyboard.press('Escape');
     // gráficos por hora
     ok((await txt(p, '#g1-titulo')) === 'Check-ins por hora' && (await txt(p, '#g2-titulo')) === 'Usuários ativos por hora', `${tag}: títulos por hora`);
@@ -83,7 +84,7 @@ const ADM = {
     // outras unidades
     await p.click('[data-periodo="30"]');
     ok((await txt(p, '#info-g1')).includes('cada dia do período') && (await txt(p, '#g2-nota')).endsWith('no dia.') && (await txt(p, '#g1-titulo')) === 'Check-ins por dia', `${tag}: 30 dias por dia`);
-    ok(/^Treinos por semana/.test(await txt(p, '#kpis .kpi:nth-child(3)')), `${tag}: 30 dias volta a treinos por semana`);
+    ok(/^Treinos por semana/.test(await txt(p, '#kpis .kpi:nth-child(4)')), `${tag}: 30 dias volta a treinos por semana`);
     await p.click('[data-periodo="90"]');
     ok((await txt(p, '#info-g1')).includes('cada semana do período') && (await txt(p, '#info-g1')).includes('de segunda a domingo') && (await txt(p, '#g2-nota')).endsWith('na semana.'), `${tag}: 90 dias por semana`);
     const sw = await p.evaluate(() => document.documentElement.scrollWidth - innerWidth);

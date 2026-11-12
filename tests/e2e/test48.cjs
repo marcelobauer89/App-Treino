@@ -17,8 +17,9 @@ const ADMIN = H.PAGINA.replace('index.html', 'admin.html');
     ok(!/Surf/.test(await txt(p, '#dias')), `${scheme}: surf não está na semana padrão`);
     // Check-in
     await p.click('#fab-checkin');
+    await p.click('#form-body .mais-tipos summary'); // RF-69: Surf fica em "Outras atividades"
     const opcoes = (await p.locator('#form-body .opcao').allInnerTexts()).map((t) => t.replace(/\s+/g, ''));
-    ok(opcoes.join('|').includes('MMuayThai|SSurf|FFutebol|VFutvôlei|CCardio'), `${scheme}: Surf no check-in, entre muay thai e futebol`, opcoes.join('|'));
+    ok(opcoes.join('|').includes('CCardio|MMuayThai|SSurf|FFutebol|VFutvôlei'), `${scheme}: Surf no check-in, entre muay thai e futebol`, opcoes.join('|'));
     await p.check('input[name="f-tipo"][value="surf"]', { force: true });
     ok((await p.inputValue('#f-dur')) === '90', `${scheme}: duração padrão 90 min`, await p.inputValue('#f-dur'));
     await p.waitForTimeout(300); await p.screenshot({ path: `${H.SAIDA}/surf-form-${scheme}.png` });
@@ -45,6 +46,7 @@ const ADMIN = H.PAGINA.replace('index.html', 'admin.html');
     ok(db.perfis[0].semana[3].includes('surf'), `${scheme}: surf salvo na quarta`, JSON.stringify(db.perfis[0].semana));
     await p.click('[data-tela="treino"]'); await p.waitForTimeout(150);
     ok(/Treino 1 \+ Surf/.test(await txt(p, '#atividade')), `${scheme}: título do dia`, await txt(p, '#atividade'));
+    await p.click('#semana-det > summary'); await p.waitForTimeout(80); // RF-69: a semana começa recolhida
     ok(/Surf/.test(await p.locator('#dias .dia.hoje .tag-feito').innerText().catch(() => '')), `${scheme}: dia marca surf como feito`, await txt(p, '#dias .dia.hoje'));
     await p.click('[data-tela="dashboard"]'); await p.waitForTimeout(150);
     ok(/Surf 1 de 1/.test(await txt(p, '#metas')), `${scheme}: meta "1 de 1" com surf no plano`, await txt(p, '#metas'));

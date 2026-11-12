@@ -9,7 +9,8 @@ const ADM = {
   usuarios: [{ id: 'u1', nome: 'Marcelo Bauer', email: 'marcelo@exemplo.com', cadastro: '2026-08-01T12:00:00Z', ultimo_acesso: '2026-10-21T11:00:00Z', acessos: 40, semana: null, dias_jiu: [2, 4], sem_peso: [] }],
   checkins: [], eventos: [],
 };
-const ESPERADO = [/abriram o app ou fizeram check-in/, /Total de check-ins/, /check-ins do período ÷ usuários ativos ÷ semanas/, /semana montada em Você/, /entre 8 e 14 dias atrás/, /não abriram nem registraram nada nos últimos 7 dias/, /superou o próprio peso máximo/];
+// RF-69: Aderência ao plano e Usuários ativos vêm primeiro (em destaque).
+const ESPERADO = [/semana montada em Você/, /abriram o app ou fizeram check-in/, /Total de check-ins/, /check-ins do período ÷ usuários ativos ÷ semanas/, /entre 8 e 14 dias atrás/, /não abriram nem registraram nada nos últimos 7 dias/, /superou o próprio peso máximo/];
 (async () => {
   const srv = await H.servidor();
   const b = await chromium.launch();
@@ -38,8 +39,8 @@ const ESPERADO = [/abriram o app ou fizeram check-in/, /Total de check-ins/, /ch
     // tocar no balão fecha
     await botoes.nth(3).click(); await p.locator('#info-k4').click();
     ok(await p.locator('.info-txt:not([hidden])').count() === 0, `${tag}: tocar no balão fecha`);
-    await botoes.nth(0).click();
-    ok((await p.locator('#info-k1').innerText()).includes('compara com os 30 dias anteriores'), `${tag}: texto cita o período`);
+    await botoes.nth(1).click();
+    ok((await p.locator('#info-k2').innerText()).includes('compara com os 30 dias anteriores'), `${tag}: texto cita o período`);
     // fecha tocando fora
     await p.mouse.click(5, 5);
     ok(await p.locator('.info-txt:not([hidden])').count() === 0, `${tag}: fecha ao tocar fora`);

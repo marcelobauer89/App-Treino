@@ -4,6 +4,15 @@ const H = require('../apoio/harness.cjs');
 let fails = 0;
 const ok = (c, l, x = '') => { if (!c) fails++; console.log(`${c ? 'PASS' : 'FAIL'} ${l}${x ? ' — ' + x : ''}`); };
 const irPara = async (p, tela) => { await p.click(`.nav [data-tela="${tela}"]`); await p.waitForFunction(t => !document.getElementById(`tela-${t}`).hidden, tela); };
+// Desde o RF-69, o botão fica só com o ícone quando, aberto, cobriria um botão, campo ou dia do calendário.
+const cobririaAcao = (p) => p.evaluate(() => {
+  const fab = document.getElementById('fab-checkin'); const r = fab.getBoundingClientRect();
+  for (const y of [r.top + 10, r.top + r.height / 2, r.bottom - 10]) for (let x = r.right - 200; x <= r.right - 8; x += 10) {
+    const el = document.elementsFromPoint(x, y).find((e) => !fab.contains(e) && !e.closest('#fab-descanso, .nav, .ativo, .toast'));
+    if (el && el.closest('button, a[href], input, select, textarea, [role="button"], .cal-dia')) return true;
+  }
+  return false;
+});
 const caixa = (p, s) => p.evaluate((s) => { const r = document.querySelector(s).getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height, b: r.bottom }; }, s);
 (async () => {
   const srv = await H.servidor();
@@ -14,7 +23,7 @@ const caixa = (p, s) => p.evaluate((s) => { const r = document.querySelector(s).
     await p.goto(H.PAGINA); await H.prontos(p); await p.evaluate(() => document.fonts.ready);
     await p.waitForTimeout(300);
     const f = await caixa(p, '#fab-checkin'), nav = await caixa(p, '.nav');
-    ok(await p.isVisible('#fab-checkin') && f.w > 150 && f.h === 56, `${scheme}: expanded on Treino`, JSON.stringify(f));
+    ok(await p.isVisible('#fab-checkin') && f.h === 56 && (f.w > 150 || (f.w === 56 && await cobririaAcao(p))), `${scheme}: expanded on Treino (or icon only over an action)`, JSON.stringify(f));
     ok(f.x + f.w <= 375 - 15 && f.b <= nav.y - 15, `${scheme}: bottom-right above nav`);
     await p.screenshot({ path: `f-${scheme}-topo.png` });
     await p.mouse.wheel(0, 900); await p.waitForTimeout(400);
@@ -22,7 +31,7 @@ const caixa = (p, s) => p.evaluate((s) => { const r = document.querySelector(s).
     ok(e.w === 56 && e.h === 56, `${scheme}: collapses to circle when scrolling down`, JSON.stringify(e));
     await p.screenshot({ path: `f-${scheme}-encolhido.png` });
     await p.mouse.wheel(0, -200); await p.waitForTimeout(400);
-    ok((await caixa(p, '#fab-checkin')).w > 150, `${scheme}: expands when scrolling up`);
+    ok((await caixa(p, '#fab-checkin')).w > 150 || await cobririaAcao(p), `${scheme}: expands when scrolling up (unless over an action)`);
     if (scheme === 'light') {
       ok(await p.evaluate(() => document.documentElement.scrollWidth) === 375, 'no horizontal scroll');
       // abre o formulário com Treino 2; troca para jiu e salva
