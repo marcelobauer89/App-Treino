@@ -169,6 +169,13 @@ Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 a t6 nos check-i
 - **Hora de subir a carga?:** os exercícios com a mesma carga máxima há 3 meses seguidos ou mais ("parado", com a sugestão de +2 kg até 20 kg e +2,5 kg acima) e os que caíram em relação ao mês anterior ("caiu"). Sem nenhum, a seção não aparece.
 - Usa os check-ins e as cargas que o app já carrega (o histórico inteiro da conta); não precisa de SQL. Para esconder a Evolução, troque `EVOLUCAO_LIGADA` para `false` no `index.html`.
 
+### Atualização automática
+
+- A cada publicação, o GitHub Pages grava `versao.json` (o commit de cada ambiente: `/versao.json` e `/dev/versao.json`).
+- Quando a pessoa volta para o app (no máximo a cada 2 minutos), ele confere esse arquivo. Se a versão mudou, recarrega sozinho, mas só quando é seguro: sem janela aberta, sem campo em edição e sem séries esperando gravar. Senão, tenta de novo ao fechar a janela ou na próxima volta. O check-in em andamento fica no banco e volta depois de recarregar.
+- Assim quem deixa o app aberto em segundo plano também recebe as novidades. No Monitoramento aparece "O app se atualizou para a versão nova" (evento `app_atualizado`), seguido de "Abriu o app".
+- Sem o `versao.json` (rodando local), fica desligado. O arquivo é gravado pelo workflow **Publicar site** da `main`, que publica os dois ambientes.
+
 ### Aviso de novidade (Evolução)
 
 - Ao abrir o app, quem já usa (conta nova vê as boas-vindas) vê o aviso **"Sua evolução, mês a mês"**: uma ilustração do atalho Resumo | Evolução com as colunas subindo, os três destaques (treinos mês a mês, quanto falta para o plano, pesos e hora de subir a carga), **Ver minha evolução** (abre Dashboard → Evolução) e **Agora não**.

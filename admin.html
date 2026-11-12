@@ -2046,6 +2046,7 @@
 
   // ---------- Detalhe do usuário ----------
   const NOMES_EVENTO = {
+    app_atualizado: (d) => `O app se atualizou para a versão nova${d.para ? ` (${d.para})` : ''}`,
     sessao: (d) => `Abriu o app${d.navegador ? ` (${d.navegador}, ${d.sistema}${d.instalado ? ', instalado' : ''})` : ''}`,
     tela: (d) => `Abriu a tela ${NOMES_TELA[d.tela] || d.tela}`,
     evolucao_aberta: () => 'Abriu a Evolução (mês a mês) no Dashboard',
