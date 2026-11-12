@@ -1,4 +1,4 @@
-// Melhorias de UX (Leis de UX, RF-69): progresso "X de N feitos" na Ficha, cartão de exercício enxuto, − e + de 0,5 kg na carga,
+// Melhorias de UX (Leis de UX, RF-69): progresso "X de N feitos" na Ficha, cartão com os 4 graus e "Última vez", − e + de 0,5 kg na carga,
 // atividades da semana primeiro no check-in, semana recolhida no Treino, "Semanas seguidas no plano", Evolução comparando o
 // mesmo trecho do mês, botão de check-in que não cobre ações, botões de Meus treinos do mesmo tamanho e, no painel, números
 // em destaque, Quem sumiu no fim da Visão geral (como antes), tipos sem check-in numa linha só e Excluir conta só na ficha.
@@ -31,15 +31,13 @@ const CHECKINS = [...semana('2026-10-19'), ...semana('2026-10-26'), ...semana('2
 
     // Ficha: progresso do dia.
     const n = await p.locator('#list > li.ex').count();
-    ok(n > 0 && (await txt(p, '#count')) === `0 de ${n} feitos`, `${scheme}: Ficha começa com 0 de ${n} feitos`, await txt(p, '#count'));
+    ok(n > 0 && (await txt(p, '#count')) === `Treino de hoje: 0 de ${n} exercícios feitos`, `${scheme}: Ficha começa com 0 de ${n} exercícios feitos`, await txt(p, '#count'));
     ok((await p.getAttribute('#ficha-prog', 'aria-valuenow')) === '0' && (await p.getAttribute('#ficha-prog', 'aria-valuemax')) === String(n), `${scheme}: barra de progresso acessível`);
 
-    // Cartão enxuto: graus altos como etiquetas e os 4 graus recolhidos.
+    // Cartão: os 4 graus (hipertrofia, força, explosão e mobilidade) sempre visíveis, como antes.
     const primeiro = p.locator('#list > li.ex').first();
-    ok(await primeiro.locator('.ex-alto').count() >= 1, `${scheme}: graus altos como etiquetas`, await txt(p, '#list > li.ex .ex-altos'));
-    ok(!(await primeiro.locator('.graus').isVisible()), `${scheme}: os 4 graus começam recolhidos`);
-    await primeiro.locator('.graus-det summary').click(); await p.waitForTimeout(80);
-    ok(await primeiro.locator('.graus').isVisible(), `${scheme}: "Ver os 4 graus" abre os graus`);
+    const graus = await primeiro.locator('.graus dt').allInnerTexts();
+    ok(await primeiro.locator('.graus').isVisible() && graus.join('|') === 'Hipertrofia|Força|Explosão|Mobilidade', `${scheme}: os 4 graus visíveis no cartão`, graus.join('|'));
 
     // Carga: + e − de 0,5 kg, e o progresso sobe ao concluir.
     const comPeso = p.locator('#list > li.ex').nth(2);
@@ -49,7 +47,7 @@ const CHECKINS = [...semana('2026-10-19'), ...semana('2026-10-26'), ...semana('2
     await p.click('[data-passo="-0.5"][data-alvo="kg-0"]');
     ok((await p.inputValue('#kg-0')) === '1', `${scheme}: − tira 0,5 kg`, await p.inputValue('#kg-0'));
     await p.click('[data-concluir]'); await H.gravacoes(p);
-    ok((await txt(p, '#count')) === `1 de ${n} feitos` && (await p.getAttribute('#ficha-prog', 'aria-valuenow')) === '1', `${scheme}: progresso sobe para 1 de ${n}`, await txt(p, '#count'));
+    ok((await txt(p, '#count')) === `Treino de hoje: 1 de ${n} exercícios feitos` && (await p.getAttribute('#ficha-prog', 'aria-valuenow')) === '1', `${scheme}: progresso sobe para 1 de ${n}`, await txt(p, '#count'));
 
     // Semana recolhida no Treino: a tira com 7 dias e a lista ao abrir.
     ok(await p.locator('#semana-tira li').count() === 7 && !(await p.locator('#dias').isVisible()), `${scheme}: semana recolhida com a tira de 7 dias`);
