@@ -118,13 +118,14 @@
         auth: {
           onAuthStateChange(cb) {
             ouvintes.push(cb);
+            // atrasoSessao (ms): a resposta do login demora, como a biblioteca real tentando renovar sem internet (até 30 s).
             setTimeout(() => {
               const d = ler();
               // sessaoVencida + semRede: a biblioteca não consegue renovar a sessão e responde "sem sessão".
               cb('INITIAL_SESSION', d.semRede && d.sessaoVencida ? null : d.sessao);
               // Como a biblioteca real na volta do Google: também chega SIGNED_IN com a mesma sessão.
               if (d.sessao && d.doisEventos) cb('SIGNED_IN', d.sessao);
-            }, 0);
+            }, ler().atrasoSessao || 0);
             return { data: { subscription: { unsubscribe() {} } } };
           },
           async getSession() { return { data: { session: ler().sessao } }; },
