@@ -87,19 +87,23 @@
     mostrarCarga('Buscando seus treinos…');
     // Limpa o código de retorno do login do Google da barra de endereço.
     if (/[?&]code=/.test(location.search)) history.replaceState(null, '', location.pathname + location.hash);
+    const mesmaConta = () => usuario && usuario.id === sessao.user.id;
     try {
       await carregarDados();
+      if (!mesmaConta()) return; // saiu (ou o login caiu) enquanto carregava
       mostrarCarga('Conferindo seu acesso…');
       if (!(await temAcesso())) return;
       // Sem internet (abriu com a cópia do aparelho), a migração fica para a próxima abertura com internet.
       if (!modoOffline) await migrarDadosLocais();
     } catch (_) {
+      if (!mesmaConta()) return;
       // Sem internet: aviso amigável, e o app tenta de novo sozinho quando a conexão voltar (ver "online" abaixo).
       mostrarEntrada('erro', navigator.onLine === false
         ? 'Você está sem internet. Seus treinos aparecem aqui assim que a conexão voltar.'
         : 'Não foi possível carregar seus dados. Confira a internet e tente de novo.');
       return;
     }
+    if (!mesmaConta()) return;
     // Um quadro com a última etapa antes de montar a tela (antes da presença, que precisa ligar junto com a tela).
     mostrarCarga('Montando sua semana…');
     await new Promise((ok) => requestAnimationFrame(() => ok()));
@@ -179,25 +183,38 @@
     // Na volta do Google chegam dois eventos com a mesma sessão (INITIAL_SESSION e SIGNED_IN);
     // entrandoId garante que os dados sejam carregados uma vez só.
     let entrandoId = null;
+    // Abertura sem internet: com o login vencido, a biblioteca do Supabase passa até 30 s tentando renová-lo antes de
+    // responder (e aí responde "sem sessão"). Se a conta deixou a conta e a cópia dos dados neste aparelho (só somem
+    // ao sair), o app abre logo com elas: na hora quando o aparelho diz que está sem internet, e depois de 3 s sem
+    // resposta do login (Wi-Fi sem internet, sinal fraco). A sessão é renovada quando a internet voltar.
+    let entrouComCopia = false;
+    const guardado = usuarioGuardado();
+    if (guardado && temCopia(guardado.id)) {
+      const entrarComCopia = () => {
+        if (entrandoId) return;
+        entrandoId = guardado.id;
+        entrouComCopia = true;
+        entrarNoApp({ user: guardado });
+      };
+      setTimeout(entrarComCopia, navigator.onLine === false ? 0 : 3000);
+    }
     sb.auth.onAuthStateChange((evento, sessao) => {
       // Chamadas ao Supabase ficam fora do callback para não travar o cliente de autenticação.
       if (sessao) {
         if (entrandoId !== sessao.user.id) {
           entrandoId = sessao.user.id;
           setTimeout(() => entrarNoApp(sessao), 0);
+        } else if (entrouComCopia && usuario && usuario.id === sessao.user.id) {
+          // Abriu com a cópia e o login foi renovado: segue com a sessão e envia o que ficou guardado.
+          usuario = sessao.user;
+          setTimeout(() => voltouAInternet(), 0);
         }
         return;
       }
-      // Sem internet e com a sessão vencida, a biblioteca não consegue renová-la e responde "sem sessão". Se a conta
-      // deixou a cópia dos dados neste aparelho (só some ao sair), o app abre com ela; ao voltar a internet, a sessão
-      // é renovada e a fila de envio sai.
-      const guardado = evento === 'INITIAL_SESSION' && navigator.onLine === false ? usuarioGuardado() : null;
-      if (guardado) {
-        entrandoId = guardado.id;
-        setTimeout(() => entrarNoApp({ user: guardado }), 0);
-        return;
-      }
+      // Já aberto com a cópia e ainda sem internet: o "sem sessão" é a renovação que não deu certo, não um logout.
+      if (evento === 'INITIAL_SESSION' && entrouComCopia && usuario && (navigator.onLine === false || modoOffline)) return;
       entrandoId = null;
+      entrouComCopia = false;
       desligarPresenca();
       usuario = null;
       checkins = [];
