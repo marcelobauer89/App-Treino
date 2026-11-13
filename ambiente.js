@@ -20,6 +20,10 @@
   window.AMBIENTE = { dev: dev, url: p.url, chave: p.chave };
   if (!dev) return;
 
+  // App instalável do dev com outro nome ("[DEV] Gestão de Treinos"), para não confundir com o de verdade na tela inicial.
+  var manifesto = document.querySelector('link[rel="manifest"]');
+  if (manifesto) manifesto.setAttribute('href', 'manifest-dev.webmanifest');
+
   // Produção e desenvolvimento ficam no mesmo endereço (github.io), então dividem o localStorage.
   // No dev, todas as chaves ganham o prefixo "dev:": sessão, fila de check-ins e marcas não se misturam.
   try {

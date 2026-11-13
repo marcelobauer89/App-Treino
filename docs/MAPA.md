@@ -14,7 +14,7 @@ Ao criar, renomear ou apagar uma seção ou um teste, atualize este mapa no mesm
 | `admin.html`, `css/admin.css`, `js/admin.js` | Monitoramento (só administradores) |
 | `mundo.html` | Mundo ao vivo (só administradores) |
 | `privacidade.html` | Política de Privacidade |
-| `manifest.webmanifest`, `icones/`, `sw.js` | App instalável (PWA): manifesto, ícones e service worker (registrado no `js/inicio.js`) |
+| `manifest.webmanifest`, `manifest-dev.webmanifest`, `icones/`, `sw.js` | App instalável (PWA): manifesto, ícones e service worker (registrado no `js/inicio.js`) |
 | `ambiente.js` | Projeto Supabase de produção ou de testes (por endereço) e o selo DEV |
 | `supabase/schema.sql` | Banco inteiro (tabelas, RLS, funções); roda de novo sem duplicar |
 | `supabase/migracoes/` | Uma mudança do banco por arquivo (`NNN-descricao.sql`), para rodar só o que mudou |
@@ -64,6 +64,7 @@ Na ordem de carga. Cada linha é uma seção (comentário `// ---------- Nome --
 | Jornadas prontas | Objetivos com treinos prontos |
 | Animação "Montando seus treinos" | |
 | Aviso da novidade / Novidade: Evolução | Avisos ao abrir o app |
+| Instalar o app | Linha em Você: pedido do navegador (Android) ou passo a passo (iPhone) |
 | **`js/telas.js`** | |
 | Telas | Navegação e endereço (`#tela`) |
 | Eventos | Cliques e formulários (delegação) |
@@ -115,5 +116,5 @@ Rode só os da área mexida: `node tests/rodar.cjs test20 test22 …`.
 | Painel: catálogo de exercícios | test74 |
 | Resumo semanal por e-mail | test30, test60 e `cd tests && npm run edge` |
 | Banco (`schema.sql`) | `tests/sql/rodar.sh` |
-| App instalável (PWA) e service worker | test83 |
+| App instalável (PWA), service worker, Instalar o app e sem internet | test83, test84 |
 | Harness dos testes (`tests/apoio/`) | todos |

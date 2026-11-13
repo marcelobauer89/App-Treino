@@ -107,9 +107,10 @@ Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 a t6 nos check-i
 ## App instalável (PWA)
 
 - **Instalar:** no Android (Chrome), menu ⋮ → **Instalar app** ou **Adicionar à tela inicial**; no iPhone (Safari), **Compartilhar → Adicionar à Tela de Início**. O app abre em tela cheia, com o ícone "GT" (`icones/`) e o nome "Treinos".
-- **Manifesto:** `manifest.webmanifest` (nome, cores, ícones 192, 512 e maskable). O `/dev/` instala como um app separado, com o próprio escopo.
+- **Instalar o app (em Você):** a linha aparece no Android quando o Chrome oferece a instalação (um toque abre o pedido do navegador) e no iPhone (abre o passo a passo do Safari). Some quando o app já está instalado e nos navegadores que não instalam apps. Evento `app_instalar` (instalou, desistiu ou passos_iphone) no Monitoramento.
+- **Manifesto:** `manifest.webmanifest` (nome, cores, ícones 192, 512 e maskable). O `/dev/` usa o `manifest-dev.webmanifest` ("[DEV] Gestão de Treinos", trocado pelo `ambiente.js`) e instala como um app separado, com o próprio escopo. Metas do iPhone (`apple-mobile-web-app-capable`, barra de status) no `index.html`.
 - **Service worker (`sw.js`):** registrado no `js/inicio.js`, só em https (no computador, em `localhost`, fica desligado). Sempre busca na rede primeiro, então quem está on-line recebe a versão nova na hora; quando a rede falha, usa a cópia dos arquivos do site (HTML, `css/`, `js/`, fontes, ícones) e da biblioteca do Supabase. Os dados e o `versao.json` nunca passam por ele. Produção e `/dev/` têm caches separados.
-- **Sem internet:** o app abre, mas os dados (treinos, check-ins) ainda precisam de internet. O modo offline com sincronização continua no roadmap (RF-04).
+- **Sem internet:** o app abre e mostra "Você está sem internet. Seus treinos aparecem aqui assim que a conexão voltar."; quando a internet volta, ele tenta de novo sozinho. Na tela de entrada, avisa que é preciso internet para entrar com o Google. Os dados (treinos, check-ins) ainda precisam de internet. O modo offline com sincronização continua no roadmap (RF-04).
 - **Login no app instalado:** no iPhone, o app instalado guarda a sessão separada do Safari, então pede o login do Google uma vez.
 
 ## Catálogo de exercícios e objetivos

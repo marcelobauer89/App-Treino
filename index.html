@@ -22,6 +22,10 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="icones/icone-192.png">
 <link rel="apple-touch-icon" href="icones/apple-touch-icon.png">
+<!-- iPhone e Android: instalado na tela inicial, abre em tela cheia. -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <script src="ambiente.js"></script>
 <script>
   // Aplica o tema escolhido antes da primeira pintura, para a tela não piscar.
@@ -234,6 +238,9 @@
       <li><button class="voce-linha" type="button" data-voce="temporizador"><svg class="voce-ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9.5 2.5h5M12 2.5V5"/></svg><span class="voce-rotulo">Temporizador</span><span class="voce-valor" id="valor-temporizador"></span><svg class="voce-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button></li>
       <li><button class="voce-linha" type="button" data-voce="notificacoes"><svg class="voce-ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8"/><path d="M10.3 20a2 2 0 0 0 3.4 0"/></svg><span class="voce-rotulo">Notificações</span><span class="voce-valor" id="valor-notificacoes"></span><svg class="voce-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button></li>
       <li><button class="voce-linha" type="button" data-voce="privacidade"><svg class="voce-ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span class="voce-rotulo">Privacidade</span><svg class="voce-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button></li>
+    </ul>
+    <ul class="voce-grupo" aria-label="App" id="grupo-instalar" hidden>
+      <li><button class="voce-linha" type="button" id="instalar-app"><svg class="voce-ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M12 7.5v7M9 11.5l3 3 3-3M10.5 18.5h3"/></svg><span class="voce-rotulo">Instalar o app</span><span class="voce-valor">Na tela inicial</span><svg class="voce-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button></li>
     </ul>
     <ul class="voce-grupo" aria-label="Conta">
       <li><button class="voce-linha perigo" type="button" id="sair"><svg class="voce-ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg><span class="voce-rotulo">Sair da conta</span></button></li>
@@ -474,6 +481,9 @@
   <button class="foto-ver-fechar" type="button" data-fechar aria-label="Fechar"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
   <img id="foto-ver-img" alt="Foto do check-in">
   <p id="foto-ver-legenda"></p>
+</dialog>
+<dialog class="modal" id="instalar-dialog" aria-labelledby="instalar-title">
+  <div class="modal-body" id="instalar-body"></div>
 </dialog>
 <dialog class="modal" id="excluir-dialog" aria-labelledby="excluir-title">
   <div class="modal-body" id="excluir-body"></div>
