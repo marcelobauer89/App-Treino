@@ -302,9 +302,8 @@
   .vazio button { margin-top: 10px; }
 
   /* Semana */
-  .semana { margin-top: 32px; }
   .semana h2 { margin-bottom: 10px; }
-  /* Semana recolhida: uma tira com os 7 dias (feito, hoje); a lista completa abre ao tocar (o Dashboard tem o detalhe). */
+  /* Semana recolhida: uma tira com os 7 dias (feito, hoje); a lista completa abre ao tocar. */
   .semana-det > summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 4px 12px; }
   .semana-det > summary::-webkit-details-marker { display: none; }
   .semana-det > summary h2 { margin: 0; }
@@ -1662,18 +1661,6 @@
       <ol class="exercicios" id="list" aria-live="polite"></ol>
     </section>
 
-    <section class="semana" aria-labelledby="semana-titulo">
-      <details class="semana-det" id="semana-det">
-        <summary>
-          <h2 class="secao" id="semana-titulo">Semana</h2>
-          <ol class="semana-tira" id="semana-tira" aria-hidden="true"></ol>
-          <span class="semana-ver">Ver a semana</span>
-        </summary>
-        <ol class="dias" id="dias"></ol>
-        <p class="semana-nota" id="semana-nota">Pernas fica na sexta para ter o fim de semana de recuperação e não pesar antes do jiu de terça.</p>
-      </details>
-    </section>
-
     <footer>
       <ul class="legenda" aria-label="Legenda dos graus">
         <li><span class="ponteira" data-nivel="3" aria-hidden="true"><i></i><i></i><i></i></span>Alta contribuição</li>
@@ -1704,6 +1691,17 @@
       <span id="semana-atual-datas"></span>
     </div>
     <ul class="metas" id="metas"></ul>
+  </section>
+  <section class="bloco semana" aria-labelledby="semana-titulo">
+    <details class="semana-det" id="semana-det">
+      <summary>
+        <h2 class="secao" id="semana-titulo">Semana</h2>
+        <ol class="semana-tira" id="semana-tira" aria-hidden="true"></ol>
+        <span class="semana-ver">Ver a semana</span>
+      </summary>
+      <ol class="dias" id="dias"></ol>
+      <p class="semana-nota" id="semana-nota">Pernas fica na sexta para ter o fim de semana de recuperação e não pesar antes do jiu de terça.</p>
+    </details>
   </section>
   <section class="bloco" aria-labelledby="cal-titulo">
     <div class="cal">

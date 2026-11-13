@@ -49,11 +49,14 @@ const CHECKINS = [...semana('2026-10-19'), ...semana('2026-10-26'), ...semana('2
     await p.click('[data-concluir]'); await H.gravacoes(p);
     ok((await txt(p, '#count')) === `Treino de hoje: 1 de ${n} exercícios feitos` && (await p.getAttribute('#ficha-prog', 'aria-valuenow')) === '1', `${scheme}: progresso sobe para 1 de ${n}`, await txt(p, '#count'));
 
-    // Semana recolhida no Treino: a tira com 7 dias e a lista ao abrir.
+    // Semana recolhida no Dashboard: a tira com 7 dias e a lista ao abrir.
+    ok(!(await p.locator('#semana-det').isVisible()), `${scheme}: a semana não fica mais no Treino`);
+    await p.click('[data-tela="dashboard"]'); await p.waitForTimeout(150); 
     ok(await p.locator('#semana-tira li').count() === 7 && !(await p.locator('#dias').isVisible()), `${scheme}: semana recolhida com a tira de 7 dias`);
     ok(await p.locator('#semana-tira li.feito').count() === 4, `${scheme}: tira marca os 4 dias feitos`, String(await p.locator('#semana-tira li.feito').count()));
     await p.click('#semana-det > summary'); await p.waitForTimeout(80);
     ok(await p.locator('#dias').isVisible(), `${scheme}: "Ver a semana" abre a lista`);
+    await p.click('[data-tela="treino"]'); await p.waitForTimeout(150);
 
     // Check-in: atividades da semana primeiro; o resto em "Outras atividades".
     await p.click('#fab-checkin'); await p.waitForTimeout(150);
