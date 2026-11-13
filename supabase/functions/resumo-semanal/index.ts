@@ -36,6 +36,19 @@ const GRUPOS: [string, string, string][] = [['musc', 'Musculação', '#2a78d6'],
   ['futebol', 'Futebol', '#a2bc75'], ['futvolei', 'Futvôlei', '#8494d6']];
 // Muay Thai, Surf, Futebol e Futvôlei só aparecem no e-mail de quem fez ou planejou; os outros continuam com 3 cartões.
 const OPCIONAIS = ['muay', 'surf', 'futebol', 'futvolei'];
+// Tipos cadastrados no painel (tabela tipos_checkin): os novos entram como opcionais, com a cor do tema claro.
+// Os do app mantêm a cor do e-mail; o nome segue o do painel.
+export function aplicarTiposCheckin(linhas: { id: string; nome: string; selo: string; cor?: string | null; ordem?: number }[]) {
+  const lista = (linhas || []).filter((t) => t && /^[a-z][a-z0-9_]{1,19}$/.test(t.id) && !/^t\d+$/.test(t.id) && t.id !== 'musc')
+    .sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
+  for (const t of lista) {
+    TIPOS[t.id] = { nome: t.nome, grupo: t.id, selo: t.selo };
+    const g = GRUPOS.find(([id]) => id === t.id);
+    if (g) g[1] = t.nome;
+    else GRUPOS.push([t.id, t.nome, /^#[0-9a-fA-F]{6}$/.test(t.cor || '') ? t.cor as string : '#6b7280']);
+    if (!OPCIONAIS.includes(t.id) && !['jiu', 'bike'].includes(t.id)) OPCIONAIS.push(t.id);
+  }
+}
 const gruposDe = (r: { porGrupo: Record<string, number>; muayNoPlano?: boolean; surfNoPlano?: boolean; noPlano?: string[] }) =>
   GRUPOS.filter(([g]) => !OPCIONAIS.includes(g) || r.porGrupo[g] > 0 || (r.noPlano || []).includes(g)
     || (g === 'muay' && r.muayNoPlano) || (g === 'surf' && r.surfNoPlano));
@@ -91,8 +104,8 @@ export function montarResumo(u: Perfil, checkins: Checkin[], recordes: Recorde[]
   const dia = (c: Checkin) => String(c.inicio).slice(0, 10);
   const daSemana = meus.filter((c) => dia(c) >= p.ini && dia(c) <= p.fim);
   const anterior = meus.filter((c) => dia(c) >= p.antIni && dia(c) <= p.antFim).length;
-  const porGrupo: Record<string, number> = { musc: 0, jiu: 0, bike: 0, muay: 0, surf: 0, futebol: 0, futvolei: 0 };
-  daSemana.forEach((c) => { porGrupo[(TIPOS[c.tipo] || TIPOS.t1).grupo] += 1; });
+  const porGrupo: Record<string, number> = Object.fromEntries(GRUPOS.map(([g]) => [g, 0]));
+  daSemana.forEach((c) => { const g = (TIPOS[c.tipo] || TIPOS.t1).grupo; porGrupo[g] = (porGrupo[g] || 0) + 1; });
   const dias = [...new Set(daSemana.map(dia))].sort();
   const planejadas = planejadasPorSemana(u);
   const nomesRecorde = [...new Set(recordes.filter((r) => r.usuario_id === u.id && r.dados && r.dados.exercicio)
@@ -553,6 +566,9 @@ export function criarHandler({ db, enviar, env, agora = () => new Date() }: Deps
     if (!modo) return json({ erro: 'diga o que fazer: enviar, previa ou simular', recebido: texto.slice(0, 200) }, 400);
 
     const p = periodo(agora());
+    // Tipos de check-in cadastrados no painel (sem a tabela, ficam os do app).
+    const { data: tiposDb } = await db.from('tipos_checkin').select('id, nome, selo, cor, ordem').then((r: { data: unknown }) => r, () => ({ data: null }));
+    if (Array.isArray(tiposDb)) aplicarTiposCheckin(tiposDb);
     const perfisQ = db.from('perfis').select('id, nome, email, semana, dias_jiu, emails_resumo, acessos, liberado, ultimo_acesso, treinos');
     const { data: perfis, error: e1 } = corpo.previa
       ? await perfisQ.ilike('email', corpo.previa.replace(/[\\%_]/g, '\\$&')) // sem diferenciar maiúsculas

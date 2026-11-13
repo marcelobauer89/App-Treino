@@ -11,6 +11,7 @@ Ao mudar um recurso, atualize só a seção dele (ache pelo índice).
 - [Atualização automática](#atualização-automática)
 - [Aviso de novidade (Evolução)](#aviso-de-novidade-evolução)
 - [Futebol e Futvôlei](#futebol-e-futvôlei)
+- [Tipos de check-in (painel) e Cardio com km](#tipos-de-check-in-painel-e-cardio-com-km)
 - [Celebração do check-in](#celebração-do-check-in)
 - [Temporizador de descanso](#temporizador-de-descanso)
 - [Jornadas prontas](#jornadas-prontas)
@@ -39,6 +40,7 @@ Cada pessoa pode montar até 6 treinos (t1 a t6), com até 15 exercícios cada, 
 - **Desfazer e versão anterior:** ao salvar, aparece "Desfazer" por 8 s, e a versão de antes (treinos e semana) fica em `perfis.treinos_anterior`. Em Você → Meus treinos, "Restaurar versão anterior" traz ela de volta depois.
 - **Treino excluído:** sai da semana. Os check-ins e pesos dele continuam no Dashboard, com o nome "Treino N".
 - **Histórico de pesos:** a carga da última vez e os recordes seguem o exercício em qualquer treino.
+- **Animação ao salvar:** mostra só os treinos que mudaram, com os exercícios novos primeiro e marcados como "Novo"; a semana só aparece se ela mudou (ex.: um treino excluído). Excluir este treino e Voltar ao plano pronto têm a largura toda e 48 px, como os outros botões.
 
 Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 a t6 nos check-ins e nas cargas e cria as colunas `treinos`, `novidade_treinos` e `novidade_oculta`.
 
@@ -72,6 +74,15 @@ Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 a t6 nos check-i
 
 - Tipos de check-in `futebol` (selo F) e `futvolei` (selo V), cada um com cor própria e 90 min por padrão. Entram no check-in, na Minha semana, no Dashboard, no resumo semanal por e-mail e no monitoramento.
 - **Para ligar:** rode de novo o `supabase/schema.sql` (o banco passa a aceitar os dois tipos) e publique de novo a função `resumo-semanal`.
+
+## Tipos de check-in (painel) e Cardio com km
+
+- **No painel → Tipos de check-in:** o administrador cria e muda as atividades além da musculação: nome, letra do selo, cor no tema claro e no escuro, duração padrão, posição na lista, ativo e **modalidades** (cada uma com "Pede os km"). Vale para todos ao abrir o app, sem publicar nada.
+- **No app:** os tipos ativos aparecem no check-in, na Minha semana, nas metas da semana e na Evolução, na ordem do painel. Desativar tira o tipo do check-in e da semana; os check-ins antigos continuam com o nome. Um tipo novo ganha a cor escolhida; os do app (Jiu Jitsu, Muay Thai, Surf, Futebol, Futvôlei, Cardio) continuam com a cor de cada tema e estilo, a menos que o administrador escolha outra.
+- **Cardio:** vem com as modalidades Bike e Corrida, as duas pedindo os km. No check-in de Cardio a pessoa escolhe a modalidade (opcional) e, se ela pede km, informa a distância (ex.: 12,5). O Dashboard mostra "Corrida · 7,5 km" no check-in.
+- **No banco:** tabela `tipos_checkin` (id, nome, selo, cor, cor_escura, duracao, ordem, ativo, modalidades) e colunas `checkins.modalidade` e `checkins.km`. O id do tipo vem do nome (sem acento) e não muda depois; um gatilho só aceita check-in de tipo cadastrado (ou t1 a t6). O app guarda uma cópia dos tipos no aparelho.
+- **E-mail semanal:** os tipos novos entram como os opcionais (só para quem fez ou planejou), com a cor do tema claro.
+- **Para ligar:** rode `supabase/migracoes/002-tipos-de-checkin.sql` no Supabase e publique de novo a função `resumo-semanal`. Sem a migração, o app continua com os tipos de sempre e o check-in não mostra a modalidade.
 
 ## Celebração do check-in
 
@@ -110,7 +121,7 @@ Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 a t6 nos check-i
 - **Manifesto:** `manifest.webmanifest` (nome, cores, ícones 192, 512 e maskable). O `/dev/` usa o `manifest-dev.webmanifest` ("[DEV] Gestão de Treinos", trocado pelo `ambiente.js`) e instala como um app separado, com o próprio escopo. Metas do iPhone (`apple-mobile-web-app-capable`, barra de status) no `index.html`.
 - **Service worker (`sw.js`):** registrado no `js/inicio.js`, só em https (no computador, em `localhost`, fica desligado). Sempre busca na rede primeiro, então quem está on-line recebe a versão nova na hora; quando a rede falha, usa a cópia dos arquivos do site (HTML, `css/`, `js/`, fontes, ícones) e da biblioteca do Supabase. Os dados e o `versao.json` nunca passam por ele. Produção e `/dev/` têm caches separados.
 - **Sem internet (RF-04):**
-  - **Cópia dos dados:** a cada abertura com internet, o app guarda no aparelho o perfil, os check-ins, os pesos e os vídeos (`bauer-copia-<id>`). Sem internet (ou com a internet tão ruim que a busca passa de 15 s), abre com essa cópia. Se a sessão do login venceu e não dá para renová-la sem internet, entra com a conta guardada (`bauer-copia-usuario`) e renova quando a conexão volta.
+  - **Cópia dos dados:** a cada abertura com internet, o app guarda no aparelho o perfil, os check-ins, os pesos e os vídeos (`bauer-copia-<id>`). Sem internet (ou com a internet tão ruim que a busca passa de 15 s), abre com essa cópia. Não espera o login: sem internet e com o login vencido, a biblioteca do Supabase passa até 30 s tentando renová-lo; com a conta (`bauer-copia-usuario`) e a cópia guardadas, o app abre na hora quando o aparelho diz que está sem internet, e depois de 3 s sem resposta do login (Wi-Fi sem internet, sinal fraco). O "sem sessão" que chega depois, ainda sem internet, não tira a pessoa do app; quando a internet volta, o login é renovado e a fila sai. A busca no servidor desiste em 8 s e usa a cópia. A cópia só existe depois de abrir o app uma vez com internet nesta versão.
   - **Fila de envio:** toda gravação (check-in, excluir check-in, pesos, perfil, treinos, semana, temporizador, observações) vira um pedido guardado no aparelho (`bauer-pendentes-<id>`) e enviado na ordem. Sem internet, fica guardado (mesmo fechando o app), aparece o aviso "Sem internet: ficou guardado no aparelho e será salvo na sua conta assim que a internet voltar." e, no topo, a faixa com o ícone de sem wi-fi: "Sem internet. N alterações guardadas no aparelho; serão salvas na sua conta assim que a internet voltar." A faixa conta alterações, não envios: os pesos de um treino num dia vão num envio só, mas cada exercício com peso mudado conta uma; várias edições do mesmo check-in contam uma; cada ajuste do perfil (semana, treinos, tema…) conta um. Quando a internet volta (ou o app volta para a frente, ou a cada 30 s), a fila sai sozinha, aparece "Conexão de volta: suas alterações foram enviadas." e o app busca os dados do servidor de novo. Um pedido recusado pelo banco por outro motivo sai da fila com o aviso de sempre e recarrega do servidor.
   - **Sair:** com alterações ainda não enviadas, o app não deixa sair (avisa para conectar antes). Ao sair ou excluir a conta, a cópia e a fila são apagadas do aparelho.
   - **Precisam de internet:** entrar com o Google pela primeira vez, a foto do check-in (o check-in fica salvo e o aviso pede para adicionar a foto depois), convites e pedido de acesso, baixar meus dados e excluir a conta. Os eventos de uso já tinham fila própria.

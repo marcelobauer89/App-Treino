@@ -28,6 +28,21 @@
     futebol: { nome: 'Futebol', selo: 'F', grupo: 'futebol' }, futvolei: { nome: 'Futvôlei', selo: 'V', grupo: 'futvolei' },
   };
   const GRUPOS = [['musc', 'Musculação'], ['jiu', 'Jiu Jitsu'], ['bike', 'Cardio'], ['muay', 'Muay Thai'], ['surf', 'Surf'], ['futebol', 'Futebol'], ['futvolei', 'Futvôlei']];
+  const TIPOS_DO_APP = ['jiu', 'muay', 'surf', 'futebol', 'futvolei', 'bike'];
+  // Tipos cadastrados (tabela tipos_checkin): nomes, selos e cores dos gráficos. Sem a tabela, ficam os de cima.
+  function aplicarTiposAdmin(linhas) {
+    const lista = (linhas || []).filter((t) => t && t.id).sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
+    if (!lista.length) return;
+    lista.forEach((t) => { TIPOS[t.id] = { nome: t.nome, selo: t.selo, grupo: t.id }; });
+    GRUPOS.splice(1, GRUPOS.length - 1, ...lista.map((t) => [t.id, t.nome]));
+    const css = lista.filter((t) => t.cor || !TIPOS_DO_APP.includes(t.id)).map((t) => {
+      const c = t.cor || '#6b7280', e = t.cor_escura || c, id = t.id;
+      return `:root{--${id}:${c}}@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--${id}:${e}}}:root[data-theme="dark"]{--${id}:${e}}.selo.${id}{background:var(--${id})}`;
+    }).join('\n');
+    let el = document.getElementById('cores-tipos');
+    if (!el) { el = document.createElement('style'); el.id = 'cores-tipos'; document.head.appendChild(el); }
+    el.textContent = css;
+  }
   const CURTOS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
   const ORDEM_SEMANA = [1, 2, 3, 4, 5, 6, 0];
 
@@ -171,6 +186,7 @@
     $('atualizar').classList.add('girando');
     const desde = eventosNecessarios(periodo);
     const argsEventos = desde ? { desde: deYmd(desde).toISOString() } : undefined;
+    const tiposP = sb.from('tipos_checkin').select('*').then((r) => r, () => ({ error: true }));
     const [u, c, e, em, cv] = await Promise.all([['admin_usuarios'], ['admin_checkins'], ['admin_eventos', argsEventos], ['admin_emails'], ['admin_convites']].map(([nome, args]) => todas(nome, args)));
     $('atualizar').disabled = false;
     $('atualizar').classList.remove('girando');
@@ -179,6 +195,10 @@
     }
     // Sem a função admin_emails (schema antigo), só a aba E-mails fica sem dados.
     eventosDesde = desde;
+    const tr = await tiposP;
+    tps.lista = tr.error ? null : tr.data || [];
+    tps.erro = tr.error ? (tr.error.message || 'sem-sql') : '';
+    if (tps.lista) aplicarTiposAdmin(tps.lista);
     dados = { usuarios: u.data || [], checkins: (c.data || []).filter((x) => TIPOS[x.tipo]), eventos: e.data || [],
       emails: em.error ? null : (em.data || []).filter((x) => x.tipo === 'resumo_semanal'), erroEmails: em.error ? em.error.message : '',
       convites: cv.error ? null : cv.data || [] };
@@ -197,6 +217,7 @@
     if (primeira) entrarEmCascata();
     ligarOnline();
     carregarExercicios();
+    renderTipos();
   }
 
   // Primeira abertura: os blocos da aba visível entram um depois do outro (sem movimento, se o sistema pedir).
@@ -983,7 +1004,7 @@
   }
 
   // ---------- Abas ----------
-  const ABAS = ['geral', 'usuarios', 'saude', 'emails', 'convites', 'exercicios'];
+  const ABAS = ['geral', 'usuarios', 'saude', 'emails', 'convites', 'exercicios', 'tipos'];
   let aba = ABAS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'geral';
   // Gráficos são desenhados na largura real, então são redesenhados ao aparecer.
   function renderVisivel() {
@@ -1906,6 +1927,138 @@
     larguraAnterior = innerWidth;
     clearTimeout(timerTamanho);
     timerTamanho = setTimeout(renderVisivel, 150);
+  });
+
+  // ---------- Tipos de check-in (tabela tipos_checkin) ----------
+  // Leitura direta da tabela (todos leem) e gravação pela função admin_salvar_tipo_checkin (só administradores).
+  const tps = { lista: null, erro: '', atual: null };
+  const corDoTipo = (id) => getComputedStyle(document.documentElement).getPropertyValue(`--${id}`).trim();
+  const hex6 = (c) => (/^#[0-9a-f]{6}$/i.test(c) ? c : /^#[0-9a-f]{3}$/i.test(c) ? `#${[...c.slice(1)].map((x) => x + x).join('')}` : '#6b7280');
+  async function carregarTipos() {
+    const r = await sb.from('tipos_checkin').select('*').then((x) => x, () => ({ error: { message: 'sem-sql' } }));
+    tps.lista = r.error ? null : r.data || [];
+    tps.erro = r.error ? r.error.message || 'sem-sql' : '';
+    if (tps.lista) aplicarTiposAdmin(tps.lista);
+    renderTipos();
+  }
+  function renderTipos() {
+    const lista = $('tp-lista');
+    $('tp-novo').disabled = !tps.lista;
+    if (!tps.lista) {
+      lista.innerHTML = `<p class="vazio">${/tipos_checkin|schema cache|does not exist|sem-sql/.test(tps.erro)
+        ? 'Os tipos de check-in ainda não estão no banco: rode a migração supabase/migracoes/002-tipos-de-checkin.sql no Supabase. Enquanto isso, o app usa os tipos que vêm com ele.'
+        : tps.erro ? `Não foi possível carregar os tipos. ${esc(tps.erro)}` : 'Carregando…'}</p>`;
+      return;
+    }
+    const usos = {};
+    ((dados && dados.checkins) || []).forEach((c) => { usos[c.tipo] = (usos[c.tipo] || 0) + 1; });
+    const itens = [...tps.lista].sort((a, b) => (b.ativo - a.ativo) || (a.ordem || 0) - (b.ordem || 0));
+    lista.innerHTML = itens.length ? itens.map((t) => {
+      const mods = (t.modalidades || []).map((m) => `${esc(m.nome)}${m.km ? ' (km)' : ''}`).join(', ');
+      return `
+      <div class="conv-item ex-item tp-item">
+        <b><span class="selo ${esc(t.id)}" aria-hidden="true">${esc(t.selo)}</span> ${esc(t.nome)}${t.ativo ? '' : ' <span class="conv-estado desativado">Desativado</span>'}</b>
+        <small>Duração padrão ${t.duracao} min${mods ? ` · Modalidades: ${mods}` : ''} · ${usos[t.id] ? `${usos[t.id]} check-in${usos[t.id] > 1 ? 's' : ''}` : 'nenhum check-in'}</small>
+        <span class="conv-botoes"><button class="excluir-btn editar-btn" type="button" data-tp-editar="${esc(t.id)}" aria-label="Editar ${esc(t.nome)}" title="Editar tipo">${ICON.lapis}</button></span>
+      </div>`;
+    }).join('') : '<p class="vazio">Nenhum tipo cadastrado.</p>';
+  }
+  function modalidadeLinhaHTML(m = { nome: '', km: false }) {
+    return `
+            <div class="tp-mod">
+              <label class="ex-campo">Nome<input class="tp-mod-nome" maxlength="30" autocomplete="off" value="${esc(m.nome)}" placeholder="Ex.: Corrida"></label>
+              <label class="excluir-entendi"><input type="checkbox" class="tp-mod-km"${m.km ? ' checked' : ''}><span>Pede os km</span></label>
+              <button class="excluir-btn" type="button" data-tp-mod-tirar aria-label="Tirar modalidade" title="Tirar modalidade">${ICON.lixeira}</button>
+            </div>`;
+  }
+  function abrirTipo(id) {
+    const t = id ? tps.lista.find((x) => x.id === id) : null;
+    if (id && !t) return;
+    tps.atual = t;
+    const ordemNova = Math.max(0, ...tps.lista.map((x) => x.ordem || 0)) + 1;
+    const v = t || { nome: '', selo: '', cor: '#0e7490', cor_escura: '', duracao: 60, ordem: ordemNova, ativo: true, modalidades: [] };
+    const cor = hex6(v.cor || (t ? corDoTipo(t.id) : '#0e7490'));
+    const corEscura = hex6(v.cor_escura || v.cor || cor);
+    $('tp-body').innerHTML = `
+      <form class="ex-form" id="tp-form" novalidate>
+        <div class="ex-topo"><h2 id="tp-title">${t ? 'Editar tipo de check-in' : 'Novo tipo de check-in'}</h2>
+          <button class="excluir-fechar" type="button" data-tp-fechar aria-label="Fechar">${ICON.xis}</button></div>
+        <div class="ex-meio">
+          <label class="ex-campo">Nome<input id="tp-nome" maxlength="40" autocomplete="off" value="${esc(v.nome)}" placeholder="Ex.: Natação" required></label>
+          <div class="ex-grade2">
+            <label class="ex-campo">Letra do selo<input id="tp-selo" maxlength="2" autocomplete="off" value="${esc(v.selo)}" placeholder="Ex.: N"></label>
+            <label class="ex-campo">Duração (min)<input id="tp-duracao" inputmode="numeric" maxlength="3" autocomplete="off" value="${v.duracao}"></label>
+          </div>
+          <div class="ex-grade2">
+            <label class="ex-campo">Cor no claro<input id="tp-cor" type="color" value="${cor}"></label>
+            <label class="ex-campo">Cor no escuro<input id="tp-cor-escura" type="color" value="${corEscura}"></label>
+          </div>
+          ${t && TIPOS_DO_APP.includes(t.id) && !t.cor ? '<p class="ex-dica">Este tipo usa a cor do app em cada tema e estilo. Mude as cores só se quiser outra.</p>' : ''}
+          <label class="ex-campo">Posição na lista<input id="tp-ordem" inputmode="numeric" maxlength="3" autocomplete="off" value="${v.ordem}"></label>
+          <fieldset class="ex-bloco"><legend>Modalidades (opcional)</legend>
+            <p class="ex-dica">Aparecem no check-in deste tipo para a pessoa escolher (ex.: Cardio → Bike e Corrida). Marque "Pede os km" para pedir a distância.</p>
+            <div id="tp-mods">${(v.modalidades || []).map(modalidadeLinhaHTML).join('')}</div>
+            <button class="btn-sec" type="button" id="tp-mod-mais">Adicionar modalidade</button>
+          </fieldset>
+          <label class="excluir-entendi"><input type="checkbox" id="tp-ativo"${v.ativo ? ' checked' : ''}><span>Ativo: aparece no check-in e na Minha semana</span></label>
+          <p class="excluir-erro" id="tp-erro" role="alert" hidden></p>
+        </div>
+        <div class="ex-rodape">
+          <button class="btn-sec" type="button" data-tp-fechar>Cancelar</button>
+          <button class="btn" type="submit" id="tp-salvar">${t ? 'Salvar' : 'Criar tipo'}</button>
+        </div>
+      </form>`;
+    $('tp-dialog').dataset.corMexida = '';
+    $('tp-dialog').showModal();
+    if (!t) $('tp-nome').focus();
+  }
+  $('tp-lista').addEventListener('click', (ev) => {
+    const b = ev.target.closest('[data-tp-editar]');
+    if (b) abrirTipo(b.dataset.tpEditar);
+  });
+  $('tp-novo').addEventListener('click', () => abrirTipo(null));
+  $('tp-dialog').addEventListener('input', (ev) => {
+    if (ev.target.type === 'color') $('tp-dialog').dataset.corMexida = '1';
+    // Tipo novo: a letra do selo acompanha o nome até ser mudada.
+    if (ev.target.id === 'tp-nome' && !tps.atual && !$('tp-selo').dataset.mexida) $('tp-selo').value = ev.target.value.trim().charAt(0).toUpperCase();
+    if (ev.target.id === 'tp-selo') ev.target.dataset.mexida = '1';
+    $('tp-erro').hidden = true;
+  });
+  $('tp-dialog').addEventListener('click', (ev) => {
+    if (ev.target === $('tp-dialog') || ev.target.closest('[data-tp-fechar]')) return $('tp-dialog').close();
+    if (ev.target.closest('#tp-mod-mais')) {
+      $('tp-mods').insertAdjacentHTML('beforeend', modalidadeLinhaHTML());
+      return $('tp-mods').lastElementChild.querySelector('input').focus();
+    }
+    const tirar = ev.target.closest('[data-tp-mod-tirar]');
+    if (tirar) tirar.closest('.tp-mod').remove();
+  });
+  $('tp-dialog').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const t = tps.atual;
+    const erro = (msg) => { $('tp-erro').textContent = msg; $('tp-erro').hidden = !msg; if (msg) $('tp-erro').scrollIntoView({ block: 'nearest' }); };
+    const nome = $('tp-nome').value.trim().replace(/\s+/g, ' ');
+    const selo = $('tp-selo').value.trim().toUpperCase();
+    const duracao = Number($('tp-duracao').value.trim());
+    const ordem = Number($('tp-ordem').value.trim());
+    const modalidades = [...document.querySelectorAll('#tp-mods .tp-mod')].map((l) => ({ nome: l.querySelector('.tp-mod-nome').value.trim(), km: l.querySelector('.tp-mod-km').checked }))
+      .filter((m) => m.nome);
+    if (!nome) return erro('Informe o nome do tipo.');
+    if (!selo) return erro('Informe a letra do selo (1 ou 2 caracteres).');
+    if (!Number.isInteger(duracao) || duracao < 5 || duracao > 600) return erro('Informe a duração padrão em minutos, entre 5 e 600.');
+    if (!Number.isInteger(ordem) || ordem < 0 || ordem > 999) return erro('Informe a posição na lista (um número de 0 a 999).');
+    // Tipo do app sem cor própria: só grava cor se ela foi mudada aqui (senão continua a do app, em cada tema e estilo).
+    const mexeu = $('tp-dialog').dataset.corMexida === '1';
+    const comCor = !t || t.cor || mexeu;
+    const p = { ...(t ? { id: t.id } : {}), nome, selo, duracao, ordem, ativo: $('tp-ativo').checked, modalidades,
+      cor: comCor ? $('tp-cor').value : null, cor_escura: comCor ? $('tp-cor-escura').value : null };
+    $('tp-salvar').disabled = true;
+    const { error } = await sb.rpc('admin_salvar_tipo_checkin', { p });
+    $('tp-salvar').disabled = false;
+    if (error) return erro(/admin_salvar_tipo_checkin|schema cache/.test(error.message || '') ? 'Para cadastrar tipos, rode a migração supabase/migracoes/002-tipos-de-checkin.sql no Supabase.' : error.message);
+    $('tp-dialog').close();
+    toast(t ? `${nome} atualizado.` : `${nome} criado.`);
+    await carregarTipos();
   });
 
   if (sb) {

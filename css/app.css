@@ -1111,6 +1111,11 @@
   .mt-treino.on ul { display: block; }
   .mt-treino.feito ul { display: none; }
   .mt-treino li.mt-mais { font-style: italic; }
+  /* Exercício que acabou de entrar no treino (animação ao salvar o editor). */
+  .mt-treino li.mt-novo { color: var(--tinta); font-weight: 700; }
+  .mt-novo-tag { display: inline-block; margin-left: 6px; padding: 0 7px; border-radius: 999px; background: var(--marca-suave); color: var(--marca-tinta); font-size: 11px; font-weight: 800; vertical-align: 1px; }
+  /* Treino editado: depois de pronto, os exercícios continuam à vista. */
+  .bv-montando:not(:has(.mt-semana-box)) .mt-treino.feito ul { display: block; }
   .mt-semana-box { width: 100%; max-width: 460px; opacity: .35; }
   .bv-montando.semana-on .mt-semana-box { opacity: 1; }
   .mt-rotulo { margin: 0 0 6px; font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--tinta-2); text-align: left; }
@@ -1264,7 +1269,9 @@
   .ed-icone:disabled { opacity: .35; cursor: not-allowed; }
   .ed-icone svg { width: 18px; height: 18px; }
   .ed-vazio { padding: 14px; border: 1px dashed var(--fio); border-radius: 12px; color: var(--tinta-2); font-size: 14px; }
-  .ed-rodape { display: flex; flex-wrap: wrap; gap: 8px; }
+  /* Personalizar treinos: Excluir este treino e Voltar ao plano pronto do tamanho dos outros botões (largura toda, 48 px). */
+  .ed-rodape { display: grid; gap: 10px; }
+  .ed-rodape :is(.btn-perigo, .btn-sec) { width: 100%; min-height: 48px; font-size: 15px; font-weight: 700; }
   .ed-confirma { display: grid; gap: 8px; padding: 12px; border-radius: 12px; background: var(--marca-suave); font-size: 14px; }
   .ed-confirma p { margin: 0; }
   .ed-confirma div { display: flex; flex-wrap: wrap; gap: 8px; }

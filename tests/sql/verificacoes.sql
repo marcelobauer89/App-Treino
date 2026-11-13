@@ -72,6 +72,23 @@ do $$ begin
   end;
 end $$;
 
+-- Tipos de check-in: todo mundo lê; só o administrador cadastra. Check-in de Cardio guarda modalidade e km.
+do $$ begin
+  if (select count(*) from public.tipos_checkin where ativo) < 6 then raise exception 'FALHOU: a pessoa lê os tipos de check-in'; end if;
+  begin update public.tipos_checkin set nome = 'X' where id = 'jiu';
+    raise exception 'FALHOU: a pessoa não muda os tipos de check-in';
+  exception when insufficient_privilege then null; end;
+  begin perform public.admin_salvar_tipo_checkin('{"nome":"Natação","selo":"N"}');
+    raise exception 'FALHOU: só o administrador cadastra tipo de check-in';
+  exception when raise_exception then
+    if sqlerrm like 'FALHOU%' then raise; end if;
+  end;
+  insert into public.checkins (id, tipo, inicio, fim, modalidade, km) values (gen_random_uuid(), 'bike', '2026-11-06 07:00', '2026-11-06 07:40', 'corrida', 7.5);
+  begin insert into public.checkins (id, tipo, inicio, fim, km) values (gen_random_uuid(), 'bike', '2026-11-07 07:00', '2026-11-07 07:40', -3);
+    raise exception 'FALHOU: km negativo é recusado';
+  exception when check_violation then null; end;
+end $$;
+
 -- Catálogo: todo mundo lê; ninguém além do administrador muda.
 do $$ begin
   if (select count(*) from public.exercicios where ativo) < 100 then raise exception 'FALHOU: a pessoa lê o catálogo de exercícios'; end if;
@@ -97,9 +114,21 @@ reset role;
 set local role authenticated;
 do $$ begin perform set_config('request.jwt.claim.sub', '11111111-1111-1111-1111-111111111111', true); end $$;
 
+-- Administrador cadastra tipo novo (id a partir do nome) e muda as modalidades do Cardio.
+do $$ declare v text; begin
+  v := public.admin_salvar_tipo_checkin('{"nome":"Natação livre","selo":"N","cor":"#0e7490","duracao":45,"modalidades":[{"nome":"Piscina","km":true}]}');
+  if v <> 'natacao_livre' then raise exception 'FALHOU: id do tipo novo a partir do nome (veio %)', v; end if;
+  if (select modalidades->0->>'id' from public.tipos_checkin where id = v) <> 'piscina' then raise exception 'FALHOU: id da modalidade'; end if;
+  begin perform public.admin_salvar_tipo_checkin('{"nome":"natacao livre","selo":"N"}');
+    raise exception 'FALHOU: nome repetido é recusado';
+  exception when raise_exception then if sqlerrm like 'FALHOU%' then raise; end if; end;
+  perform public.admin_salvar_tipo_checkin('{"id":"bike","nome":"Cardio","selo":"C","modalidades":[{"nome":"Bike","km":true},{"nome":"Corrida","km":true},{"nome":"Remo","km":false}]}');
+  if (select jsonb_array_length(modalidades) from public.tipos_checkin where id = 'bike') <> 3 then raise exception 'FALHOU: modalidades do Cardio salvas'; end if;
+end $$;
+
 do $$ begin
   if (select count(*) from public.admin_usuarios()) <> 3 then raise exception 'FALHOU: o painel vê todos os usuários'; end if;
-  if (select count(*) from public.admin_checkins()) <> 4 then raise exception 'FALHOU: o painel vê os check-ins de todos'; end if;
+  if (select count(*) from public.admin_checkins()) <> 5 then raise exception 'FALHOU: o painel vê os check-ins de todos (inclui o de Cardio com km)'; end if;
   perform public.admin_liberar_videos('22222222-2222-2222-2222-222222222222', true);
 end $$;
 
