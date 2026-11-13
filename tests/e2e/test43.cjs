@@ -98,7 +98,7 @@ async function abrirApp(b, { url = H.PAGINA, perfil = NOVO, local = {}, scheme =
     const link = await a.inputValue('#conv-link');
     ok(/\/\?convite=K7P2QX$/.test(link) && /João/.test(await txt(a, '#conv-gerado')), `${scheme}: gerar convite mostra o link`, link);
     const wa = decodeURIComponent((await a.getAttribute('#conv-whats', 'href')).split('text=')[1]);
-    ok(/^Oi, João! Te convidei para o OSS/.test(wa) && wa.includes(link), `${scheme}: WhatsApp com mensagem e link`);
+    ok(/^Oi, João! Te convidei para o Gestão de Treinos/.test(wa) && wa.includes(link), `${scheme}: WhatsApp com mensagem e link`);
     ok(/João K7P2QX Aguardando/.test(await txt(a, '#convites-lista')), `${scheme}: convite novo aparece aguardando`, await txt(a, '#convites-lista'));
     await a.screenshot({ path: `${H.SAIDA}/convites-admin-${scheme}-${vp.width}.png`, fullPage: true });
     await a.click('[data-cancelar-convite="K7P2QX"]'); await a.waitForTimeout(300);
