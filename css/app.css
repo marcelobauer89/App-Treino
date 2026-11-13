@@ -1006,6 +1006,10 @@
   .novidade-lista { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
   .novidade-lista li { display: flex; gap: 10px; align-items: flex-start; font-size: 15px; }
   .novidade-lista svg { flex: 0 0 auto; margin-top: 3px; color: var(--checkin); }
+  /* Instalar o app no iPhone: passos numerados. */
+  .instalar-passos { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+  .instalar-passos li { display: flex; gap: 12px; align-items: flex-start; font-size: 15px; line-height: 1.45; }
+  .instalar-n { flex: 0 0 auto; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--tatame); color: var(--sobre-tatame); font-size: 14px; }
   .novidade-acoes { display: grid; gap: 8px; }
   /* Novidade da Evolução: ilustração (atalho do Dashboard + colunas subindo) e os três destaques */
   /* Avisos de novidade: cabeçalho (selo, título e X) fixo ao rolar. */

@@ -19,7 +19,7 @@
     $('entrar-status').textContent = {
       carregando: 'Carregando seus treinos…',
       config: 'O app ainda não está ligado ao Supabase. Preencha o endereço e a chave do projeto no ambiente.js (o passo a passo está no README).',
-      login: conviteGuardado() ? 'Você foi convidado para o Gestão de Treinos! Entre com o Google para começar.' : 'Seus treinos, suas cargas e seu progresso, sempre com você.',
+      login: navigator.onLine === false ? 'Você está sem internet. Conecte-se para entrar com o Google.' : conviteGuardado() ? 'Você foi convidado para o Gestão de Treinos! Entre com o Google para começar.' : 'Seus treinos, suas cargas e seu progresso, sempre com você.',
       convite: 'O Gestão de Treinos é só para convidados. Digite o código do convite que você recebeu ou peça acesso.',
       erro: msg,
     }[modo];
@@ -93,7 +93,10 @@
       if (!(await temAcesso())) return;
       await migrarDadosLocais();
     } catch (_) {
-      mostrarEntrada('erro', 'Não foi possível carregar seus dados. Confira a internet e tente de novo.');
+      // Sem internet: aviso amigável, e o app tenta de novo sozinho quando a conexão voltar (ver "online" abaixo).
+      mostrarEntrada('erro', navigator.onLine === false
+        ? 'Você está sem internet. Seus treinos aparecem aqui assim que a conexão voltar.'
+        : 'Não foi possível carregar seus dados. Confira a internet e tente de novo.');
       return;
     }
     // Um quadro com a última etapa antes de montar a tela (antes da presença, que precisa ligar junto com a tela).
@@ -150,6 +153,8 @@
   $('entrar-tentar').addEventListener('click', () => {
     if (usuario) entrarNoApp({ user: usuario });
   });
+  // A internet voltou com a tela de erro aberta: tenta de novo sozinho.
+  window.addEventListener('online', () => { if (!$('entrar-tentar').hidden && usuario) entrarNoApp({ user: usuario }); });
 
   // ---------- Início ----------
   aplicarTema();

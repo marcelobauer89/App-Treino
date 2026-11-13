@@ -1164,3 +1164,48 @@
     $('foto-erro').textContent = msg;
     $('foto-erro').hidden = !msg;
   }
+
+  // ---------- Instalar o app ----------
+  // Linha "Instalar o app" em Você: no Android (Chrome), abre o pedido de instalação do navegador com um toque;
+  // no iPhone, que não tem esse pedido, mostra o passo a passo do Safari. Some quando o app já está instalado
+  // (aberto da tela inicial) e nos navegadores que não instalam apps.
+  let pedidoInstalar = null;
+  const appInstalado = () => window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  const ehIPhone = () => /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  function atualizarInstalar() {
+    $('grupo-instalar').hidden = appInstalado() || !(pedidoInstalar || ehIPhone());
+  }
+  window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); pedidoInstalar = e; atualizarInstalar(); });
+  window.addEventListener('appinstalled', () => { pedidoInstalar = null; atualizarInstalar(); });
+  const instalarDialog = $('instalar-dialog');
+  function abrirPassosIPhone() {
+    const passo = (n, txt) => `<li><b class="instalar-n">${n}</b><span>${txt}</span></li>`;
+    $('instalar-body').innerHTML = `
+      <div class="modal-head"><h3 id="instalar-title">Instalar no iPhone</h3>${BOTAO_FECHAR}</div>
+      <ol class="instalar-passos">
+        ${passo(1, 'No Safari, toque em <b>Compartilhar</b> (o quadrado com a seta para cima).')}
+        ${passo(2, 'Role a lista e toque em <b>Adicionar à Tela de Início</b>.')}
+        ${passo(3, 'Toque em <b>Adicionar</b>. O app aparece na tela inicial, com o ícone GT.')}
+      </ol>
+      <p class="aviso">Só funciona pelo Safari. No primeiro uso, o app instalado pede para entrar com o Google de novo.</p>
+      <button class="modal-done" type="button" data-fechar>Entendi</button>`;
+    instalarDialog.showModal();
+  }
+  instalarDialog.addEventListener('click', (e) => {
+    if (e.target === instalarDialog || e.target.closest('[data-fechar]')) instalarDialog.close();
+  });
+  $('instalar-app').addEventListener('click', () => {
+    if (pedidoInstalar) {
+      const pedido = pedidoInstalar;
+      pedido.prompt();
+      pedido.userChoice.then((r) => {
+        registrarEvento('app_instalar', { resultado: r && r.outcome === 'accepted' ? 'instalou' : 'desistiu' });
+        if (r && r.outcome === 'accepted') pedidoInstalar = null;
+        atualizarInstalar();
+      }).catch(() => {});
+      return;
+    }
+    registrarEvento('app_instalar', { resultado: 'passos_iphone' });
+    abrirPassosIPhone();
+  });
+  atualizarInstalar();
