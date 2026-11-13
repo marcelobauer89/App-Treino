@@ -26,6 +26,8 @@
       const db = ler();
       db.log.push(`${this.op}:${this.tabela}${this.op === 'select' && this.cols && this.cols !== '*' ? `:${this.cols}` : ''}`);
       if (this.faixa) db.log.push(`range:${this.tabela}:${this.faixa[0]}-${this.faixa[1]}`);
+      // semRede: sem internet, toda chamada falha como no navegador (TypeError: Failed to fetch).
+      if (db.semRede) { gravar(db); return { data: null, error: { message: 'TypeError: Failed to fetch', code: '' } }; }
       if (db.semTabelaEventos && this.tabela === 'eventos') {
         gravar(db); return { data: null, error: { message: "Could not find the table 'public.eventos' in the schema cache" } };
       }
@@ -46,7 +48,7 @@
         gravar(db); return { data: null, error: { message: "Could not find the table 'public.cargas' in the schema cache" } };
       }
       if (db.falharLeitura && this.op === 'select' && this.tabela === 'perfis') { db.falharLeitura--; gravar(db); return { data: null, error: { message: 'Failed to fetch' } }; }
-      if (db.falhar && this.op !== 'select') { gravar(db); return { data: null, error: { message: 'offline' } }; }
+      if (db.falhar && this.op !== 'select') { gravar(db); return { data: null, error: { message: 'erro no servidor', code: 'XX000' } }; }
       // Banco com o schema antigo, sem a coluna perfis.semana.
       if (db.semColunaSemPeso && this.op === 'update' && this.dados && 'sem_peso' in this.dados) {
         gravar(db); return { data: null, error: { message: "Could not find the 'sem_peso' column of 'perfis' in the schema cache" } };
@@ -114,13 +116,15 @@
             ouvintes.push(cb);
             setTimeout(() => {
               const d = ler();
-              cb('INITIAL_SESSION', d.sessao);
+              // sessaoVencida + semRede: a biblioteca não consegue renovar a sessão e responde "sem sessão".
+              cb('INITIAL_SESSION', d.semRede && d.sessaoVencida ? null : d.sessao);
               // Como a biblioteca real na volta do Google: também chega SIGNED_IN com a mesma sessão.
               if (d.sessao && d.doisEventos) cb('SIGNED_IN', d.sessao);
             }, 0);
             return { data: { subscription: { unsubscribe() {} } } };
           },
           async getSession() { return { data: { session: ler().sessao } }; },
+          async refreshSession() { const d = ler(); d.log.push('refreshSession'); gravar(d); return { data: { session: d.semRede ? null : d.sessao }, error: d.semRede ? { message: 'Failed to fetch' } : null }; },
           async initialize() {
             const d = ler();
             return { error: d.erroInit ? { message: d.erroInit } : null };
@@ -150,7 +154,7 @@
             return {
               async upload(caminho, arquivo, op = {}) {
                 await pausa(); const d = ler(); d.log.push(`storage:upload:${bucket}/${caminho}`);
-                if (d.falharFoto) { gravar(d); return { data: null, error: { message: 'Failed to fetch' } }; }
+                if (d.falharFoto) { gravar(d); return { data: null, error: { message: 'erro no servidor' } }; }
                 d.fotos = d.fotos || {}; d.fotos[caminho] = { bytes: arquivo.size, tipo: op.contentType || arquivo.type, upsert: !!op.upsert, bucket };
                 gravar(d); return { data: { path: caminho }, error: null };
               },
@@ -239,6 +243,7 @@
           return new Promise((r) => setTimeout(r, espera)).then(() => {
             const db = ler();
             db.log.push(`rpc:${nome}`);
+            if (db.semRede) { gravar(db); return { data: null, error: { message: 'TypeError: Failed to fetch', code: '' } }; }
             // Apps conectados: db.integracoes = [{ id, nome, prefixo, criada_em, ultimo_uso_em, revogada_em }]; semIntegracoes = schema antigo.
             if (['criar_codigo_conexao', 'minhas_integracoes', 'revogar_integracao'].includes(nome)) {
               if (db.semIntegracoes) { gravar(db); return { data: null, error: { message: `Could not find the function public.${nome} in the schema cache` } }; }

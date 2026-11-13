@@ -9,11 +9,7 @@
   function salvarTemporizador() {
     const valor = { ...config.temporizador };
     // Sem a coluna ou sem a permissão (schema.sql antigo), a escolha vale só nesta sessão, sem aviso de erro.
-    enviar(async () => {
-      const r = await sb.from('perfis').update({ temporizador: valor }).eq('id', usuario.id);
-      if (r.error && (r.error.code === '42501' || /temporizador/.test(r.error.message || ''))) return { error: null };
-      return r;
-    });
+    salvarPerfil({ temporizador: valor }, ['temporizador']);
   }
   function renderTemporizadorConfig() {
     const t = config.temporizador;
@@ -248,9 +244,16 @@
   $('sair').addEventListener('click', async () => {
     salvarNome();
     salvarSeriesPendentes();
+    // Mudanças feitas sem internet ainda não enviadas: sair agora as perderia (a cópia do aparelho é apagada ao sair).
+    await sincronizar();
+    if (pendentes.length) {
+      toast('Há alterações feitas sem internet que ainda não foram enviadas. Conecte-se e tente sair de novo.');
+      return;
+    }
     registrarEvento('saiu');
     try { localStorage.removeItem(CHAVE_SESSAO); } catch (_) {}
     desligarPresenca();
     await Promise.all([fila, enviarEventos()]);
+    esquecerCopia();
     await sb.auth.signOut();
   });

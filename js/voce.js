@@ -425,18 +425,8 @@
   const fotoDosTreinos = () => ({ treinos: treinosParaSalvar(TREINOS), semana: copiaSemana(config.semana), em: new Date().toISOString(), jornada });
   // Num banco sem as colunas treinos_anterior ou jornada (schema.sql antigo), grava sem elas: salvar nunca trava por causa delas.
   function salvarTreinosNoBanco(campos) {
-    enviar(async () => {
-      let resto = campos;
-      for (;;) {
-        const r = await sb.from('perfis').update(resto).eq('id', usuario.id);
-        // Coluna que ainda não existe (citada no erro) ou sem permissão para gravá-la (42501, grant antigo): grava o resto.
-        const falta = r.error && (['treinos_anterior', 'jornada'].find((c) => c in resto && new RegExp(`\\b${c}\\b`).test(r.error.message || ''))
-          || (r.error.code === '42501' && 'jornada' in resto ? 'jornada' : null));
-        if (!falta) return r;
-        const { [falta]: _, ...sem } = resto;
-        resto = sem;
-      }
-    });
+    // Coluna que ainda não existe (citada no erro) ou sem permissão para gravá-la (42501, grant antigo): grava o resto.
+    salvarPerfil(campos, ['treinos_anterior', 'jornada']);
   }
   // Volta para a versão anterior (treinos e semana). A versão de agora vira a anterior, então dá para desfazer de novo.
   function restaurarAnterior(origem) {

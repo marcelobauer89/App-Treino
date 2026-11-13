@@ -420,14 +420,169 @@
     ultimaSerie: minuto(r.ultima_serie), series: r.series || {}, foto: r.foto || '',
   });
 
-  // As gravações vão em fila, na ordem em que aconteceram (ex.: encerrar um check-in antes de abrir outro).
-  let fila = Promise.resolve();
-  function enviar(op) {
-    fila = fila
-      .then(async () => { const { error } = await op(); if (error) throw error; })
-      .catch(falhaAoSalvar);
+  // ---------- Fila de envio e cópia dos dados no aparelho (uso sem internet) ----------
+  // Cada gravação vira um pedido guardado no aparelho e enviado na ordem em que aconteceu (ex.: encerrar um check-in
+  // antes de abrir outro). Sem internet, os pedidos ficam guardados, mesmo se o app for fechado, e saem sozinhos
+  // quando a conexão volta. Cada pedido também entra na cópia dos dados do aparelho, com a qual o app abre sem internet.
+  // Pedidos: { t: 'checkin', linha } · { t: 'apagarCheckin', id } · { t: 'carga', linha } · { t: 'apagarObs' }
+  //          { t: 'perfil', campos, tolerar }: colunas de "tolerar" que o banco ainda não tem (schema.sql antigo) ficam de fora.
+  const ERRO_REDE = /failed to fetch|load failed|networkerror|network ?request failed|fetch failed|network connection was lost|timed? ?out|timeout|aborterror|err_internet_disconnected|sem internet/i;
+  const ERRO_SESSAO = /jwt expired|invalid jwt|jwt.*expir|PGRST301/i;
+  const textoErro = (e) => String((e && e.message) || e || '');
+  const semRede = (e) => navigator.onLine === false || ERRO_REDE.test(textoErro(e));
+  const CHAVE_COPIA_USUARIO = 'bauer-copia-usuario';
+  const chavePendentes = () => `bauer-pendentes-${usuario.id}`;
+  const chaveCopia = () => `bauer-copia-${usuario.id}`;
+  let pendentes = [];
+  let copiaDados = null; // { p: perfil, c: check-ins, k: cargas (null = sem a tabela), v: vídeos, fotos, em }
+  let modoOffline = false; // a tela está com a cópia do aparelho (abriu sem internet)
+  let semConexao = false; // a última tentativa de envio parou por falta de internet
+  let enviando = false;
+  let fila = Promise.resolve(); // a tentativa de envio em andamento (Sair e Excluir conta esperam por ela)
+
+  function lerPendentes() {
+    try { const v = JSON.parse(localStorage.getItem(chavePendentes()) || '[]'); pendentes = Array.isArray(v) ? v : []; } catch (_) { pendentes = []; }
+  }
+  function guardarPendentes() {
+    try {
+      if (pendentes.length) localStorage.setItem(chavePendentes(), JSON.stringify(pendentes));
+      else localStorage.removeItem(chavePendentes());
+    } catch (_) {}
+  }
+  function lerCopia() {
+    try {
+      const d = JSON.parse(localStorage.getItem(chaveCopia()) || 'null');
+      return d && d.p && Array.isArray(d.c) ? d : null;
+    } catch (_) { return null; }
+  }
+  function guardarCopia() {
+    if (!copiaDados || !usuario) return;
+    try {
+      localStorage.setItem(chaveCopia(), JSON.stringify(copiaDados));
+      localStorage.setItem(CHAVE_COPIA_USUARIO, JSON.stringify({ id: usuario.id, email: usuario.email || '', user_metadata: usuario.user_metadata || {} }));
+    } catch (_) {} // aparelho sem espaço: o app segue, só não abre sem internet com a última mudança
+  }
+  // Conta guardada para abrir sem internet quando a sessão venceu e não dá para renová-la agora.
+  function usuarioGuardado() {
+    try { const u = JSON.parse(localStorage.getItem(CHAVE_COPIA_USUARIO) || 'null'); return u && u.id ? u : null; } catch (_) { return null; }
+  }
+  // Ao sair ou excluir a conta: nada dos dados da pessoa fica no aparelho.
+  function esquecerCopia() {
+    try { [chaveCopia(), chavePendentes(), CHAVE_COPIA_USUARIO].forEach((k) => localStorage.removeItem(k)); } catch (_) {}
+    pendentes = []; copiaDados = null; modoOffline = false; semConexao = false;
+  }
+  const mesmaCarga = (a, b) => String(a.data).slice(0, 10) === String(b.data).slice(0, 10) && a.treino === b.treino;
+  function aplicarNaCopia(d, op) {
+    if (!d) return;
+    if (op.t === 'checkin') d.c = d.c.filter((r) => r.id !== op.linha.id).concat(op.linha);
+    else if (op.t === 'apagarCheckin') d.c = d.c.filter((r) => r.id !== op.id);
+    else if (op.t === 'carga') d.k = (d.k || []).filter((r) => !mesmaCarga(r, op.linha)).concat(op.linha);
+    else if (op.t === 'apagarObs') d.c.forEach((r) => { r.obs = ''; });
+    else if (op.t === 'perfil') d.p = { ...d.p, ...op.campos };
+  }
+  async function executarPedido(op) {
+    if (op.t === 'checkin') return sb.from('checkins').upsert(op.linha);
+    if (op.t === 'apagarCheckin') return sb.from('checkins').delete().eq('id', op.id);
+    if (op.t === 'carga') return sb.from('cargas').upsert(op.linha, { onConflict: 'usuario_id,data,treino' });
+    if (op.t === 'apagarObs') return sb.from('checkins').update({ obs: '' }).eq('usuario_id', usuario.id);
+    // Perfil: coluna tolerada que o banco não tem (citada no erro) ou sem permissão (42501, grant antigo) fica de fora.
+    const tolerar = op.tolerar || [];
+    let resto = op.campos;
+    for (;;) {
+      const r = await sb.from('perfis').update(resto).eq('id', usuario.id);
+      if (!r.error) return r;
+      const presentes = tolerar.filter((c) => c in resto);
+      const falta = presentes.find((c) => new RegExp(`\\b${c}\\b`).test(r.error.message || ''))
+        || (r.error.code === '42501' ? presentes[presentes.length - 1] : null);
+      if (!falta) return r;
+      const { [falta]: _, ...sem } = resto;
+      if (!Object.keys(sem).length) return { error: null };
+      resto = sem;
+    }
+  }
+  function enfileirar(op) {
+    // Um check-in ou um registro de pesos com envio ainda pendente: só a versão mais nova vai.
+    if (op.t === 'checkin' || op.t === 'apagarCheckin') {
+      const id = op.t === 'checkin' ? op.linha.id : op.id;
+      pendentes = pendentes.filter((x) => !(x.t === 'checkin' && x.linha.id === id));
+    }
+    if (op.t === 'carga') pendentes = pendentes.filter((x) => !(x.t === 'carga' && mesmaCarga(x.linha, op.linha)));
+    pendentes.push(op);
+    guardarPendentes();
+    aplicarNaCopia(copiaDados, op);
+    guardarCopia();
+    return sincronizar();
+  }
+  // Envia os pedidos guardados, um por vez. Sem internet (ou com a sessão vencida e sem como renovar), para e tenta de
+  // novo quando a conexão volta; o pedido continua guardado. Recusado pelo banco por outro motivo: sai da fila e avisa.
+  function sincronizar() {
+    if (enviando || !usuario || !sb) return fila;
+    enviando = true;
+    fila = (async () => {
+      const estavaSemConexao = semConexao;
+      let renovou = false;
+      while (pendentes.length && usuario) {
+        const op = pendentes[0];
+        let r;
+        try { r = await executarPedido(op); } catch (e) { r = { error: e }; }
+        const erro = r && r.error;
+        if (erro && ERRO_SESSAO.test(textoErro(erro)) && !renovou && !semRede(erro)) {
+          renovou = true;
+          try { await sb.auth.refreshSession(); } catch (_) {}
+          continue;
+        }
+        if (erro && (semRede(erro) || ERRO_SESSAO.test(textoErro(erro)))) {
+          if (!semConexao && !estavaSemConexao) toast('Sem internet: ficou salvo no aparelho e vai para a nuvem quando a conexão voltar.');
+          semConexao = true;
+          break;
+        }
+        pendentes = pendentes.filter((x) => x !== op);
+        guardarPendentes();
+        semConexao = false;
+        if (erro) await falhaAoSalvar(erro);
+      }
+      enviando = false;
+      if (estavaSemConexao && !semConexao && !pendentes.length && usuario) toast('Conexão de volta: suas alterações foram enviadas.');
+      atualizarPendentesUI();
+    })();
+    atualizarPendentesUI();
     return fila;
   }
+  // Selo no topo enquanto há mudanças guardadas só no aparelho ou a tela está com a cópia (sem internet).
+  function atualizarPendentesUI() {
+    const el = document.getElementById('pendentes');
+    if (!el) return;
+    const n = pendentes.length;
+    const mostrar = !!usuario && !document.body.classList.contains('deslogado')
+      && (modoOffline || (n > 0 && (semConexao || navigator.onLine === false)));
+    el.hidden = !mostrar;
+    document.body.classList.toggle('com-pendentes', mostrar);
+    if (!mostrar) return;
+    el.textContent = n
+      ? `Sem internet · ${n === 1 ? '1 alteração guardada' : `${n} alterações guardadas`} no aparelho`
+      : 'Sem internet · mostrando os dados guardados no aparelho';
+  }
+  // A internet voltou (ou o app voltou para a frente): envia o que ficou guardado e, se a tela estava com a cópia,
+  // busca os dados do servidor de novo.
+  let voltando = false;
+  async function voltouAInternet() {
+    if (!usuario || voltando || navigator.onLine === false) return;
+    voltando = true;
+    try {
+      await sincronizar();
+      if (modoOffline && !semConexao) {
+        await carregarDados();
+        if (!modoOffline) renderizarApp();
+      }
+    } catch (_) {} finally { voltando = false; atualizarPendentesUI(); }
+  }
+  window.addEventListener('online', voltouAInternet);
+  window.addEventListener('offline', atualizarPendentesUI);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && (pendentes.length || modoOffline)) voltouAInternet();
+  });
+  setInterval(() => { if (usuario && (semConexao || modoOffline)) voltouAInternet(); }, 30000);
+
   async function falhaAoSalvar(erro) {
     // Banco com o schema.sql antigo: sem a coluna perfis.semana ou sem a tabela cargas.
     const msg = (erro && erro.message) || '';
@@ -441,11 +596,11 @@
     else toast('Não foi possível salvar. Confira a internet; os dados foram recarregados do servidor.');
     try { await carregarDados(); renderizarApp(); } catch (_) {}
   }
-  const salvarCheckin = (c) => enviar(() => sb.from('checkins').upsert(paraLinha(c)));
-  const excluirCheckinRemoto = (id) => enviar(() => sb.from('checkins').delete().eq('id', id));
-  const salvarPerfil = (campos) => enviar(() => sb.from('perfis').update(campos).eq('id', usuario.id));
-  const salvarCarga = (r) => enviar(() => sb.from('cargas')
-    .upsert({ usuario_id: usuario.id, data: r.data, treino: r.treino, series: r.series }, { onConflict: 'usuario_id,data,treino' }));
+  const salvarCheckin = (c) => enfileirar({ t: 'checkin', linha: paraLinha(c) });
+  const excluirCheckinRemoto = (id) => enfileirar({ t: 'apagarCheckin', id });
+  const salvarPerfil = (campos, tolerar) => enfileirar({ t: 'perfil', campos, ...(tolerar ? { tolerar } : {}) });
+  const salvarCarga = (r) => enfileirar({ t: 'carga', linha: { usuario_id: usuario.id, data: r.data, treino: r.treino, series: r.series } });
+  const apagarObservacoes = () => enfileirar({ t: 'apagarObs' });
 
   // ---------- Eventos de uso (para o dashboard /admin) ----------
   // Vão numa fila e são enviados em lote: a cada 10 s, com 20 eventos ou quando a página some.
@@ -675,7 +830,8 @@
     }
   }
 
-  async function carregarDados() {
+  // Busca os dados da conta no servidor (perfil, check-ins, pesos, vídeos e catálogo). Sem internet, dá erro.
+  async function buscarDoServidor() {
     const [p, c, k, v] = await Promise.all([
       sb.from('perfis').select('*').eq('id', usuario.id).maybeSingle(),
       todasLinhas(() => sb.from('checkins').select('*').order('inicio').order('id')),
@@ -687,11 +843,7 @@
     ]);
     if (p.error || c.error) throw p.error || c.error;
     // Fotos nos check-ins: liga quando a coluna checkins.foto existe (o schema.sql cria junto o bucket).
-    fotosLigadas = (c.data || []).length ? 'foto' in c.data[0] : !(await sb.from('checkins').select('foto').limit(1)).error;
-    // Sem a tabela cargas (schema.sql antigo) o app abre do mesmo jeito; o aviso aparece ao salvar um peso.
-    cargas = k.error ? [] : (k.data || []).map((r) => ({ data: String(r.data).slice(0, 10), treino: r.treino, series: r.series || {} }));
-    for (const nome of Object.keys(VIDEOS)) delete VIDEOS[nome];
-    if (!v.error) (v.data || []).forEach((r) => { if (r && r.exercicio && /^[\w-]{11}$/.test(r.video_id || '')) VIDEOS[r.exercicio] = r.video_id; });
+    const fotos = (c.data || []).length ? 'foto' in c.data[0] : !(await sb.from('checkins').select('foto').limit(1)).error;
     let linha = p.data;
     if (!linha) {
       // Conta criada antes do schema: cria o perfil com os dados do Google.
@@ -703,6 +855,42 @@
       const { error } = await sb.from('perfis').upsert(linha);
       if (error) throw error;
     }
+    // Sem a tabela cargas (schema.sql antigo), k = null: o app abre do mesmo jeito; o aviso aparece ao salvar um peso.
+    return { p: linha, c: c.data || [], k: k.error ? null : (k.data || []), v: v.error ? null : (v.data || []), fotos, em: new Date().toISOString() };
+  }
+
+  // Carrega os dados da conta. Sem internet, abre com a cópia guardada no aparelho (com o que ainda não foi enviado).
+  // Com internet, o que ainda está na fila de envio entra por cima do que veio do servidor.
+  async function carregarDados() {
+    lerPendentes();
+    const copia = lerCopia();
+    let d;
+    try {
+      // Internet muito ruim, com a cópia no aparelho: depois de 15 s, abre com a cópia em vez de esperar mais.
+      d = await (copia
+        ? Promise.race([buscarDoServidor(), new Promise((_, nao) => setTimeout(() => nao(new Error('timeout')), 15000))])
+        : buscarDoServidor());
+      pendentes.forEach((op) => aplicarNaCopia(d, op));
+      modoOffline = false;
+    } catch (erro) {
+      if (!copia || !semRede(erro)) throw erro;
+      await carregarCatalogo();
+      d = copia;
+      modoOffline = true;
+    }
+    copiaDados = d;
+    if (!modoOffline) guardarCopia();
+    aplicarDados(d);
+    atualizarPendentesUI();
+  }
+
+  function aplicarDados(d) {
+    const linha = d.p;
+    fotosLigadas = !!d.fotos;
+    const ordemCarga = (a, b) => (String(a.data) + a.treino < String(b.data) + b.treino ? -1 : 1);
+    cargas = (d.k || []).map((r) => ({ data: String(r.data).slice(0, 10), treino: r.treino, series: r.series || {} })).sort(ordemCarga);
+    for (const nome of Object.keys(VIDEOS)) delete VIDEOS[nome];
+    (d.v || []).forEach((r) => { if (r && r.exercicio && /^[\w-]{11}$/.test(r.video_id || '')) VIDEOS[r.exercicio] = r.video_id; });
     perfil = { nome: linha.nome || '', email: usuario.email || linha.email || '', foto: linha.foto || '' };
     // Perfil sem nome (o Google não mandou ao criar a conta, ou o nome foi apagado): usa o nome do Google.
     const nomeGoogle = String((usuario.user_metadata || {}).full_name || (usuario.user_metadata || {}).name || '').trim().slice(0, 120);
@@ -716,11 +904,11 @@
     try { ocultaNoAparelho = !!localStorage.getItem(chaveNovidade()); } catch (_) {}
     // Acesso por convite: sem a coluna (schema.sql antigo), todo mundo entra como antes.
     acesso = { liberado: linha.liberado !== false, pedidoEm: linha.acesso_pedido_em || null };
-    politica = { disponivel: 'politica_versao' in linha, aceita: linha.politica_versao === POLITICA_VERSAO, contaNova: !(c.data || []).length && !cargas.length };
+    politica = { disponivel: 'politica_versao' in linha, aceita: linha.politica_versao === POLITICA_VERSAO, contaNova: !d.c.length && !cargas.length };
     perfilLinha = linha;
     treinosAnterior = linha.treinos_anterior && linha.treinos_anterior.treinos ? linha.treinos_anterior : null;
     jornada = jornadaPorId(linha.jornada) ? linha.jornada : null;
-    novidade = { disponivel: true, vista: !!linha.novidade_oculta || ocultaNoAparelho, contaNova: !(c.data || []).length && !cargas.length };
+    novidade = { disponivel: true, vista: !!linha.novidade_oculta || ocultaNoAparelho, contaNova: !d.c.length && !cargas.length };
     let ocultasNoAparelho = [];
     try { ocultasNoAparelho = JSON.parse(localStorage.getItem(chaveNovidades()) || '[]'); } catch (_) {}
     novidadesOcultas = new Set([...(Array.isArray(linha.novidades_ocultas) ? linha.novidades_ocultas : []), ...(Array.isArray(ocultasNoAparelho) ? ocultasNoAparelho : [])]);
@@ -738,7 +926,8 @@
       saude: 'consentimento_saude' in linha ? linha.consentimento_saude || null : 'sim',
     };
     // Tipos que não existem mais no app (ex.: a Calistenia retirada) ficam de fora, para nada quebrar.
-    checkins = (c.data || []).map(deLinha).filter((x) => TIPOS[x.tipo]);
+    const ordemCheckin = (a, b) => (a.inicio + a.id < b.inicio + b.id ? -1 : 1);
+    checkins = d.c.map(deLinha).filter((x) => TIPOS[x.tipo]).sort(ordemCheckin);
   }
 
   // No primeiro login neste aparelho, envia para a conta o que já estava salvo só no navegador.
