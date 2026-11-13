@@ -3236,11 +3236,26 @@
     timersSeries.clear();
   }
 
+  // O Supabase devolve no máximo 1.000 linhas por chamada: busca em páginas até a lista acabar,
+  // senão quem passa de 1.000 check-ins (ou registros de peso) deixa de ver os mais novos.
+  // A ordem precisa ser única (o id ou a chave desempata) para as páginas não repetirem nem pularem linhas.
+  const POR_PAGINA = 1000;
+  async function todasLinhas(consulta) {
+    const linhas = [];
+    for (let de = 0; ; de += POR_PAGINA) {
+      const r = await consulta().range(de, de + POR_PAGINA - 1);
+      if (r.error) return r;
+      const pagina = r.data || [];
+      linhas.push(...pagina);
+      if (pagina.length < POR_PAGINA) return { data: linhas, error: null };
+    }
+  }
+
   async function carregarDados() {
     const [p, c, k, v] = await Promise.all([
       sb.from('perfis').select('*').eq('id', usuario.id).maybeSingle(),
-      sb.from('checkins').select('*').order('inicio'),
-      sb.from('cargas').select('*').order('data'),
+      todasLinhas(() => sb.from('checkins').select('*').order('inicio').order('id')),
+      todasLinhas(() => sb.from('cargas').select('*').order('data').order('treino')),
       // Vídeos dos exercícios: só vêm para quem o administrador liberou. Sem a função (schema antigo), sem vídeos.
       sb.rpc('meus_videos').then((r) => r, () => ({ error: true })),
       // Catálogo de exercícios e objetivos (antes de montar os treinos da conta).

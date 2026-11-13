@@ -34,7 +34,7 @@ Ao criar, renomear ou apagar uma seção ou um teste, atualize este mapa no mesm
 | Check-ins | Modelo do check-in |
 | Supabase | `enviar`, `salvarCheckin`, `salvarCarga`, avisos "rode o schema.sql" |
 | Eventos de uso | Fila e envio em lote para `eventos` |
-| Atualização automática | `versao.json` e recarga segura |
+| Atualização automática | `versao.json` e recarga segura; logo depois, `todasLinhas` (páginas de 1.000) e `carregarDados` (carga dos dados da conta) |
 | Helpers de interface | `toast`, `$` e afins |
 | Registro de pesos | Séries, cargas, Sem peso, recordes |
 | Encerrar check-in | Fecha o check-in em andamento |
@@ -59,7 +59,7 @@ Ao criar, renomear ou apagar uma seção ou um teste, atualize este mapa no mesm
 | Privacidade (LGPD) | Política, consentimento, baixar meus dados |
 | Convites | `?convite=` e pedir acesso |
 | Entrada (login com Google) | Tela de login e sessão |
-| Início | `carregarDados` e abertura do app |
+| Início | Abertura do app (chama `carregarDados`) |
 
 ## `admin.html`: seções do script
 
@@ -81,7 +81,7 @@ Rode só os da área mexida: `node tests/rodar.cjs test20 test22 …`.
 
 | Área | Testes |
 | --- | --- |
-| Login, abertura e carregamento | test09, test10, test11, test12, test18, test21, test53, test62 |
+| Login, abertura e carregamento (inclui a busca em páginas) | test09, test10, test11, test12, test18, test21, test53, test62, test81 |
 | Atualização automática e avisos ao abrir | test36, test78, test79 |
 | Tela Treino (cartões, Ficha, vídeo) | test13, test14, test15, test16, test41, test56, test65, test80 |
 | Pesos, Sem peso e recordes | test20, test22, test24, test80 |
