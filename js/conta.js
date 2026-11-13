@@ -53,6 +53,7 @@
     try {
       [CHAVE_SESSAO, chaveNovidade(), `bauer-migrado-${usuario.id}`].forEach((k) => localStorage.removeItem(k));
     } catch (_) {}
+    esquecerCopia();
     desligarPresenca();
     excluirDialog.close();
     await sb.auth.signOut();
@@ -134,7 +135,7 @@
     if (!ligar && checkins.some((c) => c.obs)) {
       apagou = true;
       checkins.forEach((c) => { c.obs = ''; });
-      enviar(() => sb.from('checkins').update({ obs: '' }).eq('usuario_id', usuario.id));
+      apagarObservacoes();
     }
     registrarEvento('consentimento_saude', { resposta: config.saude, origem: 'privacidade', apagou });
     atualizarCheckinUI();
@@ -159,7 +160,7 @@
     const { foto, ...semFoto } = p;
     const arquivo = {
       gerado_em: new Date().toISOString(),
-      app: 'OSS · App Treino',
+      app: 'Gestão de Treinos',
       politica_versao: POLITICA_VERSAO,
       perfil: { ...semFoto, nome: perfil.nome, email: perfil.email, tem_foto: !!perfil.foto, tema: config.tema, estilo: config.estilo, semana: config.semana,
         sem_peso: [...config.semPeso], emails_resumo: config.resumoEmail, consentimento_saude: config.saude, treinos: treinosDaConta ? treinosParaSalvar(TREINOS) : 'plano pronto' },
@@ -171,7 +172,7 @@
     const blob = new Blob([JSON.stringify(arquivo, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `oss-meus-dados-${hoje()}.json`;
+    a.download = `gestao-de-treinos-meus-dados-${hoje()}.json`;
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
     botao.disabled = false;

@@ -254,7 +254,7 @@
     const quando = data === hoje() ? 'Hoje' : fmtData(data, { weekday: 'short', day: '2-digit', month: '2-digit' });
     const dur = duracaoMin(c);
     const n = treinosDaSemana(data);
-    const faiscas = Array.from({ length: 16 }, (_, k) => `<i style="--a:${k * 22.5}deg;--c:var(${['--cor', '--tatame', '--checkin', '--feito-tinta'][k % 4]})"></i>`).join('');
+    const faiscas = Array.from({ length: 16 }, (_, k) => `<i style="--a:${k * 22.5}deg;--c:var(${['--cor', '--marca', '--checkin', '--feito-tinta'][k % 4]})"></i>`).join('');
     $('celebra-body').innerHTML = `
       <div class="cel" data-grupo="${g}" style="--cor:var(--${g})">
         <div class="cel-palco">
@@ -448,7 +448,9 @@
       const caminho = `${usuario.id}/${c.id}.jpg`;
       const { error } = await sb.storage.from(BUCKET_FOTOS).upload(caminho, f.nova, { upsert: true, contentType: 'image/jpeg' });
       if (error) {
-        toast('Check-in salvo, mas a foto não foi enviada. Tente de novo em Editar check-in.', 6000);
+        toast(semRede(error)
+          ? 'Check-in salvo. A foto precisa de internet: adicione de novo em Editar check-in quando a conexão voltar.'
+          : 'Check-in salvo, mas a foto não foi enviada. Tente de novo em Editar check-in.', 6000);
         registrarErro('foto', error.message);
         return;
       }

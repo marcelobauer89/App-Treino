@@ -92,7 +92,7 @@ Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 a t6 nos check-i
   - Mobilidade e prevenção: Mobilidade, Anti-lesão e Pegada.
 - **Exercícios:** todos são da biblioteca, por nome. Cada treino tem o próprio "Sobre o treino", que só aparece enquanto os exercícios forem os mesmos da jornada.
 - **Conta nova:** passa pelas boas-vindas em passos, que não fecham sem uma escolha:
-  1. **Bem-vindo ao OSS:** o que o app faz (não grava nada);
+  1. **Bem-vindo ao Gestão de Treinos:** o que o app faz (não grava nada);
   2. **Seus dados:** o aviso de privacidade, com Entendi (só se a política ainda não foi aceita; vem antes de qualquer escolha ser gravada);
   3. **Qual é o seu objetivo?:** os objetivos prontos ou Montar do zero (sair do editor sem salvar volta para a escolha).
 
@@ -109,7 +109,12 @@ Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 a t6 nos check-i
 - **Instalar o app (em Você):** a linha aparece no Android quando o Chrome oferece a instalação (um toque abre o pedido do navegador) e no iPhone (abre o passo a passo do Safari). Some quando o app já está instalado e nos navegadores que não instalam apps. Evento `app_instalar` (instalou, desistiu ou passos_iphone) no Monitoramento.
 - **Manifesto:** `manifest.webmanifest` (nome, cores, ícones 192, 512 e maskable). O `/dev/` usa o `manifest-dev.webmanifest` ("[DEV] Gestão de Treinos", trocado pelo `ambiente.js`) e instala como um app separado, com o próprio escopo. Metas do iPhone (`apple-mobile-web-app-capable`, barra de status) no `index.html`.
 - **Service worker (`sw.js`):** registrado no `js/inicio.js`, só em https (no computador, em `localhost`, fica desligado). Sempre busca na rede primeiro, então quem está on-line recebe a versão nova na hora; quando a rede falha, usa a cópia dos arquivos do site (HTML, `css/`, `js/`, fontes, ícones) e da biblioteca do Supabase. Os dados e o `versao.json` nunca passam por ele. Produção e `/dev/` têm caches separados.
-- **Sem internet:** o app abre e mostra "Você está sem internet. Seus treinos aparecem aqui assim que a conexão voltar."; quando a internet volta, ele tenta de novo sozinho. Na tela de entrada, avisa que é preciso internet para entrar com o Google. Os dados (treinos, check-ins) ainda precisam de internet. O modo offline com sincronização continua no roadmap (RF-04).
+- **Sem internet (RF-04):**
+  - **Cópia dos dados:** a cada abertura com internet, o app guarda no aparelho o perfil, os check-ins, os pesos e os vídeos (`bauer-copia-<id>`). Sem internet (ou com a internet tão ruim que a busca passa de 15 s), abre com essa cópia. Se a sessão do login venceu e não dá para renová-la sem internet, entra com a conta guardada (`bauer-copia-usuario`) e renova quando a conexão volta.
+  - **Fila de envio:** toda gravação (check-in, excluir check-in, pesos, perfil, treinos, semana, temporizador, observações) vira um pedido guardado no aparelho (`bauer-pendentes-<id>`) e enviado na ordem. Sem internet, fica guardado (mesmo fechando o app), aparece o aviso "Sem internet: ficou guardado no aparelho e será salvo na sua conta assim que a internet voltar." e, no topo, a faixa com o ícone de sem wi-fi: "Sem internet. N alterações guardadas no aparelho; serão salvas na sua conta assim que a internet voltar." A faixa conta alterações, não envios: os pesos de um treino num dia vão num envio só, mas cada exercício com peso mudado conta uma; várias edições do mesmo check-in contam uma; cada ajuste do perfil (semana, treinos, tema…) conta um. Quando a internet volta (ou o app volta para a frente, ou a cada 30 s), a fila sai sozinha, aparece "Conexão de volta: suas alterações foram enviadas." e o app busca os dados do servidor de novo. Um pedido recusado pelo banco por outro motivo sai da fila com o aviso de sempre e recarrega do servidor.
+  - **Sair:** com alterações ainda não enviadas, o app não deixa sair (avisa para conectar antes). Ao sair ou excluir a conta, a cópia e a fila são apagadas do aparelho.
+  - **Precisam de internet:** entrar com o Google pela primeira vez, a foto do check-in (o check-in fica salvo e o aviso pede para adicionar a foto depois), convites e pedido de acesso, baixar meus dados e excluir a conta. Os eventos de uso já tinham fila própria.
+  - **Sem a cópia** (primeira abertura no aparelho, ou depois de sair): mostra "Você está sem internet. Seus treinos aparecem aqui assim que a conexão voltar." e tenta de novo sozinho. Na tela de entrada, avisa que é preciso internet para entrar com o Google.
 - **Login no app instalado:** no iPhone, o app instalado guarda a sessão separada do Safari, então pede o login do Google uma vez.
 
 ## Catálogo de exercícios e objetivos
@@ -144,7 +149,7 @@ Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 a t6 nos check-i
 
 - **Convidar alguém:** no monitoramento, aba **Convites** → "Para quem?" (opcional) → **Gerar convite**. Copie o link ou toque em **Enviar pelo WhatsApp**. Cada link vale para uma pessoa e por 7 dias.
 - **O amigo:** abre o link, entra com o Google e o app libera a conta sozinho. Se o link já tiver sido usado, tiver expirado ou sido cancelado, ele vê o motivo e pode digitar outro código.
-- **Quem entra sem convite:** vê "O OSS é só para convidados", com um campo para o código e o botão **Pedir acesso**. Os pedidos aparecem na aba Convites, com Liberar e Recusar, e a aba mostra um selo com a quantidade.
+- **Quem entra sem convite:** vê "O Gestão de Treinos é só para convidados", com um campo para o código e o botão **Pedir acesso**. Os pedidos aparecem na aba Convites, com Liberar e Recusar, e a aba mostra um selo com a quantidade.
 - **Aviso por e-mail de pedido de acesso:** a cada novo pedido, os administradores recebem um e-mail ("Novo pedido de acesso: Nome") com o botão "Liberar ou recusar", que abre a aba Convites. Quem envia é a Edge Function `resumo-semanal` (mesmo Gmail do resumo), chamada por um gatilho no banco. Para ligar, publique a versão atual da função e rode `supabase/agendamentos/aviso-pedido-acesso.sql` no SQL Editor (depois do `resumo-semanal.sql`, que guarda o token no Vault). Pedidos repetidos da mesma pessoa em menos de 1 hora não geram outro e-mail.
 - **Convites gerados e utilizados:** a aba separa os convites ainda não usados (aguardando, expirados e cancelados) dos **convites utilizados**, que mostram quem entrou e quando. Quem foi liberado depois de pedir acesso também aparece ali, com o selo "Pedido de acesso". Tocar no nome abre o detalhe da pessoa.
 - **Excluir convite:** a lixeira de cada convite apaga o registro, com confirmação. Excluir um convite usado não tira o acesso de quem entrou; num convite aguardando, o link para de funcionar.
@@ -211,7 +216,7 @@ O dashboard mostra:
   - A aba mostra uma bolinha vermelha com os erros críticos das últimas 24 h.
 - **E-mails**: os resumos semanais enviados no período, com quantos foram abertos e clicados.
   - Tocando numa semana, aparece quem recebeu (Enviado, Abriu ou Clicou, com o horário) e quem não recebeu e por quê.
-  - A abertura é medida por uma imagem invisível e é aproximada: o Mail do iPhone/Mac pode carregar a imagem sozinho, e quem bloqueia imagens não conta. O clique no botão "Abrir o App Treino" é exato.
+  - A abertura é medida por uma imagem invisível e é aproximada: o Mail do iPhone/Mac pode carregar a imagem sozinho, e quem bloqueia imagens não conta. O clique no botão "Abrir o Gestão de Treinos" é exato.
   - Precisa da função `admin_emails` do `schema.sql`.
 
 ### On-line agora (Realtime)
@@ -260,7 +265,7 @@ O envio sai do seu Gmail, pela Edge Function `supabase/functions/resumo-semanal/
 
 1. **Senha de app do Google:**
    - na conta Google que vai enviar, ative a verificação em duas etapas;
-   - em https://myaccount.google.com/apppasswords, crie uma senha de app chamada "App Treino";
+   - em https://myaccount.google.com/apppasswords, crie uma senha de app chamada "Gestão de Treinos";
    - guarde os 16 caracteres.
 2. **Banco:** rode de novo o `supabase/schema.sql` no SQL Editor. Ele cria a opção `emails_resumo` no perfil e a tabela `emails_enviados`.
 3. **Função:** no Supabase, abra **Edge Functions → Deploy a new function → Via Editor**:

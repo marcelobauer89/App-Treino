@@ -407,16 +407,11 @@
     .map((ex) => ({ ...ex, variacoes: VARIACOES[ex.nome] || [] }))
     .sort((a, b) => GRUPOS_EX.indexOf(a.grupo) - GRUPOS_EX.indexOf(b.grupo) || a.nome.localeCompare(b.nome, 'pt-BR'));
 
-  // Jornadas prontas: a pessoa escolhe uma e recebe os treinos e uma semana sugerida (docs/RECURSOS.md → "Jornadas prontas").
+  // Jornadas prontas (Jiu Jitsu por último): a pessoa escolhe uma e recebe os treinos e uma semana sugerida (docs/RECURSOS.md → "Jornadas prontas").
   // Exercícios por nome da biblioteca, com a dose e a PSE da jornada. semana: dia (Date.getDay()) → treinos.
-  // Seleção, ordem e textos próprios do OSS (não reproduzem nenhuma planilha de terceiros).
+  // Seleção, ordem e textos próprios do Gestão de Treinos (não reproduzem nenhuma planilha de terceiros).
   const exJ = (nome, dose, pse) => ({ nome, dose, pse });
   const JORNADAS_APP = [
-    {
-      id: 'jiu', nome: 'Jiu Jitsu', resumo: 'Força que vai para o tatame.',
-      nivel: 'Intermediário', dias: 3, tempo: '50–60 min', equipamento: 'Academia',
-      treinos: PLANO_PADRAO, semana: { 1: ['t2'], 3: ['t1'], 5: ['t3'] },
-    },
     {
       id: 'hipertrofia', nome: 'Hipertrofia', resumo: 'Ganhar massa muscular com 4 treinos por semana.',
       nivel: 'Intermediário', dias: 4, tempo: '55–65 min', equipamento: 'Academia (halteres, barra, cabos e máquinas)',
@@ -507,7 +502,7 @@
       treinos: {
         1: {
           nome: 'Mobilidade', subtitulo: 'Ombros, coluna e quadril',
-          objetivo: 'Mais amplitude em ombros, coluna e quadril, para se mexer melhor no tatame e no dia a dia.',
+          objetivo: 'Mais amplitude em ombros, coluna e quadril, para se mexer melhor no esporte e no dia a dia.',
           esperado: 'Sair mais solto do que entrou. Movimentos lentos, sem forçar até doer.',
           impacto_jiu: 'Guarda mais flexível, mais facilidade para girar e se encaixar e menos travas nas posições.',
           impacto_fisico: 'Menos rigidez e dores, com uma postura melhor.',
@@ -536,6 +531,11 @@
             exJ('Carregada farmer', '3×40 s', 8), exJ('Pega anilha', '3×20 s', 8)],
         },
       },
+    },
+    {
+      id: 'jiu', nome: 'Jiu Jitsu', resumo: 'Força que vai para o tatame.',
+      nivel: 'Intermediário', dias: 3, tempo: '50–60 min', equipamento: 'Academia',
+      treinos: PLANO_PADRAO, semana: { 1: ['t2'], 3: ['t1'], 5: ['t3'] },
     },
   ];
   const jornadaPorIdApp = (id) => JORNADAS_APP.find((j) => j.id === id) || null;

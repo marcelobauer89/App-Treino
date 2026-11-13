@@ -622,7 +622,7 @@
 
   // Gráfico de barras em SVG: barras finas com cantos de 4 px no topo, 2 px de folga entre segmentos,
   // grade discreta e dica ao passar o mouse ou o dedo.
-  function barras(el, serie, { empilhado, rotulo, cor = 'var(--tatame)' }) {
+  function barras(el, serie, { empilhado, rotulo, cor = 'var(--marca)' }) {
     const max = Math.max(1, ...serie.map((s) => s.total));
     if (!serie.some((s) => s.total)) {
       el.innerHTML = `<p class="vazio-graf">Sem ${rotulo} neste período.</p>`;
@@ -941,8 +941,8 @@
         info: 'Quantos e-mails do resumo semanal foram enviados no período, somando todas as sextas. Cada pessoa recebe um por semana.' }),
       tile('Abertos', `${pct(abertos, linhas.length).replace('%', '<small>%</small>')}`, { longo: `${abertos} de ${linhas.length} e-mails`, curto: `${abertos} de ${linhas.length}`,
         info: 'Quantos e-mails foram abertos, medido por uma imagem invisível no e-mail. É aproximado: o Mail do iPhone/Mac pode carregar a imagem sozinho (conta como aberto) e quem bloqueia imagens não conta. Abertura registrada a partir dos envios com essa medição.' }),
-      tile('Clicaram', `${pct(clicaram, linhas.length).replace('%', '<small>%</small>')}`, { longo: `${clicaram} tocaram em "Abrir o App Treino"`, curto: `${clicaram} de ${linhas.length}`,
-        info: 'Quantos e-mails tiveram o botão "Abrir o App Treino" tocado. É exato e mostra interesse de verdade; clicar também conta como aberto.' }),
+      tile('Clicaram', `${pct(clicaram, linhas.length).replace('%', '<small>%</small>')}`, { longo: `${clicaram} tocaram em "Abrir o Gestão de Treinos"`, curto: `${clicaram} de ${linhas.length}`,
+        info: 'Quantos e-mails tiveram o botão "Abrir o Gestão de Treinos" tocado. É exato e mostra interesse de verdade; clicar também conta como aberto.' }),
       tile('Resumo desligado', comOpcao.length ? `${desligados}<small> de ${dados.usuarios.length}</small>` : '—', { longo: 'pessoas que não recebem mais', curto: 'não recebem',
         info: 'Quantas pessoas desligaram o resumo semanal (em Você → Conta ou pelo link do e-mail). Não depende do período.' }),
     ].join('');
@@ -1045,7 +1045,7 @@
     treinos_salvos: (d) => (d.plano_pronto ? 'Voltou ao plano pronto' : `Salvou ${d.treinos} ${d.treinos === 1 ? 'treino' : 'treinos'} personalizados`),
     resumo_email: (d) => (d.ativo ? 'Ligou o resumo semanal por e-mail' : 'Desligou o resumo semanal por e-mail'),
     tema: (d) => `Mudou o tema para ${d.tema}`,
-    estilo: (d) => `Mudou o estilo para ${({ padrao: 'Padrão', neon: 'Neon Tatame', brasa: 'Brasa', cyber: 'Cyber', ultra: 'Ultravioleta', gelo: 'Gelo', violeta: 'Violeta', miami: 'Miami', lua_de_sangue: 'Lua de Sangue' })[d.estilo] || d.estilo}`,
+    estilo: (d) => `Mudou o estilo para ${({ padrao: 'Padrão', neon: 'Neon', brasa: 'Brasa', cyber: 'Cyber', ultra: 'Ultravioleta', gelo: 'Gelo', violeta: 'Violeta', miami: 'Miami', lua_de_sangue: 'Lua de Sangue' })[d.estilo] || d.estilo}`,
     foto: (d) => ({ nova: 'Adicionou foto', trocada: 'Trocou a foto', removida: 'Removeu a foto' })[d.acao] || 'Alterou a foto',
     erro: (d) => `Erro (${d.origem}): ${d.mensagem}`,
     sessao_perdida: (d) => `Precisou entrar de novo sem ter saído (${d.horas_desde} h sem usar, ${d.navegador}, ${d.sistema})`,
@@ -1448,7 +1448,7 @@
     if (!cv.error) { dados.convites = cv.data || []; renderConvites(); }
   });
   function mensagemConvite(nome, link) {
-    return `Oi${nome ? `, ${nome}` : ''}! Te convidei para o OSS, o app de treino que eu uso. Entra por este link com a sua conta Google (vale 7 dias): ${link}`;
+    return `Oi${nome ? `, ${nome}` : ''}! Te convidei para o Gestão de Treinos, o app de treino que eu uso. Entra por este link com a sua conta Google (vale 7 dias): ${link}`;
   }
   async function copiar(texto, botao) {
     try { await navigator.clipboard.writeText(texto); } catch (_) {
