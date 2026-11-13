@@ -2455,7 +2455,7 @@
     .map((ex) => ({ ...ex, variacoes: VARIACOES[ex.nome] || [] }))
     .sort((a, b) => GRUPOS_EX.indexOf(a.grupo) - GRUPOS_EX.indexOf(b.grupo) || a.nome.localeCompare(b.nome, 'pt-BR'));
 
-  // Jornadas prontas: a pessoa escolhe uma e recebe os treinos e uma semana sugerida (README → "Jornadas prontas").
+  // Jornadas prontas: a pessoa escolhe uma e recebe os treinos e uma semana sugerida (docs/RECURSOS.md → "Jornadas prontas").
   // Exercícios por nome da biblioteca, com a dose e a PSE da jornada. semana: dia (Date.getDay()) → treinos.
   // Seleção, ordem e textos próprios do OSS (não reproduzem nenhuma planilha de terceiros).
   const exJ = (nome, dose, pse) => ({ nome, dose, pse });
