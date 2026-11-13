@@ -14,6 +14,7 @@ Ao mudar um recurso, atualize só a seção dele (ache pelo índice).
 - [Celebração do check-in](#celebração-do-check-in)
 - [Temporizador de descanso](#temporizador-de-descanso)
 - [Jornadas prontas](#jornadas-prontas)
+- [App instalável (PWA)](#app-instalável-pwa)
 - [Catálogo de exercícios e objetivos](#catálogo-de-exercícios-e-objetivos)
 - [Vídeos liberados por usuário](#vídeos-liberados-por-usuário)
 - [Convites (acesso só para convidados)](#convites-acesso-só-para-convidados)
@@ -102,6 +103,14 @@ Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 a t6 nos check-i
 - **No banco:** a coluna `perfis.jornada` guarda só o id da jornada. Sem ela (schema antigo), escolher funciona do mesmo jeito, sem o rótulo.
 - **Monitoramento:** os eventos `jornadas_abertas` e `jornada_escolhida` alimentam o card "Objetivos escolhidos".
 - **De onde veio:** as jornadas foram montadas com seleção, ordem, doses e textos próprios, usando planilhas de treino só como referência de método. Ao criar uma jornada nova, não copie a sequência nem os textos de nenhuma planilha.
+
+## App instalável (PWA)
+
+- **Instalar:** no Android (Chrome), menu ⋮ → **Instalar app** ou **Adicionar à tela inicial**; no iPhone (Safari), **Compartilhar → Adicionar à Tela de Início**. O app abre em tela cheia, com o ícone "GT" (`icones/`) e o nome "Treinos".
+- **Manifesto:** `manifest.webmanifest` (nome, cores, ícones 192, 512 e maskable). O `/dev/` instala como um app separado, com o próprio escopo.
+- **Service worker (`sw.js`):** registrado no `js/inicio.js`, só em https (no computador, em `localhost`, fica desligado). Sempre busca na rede primeiro, então quem está on-line recebe a versão nova na hora; quando a rede falha, usa a cópia dos arquivos do site (HTML, `css/`, `js/`, fontes, ícones) e da biblioteca do Supabase. Os dados e o `versao.json` nunca passam por ele. Produção e `/dev/` têm caches separados.
+- **Sem internet:** o app abre, mas os dados (treinos, check-ins) ainda precisam de internet. O modo offline com sincronização continua no roadmap (RF-04).
+- **Login no app instalado:** no iPhone, o app instalado guarda a sessão separada do Safari, então pede o login do Google uma vez.
 
 ## Catálogo de exercícios e objetivos
 
