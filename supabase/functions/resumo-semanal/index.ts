@@ -1,4 +1,4 @@
-// Resumo semanal por e-mail do App Treino (Supabase Edge Function "resumo-semanal").
+// Resumo semanal por e-mail do Gestão de Treinos (Supabase Edge Function "resumo-semanal").
 //
 // Toda sexta às 9h (Brasília) o agendamento em supabase/agendamentos/resumo-semanal.sql chama esta função.
 // Ela monta, para cada pessoa, o resumo dos últimos 7 dias (de sexta a quinta) e envia pelo Gmail.
@@ -288,7 +288,7 @@ export function montarEmail(r: Resumo, links: { app: string; sair: string; pixel
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${COR.fundo};border-collapse:collapse"><tr><td align="center" style="padding:20px 10px">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;border-collapse:separate">
     <tr><td style="background:${COR.azul};border-radius:16px 16px 0 0;padding:22px 22px 20px">
-      <p style="margin:0;font-size:12px;font-weight:800;letter-spacing:2px;color:#c7d7fb">OSS · APP TREINO</p>
+      <p style="margin:0;font-size:12px;font-weight:800;letter-spacing:2px;color:#c7d7fb">GESTÃO DE TREINOS</p>
       <p style="margin:6px 0 0;font-size:26px;line-height:1.2;font-weight:800;color:#ffffff">Seu resumo da semana</p>
       <p style="margin:4px 0 0;font-size:15px;color:#dbe6fd">${esc(r.periodo)}</p>
     </td></tr>
@@ -296,11 +296,11 @@ export function montarEmail(r: Resumo, links: { app: string; sair: string; pixel
       <p style="margin:0;font-size:18px;font-weight:700;color:${COR.tinta}">${r.nome ? `Olá, ${esc(r.nome)}! 👋` : 'Olá! 👋'}</p>
       ${r.total ? corpoComTreino : corpoSemTreino}
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:28px;border-collapse:separate"><tr>
-        <td align="center" style="background:${COR.azul};border-radius:12px"><a href="${esc(links.app)}" style="display:block;padding:16px 20px;font-size:16px;font-weight:800;color:#ffffff;text-decoration:none">${r.total ? 'Abrir o App Treino →' : 'Marcar meu próximo treino →'}</a></td>
+        <td align="center" style="background:${COR.azul};border-radius:12px"><a href="${esc(links.app)}" style="display:block;padding:16px 20px;font-size:16px;font-weight:800;color:#ffffff;text-decoration:none">${r.total ? 'Abrir o Gestão de Treinos →' : 'Marcar meu próximo treino →'}</a></td>
       </tr></table>
     </td></tr>
     <tr><td style="padding:16px 6px 0;font-size:12px;line-height:1.5;color:${COR.tinta2};text-align:center">
-      Você recebe este e-mail porque o resumo semanal está ligado no App Treino (Você → Conta).
+      Você recebe este e-mail porque o resumo semanal está ligado no Gestão de Treinos (Você → Conta).
       Registramos se ele foi aberto e se o botão foi tocado, para melhorar o resumo.<br>
       <a href="${esc(links.sair)}" style="color:${COR.azulTinta}">Não quero mais receber</a>
       ${links.pixel ? `<img src="${esc(links.pixel)}" width="1" height="1" alt="" style="display:block;width:1px;height:1px;border:0;margin:0 auto">` : ''}
@@ -318,7 +318,7 @@ export function montarEmail(r: Resumo, links: { app: string; sair: string; pixel
         gruposDe(r).map(([g, n]) => `${n}: ${r.porGrupo[g]}`).join(' · '),
         r.recordes.length ? `Recordes da semana: ${r.recordes.join(', ')}` : ''].filter(Boolean).join('\n')
       : `Semana nova, recomeço.\nNão apareceu nenhum treino no app de ${r.periodo}. Seu plano tem ${plural(r.planejadas, 'treino', 'treinos')} por semana; que tal marcar o primeiro hoje?`,
-    '', `Abrir o App Treino: ${links.app}`, '',
+    '', `Abrir o Gestão de Treinos: ${links.app}`, '',
     `Não quer mais receber o resumo semanal? ${links.sair}`,
   ].join('\n');
   return { assunto: assunto(r), html, texto };
@@ -424,18 +424,18 @@ export function montarAvisoPedido(p: { nome?: string; email?: string; quando: st
   const nome = (p.nome || '').trim() || 'Alguém';
   const quando = new Intl.DateTimeFormat('pt-BR', { timeZone: FUSO, day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(p.quando));
   const assunto = `Novo pedido de acesso: ${nome}`;
-  const texto = `${nome}${p.email ? ` (${p.email})` : ''} pediu acesso ao App Treino em ${quando}.\nPara liberar ou recusar, abra o monitoramento, aba Convites: ${painel}`;
+  const texto = `${nome}${p.email ? ` (${p.email})` : ''} pediu acesso ao Gestão de Treinos em ${quando}.\nPara liberar ou recusar, abra o monitoramento, aba Convites: ${painel}`;
   const html = `<!doctype html><html lang="pt-BR"><body style="margin:0;padding:24px 12px;background:${COR.fundo};font-family:Arial,Helvetica,sans-serif;color:${COR.tinta}">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border:1px solid ${COR.fio};border-radius:14px">
 <tr><td style="padding:24px">
-<p style="margin:0 0 6px;font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:${COR.azulTinta}">App Treino · Convites</p>
+<p style="margin:0 0 6px;font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:${COR.azulTinta}">Gestão de Treinos · Convites</p>
 <h1 style="margin:0 0 12px;font-size:22px;line-height:1.25">Novo pedido de acesso</h1>
 <p style="margin:0 0 4px;font-size:16px"><b>${esc(nome)}</b></p>
 ${p.email ? `<p style="margin:0 0 4px;font-size:15px;color:${COR.tinta2}">${esc(p.email)}</p>` : ''}
 <p style="margin:0 0 20px;font-size:14px;color:${COR.tinta2}">Pediu acesso em ${esc(quando)}.</p>
 <a href="${esc(painel)}" style="display:inline-block;padding:12px 18px;border-radius:10px;background:${COR.azul};color:#ffffff;font-weight:700;text-decoration:none">Liberar ou recusar →</a>
-<p style="margin:20px 0 0;font-size:12px;color:${COR.tinta2}">Você recebe este aviso porque é administrador do App Treino.</p>
+<p style="margin:20px 0 0;font-size:12px;color:${COR.tinta2}">Você recebe este aviso porque é administrador do Gestão de Treinos.</p>
 </td></tr></table></td></tr></table></body></html>`;
   return { assunto, html, texto };
 }
@@ -632,7 +632,7 @@ function iniciar() {
   });
   const enviar = async (e: Envio) => {
     await transporte.sendMail({
-      from: `"App Treino" <${gmail}>`, to: e.para, subject: e.assunto, html: e.html, text: e.texto,
+      from: `"Gestão de Treinos" <${gmail}>`, to: e.para, subject: e.assunto, html: e.html, text: e.texto,
       headers: e.sair ? { 'List-Unsubscribe': `<${e.sair}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' } : {},
     });
   };

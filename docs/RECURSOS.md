@@ -92,7 +92,7 @@ Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 a t6 nos check-i
   - Mobilidade e prevenção: Mobilidade, Anti-lesão e Pegada.
 - **Exercícios:** todos são da biblioteca, por nome. Cada treino tem o próprio "Sobre o treino", que só aparece enquanto os exercícios forem os mesmos da jornada.
 - **Conta nova:** passa pelas boas-vindas em passos, que não fecham sem uma escolha:
-  1. **Bem-vindo ao OSS:** o que o app faz (não grava nada);
+  1. **Bem-vindo ao Gestão de Treinos:** o que o app faz (não grava nada);
   2. **Seus dados:** o aviso de privacidade, com Entendi (só se a política ainda não foi aceita; vem antes de qualquer escolha ser gravada);
   3. **Qual é o seu objetivo?:** os objetivos prontos ou Montar do zero (sair do editor sem salvar volta para a escolha).
 
@@ -149,7 +149,7 @@ Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 a t6 nos check-i
 
 - **Convidar alguém:** no monitoramento, aba **Convites** → "Para quem?" (opcional) → **Gerar convite**. Copie o link ou toque em **Enviar pelo WhatsApp**. Cada link vale para uma pessoa e por 7 dias.
 - **O amigo:** abre o link, entra com o Google e o app libera a conta sozinho. Se o link já tiver sido usado, tiver expirado ou sido cancelado, ele vê o motivo e pode digitar outro código.
-- **Quem entra sem convite:** vê "O OSS é só para convidados", com um campo para o código e o botão **Pedir acesso**. Os pedidos aparecem na aba Convites, com Liberar e Recusar, e a aba mostra um selo com a quantidade.
+- **Quem entra sem convite:** vê "O Gestão de Treinos é só para convidados", com um campo para o código e o botão **Pedir acesso**. Os pedidos aparecem na aba Convites, com Liberar e Recusar, e a aba mostra um selo com a quantidade.
 - **Aviso por e-mail de pedido de acesso:** a cada novo pedido, os administradores recebem um e-mail ("Novo pedido de acesso: Nome") com o botão "Liberar ou recusar", que abre a aba Convites. Quem envia é a Edge Function `resumo-semanal` (mesmo Gmail do resumo), chamada por um gatilho no banco. Para ligar, publique a versão atual da função e rode `supabase/agendamentos/aviso-pedido-acesso.sql` no SQL Editor (depois do `resumo-semanal.sql`, que guarda o token no Vault). Pedidos repetidos da mesma pessoa em menos de 1 hora não geram outro e-mail.
 - **Convites gerados e utilizados:** a aba separa os convites ainda não usados (aguardando, expirados e cancelados) dos **convites utilizados**, que mostram quem entrou e quando. Quem foi liberado depois de pedir acesso também aparece ali, com o selo "Pedido de acesso". Tocar no nome abre o detalhe da pessoa.
 - **Excluir convite:** a lixeira de cada convite apaga o registro, com confirmação. Excluir um convite usado não tira o acesso de quem entrou; num convite aguardando, o link para de funcionar.
@@ -216,7 +216,7 @@ O dashboard mostra:
   - A aba mostra uma bolinha vermelha com os erros críticos das últimas 24 h.
 - **E-mails**: os resumos semanais enviados no período, com quantos foram abertos e clicados.
   - Tocando numa semana, aparece quem recebeu (Enviado, Abriu ou Clicou, com o horário) e quem não recebeu e por quê.
-  - A abertura é medida por uma imagem invisível e é aproximada: o Mail do iPhone/Mac pode carregar a imagem sozinho, e quem bloqueia imagens não conta. O clique no botão "Abrir o App Treino" é exato.
+  - A abertura é medida por uma imagem invisível e é aproximada: o Mail do iPhone/Mac pode carregar a imagem sozinho, e quem bloqueia imagens não conta. O clique no botão "Abrir o Gestão de Treinos" é exato.
   - Precisa da função `admin_emails` do `schema.sql`.
 
 ### On-line agora (Realtime)
@@ -265,7 +265,7 @@ O envio sai do seu Gmail, pela Edge Function `supabase/functions/resumo-semanal/
 
 1. **Senha de app do Google:**
    - na conta Google que vai enviar, ative a verificação em duas etapas;
-   - em https://myaccount.google.com/apppasswords, crie uma senha de app chamada "App Treino";
+   - em https://myaccount.google.com/apppasswords, crie uma senha de app chamada "Gestão de Treinos";
    - guarde os 16 caracteres.
 2. **Banco:** rode de novo o `supabase/schema.sql` no SQL Editor. Ele cria a opção `emails_resumo` no perfil e a tabela `emails_enviados`.
 3. **Função:** no Supabase, abra **Edge Functions → Deploy a new function → Via Editor**:

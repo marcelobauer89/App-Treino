@@ -47,7 +47,7 @@ ok(e.html.includes('Olá, Marcelo! 👋') && e.html.includes('>4</span>') && e.h
 ok(e.html.includes('Seu resumo da semana') && e.html.includes('16 de out a 22 de out'), 'cabeçalho com período');
 ok(e.html.includes('Quase lá') === false && e.html.includes('Bom ritmo'), 'mensagem do plano (67%)');
 ok(e.html.includes('2 novos recordes na semana') && e.html.includes('▸ Supino'), 'cartão de recordes');
-ok(e.html.includes('Abrir o App Treino →'), 'botão');
+ok(e.html.includes('Abrir o Gestão de Treinos →'), 'botão');
 // faixa: 7 colunas, sex..qui, com os selos dos dias de treino
 const sem = r.semana7;
 ok(sem.length === 7 && sem.map((d) => d.sigla).join() === 'sex,sáb,dom,seg,ter,qua,qui' && sem[0].num === 16 && sem[6].num === 22, 'faixa de sex a qui', sem.map((d) => `${d.sigla}${d.num}`).join());
@@ -206,7 +206,7 @@ ok(res.status === 500 && /falha checkins/.test((await res.json()).erro), 'erro d
   await hA.h(post({ enviar: true }));
   const m = hA.caixa.find((x) => x.para === 'm@x.com');
   const px = (m.html.match(/<img src="([^"]+)"/) || [])[1].replace(/&amp;/g, '&');
-  const bt = (m.html.match(/<a href="([^"]+)"[^>]*>Abrir o App Treino/) || [])[1].replace(/&amp;/g, '&');
+  const bt = (m.html.match(/<a href="([^"]+)"[^>]*>Abrir o Gestão de Treinos/) || [])[1].replace(/&amp;/g, '&');
   ok(px.startsWith(`${ENV.FUNCAO_URL}?aberto=${u.id}&ref=2026-10-22&t=`) && bt.startsWith(`${ENV.FUNCAO_URL}?clique=${u.id}&ref=2026-10-22&t=`), 'e-mail traz pixel e botão rastreados', `${px} | ${bt}`);
   ok(m.html.includes('Registramos se ele foi aberto'), 'rodapé avisa o registro de abertura');
   const linhaM = () => dbA.tabelas.emails_enviados.find((x) => x.usuario_id === u.id);
