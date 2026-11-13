@@ -153,6 +153,11 @@
 
   // ---------- Início ----------
   aplicarTema();
+  // App instalável: o service worker guarda os arquivos do site para abrir rápido e com internet ruim (sw.js).
+  // No computador (localhost) fica desligado, para nunca servir arquivo velho enquanto se mexe no código.
+  if ('serviceWorker' in navigator && location.protocol === 'https:') {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
   // Volta do link "Não quero mais receber" do resumo semanal (a função já desligou a opção no banco).
   if (new URLSearchParams(location.search).get('resumo') === 'desligado') {
     history.replaceState(null, '', location.pathname + location.hash);

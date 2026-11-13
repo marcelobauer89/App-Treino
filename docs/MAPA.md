@@ -14,6 +14,7 @@ Ao criar, renomear ou apagar uma seção ou um teste, atualize este mapa no mesm
 | `admin.html`, `css/admin.css`, `js/admin.js` | Monitoramento (só administradores) |
 | `mundo.html` | Mundo ao vivo (só administradores) |
 | `privacidade.html` | Política de Privacidade |
+| `manifest.webmanifest`, `icones/`, `sw.js` | App instalável (PWA): manifesto, ícones e service worker (registrado no `js/inicio.js`) |
 | `ambiente.js` | Projeto Supabase de produção ou de testes (por endereço) e o selo DEV |
 | `supabase/schema.sql` | Banco inteiro (tabelas, RLS, funções); roda de novo sem duplicar |
 | `supabase/migracoes/` | Uma mudança do banco por arquivo (`NNN-descricao.sql`), para rodar só o que mudou |
@@ -114,4 +115,5 @@ Rode só os da área mexida: `node tests/rodar.cjs test20 test22 …`.
 | Painel: catálogo de exercícios | test74 |
 | Resumo semanal por e-mail | test30, test60 e `cd tests && npm run edge` |
 | Banco (`schema.sql`) | `tests/sql/rodar.sh` |
+| App instalável (PWA) e service worker | test83 |
 | Harness dos testes (`tests/apoio/`) | todos |
