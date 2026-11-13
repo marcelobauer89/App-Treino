@@ -672,7 +672,8 @@
   function enviarEventos() {
     clearTimeout(eventosTimer);
     eventosTimer = null;
-    if (enviandoEventos) return enviandoEventos;
+    // Um envio já em andamento: o que entrou na fila depois sai logo em seguida (não espera o próximo ciclo de 10 s).
+    if (enviandoEventos) return enviandoEventos.then(() => (eventosFila.length ? enviarEventos() : undefined));
     if (!eventosFila.length || !sb || !eventosLigados) return Promise.resolve();
     const lote = eventosFila;
     eventosFila = [];
