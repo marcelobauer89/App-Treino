@@ -12,7 +12,6 @@ Ao criar, renomear ou apagar uma seção ou um teste, atualize este mapa no mesm
 | `css/app.css` | Estilos do app |
 | `js/*.js` | JavaScript do app, um arquivo por área (tabela abaixo). Todos dividem o mesmo escopo global: o que um arquivo define, os seguintes usam. Código que roda ao carregar só pode usar o que já foi carregado antes |
 | `admin.html`, `css/admin.css`, `js/admin.js` | Monitoramento (só administradores) |
-| `mundo.html` | Mundo ao vivo (só administradores) |
 | `privacidade.html` | Política de Privacidade |
 | `manifest.webmanifest`, `manifest-dev.webmanifest`, `icones/`, `sw.js` | App instalável (PWA): manifesto, ícones e service worker (registrado no `js/inicio.js`) |
 | `ambiente.js` | Projeto Supabase de produção ou de testes (por endereço) e o selo DEV |
@@ -83,10 +82,6 @@ Na ordem de carga. Cada linha é uma seção (comentário `// ---------- Nome --
 Conexão · Estado · Acesso · On-line agora (Presence) · Cálculos (números da Visão geral) · Render (Visão geral e gráficos) · Usuários · Saúde do app · E-mails · Abas · Detalhe do usuário · Eventos de interface · Excluir conta de um usuário · Convites · Exercícios (catálogo).
 
 Os eventos vêm só do período escolhido (`eventosNecessarios`, em Acesso). Os dados vêm de `todas()` (páginas de 1.000) nas funções `admin_usuarios`, `admin_checkins`, `admin_eventos`, `admin_emails` e `admin_convites`.
-
-## `mundo.html`: seções do script
-
-Conexão · Mapa · Personagens · Linha do tempo · Presença ao vivo · Acesso.
 
 ## `supabase/schema.sql`: ordem das partes
 
