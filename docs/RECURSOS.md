@@ -52,7 +52,7 @@ Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 a t6 nos check-i
 - **Seu plano no mês:** cada atividade da semana montada, com quantas vezes caiu no mês (até hoje, no mês atual) e quantas foram feitas, as mais puladas primeiro. No mês atual, uma dica 💡 aponta o dia da semana que mais falha nos últimos 3 meses (com plano em 3 dias ou mais e menos da metade feita) e leva à Minha semana.
 - **Seus pesos no mês:** a maior carga de cada exercício, a variação para o mês anterior, "novo" e 🏆 quando bateu recorde. Usa o nome de hoje no catálogo e junta os nomes antigos.
 - **Hora de subir a carga?:** os exercícios com a mesma carga máxima há 3 meses seguidos ou mais ("parado", com a sugestão de +2 kg até 20 kg e +2,5 kg acima) e os que caíram em relação ao mês anterior ("caiu"). Sem nenhum, a seção não aparece.
-- Usa os check-ins e as cargas que o app já carrega (o histórico inteiro da conta); não precisa de SQL. Para esconder a Evolução, troque `EVOLUCAO_LIGADA` para `false` no `index.html`.
+- Usa os check-ins e as cargas que o app já carrega (o histórico inteiro da conta); não precisa de SQL. Para esconder a Evolução, troque `EVOLUCAO_LIGADA` para `false` no `js/dashboard.js`.
 
 ## Atualização automática
 
@@ -85,7 +85,7 @@ Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 a t6 nos check-i
 
 ## Jornadas prontas
 
-- **O que são:** conjuntos de treinos prontos com uma semana sugerida, na tabela `jornadas` do banco (a cópia de reserva fica na constante `JORNADAS_APP` do `index.html`):
+- **O que são:** conjuntos de treinos prontos com uma semana sugerida, na tabela `jornadas` do banco (a cópia de reserva fica na constante `JORNADAS_APP` do `js/dados.js`):
   - Jiu Jitsu: o plano pronto de sempre;
   - Hipertrofia: 4 treinos;
   - Força e potência: A, B e Cardio;
@@ -116,9 +116,9 @@ Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 a t6 nos check-i
 - **Campos do cadastro:** séries por campos (séries × repetições ou tempo, unidade, "/ lado", totais ou válidas), gerando sempre o formato do app (`3×10`, `2–3×12 / lado`, `3×30 s`); o que não cabe nisso vai em "Outro formato". PSE em lista (como no editor do app), níveis em botões e nome com a primeira letra maiúscula. No celular, a janela ocupa a tela toda.
 - **Objetivo do exercício (opcional):** marque um ou mais objetivos (coluna `exercicios.objetivos`). No app, quem tem objetivo vê o chip **"Do meu objetivo"** em "Adicionar exercício". A carga inicial marca cada exercício com os objetivos em que ele já aparece.
 - **Objetivos prontos:** por enquanto, mudam só por SQL (a edição pelo painel vem depois).
-- **No aparelho:** o app guarda uma cópia do catálogo e abre com ela. Sem as tabelas (SQL ainda não rodado) ou sem internet, usa a cópia ou a lista que vem no `index.html` (`BIBLIOTECA_APP` e `JORNADAS_APP`).
+- **No aparelho:** o app guarda uma cópia do catálogo e abre com ela. Sem as tabelas (SQL ainda não rodado) ou sem internet, usa a cópia ou a lista que vem no `js/dados.js` (`BIBLIOTECA_APP` e `JORNADAS_APP`).
 - **Como ligar:** rode de novo o `supabase/schema.sql`. Ele cria as tabelas e carrega os 136 exercícios e os 4 objetivos. Rodar de novo não duplica, não traz de volta um exercício renomeado e não desfaz o que foi mudado no painel.
-- **Carga inicial:** é gerada da lista do `index.html` por `node supabase/gerar-catalogo.cjs` (o teste confere com `--conferir`). Ao mudar a lista do código, rode o gerador.
+- **Carga inicial:** é gerada da lista do `js/dados.js` por `node supabase/gerar-catalogo.cjs` (o teste confere com `--conferir`). Ao mudar a lista do código, rode o gerador.
 - **Exercícios mandados em lista:** viram um SQL de `insert into public.exercicios ...`, rodado primeiro no projeto de testes e depois no de produção.
 
 ## Vídeos liberados por usuário
@@ -161,7 +161,7 @@ Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 a t6 nos check-i
 ## Privacidade e LGPD
 
 - **Política:** `privacidade.html`, com link na tela de entrada e em Você → Privacidade. O contato do responsável é marcelobauer.mbb@gmail.com.
-- **Aviso de nova versão:** quando `perfis.politica_versao` é diferente de `POLITICA_VERSAO` (no `index.html`), o app mostra um resumo com "Entendi". Ao mudar o que o app guarda ou o que o painel mostra, atualize a política (texto e data) e a constante `POLITICA_VERSAO`, para todos verem o aviso de novo.
+- **Aviso de nova versão:** quando `perfis.politica_versao` é diferente de `POLITICA_VERSAO` (no `js/nucleo.js`), o app mostra um resumo com "Entendi". Ao mudar o que o app guarda ou o que o painel mostra, atualize a política (texto e data) e a constante `POLITICA_VERSAO`, para todos verem o aviso de novo.
 - **Dados de saúde:** as observações dos check-ins só aparecem para quem ligar "Registrar observações nos check-ins" em Você → Privacidade, que vem desligado; ligar é dar o consentimento (`perfis.consentimento_saude = 'sim'`). Desligar não pede confirmação: retira o consentimento e apaga as observações já registradas. A nota de recuperação (1 a 5) saiu do app, e o `schema.sql` apaga a coluna `checkins.recuperacao`; rode-o **depois** de publicar essa versão do app.
 - **Baixar meus dados:** Você → Privacidade gera um JSON com perfil, check-ins, cargas, treinos, registro de uso e e-mails (função `meus_dados_extras()`).
 - **Tempo de guarda:** enquanto a conta existir; excluir a conta apaga tudo.
@@ -195,7 +195,7 @@ O dashboard mostra:
 - **Detalhe de cada usuário**: check-ins das últimas 8 semanas, semana montada, exercícios sem peso, se recebe o resumo por e-mail e atividade recente (7 por vez, agrupada por dia, inclusive erros e sessões que caíram).
 - **Saúde do app**: só **erros críticos**, isto é, falhas do app que precisam de correção, e quantos usuários foram afetados.
   - Entram: erros de programação, gravações recusadas pelo banco (por exemplo, `schema.sql` não rodado depois de uma versão nova, com a dica para rodar) e falha ao excluir conta.
-  - Ficam de fora, porque são normais: quedas de internet ("Failed to fetch", "Load failed", tempo esgotado), reconexões do "On-line agora", login de novo e ruídos do navegador ("Script error.", "ResizeObserver loop"). O app nem registra esses casos, e o painel também ignora os que versões antigas gravaram. A regra está em `ehErroComum`, igual no `index.html` e no `admin.html`.
+  - Ficam de fora, porque são normais: quedas de internet ("Failed to fetch", "Load failed", tempo esgotado), reconexões do "On-line agora", login de novo e ruídos do navegador ("Script error.", "ResizeObserver loop"). O app nem registra esses casos, e o painel também ignora os que versões antigas gravaram. A regra está em `ehErroComum`, igual no `js/nucleo.js` (app) e no `js/admin.js` (painel).
   - Erros iguais aparecem agrupados, com o selo "Acontecendo agora" quando ocorreram nas últimas 24 h; tocando no grupo, aparece quando e com qual usuário.
   - A aba mostra uma bolinha vermelha com os erros críticos das últimas 24 h.
 - **E-mails**: os resumos semanais enviados no período, com quantos foram abertos e clicados.

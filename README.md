@@ -1,9 +1,10 @@
 # App-Treino
 
-App web (celular primeiro) do plano de 6 semanas **Jiu Jitsu + Hipertrofia**: treino do dia, registro de cargas, check-ins, calendário e dashboard. O app inteiro está em `index.html` e os dados ficam no **Supabase**, com login pela conta **Google**.
+App web (celular primeiro) do plano de 6 semanas **Jiu Jitsu + Hipertrofia**: treino do dia, registro de cargas, check-ins, calendário e dashboard. O app está em `index.html`, `css/` e `js/` (sem build) e os dados ficam no **Supabase**, com login pela conta **Google**.
 
-- `index.html`: o app (HTML, CSS e JavaScript, sem build).
-- `admin.html`: o monitoramento, só para administradores.
+- `index.html`: o app (HTML das telas); estilos em `css/app.css` e JavaScript em `js/` (um arquivo por área, sem build; mapa em [docs/MAPA.md](docs/MAPA.md)).
+- `admin.html`: o monitoramento, só para administradores (`css/admin.css` e `js/admin.js`).
+- Na publicação, o `?v=dev` dos endereços de `css/` e `js/` vira o commit publicado, para o navegador não misturar versões.
 - `mundo.html`: o Mundo ao vivo, só para administradores.
 - `ambiente.js`: endereço e chave do Supabase de produção e do de desenvolvimento (veja [Ambiente de desenvolvimento](#ambiente-de-desenvolvimento)).
 - `supabase/schema.sql`: tabelas, regras de acesso por usuário e criação automática do perfil.

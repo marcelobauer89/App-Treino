@@ -14,7 +14,7 @@ const usuario = (id, nome, videos) => ({ id, nome, email: `${id}@x.com`, cadastr
   const srv = await H.servidor(); const b = await chromium.launch();
 
   // O app não traz mais a lista de vídeos no código nem no repositório.
-  const html = fs.readFileSync(H.RAIZ + '/index.html', 'utf8');
+  const html = H.fonte();
   const ids = JSON.parse(fs.readFileSync(`${H.APOIO}/videos-exemplo.json`, 'utf8')).videos;
   const vazados = Object.values(ids).filter((id) => html.includes(id));
   ok(!vazados.length && /const VIDEOS = \{\};/.test(html), 'nenhum id de vídeo no index.html', vazados.join(','));

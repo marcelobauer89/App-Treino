@@ -1,6 +1,6 @@
 # Mapa do código e dos testes
 
-Para achar o trecho certo sem ler o arquivo inteiro. Cada parte do JS começa com um comentário `// ---------- Nome ----------`: procure por ele (`grep -n -- '---------- Nome' index.html`) e leia só daquela linha até a próxima seção. Os números de linha mudam; os nomes, não.
+Para achar o trecho certo sem ler o arquivo inteiro. Cada parte do JS começa com um comentário `// ---------- Nome ----------`: procure por ele (`grep -rn -- '---------- Nome' js/`) e leia só daquela linha até a próxima seção. Os números de linha mudam; os nomes, não.
 
 Ao criar, renomear ou apagar uma seção ou um teste, atualize este mapa no mesmo PR.
 
@@ -8,8 +8,10 @@ Ao criar, renomear ou apagar uma seção ou um teste, atualize este mapa no mesm
 
 | Arquivo | O que tem |
 | --- | --- |
-| `index.html` | O app inteiro: `<style>` no topo (~1.560 linhas), HTML das telas e janelas, e um `<script>` com as seções abaixo |
-| `admin.html` | Monitoramento (só administradores) |
+| `index.html` | HTML das telas e janelas do app; carrega `css/app.css` e os arquivos de `js/` na ordem abaixo |
+| `css/app.css` | Estilos do app |
+| `js/*.js` | JavaScript do app, um arquivo por área (tabela abaixo). Todos dividem o mesmo escopo global: o que um arquivo define, os seguintes usam. Código que roda ao carregar só pode usar o que já foi carregado antes |
+| `admin.html`, `css/admin.css`, `js/admin.js` | Monitoramento (só administradores) |
 | `mundo.html` | Mundo ao vivo (só administradores) |
 | `privacidade.html` | Política de Privacidade |
 | `ambiente.js` | Projeto Supabase de produção ou de testes (por endereço) e o selo DEV |
@@ -21,12 +23,16 @@ Ao criar, renomear ou apagar uma seção ou um teste, atualize este mapa no mesm
 | `docs/PRD.md` | Requisitos (RF-xx), com status |
 | `docs/RECURSOS.md` | Como cada recurso funciona e como ligar |
 
-## `index.html`: seções do script
+## App: arquivos de `js/` e suas seções
+
+Na ordem de carga. Cada linha é uma seção (comentário `// ---------- Nome ----------`).
 
 | Seção (comentário) | O que faz |
 | --- | --- |
+| **`js/dados.js`** | |
+| Dados (do PDF) | Plano pronto, `EXERCICIOS_EXTRAS`, `BIBLIOTECA_APP`, `VARIACOES`, `JORNADAS_APP` (reserva do catálogo do banco) |
+| **`js/nucleo.js`** | |
 | Conexão com o Supabase | Cria o cliente `sb` a partir do `ambiente.js` |
-| Dados (do PDF) | Plano pronto, `BIBLIOTECA_APP`, `VARIACOES`, `JORNADAS_APP` (reserva do catálogo do banco) |
 | Catálogo (exercícios e objetivos) | Lê `exercicios` e `jornadas` do banco e guarda cópia no aparelho |
 | Perfil e configurações | Tema, estilo, semana, treinos e opções vindas de `perfis` |
 | Datas | Helpers de data e semana |
@@ -36,15 +42,19 @@ Ao criar, renomear ou apagar uma seção ou um teste, atualize este mapa no mesm
 | Eventos de uso | Fila e envio em lote para `eventos` |
 | Atualização automática | `versao.json` e recarga segura; logo depois, `todasLinhas` (páginas de 1.000) e `carregarDados` (carga dos dados da conta) |
 | Helpers de interface | `toast`, `$` e afins |
+| **`js/checkin.js`** | |
 | Registro de pesos | Séries, cargas, Sem peso, recordes |
 | Encerrar check-in | Fecha o check-in em andamento |
 | Celebração do check-in | Tela cheia ao salvar |
 | Check-in rápido, extra ou retroativo | Formulário de check-in |
 | Foto do check-in | Câmera, redução e Storage |
+| **`js/treino.js`** | |
 | Render: tela Treino | Abas, cartões dos exercícios, Ficha |
 | Vídeo de execução no cartão | Carrossel do vídeo |
+| **`js/dashboard.js`** | |
 | Render: Dashboard | Resumo, calendário, check-ins do dia |
 | Dashboard → Evolução | Mês a mês, pesos e "hora de subir a carga" |
+| **`js/voce.js`** | |
 | Render: Você | Lista de opções |
 | Minha semana | Arrastar atividades nos dias |
 | Meus treinos (editor) | Montar até 6 treinos, biblioteca |
@@ -52,16 +62,20 @@ Ao criar, renomear ou apagar uma seção ou um teste, atualize este mapa no mesm
 | Jornadas prontas | Objetivos com treinos prontos |
 | Animação "Montando seus treinos" | |
 | Aviso da novidade / Novidade: Evolução | Avisos ao abrir o app |
+| **`js/telas.js`** | |
 | Telas | Navegação e endereço (`#tela`) |
 | Eventos | Cliques e formulários (delegação) |
+| **`js/temporizador.js`** | |
 | Temporizador de descanso | |
+| **`js/conta.js`** | |
 | Excluir conta | |
 | Privacidade (LGPD) | Política, consentimento, baixar meus dados |
 | Convites | `?convite=` e pedir acesso |
+| **`js/inicio.js`** | |
 | Entrada (login com Google) | Tela de login e sessão |
 | Início | Abertura do app (chama `carregarDados`) |
 
-## `admin.html`: seções do script
+## `js/admin.js` (monitoramento): seções
 
 Conexão · Estado · Acesso · On-line agora (Presence) · Cálculos (números da Visão geral) · Render (Visão geral e gráficos) · Usuários · Saúde do app · E-mails · Abas · Detalhe do usuário · Eventos de interface · Excluir conta de um usuário · Convites · Exercícios (catálogo).
 
