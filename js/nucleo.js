@@ -500,13 +500,42 @@
       resto = sem;
     }
   }
-  function enfileirar(op) {
+  // O que a pessoa mudou em cada pedido, para a faixa contar alterações e não pedidos: os pesos de um treino num dia
+  // vão num pedido só, mas cada exercício com peso mudado conta; várias edições do mesmo check-in contam uma vez.
+  function itensDoPedido(op, anterior) {
+    if (op.t === 'checkin') return [`checkin:${op.linha.id}`];
+    if (op.t === 'apagarCheckin') return [`checkin:${op.id}`];
+    if (op.t !== 'carga') return null;
+    const antes = ((copiaDados && copiaDados.k) || []).find((r) => mesmaCarga(r, op.linha));
+    const series = (antes && antes.series) || {};
+    const mudou = Object.keys(op.linha.series || {})
+      .filter((ex) => JSON.stringify(op.linha.series[ex]) !== JSON.stringify(series[ex]))
+      .map((ex) => `carga:${op.linha.data}:${op.linha.treino}:${ex}`);
+    const itens = [...new Set([...((anterior && anterior.itens) || []), ...mudou])];
+    return itens.length ? itens : [`carga:${op.linha.data}:${op.linha.treino}`];
+  }
+  // Quantas alterações estão guardadas só no aparelho (pedido sem itens, como perfil e semana, conta 1).
+  function contarAlteracoes() {
+    const itens = new Set();
+    let soltos = 0;
+    pendentes.forEach((x) => { if (Array.isArray(x.itens) && x.itens.length) x.itens.forEach((i) => itens.add(i)); else soltos++; });
+    return itens.size + soltos;
+  }
+  function enfileirar(pedido) {
+    // Cópia própria: a tela continua mexendo nos mesmos objetos (ex.: as séries) depois de pedir o envio.
+    const op = JSON.parse(JSON.stringify(pedido));
     // Um check-in ou um registro de pesos com envio ainda pendente: só a versão mais nova vai.
+    let anterior = null;
     if (op.t === 'checkin' || op.t === 'apagarCheckin') {
       const id = op.t === 'checkin' ? op.linha.id : op.id;
       pendentes = pendentes.filter((x) => !(x.t === 'checkin' && x.linha.id === id));
     }
-    if (op.t === 'carga') pendentes = pendentes.filter((x) => !(x.t === 'carga' && mesmaCarga(x.linha, op.linha)));
+    if (op.t === 'carga') {
+      anterior = pendentes.find((x) => x.t === 'carga' && mesmaCarga(x.linha, op.linha));
+      pendentes = pendentes.filter((x) => x !== anterior);
+    }
+    const itens = itensDoPedido(op, anterior);
+    if (itens) op.itens = itens;
     pendentes.push(op);
     guardarPendentes();
     aplicarNaCopia(copiaDados, op);
@@ -532,7 +561,7 @@
           continue;
         }
         if (erro && (semRede(erro) || ERRO_SESSAO.test(textoErro(erro)))) {
-          if (!semConexao && !estavaSemConexao) toast('Sem internet: ficou salvo no aparelho e vai para a nuvem quando a conexão voltar.');
+          if (!semConexao && !estavaSemConexao) toast('Sem internet: ficou guardado no aparelho e será salvo na sua conta assim que a internet voltar.');
           semConexao = true;
           break;
         }
@@ -548,19 +577,24 @@
     atualizarPendentesUI();
     return fila;
   }
-  // Selo no topo enquanto há mudanças guardadas só no aparelho ou a tela está com a cópia (sem internet).
+  const ICONE_SEM_WIFI = '<svg class="pendentes-ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+    + '<path d="M12 20h.01M8.5 16.43a5 5 0 0 1 7 0M5 12.86a10 10 0 0 1 5.17-2.69M19 12.86a10 10 0 0 0-2.01-1.52M2 8.82a15 15 0 0 1 4.18-2.65M22 8.82a15 15 0 0 0-11.29-3.76M2 2l20 20"/></svg>';
+  // Faixa no topo enquanto há mudanças guardadas só no aparelho ou a tela está com a cópia (sem internet).
   function atualizarPendentesUI() {
     const el = document.getElementById('pendentes');
     if (!el) return;
-    const n = pendentes.length;
+    const n = contarAlteracoes();
     const mostrar = !!usuario && !document.body.classList.contains('deslogado')
       && (modoOffline || (n > 0 && (semConexao || navigator.onLine === false)));
     el.hidden = !mostrar;
     document.body.classList.toggle('com-pendentes', mostrar);
     if (!mostrar) return;
-    el.textContent = n
-      ? `Sem internet · ${n === 1 ? '1 alteração guardada' : `${n} alterações guardadas`} no aparelho`
-      : 'Sem internet · mostrando os dados guardados no aparelho';
+    const texto = n
+      ? `<b>Sem internet.</b> ${n === 1 ? '1 alteração guardada' : `${n} alterações guardadas`} no aparelho; ${n === 1 ? 'será salva' : 'serão salvas'} na sua conta assim que a internet voltar.`
+      : '<b>Sem internet.</b> Mostrando os dados guardados no aparelho; tudo volta a ser salvo na sua conta quando a internet voltar.';
+    el.innerHTML = `${ICONE_SEM_WIFI}<span>${texto}</span>`;
+    // A faixa pode ocupar duas linhas: a tela desce o quanto ela mede.
+    document.body.style.setProperty('--pendentes-h', `${el.offsetHeight}px`);
   }
   // A internet voltou (ou o app voltou para a frente): envia o que ficou guardado e, se a tela estava com a cópia,
   // busca os dados do servidor de novo.
