@@ -4,13 +4,14 @@
 //   node supabase/gerar-catalogo.cjs --conferir → só confere (sai com erro se o schema.sql estiver desatualizado)
 const fs = require('fs'), path = require('path');
 const RAIZ = path.resolve(__dirname, '..');
-const html = fs.readFileSync(path.join(RAIZ, 'index.html'), 'utf8');
+// O catálogo do app fica em js/dados.js (carregado pelo index.html).
+const html = fs.readFileSync(path.join(RAIZ, 'js', 'dados.js'), 'utf8');
 const SCHEMA = path.join(RAIZ, 'supabase', 'schema.sql');
 
 // O trecho do app que define o catálogo roda sozinho (não depende do resto do app).
 const ini = html.indexOf('  const PLANO_PADRAO = {');
 const fim = html.indexOf('  const jornadaPorIdApp');
-if (ini < 0 || fim < 0) throw new Error('Não achei o catálogo no index.html');
+if (ini < 0 || fim < 0) throw new Error('Não achei o catálogo no js/dados.js');
 const { BIBLIOTECA_APP, JORNADAS_APP } = new Function(`${html.slice(ini, fim)}; return { BIBLIOTECA_APP, JORNADAS_APP };`)();
 
 const sqlTexto = (s) => `'${String(s).replace(/'/g, "''")}'`;

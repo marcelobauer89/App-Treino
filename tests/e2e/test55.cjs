@@ -26,7 +26,7 @@ const FORA = ['Agachamento goblet', 'Clean do chão unilateral', 'Barra fixa sup
 const norm = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 async function abrir(b, op = {}) {
   const p = await H.novaPagina(b, { extra: { perfis: [{ ...PERFIL }] }, ...op });
-  if (op.html) await p.context().route(/\/index\.html/, async (r) => { const resp = await r.fetch(); r.fulfill({ response: resp, body: op.html(await resp.text()) }); });
+  if (op.html) await p.context().route(/\/js\/dados\.js/, async (r) => { const resp = await r.fetch(); r.fulfill({ response: resp, body: op.html(await resp.text()) }); });
   await p.clock.install({ time: T });
   await p.goto(H.PAGINA); await H.prontos(p); await p.waitForTimeout(200);
   await H.voce(p, 'treinos'); await p.click('#editar-treinos'); await p.click('[data-ed-vista="escolher"]'); await p.waitForTimeout(150);
@@ -86,7 +86,7 @@ const itens = (p) => p.locator('.ed-bib-item').evaluateAll((ls) => ls.map((l) =>
   }
   // Outros nomes: cada um aponta para um exercício que existe e nenhum é nome de outro exercício (nem se repete)
   {
-    const html = require('fs').readFileSync(H.RAIZ + '/index.html', 'utf8');
+    const html = H.fonte();
     const bloco = html.slice(html.indexOf('const VARIACOES = {'), html.indexOf('const GRUPOS_EX'));
     const pares = [...bloco.matchAll(/'([^']+)': \[([^\]]+)\]/g)].map((m) => [m[1], [...m[2].matchAll(/'([^']+)'/g)].map((x) => x[1])]);
     const p0 = await abrir(b); const todos = (await itens(p0)).map(norm); await p0.context().close();

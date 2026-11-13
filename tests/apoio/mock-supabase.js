@@ -12,7 +12,9 @@
     constructor(tabela) { this.tabela = tabela; this.op = 'select'; this.filtros = []; this.unico = false; }
     select(c) { this.cols = c; return this; }
     limit() { return this; }
-    order(c) { this.ordem = c; return this; }
+    order(c) { this.ordens = (this.ordens || []).concat(c); return this; }
+    // Como o Supabase: .range(de, ate) pega uma página, e maxLinhas (o "Max rows" do projeto) corta qualquer lista.
+    range(de, ate) { this.faixa = [de, ate]; return this; }
     eq(c, v) { this.filtros.push([c, v]); return this; }
     maybeSingle() { this.unico = true; return this; }
     insert(r) { this.op = 'insert'; this.dados = [].concat(r); return this; }
@@ -23,6 +25,7 @@
     executar() {
       const db = ler();
       db.log.push(`${this.op}:${this.tabela}${this.op === 'select' && this.cols && this.cols !== '*' ? `:${this.cols}` : ''}`);
+      if (this.faixa) db.log.push(`range:${this.tabela}:${this.faixa[0]}-${this.faixa[1]}`);
       if (db.semTabelaEventos && this.tabela === 'eventos') {
         gravar(db); return { data: null, error: { message: "Could not find the table 'public.eventos' in the schema cache" } };
       }
@@ -75,8 +78,10 @@
       const casa = (r) => this.filtros.every(([c, v]) => r[c] === v);
       const linhas = db[this.tabela];
       if (this.op === 'select') {
-        const d = linhas.filter(casa);
-        if (this.ordem) d.sort((a, b) => String(a[this.ordem]).localeCompare(String(b[this.ordem])));
+        let d = linhas.filter(casa);
+        if (this.ordens) d.sort((a, b) => { for (const c of this.ordens) { const x = String(a[c] ?? '').localeCompare(String(b[c] ?? '')); if (x) return x; } return 0; });
+        if (this.faixa) d = d.slice(this.faixa[0], this.faixa[1] + 1);
+        if (!this.unico) d = d.slice(0, db.maxLinhas || Infinity);
         gravar(db);
         return { data: this.unico ? d[0] || null : d, error: null };
       }
@@ -398,6 +403,11 @@
               if (nome === 'eh_admin') return { data: eh, error: null };
               if (!eh) return { data: null, error: { message: 'acesso restrito' } };
               if (nome === 'admin_emails' && a.semEmails) return { data: null, error: { message: 'Could not find the function public.admin_emails without parameters' } };
+              // admin_eventos(desde): como no banco, só os eventos a partir do instante pedido.
+              if (nome === 'admin_eventos' && args && args.desde) {
+                const d2 = ler(); d2.log.push(`admin_eventos:desde:${args.desde}`); gravar(d2);
+                return { data: (a.eventos || []).filter((e) => e.criado_em >= args.desde), error: null };
+              }
               return { data: a[nome.slice(6)] || [], error: null };
             }
             if (db.semFuncaoAcesso) { gravar(db); return { data: null, error: { message: `Could not find the function public.${nome} without parameters` } }; }

@@ -66,6 +66,11 @@ jobs:
           if [ -d desenvolvimento ]; then
             printf '{"versao":"%s"}\n' "$(git -C desenvolvimento rev-parse HEAD)" > _site/dev/versao.json
           fi
+          # css/ e js/ com a versão no endereço (?v=dev vira ?v=<commit>): o navegador não mistura arquivos de versões diferentes.
+          sed -i "s/?v=dev\"/?v=$(git -C producao rev-parse --short HEAD)\"/g" _site/*.html
+          if [ -d desenvolvimento ]; then
+            sed -i "s/?v=dev\"/?v=$(git -C desenvolvimento rev-parse --short HEAD)\"/g" _site/dev/*.html
+          fi
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
