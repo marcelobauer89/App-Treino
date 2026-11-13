@@ -53,9 +53,10 @@ const local = (p, k) => p.evaluate((k) => JSON.parse(localStorage.getItem(k) || 
   ok(await p.locator('#tela-voce').isVisible() && /ainda não foram enviadas/.test(await txt(p, '#toast')), 'Sair bloqueado com mudança não enviada', await txt(p, '#toast'));
 
   // 4. Fecha e abre sem internet, com a sessão vencida: abre com a cópia, já com o check-in.
-  await rede(p, false, { sessaoVencida: true });
+  // O login demora 30 s para responder (a biblioteca tentando renovar): o app não espera por ele.
+  await rede(p, false, { sessaoVencida: true, atrasoSessao: 30000 });
   await p.reload(); await H.prontos(p);
-  ok(await p.locator('#tela-entrar').isHidden(), 'sem internet e sessão vencida: o app abre com a cópia');
+  ok(await p.locator('#tela-entrar').isHidden(), 'sem internet e sessão vencida: o app abre na hora com a cópia');
   ok(/1 alteração guardada/.test(await txt(p, '#pendentes')), 'selo continua depois de reabrir', await txt(p, '#pendentes'));
   const naTela = await p.evaluate(() => checkins.map((c) => c.tipo));
   ok(naTela.length === 1 && naTela[0] === 'jiu', 'check-in feito sem internet continua na tela', JSON.stringify(naTela));
@@ -85,6 +86,18 @@ const local = (p, k) => p.evaluate((k) => JSON.parse(localStorage.getItem(k) || 
   ok(pend3.length === 2, 'pesos do mesmo treino continuam num pedido só', JSON.stringify(pend3.map((x) => x.t)));
   ok(/4 alterações guardadas/.test(await txt(p, '#pendentes')), 'faixa conta cada exercício: 4 alterações', await txt(p, '#pendentes'));
   await p.screenshot({ path: `${H.SAIDA}/offline-faixa-4.png` });
+
+  // 5b. Wi-Fi sem internet (o aparelho diz que está on-line) e o login demorando: abre com a cópia depois de 3 s.
+  await p.evaluate(() => localStorage.setItem('teste-offline', '0'));
+  await p.reload();
+  await p.waitForTimeout(300);
+  ok(await p.locator('#tela-entrar').isVisible(), 'Wi-Fi sem internet: espera o login por alguns segundos');
+  await p.clock.runFor(3200);
+  await H.prontos(p);
+  ok(/4 alterações guardadas/.test(await txt(p, '#pendentes')), 'Wi-Fi sem internet: abre com a cópia e as 4 alterações', await txt(p, '#pendentes'));
+  // A resposta do login chega ("sem sessão", a renovação falhou): o app continua aberto.
+  await p.clock.runFor(30000); await p.waitForTimeout(200);
+  ok(await p.locator('#tela-entrar').isHidden() && await p.locator('.nav').isVisible(), 'login responde sem sessão sem internet: continua no app');
 
   // 6. A internet volta: a fila sai sozinha, na ordem, e o selo some.
   await rede(p, true, { sessaoVencida: false });

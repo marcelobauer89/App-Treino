@@ -463,6 +463,7 @@
     } catch (_) {} // aparelho sem espaço: o app segue, só não abre sem internet com a última mudança
   }
   // Conta guardada para abrir sem internet quando a sessão venceu e não dá para renová-la agora.
+  const temCopia = (id) => { try { return !!localStorage.getItem(`bauer-copia-${id}`); } catch (_) { return false; } };
   function usuarioGuardado() {
     try { const u = JSON.parse(localStorage.getItem(CHAVE_COPIA_USUARIO) || 'null'); return u && u.id ? u : null; } catch (_) { return null; }
   }
@@ -893,9 +894,11 @@
     const copia = lerCopia();
     let d;
     try {
-      // Internet muito ruim, com a cópia no aparelho: depois de 15 s, abre com a cópia em vez de esperar mais.
+      // O aparelho diz que está sem internet: nem tenta (abre na hora com a cópia).
+      if (copia && navigator.onLine === false) throw new Error('sem internet');
+      // Internet muito ruim, com a cópia no aparelho: depois de 8 s, abre com a cópia em vez de esperar mais.
       d = await (copia
-        ? Promise.race([buscarDoServidor(), new Promise((_, nao) => setTimeout(() => nao(new Error('timeout')), 15000))])
+        ? Promise.race([buscarDoServidor(), new Promise((_, nao) => setTimeout(() => nao(new Error('timeout')), 8000))])
         : buscarDoServidor());
       pendentes.forEach((op) => aplicarNaCopia(d, op));
       modoOffline = false;
