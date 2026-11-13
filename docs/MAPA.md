@@ -16,6 +16,7 @@ Ao criar, renomear ou apagar uma seção ou um teste, atualize este mapa no mesm
 | `privacidade.html` | Política de Privacidade |
 | `ambiente.js` | Projeto Supabase de produção ou de testes (por endereço) e o selo DEV |
 | `supabase/schema.sql` | Banco inteiro (tabelas, RLS, funções); roda de novo sem duplicar |
+| `supabase/migracoes/` | Uma mudança do banco por arquivo (`NNN-descricao.sql`), para rodar só o que mudou |
 | `supabase/functions/resumo-semanal/` | Edge Function do resumo semanal e do aviso de pedido de acesso |
 | `supabase/agendamentos/` | Agendamento do resumo e gatilho do aviso por e-mail |
 | `supabase/ajustes/` | Correções de dados que rodam uma vez |
@@ -79,7 +80,7 @@ Na ordem de carga. Cada linha é uma seção (comentário `// ---------- Nome --
 
 Conexão · Estado · Acesso · On-line agora (Presence) · Cálculos (números da Visão geral) · Render (Visão geral e gráficos) · Usuários · Saúde do app · E-mails · Abas · Detalhe do usuário · Eventos de interface · Excluir conta de um usuário · Convites · Exercícios (catálogo).
 
-Os dados vêm de `todas()` (páginas de 1.000) nas funções `admin_usuarios`, `admin_checkins`, `admin_eventos`, `admin_emails` e `admin_convites`.
+Os eventos vêm só do período escolhido (`eventosNecessarios`, em Acesso). Os dados vêm de `todas()` (páginas de 1.000) nas funções `admin_usuarios`, `admin_checkins`, `admin_eventos`, `admin_emails` e `admin_convites`.
 
 ## `mundo.html`: seções do script
 
@@ -108,7 +109,7 @@ Rode só os da área mexida: `node tests/rodar.cjs test20 test22 …`.
 | Privacidade, LGPD e excluir conta | test42, test44, test46 |
 | Convites | test43, test47 |
 | Eventos de uso | test26, test57 |
-| Painel: Visão geral e gráficos | test27, test29, test31, test50, test54, test61, test64, test67 |
+| Painel: Visão geral e gráficos (inclui a busca de eventos por período) | test27, test29, test31, test50, test54, test61, test64, test67, test82 |
 | Painel: usuários, on-line, saúde, e-mails | test28, test32, test33, test49, test60, test69 |
 | Painel: catálogo de exercícios | test74 |
 | Resumo semanal por e-mail | test30, test60 e `cd tests && npm run edge` |

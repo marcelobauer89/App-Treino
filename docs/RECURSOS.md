@@ -182,6 +182,8 @@ on conflict do nothing;
 
 Para o login do Google voltar ao dashboard, o endereço dele precisa estar liberado em **Authentication → URL Configuration → Redirect URLs** do Supabase. Adicione `https://marcelobauer89.github.io/App-Treino/admin.html` (ou `https://marcelobauer89.github.io/App-Treino/**`, que libera o app e o dashboard).
 
+Para abrir rápido mesmo com muitos usuários, o painel busca só os eventos do período escolhido e do anterior (para a comparação), no mínimo os últimos 35 dias ("Quem sumiu" olha 4 semanas + 7 dias). Escolher um período mais longo busca de novo (o botão Atualizar gira); só **Tudo** baixa o histórico inteiro. A atividade recente no detalhe do usuário mostra os eventos desse intervalo. Não precisa de SQL: usa o `admin_eventos(desde)` que já existe.
+
 O dashboard é dividido em quatro abas: **Visão geral**, **Usuários**, **Saúde do app** e **E-mails**. O período escolhido (Hoje, 7, 30, 90 dias ou Tudo) vale para todas, e a aba aberta fica no endereço (por exemplo `admin.html#saude`).
 
 O dashboard mostra:

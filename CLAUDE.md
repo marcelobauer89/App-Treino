@@ -18,7 +18,7 @@ O dono do repositório não quer abrir nem aceitar PRs pelo GitHub. Ao terminar 
 Regras:
 
 - Se o PR tiver conflito, resolva com um merge da branch de destino (nada de force-push na `dev` ou na `main`) e só então faça o merge.
-- Se a mudança mexer no `supabase/schema.sql` ou em outro SQL, avise na resposta que é preciso rodar o SQL no projeto de **testes** (ao ir para a `dev`) ou de **produção** (ao ir para a `main`), porque isso não é automático.
+- Mudança no banco: crie a migração em `supabase/migracoes/NNN-descricao.sql` (ver o README da pasta) e aplique a mesma mudança no `supabase/schema.sql`. Avise na resposta qual arquivo rodar no projeto de **testes** (ao ir para a `dev`) ou de **produção** (ao ir para a `main`), porque isso não é automático.
 - Depois do merge, responda com o link do PR e o endereço publicado (`/App-Treino/dev/` ou `/App-Treino/`).
 
 ## Backlog no Notion: atualizar a cada subida para produção

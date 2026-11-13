@@ -140,7 +140,7 @@ Por segurança, o workflow só importa no projeto `tnpgxukcrfcwjvzlimkm` (oss-de
 
 ## Atualizar o banco depois de uma nova versão
 
-Quando uma versão nova do app precisar de mudanças no banco, rode de novo o `supabase/schema.sql` inteiro no **SQL Editor** (passo 1). Ele só cria o que falta e não apaga dados. A tela **Minha semana** precisa da coluna `perfis.semana` e o registro de pesos precisa da tabela `cargas`: se o app avisar "Para salvar a semana…" ou "Para salvar os pesos, rode de novo o supabase/schema.sql", é isso que falta.
+Quando uma versão nova do app precisar de mudanças no banco, rode no **SQL Editor** a migração nova de `supabase/migracoes/` (veja o [README da pasta](supabase/migracoes/README.md)). Rodar de novo o `supabase/schema.sql` inteiro (passo 1) também funciona. Ele só cria o que falta e não apaga dados. A tela **Minha semana** precisa da coluna `perfis.semana` e o registro de pesos precisa da tabela `cargas`: se o app avisar "Para salvar a semana…" ou "Para salvar os pesos, rode de novo o supabase/schema.sql", é isso que falta.
 
 ## Recursos
 
