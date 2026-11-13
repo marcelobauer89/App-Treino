@@ -53,6 +53,7 @@
     try {
       [CHAVE_SESSAO, chaveNovidade(), `bauer-migrado-${usuario.id}`].forEach((k) => localStorage.removeItem(k));
     } catch (_) {}
+    esquecerCopia();
     desligarPresenca();
     excluirDialog.close();
     await sb.auth.signOut();
@@ -134,7 +135,7 @@
     if (!ligar && checkins.some((c) => c.obs)) {
       apagou = true;
       checkins.forEach((c) => { c.obs = ''; });
-      enviar(() => sb.from('checkins').update({ obs: '' }).eq('usuario_id', usuario.id));
+      apagarObservacoes();
     }
     registrarEvento('consentimento_saude', { resposta: config.saude, origem: 'privacidade', apagou });
     atualizarCheckinUI();

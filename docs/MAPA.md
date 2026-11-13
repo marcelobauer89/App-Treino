@@ -39,9 +39,10 @@ Na ordem de carga. Cada linha é uma seção (comentário `// ---------- Nome --
 | Datas | Helpers de data e semana |
 | Estado da tela | Variáveis globais da interface |
 | Check-ins | Modelo do check-in |
-| Supabase | `enviar`, `salvarCheckin`, `salvarCarga`, avisos "rode o schema.sql" |
+| Supabase | `salvarCheckin`, `salvarCarga`, `salvarPerfil`, avisos "rode o schema.sql" |
+| Fila de envio e cópia dos dados no aparelho (uso sem internet) | `enfileirar`, `sincronizar`, cópia `bauer-copia-<id>`, faixa "Sem internet" (`atualizarPendentesUI`) |
 | Eventos de uso | Fila e envio em lote para `eventos` |
-| Atualização automática | `versao.json` e recarga segura; logo depois, `todasLinhas` (páginas de 1.000) e `carregarDados` (carga dos dados da conta) |
+| Atualização automática | `versao.json` e recarga segura; logo depois, `todasLinhas` (páginas de 1.000), `buscarDoServidor`, `carregarDados` (servidor ou cópia do aparelho) e `aplicarDados` |
 | Helpers de interface | `toast`, `$` e afins |
 | **`js/checkin.js`** | |
 | Registro de pesos | Séries, cargas, Sem peso, recordes |
@@ -111,5 +112,5 @@ Rode só os da área mexida: `node tests/rodar.cjs test20 test22 …`.
 | Painel: catálogo de exercícios | test74 |
 | Resumo semanal por e-mail | test30, test60 e `cd tests && npm run edge` |
 | Banco (`schema.sql`) | `tests/sql/rodar.sh` |
-| App instalável (PWA), service worker, Instalar o app e sem internet | test83, test84 |
+| App instalável (PWA), service worker, Instalar o app e sem internet (cópia dos dados e fila de envio) | test83, test84, test85 |
 | Harness dos testes (`tests/apoio/`) | todos |

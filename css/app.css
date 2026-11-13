@@ -572,6 +572,16 @@
   .anterior-confirma { display: grid; gap: 8px; }
   .anterior-confirma > div { display: flex; flex-wrap: wrap; gap: 8px; }
   /* Na tela de entrada não há barra de navegação: o aviso fica no topo para não cobrir o botão do Google. */
+  /* Faixa "Sem internet" no topo: mudanças guardadas só no aparelho ou a tela com a cópia dos dados.
+     Empurra a tela para baixo (body.com-pendentes), para não cobrir nada. */
+  .pendentes {
+    position: fixed; z-index: 25; top: 0; left: 0; right: 0;
+    padding: calc(6px + env(safe-area-inset-top, 0px)) 16px 6px; min-height: 32px;
+    background: var(--tinta); color: var(--gi); text-align: center; font-size: 13px; font-weight: 700; line-height: 20px;
+  }
+  body.com-pendentes { padding-top: calc(32px + env(safe-area-inset-top, 0px)); }
+  body.com-pendentes .controles { top: calc(32px + env(safe-area-inset-top, 0px)); }
+  body.deslogado .pendentes { display: none; }
   body.deslogado .toast { top: max(16px, env(safe-area-inset-top, 0px)); bottom: auto; }
   body.com-ativo .toast { bottom: calc(var(--nav-h) + var(--ativo-h) + env(safe-area-inset-bottom, 0px) + 84px); }
 

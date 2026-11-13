@@ -91,7 +91,8 @@
       await carregarDados();
       mostrarCarga('Conferindo seu acesso…');
       if (!(await temAcesso())) return;
-      await migrarDadosLocais();
+      // Sem internet (abriu com a cópia do aparelho), a migração fica para a próxima abertura com internet.
+      if (!modoOffline) await migrarDadosLocais();
     } catch (_) {
       // Sem internet: aviso amigável, e o app tenta de novo sozinho quando a conexão voltar (ver "online" abaixo).
       mostrarEntrada('erro', navigator.onLine === false
@@ -136,6 +137,9 @@
     }
     // Mantém o horário do topo e a barra de treino em andamento atualizados.
     if (!relogio) relogio = setInterval(() => { renderHoje(); renderAtivo(); }, 15000);
+    // O que foi feito sem internet em outra abertura sai agora (ou quando a conexão voltar).
+    if (pendentes.length) sincronizar();
+    atualizarPendentesUI();
   }
 
   $('entrar-google').innerHTML = `${ICONE_GOOGLE}<span>Continuar com o Google</span>`;
@@ -182,6 +186,15 @@
           entrandoId = sessao.user.id;
           setTimeout(() => entrarNoApp(sessao), 0);
         }
+        return;
+      }
+      // Sem internet e com a sessão vencida, a biblioteca não consegue renová-la e responde "sem sessão". Se a conta
+      // deixou a cópia dos dados neste aparelho (só some ao sair), o app abre com ela; ao voltar a internet, a sessão
+      // é renovada e a fila de envio sai.
+      const guardado = evento === 'INITIAL_SESSION' && navigator.onLine === false ? usuarioGuardado() : null;
+      if (guardado) {
+        entrandoId = guardado.id;
+        setTimeout(() => entrarNoApp({ user: guardado }), 0);
         return;
       }
       entrandoId = null;

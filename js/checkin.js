@@ -448,7 +448,9 @@
       const caminho = `${usuario.id}/${c.id}.jpg`;
       const { error } = await sb.storage.from(BUCKET_FOTOS).upload(caminho, f.nova, { upsert: true, contentType: 'image/jpeg' });
       if (error) {
-        toast('Check-in salvo, mas a foto não foi enviada. Tente de novo em Editar check-in.', 6000);
+        toast(semRede(error)
+          ? 'Check-in salvo. A foto precisa de internet: adicione de novo em Editar check-in quando a conexão voltar.'
+          : 'Check-in salvo, mas a foto não foi enviada. Tente de novo em Editar check-in.', 6000);
         registrarErro('foto', error.message);
         return;
       }
