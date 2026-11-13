@@ -264,7 +264,8 @@
     if (!dias.includes(6)) s[6].push('bike');
     return s;
   }
-  const SEMANA_PADRAO = semanaDeDiasJiu([2, 4]);
+  // Padrão sem lutas: jiu e os outros esportes entram quando a pessoa os coloca na semana.
+  const SEMANA_PADRAO = semanaDeDiasJiu([]);
   // Com treinos montados pela pessoa, a semana padrão fica só com os que existem.
   const semanaPadrao = () => validarSemana(SEMANA_PADRAO);
   function validarSemana(s) {
@@ -877,7 +878,7 @@
       const meta = usuario.user_metadata || {};
       linha = {
         id: usuario.id, nome: meta.full_name || meta.name || '', email: usuario.email || '',
-        foto: meta.avatar_url || meta.picture || '', tema: 'auto', dias_jiu: [2, 4],
+        foto: meta.avatar_url || meta.picture || '', tema: 'auto', dias_jiu: [],
       };
       const { error } = await sb.from('perfis').upsert(linha);
       if (error) throw error;

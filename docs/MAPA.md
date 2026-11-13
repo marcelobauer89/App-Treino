@@ -113,4 +113,5 @@ Rode só os da área mexida: `node tests/rodar.cjs test20 test22 …`.
 | Resumo semanal por e-mail | test30, test60 e `cd tests && npm run edge` |
 | Banco (`schema.sql`) | `tests/sql/rodar.sh` |
 | App instalável (PWA), service worker, Instalar o app e sem internet (cópia dos dados e fila de envio) | test83, test84, test85 |
+| Identidade "Gestão de Treinos" (nome, descrição, semana padrão sem jiu, ordem dos objetivos) | test86 |
 | Harness dos testes (`tests/apoio/`) | todos |

@@ -35,7 +35,8 @@ const doDia = (p, i, t) => p.locator(`#dias-cfg .dia-cfg[data-dia="${i}"] [data-
   await p.evaluate(() => document.fonts.ready);
 
   ok((await dias(p)).join(' ') === 't2 jiu t1 jiu t3 bike -', 'default week from dias_jiu', (await dias(p)).join(' '));
-  ok(await p.isDisabled('#semana-padrao'), 'reset disabled on default');
+  // Conta antiga com jiu (dias_jiu): a semana dela não é mais o padrão, que começa sem lutas.
+  ok(!(await p.isDisabled('#semana-padrao')), 'reset enabled: old jiu week differs from the new default');
   ok((await txt(p, '#avisos-semana')) === '', 'no warnings on default week', await txt(p, '#avisos-semana'));
   ok(await p.evaluate(() => document.documentElement.scrollWidth) === 375, 'no horizontal scroll');
   await linhaDia(p, 1).scrollIntoViewIfNeeded();
@@ -116,9 +117,9 @@ const doDia = (p, i, t) => p.locator(`#dias-cfg .dia-cfg[data-dia="${i}"] [data-
   ok((await dias(p)).join(' ') === 't1 jiu - jiu t3 bike+jiu t2', 'persists after reload');
   await p.click('#semana-padrao');
   await H.gravacoes(p);
-  ok((await dias(p)).join(' ') === 't2 jiu t1 jiu t3 bike -' && await p.isDisabled('#semana-padrao'), 'reset to default');
+  ok((await dias(p)).join(' ') === 't2 - t1 - t3 bike -' && await p.isDisabled('#semana-padrao'), 'reset to default (no jiu)', (await dias(p)).join(' '));
   db = await H.banco(p);
-  ok(JSON.stringify(db.perfis[0].semana) === JSON.stringify([[], ['t2'], ['jiu'], ['t1'], ['jiu'], ['t3'], ['bike']]), 'reset saved');
+  ok(JSON.stringify(db.perfis[0].semana) === JSON.stringify([[], ['t2'], [], ['t1'], [], ['t3'], ['bike']]), 'reset saved');
   console.log('errors:', p.errs);
   ok(!p.errs.length, 'no page errors');
 

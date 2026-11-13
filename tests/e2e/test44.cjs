@@ -69,7 +69,7 @@ async function abrir(b, perfil, op = {}) {
     const [down] = await Promise.all([p.waitForEvent('download'), p.click('#baixar-dados')]);
     const caminho = await down.path();
     const j = JSON.parse(fs.readFileSync(caminho, 'utf8'));
-    ok(/^oss-meus-dados-\d{4}-\d{2}-\d{2}\.json$/.test(down.suggestedFilename()), `${scheme}: nome do arquivo`, down.suggestedFilename());
+    ok(/^gestao-de-treinos-meus-dados-\d{4}-\d{2}-\d{2}\.json$/.test(down.suggestedFilename()), `${scheme}: nome do arquivo`, down.suggestedFilename());
     ok(j.perfil.email === 'marcelo@exemplo.com' && j.perfil.tem_foto === true && !('foto' in j.perfil) && j.checkins.length === 2 && j.cargas.length === 1 && j.eventos.length >= 1 && j.eventos.every((e) => e.tipo) && Array.isArray(j.emails_enviados), `${scheme}: arquivo com perfil (sem foto), check-ins, cargas, eventos e e-mails`);
     ok(!JSON.stringify(j).includes('u2'), `${scheme}: só os dados da própria pessoa`);
     ok(/Arquivo baixado/.test(await txt(p, '#baixar-status')), `${scheme}: confirmação do download`);

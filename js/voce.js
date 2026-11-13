@@ -722,7 +722,7 @@
     if (jd.passo === 'bemvindo') {
       return `
       ${cabecaBV('Boas-vindas', 'Bem-vindo ao Gestão de Treinos')}
-      <p class="resumo-enc">Seu treino de Jiu Jitsu e academia num lugar só.</p>
+      <p class="resumo-enc">Seu treino de academia e dos seus esportes num lugar só.</p>
       <ul class="novidade-lista">
         ${item('<b>Treino do dia</b>: a ficha de hoje, com as cargas de cada série')}
         ${item('<b>Check-in</b> de cada treino: musculação, Jiu Jitsu, muay thai, surf, futebol, futvôlei e cardio')}
@@ -893,7 +893,7 @@
     const ordem = [1, 2, 3, 4, 5, 6, 0];
     const semana = ordem.map((d, k) => `
         <li class="mt-dia" style="--k:${k}"><small>${DIAS_LETRA[d]}</small><span>${config.semana[d].map((t) => (TIPOS[t] ? seloHTML(t) : '')).join('') || '<i class="mt-folga"></i>'}</span></li>`).join('');
-    const faiscas = Array.from({ length: 14 }, (_, k) => `<i style="--a:${k * (360 / 14)}deg;--c:var(${['--tatame', '--checkin', '--jiu', '--musc', '--bike', '--muay', '--surf', '--futebol', '--futvolei'][k % 9]})"></i>`).join('');
+    const faiscas = Array.from({ length: 14 }, (_, k) => `<i style="--a:${k * (360 / 14)}deg;--c:var(${['--marca', '--checkin', '--jiu', '--musc', '--bike', '--muay', '--surf', '--futebol', '--futvolei'][k % 9]})"></i>`).join('');
     $('jornada-body').innerHTML = `
       <div class="bv-montando" style="--prog:0">
         <div class="mt-anel">
@@ -1086,7 +1086,7 @@
   novidadeEvoDialog.addEventListener('cancel', (e) => { e.preventDefault(); responderNovidadeEvo('fechou'); });
 
   const NOMES_TEMA = { auto: 'Automático', claro: 'Claro', escuro: 'Escuro' };
-  const NOMES_ESTILO = { padrao: 'Padrão', neon: 'Neon Tatame', brasa: 'Brasa', cyber: 'Cyber', ultra: 'Ultravioleta', gelo: 'Gelo', violeta: 'Violeta', miami: 'Miami', lua_de_sangue: 'Lua de Sangue' };
+  const NOMES_ESTILO = { padrao: 'Padrão', neon: 'Neon', brasa: 'Brasa', cyber: 'Cyber', ultra: 'Ultravioleta', gelo: 'Gelo', violeta: 'Violeta', miami: 'Miami', lua_de_sangue: 'Lua de Sangue' };
   // Valores mostrados à direita de cada linha da lista de Você.
   function renderMenuVoce() {
     const n = Object.keys(TREINOS).length;
