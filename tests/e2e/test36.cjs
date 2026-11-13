@@ -31,7 +31,7 @@ async function abrir(b, extra = {}, op = {}) {
   const norm = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
   ok(nomes.length === 136, 'biblioteca com 136 exercícios', String(nomes.length));
   ok(new Set(nomes.map(norm)).size === nomes.length, 'sem nomes repetidos (sem acento/maiúsculas)');
-  const html = require('fs').readFileSync(H.RAIZ + '/index.html', 'utf8');
+  const html = H.fonte();
   const blocos = [...html.matchAll(/\{ nome: '([^']+)', grupo: '([^']+)', dose: '([^']+)', pse: (\d+), H: '(\w+)', M: '(\w+)', F: '(\w+)', E: '(\w+)',\s+why: '([^']+)' \}/g)];
   ok(blocos.length === 136, 'todos os exercícios com o formato completo', String(blocos.length));
   ok(blocos.every((m) => [5, 6, 7, 8].every((k) => ['alta', 'media', 'baixa'].includes(m[k])) && +m[4] >= 1 && +m[4] <= 10 && m[9].length > 20), 'níveis, PSE e explicação válidos');

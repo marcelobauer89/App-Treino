@@ -2,7 +2,7 @@
 
 ## Onde achar as coisas (gastar menos tokens)
 
-- **`docs/MAPA.md`**: em que seção de cada arquivo fica cada tela ou recurso, e quais testes cobrem cada área. Comece por ele; procure a seção pelo comentário `// ---------- Nome ----------` e leia só aquele trecho, nunca o `index.html` ou o `admin.html` inteiros.
+- **`docs/MAPA.md`**: em que seção de cada arquivo fica cada tela ou recurso, e quais testes cobrem cada área. Comece por ele; procure a seção pelo comentário `// ---------- Nome ----------` e leia só aquele trecho (o JS do app fica em `js/`, um arquivo por área; nunca leia um arquivo grande inteiro).
 - **`docs/RECURSOS.md`**: como cada recurso funciona e como ligar (índice no topo). **`docs/PRD.md`**: requisitos; ache a linha pelo ID (`grep -n 'RF-02 ' docs/PRD.md`).
 - Não abra imagens (PNG/JPG) nem `tests/saida/` sem necessidade.
 

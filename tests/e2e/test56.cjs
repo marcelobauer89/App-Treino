@@ -9,7 +9,7 @@ const T = new Date('2026-10-27T15:00:00'); // terça: treino com vídeos na list
   const arq = JSON.parse(fs.readFileSync(H.APOIO + '/videos-exemplo.json', 'utf8'));
   const ids = Object.values(arq.videos);
   ok(ids.length === 80 && new Set(ids).size === 80 && ids.every((v) => /^[\w-]{11}$/.test(v)), 'lista guardada com os 80 vídeos, sem repetir', String(ids.length));
-  const html = fs.readFileSync(H.RAIZ + '/index.html', 'utf8');
+  const html = H.fonte();
   ok(/const VIDEOS = \{\};/.test(html) && !ids.some((v) => html.includes(v)), 'nenhum vídeo no index.html');
   const srv = await H.servidor(); const b = await chromium.launch();
   for (const scheme of ['light', 'dark']) {
