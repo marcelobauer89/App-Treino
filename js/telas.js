@@ -228,7 +228,16 @@
   });
 
   formDialog.addEventListener('change', (e) => {
-    if (e.target.name === 'f-tipo' && !durTocada) $('f-dur').value = DURACAO_PADRAO[TIPOS[e.target.value].grupo];
+    if (e.target.name === 'f-tipo') {
+      if (!durTocada) $('f-dur').value = duracaoPadrao(e.target.value);
+      renderModalidade(e.target.value);
+    }
+    // Modalidade com km (Bike, Corrida): aparece o campo da distância.
+    if (e.target.name === 'f-mod') {
+      const m = (TIPOS[formDialog.querySelector('input[name="f-tipo"]:checked').value].modalidades || []).find((x) => x.id === e.target.value);
+      $('f-km-campo').hidden = !(m && m.km);
+      if (m && m.km) $('f-km').focus();
+    }
   });
   formDialog.addEventListener('input', (e) => {
     if (e.target.id === 'f-dur') durTocada = true;

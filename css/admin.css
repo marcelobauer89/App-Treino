@@ -733,3 +733,9 @@
   html:root[data-estilo="miami"] :is(.btn, .periodo button[aria-pressed="true"]) { background: linear-gradient(90deg, #ff4fa3, #ff9a3c); }
   html:root[data-estilo="miami"] h1 { background: linear-gradient(90deg, #ffd56b, #ff4fa3 55%, #b26bff); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: none; }
   html:root[data-estilo="lua_de_sangue"] :is(.btn, .periodo button[aria-pressed="true"]) { background: linear-gradient(180deg, #c62828, #8b1414); }
+
+/* Tipos de check-in: linha de cada modalidade no editor (nome, km e tirar). */
+.tp-mod { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 10px; align-items: end; margin: 0 0 10px; }
+.tp-mod .excluir-entendi { margin: 0 0 10px; }
+.tp-item b .selo { vertical-align: -3px; margin-right: 4px; }
+#tp-mod-mais { justify-self: start; }

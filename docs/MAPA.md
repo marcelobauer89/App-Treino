@@ -80,7 +80,7 @@ Na ordem de carga. Cada linha é uma seção (comentário `// ---------- Nome --
 
 ## `js/admin.js` (monitoramento): seções
 
-Conexão · Estado · Acesso · On-line agora (Presence) · Cálculos (números da Visão geral) · Render (Visão geral e gráficos) · Usuários · Saúde do app · E-mails · Abas · Detalhe do usuário · Eventos de interface · Excluir conta de um usuário · Convites · Exercícios (catálogo).
+Conexão · Estado · Acesso · On-line agora (Presence) · Cálculos (números da Visão geral) · Render (Visão geral e gráficos) · Usuários · Saúde do app · E-mails · Abas · Detalhe do usuário · Eventos de interface · Excluir conta de um usuário · Convites · Exercícios (catálogo) · Tipos de check-in (tabela tipos_checkin).
 
 Os eventos vêm só do período escolhido (`eventosNecessarios`, em Acesso). Os dados vêm de `todas()` (páginas de 1.000) nas funções `admin_usuarios`, `admin_checkins`, `admin_eventos`, `admin_emails` e `admin_convites`.
 
@@ -114,4 +114,5 @@ Rode só os da área mexida: `node tests/rodar.cjs test20 test22 …`.
 | Banco (`schema.sql`) | `tests/sql/rodar.sh` |
 | App instalável (PWA), service worker, Instalar o app e sem internet (cópia dos dados e fila de envio) | test83, test84, test85 |
 | Identidade "Gestão de Treinos" (nome, descrição, semana padrão sem jiu, ordem dos objetivos) | test86 |
+| Tipos de check-in do painel, Cardio com modalidade e km, botões do editor e animação ao salvar | test87 |
 | Harness dos testes (`tests/apoio/`) | todos |

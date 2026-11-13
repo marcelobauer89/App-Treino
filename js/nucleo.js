@@ -9,8 +9,10 @@
   const SUPABASE_KEY = window.AMBIENTE.chave;
   const configurado = /^https:\/\//.test(SUPABASE_URL) && !SUPABASE_URL.includes('SEU-PROJETO') && !SUPABASE_KEY.startsWith('SUA-');
 
-  // Atividades além da musculação, na ordem em que aparecem (check-in, semana, Dashboard).
+  // Atividades além da musculação, na ordem em que aparecem (check-in, semana, Dashboard). Vêm do banco
+  // (tabela tipos_checkin, cadastrada no painel → Tipos de check-in); esta lista é a reserva sem o banco.
   const ATIVIDADES = ['jiu', 'muay', 'surf', 'futebol', 'futvolei', 'bike'];
+  const ATIVIDADES_APP = [...ATIVIDADES];
 
   // ---------- Catálogo (exercícios e objetivos) ----------
   // Vem do banco (tabelas exercicios e jornadas, editadas no painel → Exercícios) e fica guardado no aparelho,
@@ -98,7 +100,12 @@
   async function carregarCatalogo() {
     try {
       catalogoEm = Date.now();
-      const [e, j] = await Promise.all([sb.from('exercicios').select('*'), sb.from('jornadas').select('*')]);
+      const [e, j, t] = await Promise.all([sb.from('exercicios').select('*'), sb.from('jornadas').select('*'),
+        sb.from('tipos_checkin').select('*').then((r) => r, () => ({ error: true }))]);
+      // Tipos de check-in: valem mesmo sem o catálogo de exercícios no banco.
+      if (!t.error && Array.isArray(t.data) && aplicarTiposCheckin(t.data)) {
+        try { localStorage.setItem(CHAVE_TIPOS, JSON.stringify(t.data)); } catch (_) {}
+      }
       if (e.error || !Array.isArray(e.data) || !e.data.length) return false;
       const dados = { exercicios: e.data, jornadas: j.error ? [] : j.data || [] };
       const json = JSON.stringify(dados);
@@ -293,15 +300,19 @@
 
   // Tipos de check-in. Musculação usa uma cor só; o número no selo diz qual treino foi.
   // t1 a t6 existem sempre, para os check-ins de um treino que foi excluído continuarem com nome.
-  const TIPOS = {
-    jiu: { nome: 'Jiu Jitsu', selo: 'J', grupo: 'jiu' },
-    muay: { nome: 'Muay Thai', selo: 'M', grupo: 'muay' },
-    surf: { nome: 'Surf', selo: 'S', grupo: 'surf' },
-    futebol: { nome: 'Futebol', selo: 'F', grupo: 'futebol' },
-    futvolei: { nome: 'Futvôlei', selo: 'V', grupo: 'futvolei' },
+  // As outras atividades vêm do banco (tipos_checkin); cada uma é o próprio grupo (cor e meta na semana).
+  // modalidades: [{ id, nome, km }] (ex.: Cardio → Bike e Corrida, com os km percorridos).
+  const TIPOS_BASE = {
+    jiu: { nome: 'Jiu Jitsu', selo: 'J', grupo: 'jiu', modalidades: [] },
+    muay: { nome: 'Muay Thai', selo: 'M', grupo: 'muay', modalidades: [] },
+    surf: { nome: 'Surf', selo: 'S', grupo: 'surf', modalidades: [] },
+    futebol: { nome: 'Futebol', selo: 'F', grupo: 'futebol', modalidades: [] },
+    futvolei: { nome: 'Futvôlei', selo: 'V', grupo: 'futvolei', modalidades: [] },
     // A chave 'bike' fica no banco (check-ins e semana já salvos); na tela o tipo se chama Cardio.
-    bike: { nome: 'Cardio', selo: 'C', grupo: 'bike' },
+    bike: { nome: 'Cardio', selo: 'C', grupo: 'bike', modalidades: [{ id: 'bike', nome: 'Bike', km: true }, { id: 'corrida', nome: 'Corrida', km: true }] },
   };
+  // Um check-in de um tipo que não está cadastrado (ex.: Calistenia, retirada) fica de fora ao carregar.
+  const TIPOS = JSON.parse(JSON.stringify(TIPOS_BASE));
   let ORDEM_TIPOS = [];
   function atualizarTipos() {
     for (let n = 1; n <= MAX_TREINOS; n++) {
@@ -311,6 +322,54 @@
   }
   atualizarTipos();
   const DURACAO_PADRAO = { musc: 60, jiu: 60, muay: 60, surf: 90, futebol: 90, futvolei: 90, bike: 30 };
+  const duracaoPadrao = (tipo) => DURACAO_PADRAO[TIPOS[tipo].grupo] || 60;
+
+  // Tipos cadastrados no banco: nome, selo, cor, duração, ordem, ativo e modalidades. Os desativados saem do check-in
+  // e da semana, mas continuam com nome nos check-ins antigos. Sem nenhuma linha, ficam os tipos do app.
+  const CHAVE_TIPOS = 'bauer-tipos-checkin';
+  const COR = /^#[0-9a-fA-F]{6}$/;
+  function aplicarTiposCheckin(linhas) {
+    const lista = (Array.isArray(linhas) ? linhas : []).filter((r) => r && /^[a-z][a-z0-9_]{1,19}$/.test(r.id) && r.id !== 'musc' && !/^t\d+$/.test(r.id))
+      .map((r) => ({
+        id: r.id, nome: limpar(r.nome, 40) || r.id, selo: limpar(r.selo, 2) || r.id.charAt(0).toUpperCase(),
+        cor: COR.test(r.cor || '') ? r.cor : '', corEscura: COR.test(r.cor_escura || '') ? r.cor_escura : '',
+        duracao: Number(r.duracao) >= 5 && Number(r.duracao) <= 600 ? Math.round(Number(r.duracao)) : 60,
+        ordem: Number(r.ordem) || 0, ativo: r.ativo !== false,
+        modalidades: (Array.isArray(r.modalidades) ? r.modalidades : []).filter((m) => m && /^[a-z][a-z0-9_]{0,19}$/.test(m.id))
+          .map((m) => ({ id: m.id, nome: limpar(m.nome, 30) || m.id, km: !!m.km })),
+      }))
+      .sort((a, b) => a.ordem - b.ordem || a.nome.localeCompare(b.nome, 'pt-BR'));
+    if (!lista.length) return false;
+    lista.forEach((t) => {
+      TIPOS[t.id] = { nome: t.nome, selo: t.selo, grupo: t.id, modalidades: t.modalidades, ativo: t.ativo };
+      DURACAO_PADRAO[t.id] = t.duracao;
+    });
+    ATIVIDADES.splice(0, ATIVIDADES.length, ...lista.filter((t) => t.ativo).map((t) => t.id));
+    aplicarCoresTipos(lista);
+    atualizarTipos();
+    return true;
+  }
+  // Cores: os tipos do app já têm as suas no CSS (validadas no claro, no escuro e em cada estilo); um tipo novo, ou um
+  // dos do app com cor escolhida no painel, ganha as mesmas regras aqui, com a cor do tema claro e a do escuro.
+  function aplicarCoresTipos(lista) {
+    const css = lista.filter((t) => t.cor || !ATIVIDADES_APP.includes(t.id)).map((t) => {
+      const c = t.cor || '#6b7280', e = t.corEscura || c, id = t.id;
+      return `:root{--${id}:${c}}@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--${id}:${e}}}:root[data-theme="dark"]{--${id}:${e}}`
+        + `.selo.${id}{background:var(--${id})}.evo-${id}{fill:var(--${id})}.seg i.on.${id},.barra-trilho i.${id}{background:var(--${id})}`
+        + `html[data-estilo] :is(.seg i.on.${id},.barra-trilho i.${id}){color:var(--${id})}html[data-estilo] .selo.${id}{box-shadow:0 0 8px var(--${id})}`;
+    }).join('\n');
+    let el = document.getElementById('cores-tipos');
+    if (!el) { el = document.createElement('style'); el.id = 'cores-tipos'; document.head.appendChild(el); }
+    el.textContent = css;
+  }
+  try { const g = JSON.parse(localStorage.getItem(CHAVE_TIPOS) || 'null'); if (g) aplicarTiposCheckin(g); } catch (_) {}
+  // Modalidade do check-in (ex.: Bike) e o texto curto para as listas: "Bike · 12,5 km".
+  const modalidadeDe = (c) => (TIPOS[c.tipo].modalidades || []).find((m) => m.id === c.modalidade) || null;
+  function detalheCardio(c) {
+    const m = modalidadeDe(c);
+    const partes = [m ? m.nome : '', c.km ? `${String(c.km).replace('.', ',')} km` : ''].filter(Boolean);
+    return partes.join(' · ');
+  }
 
   const FOCOS = [
     { id: 'todos', label: 'Todos' },
@@ -407,11 +466,14 @@
   // em "<usuário>/<check-in>.jpg"; o check-in guarda só o caminho. Sem a coluna (schema antigo), some.
   const BUCKET_FOTOS = 'fotos-checkin';
   let fotosLigadas = false;
+  // Modalidade e km do check-in (Cardio): só com as colunas checkins.modalidade e checkins.km (migração 002).
+  let kmLigado = false;
   const paraLinha = (c) => ({
     id: c.id, usuario_id: usuario.id, tipo: c.tipo, inicio: c.inicio, fim: c.fim,
     sem_horario: !!c.semHorario, obs: c.obs || '',
     retroativo: !!c.retroativo, ultima_serie: c.ultimaSerie || null, series: c.series || {},
     ...(fotosLigadas ? { foto: c.foto || '' } : {}),
+    ...(kmLigado ? { modalidade: c.modalidade || null, km: c.km || null } : {}),
   });
   // O banco devolve "AAAA-MM-DDTHH:MM:SS"; o app trabalha com "AAAA-MM-DDTHH:MM".
   const minuto = (s) => (s ? s.slice(0, 16) : null);
@@ -419,6 +481,7 @@
     id: r.id, tipo: r.tipo, inicio: minuto(r.inicio), fim: minuto(r.fim), semHorario: r.sem_horario,
     obs: r.obs || '', retroativo: r.retroativo,
     ultimaSerie: minuto(r.ultima_serie), series: r.series || {}, foto: r.foto || '',
+    modalidade: r.modalidade || '', km: r.km != null && Number(r.km) > 0 ? Number(r.km) : null,
   });
 
   // ---------- Fila de envio e cópia dos dados no aparelho (uso sem internet) ----------
@@ -872,6 +935,7 @@
     if (p.error || c.error) throw p.error || c.error;
     // Fotos nos check-ins: liga quando a coluna checkins.foto existe (o schema.sql cria junto o bucket).
     const fotos = (c.data || []).length ? 'foto' in c.data[0] : !(await sb.from('checkins').select('foto').limit(1)).error;
+    const km = (c.data || []).length ? 'km' in c.data[0] : !(await sb.from('checkins').select('km').limit(1)).error;
     let linha = p.data;
     if (!linha) {
       // Conta criada antes do schema: cria o perfil com os dados do Google.
@@ -884,7 +948,7 @@
       if (error) throw error;
     }
     // Sem a tabela cargas (schema.sql antigo), k = null: o app abre do mesmo jeito; o aviso aparece ao salvar um peso.
-    return { p: linha, c: c.data || [], k: k.error ? null : (k.data || []), v: v.error ? null : (v.data || []), fotos, em: new Date().toISOString() };
+    return { p: linha, c: c.data || [], k: k.error ? null : (k.data || []), v: v.error ? null : (v.data || []), fotos, km, em: new Date().toISOString() };
   }
 
   // Carrega os dados da conta. Sem internet, abre com a cópia guardada no aparelho (com o que ainda não foi enviado).
@@ -915,6 +979,7 @@
   function aplicarDados(d) {
     const linha = d.p;
     fotosLigadas = !!d.fotos;
+    kmLigado = !!d.km;
     const ordemCarga = (a, b) => (String(a.data) + a.treino < String(b.data) + b.treino ? -1 : 1);
     cargas = (d.k || []).map((r) => ({ data: String(r.data).slice(0, 10), treino: r.treino, series: r.series || {} })).sort(ordemCarga);
     for (const nome of Object.keys(VIDEOS)) delete VIDEOS[nome];

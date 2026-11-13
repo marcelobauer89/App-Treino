@@ -72,7 +72,11 @@
       }
       // Catálogo (exercicios, jornadas): sem a lista no banco falso = SQL ainda não rodado (tabela não existe).
       // falharCatalogo: a leitura falha (sem internet). Só leitura pela API, como no banco.
-      if (['exercicios', 'jornadas'].includes(this.tabela)) {
+      // Sem a coluna checkins.km (migração 002 ainda não rodada): ler ou gravar modalidade/km dá erro.
+      if (db.semKm && this.tabela === 'checkins' && ((this.cols && /\bkm\b|modalidade/.test(this.cols)) || (this.dados && [].concat(this.dados).some((r) => r && ('km' in r || 'modalidade' in r))))) {
+        gravar(db); return { data: null, error: { message: 'column checkins.km does not exist' } };
+      }
+      if (['exercicios', 'jornadas', 'tipos_checkin'].includes(this.tabela)) {
         if (!Array.isArray(db[this.tabela])) { gravar(db); return { data: null, error: { code: 'PGRST205', message: `Could not find the table 'public.${this.tabela}' in the schema cache` } }; }
         if (db.falharCatalogo) { gravar(db); return { data: null, error: { message: 'TypeError: Failed to fetch' } }; }
         if (this.op !== 'select') { gravar(db); return { data: null, error: { code: '42501', message: `permission denied for table ${this.tabela}` } }; }
@@ -356,6 +360,26 @@
                 : obj ? `Faz parte do objetivo pronto ${obj.dados.nome}. Desative em vez de excluir.` : null;
               if (!erro) { db.exercicios = db.exercicios.filter((x) => x !== e); db.videos = (db.videos || []).filter((v) => v.exercicio !== args.p_nome); db.log.push(`admin_excluir_exercicio:${args.p_nome}`); }
               gravar(db); return { data: null, error: erro ? { message: erro } : null };
+            }
+            // Tipos de check-in pelo painel: db.tipos_checkin (como a tabela).
+            if (nome === 'admin_salvar_tipo_checkin') {
+              const a = db.admin || {}; const eu = db.sessao && db.sessao.user.id;
+              if (!(a.ids || []).includes(eu)) { gravar(db); return { data: null, error: { message: 'Acesso restrito a administradores.' } }; }
+              if (!Array.isArray(db.tipos_checkin)) { gravar(db); return { data: null, error: { message: 'Could not find the function public.admin_salvar_tipo_checkin in the schema cache' } }; }
+              const p = args.p || {};
+              const slug = (t) => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^[^a-z]+/, '').slice(0, 20).replace(/_+$/, '');
+              const nomeT = String(p.nome || '').trim().replace(/\s+/g, ' ');
+              const outro = db.tipos_checkin.find((t) => slug(t.nome) === slug(nomeT) && t.id !== p.id);
+              if (!nomeT) { gravar(db); return { data: null, error: { message: 'Informe o nome do tipo (até 40 letras).' } }; }
+              if (outro) { gravar(db); return { data: null, error: { message: 'Já existe um tipo com esse nome.' } }; }
+              const mods = (p.modalidades || []).filter((m) => String(m.nome || '').trim()).map((m) => ({ id: slug(m.nome), nome: String(m.nome).trim(), km: !!m.km }));
+              const campos = { nome: nomeT, selo: String(p.selo || '').toUpperCase(), cor: p.cor || null, cor_escura: p.cor_escura || null, duracao: Number(p.duracao) || 60,
+                ordem: Number.isFinite(Number(p.ordem)) ? Number(p.ordem) : db.tipos_checkin.length + 1, ativo: p.ativo !== false, modalidades: mods };
+              let id = p.id;
+              const t = id && db.tipos_checkin.find((x) => x.id === id);
+              if (t) Object.assign(t, campos); else { id = slug(nomeT); db.tipos_checkin.push({ id, ...campos }); }
+              db.log.push(`admin_salvar_tipo_checkin:${id}`);
+              gravar(db); return { data: id, error: null };
             }
             if (nome === 'admin_exercicios' || nome === 'admin_salvar_exercicio') {
               const a = db.admin || {}; const eu = db.sessao && db.sessao.user.id;

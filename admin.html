@@ -56,6 +56,7 @@
       <button type="button" role="tab" id="tab-emails" data-aba="emails" aria-controls="aba-emails" aria-selected="false" tabindex="-1">E-mails</button>
       <button type="button" role="tab" id="tab-convites" data-aba="convites" aria-controls="aba-convites" aria-selected="false" tabindex="-1">Convites<span class="aba-alerta" id="alerta-convites" hidden></span></button>
       <button type="button" role="tab" id="tab-exercicios" data-aba="exercicios" aria-controls="aba-exercicios" aria-selected="false" tabindex="-1"><span class="aba-longo">Exercícios</span><span class="aba-curto" aria-hidden="true">Exerc.</span></button>
+      <button type="button" role="tab" id="tab-tipos" data-aba="tipos" aria-controls="aba-tipos" aria-selected="false" tabindex="-1"><span class="aba-longo">Tipos de check-in</span><span class="aba-curto" aria-hidden="true">Tipos</span></button>
     </div>
 
     <div role="tabpanel" id="aba-geral" aria-labelledby="tab-geral">
@@ -278,6 +279,20 @@
         <div class="cartao lista-cartao" id="ex-lista"><p class="vazio">Carregando…</p></div>
       </section>
     </div>
+
+    <div role="tabpanel" id="aba-tipos" aria-labelledby="tab-tipos" hidden>
+      <section class="bloco" aria-labelledby="tp-titulo">
+        <div class="bloco-topo">
+          <div class="titulo-info">
+            <h2 id="tp-titulo">Tipos de check-in</h2>
+            <button class="info" type="button" data-info="info-tp" aria-expanded="false" aria-controls="info-tp" aria-label="Como funciona: tipos de check-in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button>
+          </div>
+          <button class="btn" type="button" id="tp-novo">Novo tipo</button>
+        </div>
+        <p class="info-txt" id="info-tp" role="note" hidden>As atividades além da musculação que aparecem no check-in, na Minha semana e no Dashboard. O que você muda aqui vale para todos ao abrir o app. Modalidades (ex.: Cardio → Bike e Corrida) aparecem no check-in do tipo, e as marcadas com km pedem a distância. Desativar tira o tipo do check-in e da semana; os check-ins antigos continuam com o nome.</p>
+        <div class="cartao lista-cartao" id="tp-lista"><p class="vazio">Carregando…</p></div>
+      </section>
+    </div>
   </div>
 </main>
 
@@ -306,6 +321,9 @@
 </dialog>
 <dialog class="ex-dialog" id="ex-dialog" aria-labelledby="ex-title">
   <div class="ex-corpo" id="ex-body"></div>
+</dialog>
+<dialog class="ex-dialog" id="tp-dialog" aria-labelledby="tp-title">
+  <div class="ex-corpo" id="tp-body"></div>
 </dialog>
 <dialog class="modal-excluir" id="excluir-dialog" aria-labelledby="excluir-title">
   <div class="excluir-corpo" id="excluir-body"></div>

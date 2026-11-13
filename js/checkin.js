@@ -309,19 +309,40 @@
         </details>`;
   }
 
-  function abrirFormCheckin({ tipo = 'jiu', data = hoje(), editar = null } = {}) {
+  // Modalidade (ex.: Cardio → Bike ou Corrida) e os km, quando o tipo tem modalidades e o banco já tem as colunas.
+  function modalidadeHTML(tipo, mod = '', km = null) {
+    const mods = kmLigado ? TIPOS[tipo].modalidades || [] : [];
+    if (!mods.length) return '';
+    const atual = mods.find((m) => m.id === mod);
+    return `
+      <fieldset class="campo" id="f-mod-bloco">
+        <legend>Modalidade</legend>
+        <div class="opcoes">${mods.map((m) => `
+          <label class="opcao"><input type="radio" name="f-mod" value="${m.id}"${m.id === mod ? ' checked' : ''}><span>${esc(m.nome)}</span></label>`).join('')}
+        </div>
+      </fieldset>
+      <div class="campo" id="f-km-campo"${atual && atual.km ? '' : ' hidden'}>
+        <label for="f-km">Distância (km)</label>
+        <input type="text" inputmode="decimal" id="f-km" placeholder="Ex.: 12,5" value="${km ? String(km).replace('.', ',') : ''}">
+      </div>`;
+  }
+  function renderModalidade(tipo) {
+    $('f-mod-area').innerHTML = modalidadeHTML(tipo);
+  }
+
+  function abrirFormCheckin({ tipo = ORDEM_TIPOS.find((t) => !ehTreino(t)) || 'jiu', data = hoje(), editar = null } = {}) {
     let dur, inicio, obs = '';
     if (editar) {
       // Edição: o formulário abre com os dados do check-in (o "sem horário" ganha horário ao salvar).
       ({ tipo } = editar);
       data = dataDe(editar);
       inicio = horaDe(editar.inicio);
-      dur = duracaoMin(editar) ?? DURACAO_PADRAO[TIPOS[tipo].grupo];
+      dur = duracaoMin(editar) ?? duracaoPadrao(tipo);
       obs = editar.obs || '';
       formDialog.dataset.editar = editar.id;
     } else {
       if (data > hoje()) data = hoje();
-      dur = DURACAO_PADRAO[TIPOS[tipo].grupo];
+      dur = duracaoPadrao(tipo);
       inicio = '19:00';
       if (data === hoje()) {
         const ini = new Date(Date.now() - dur * 60000);
@@ -339,6 +360,7 @@
         <legend>Treino</legend>
         ${opcoesTipoHTML(tipo)}
       </fieldset>
+      <div id="f-mod-area">${modalidadeHTML(tipo, editar ? editar.modalidade : '', editar ? editar.km : null)}</div>
       <div class="campo">
         <label for="f-data">Data</label>
         <input type="date" id="f-data" value="${data}" max="${hoje()}">
@@ -493,6 +515,13 @@
     if (data > hoje()) return erro('A data não pode ser no futuro.');
     if (!/^\d{2}:\d{2}$/.test(ini)) return erro('Informe o horário de início.');
     if (!Number.isInteger(dur) || dur < 1 || dur > 600) return erro('Informe a duração em minutos, entre 1 e 600.');
+    // Modalidade e km (só para os tipos que têm modalidades): os dois são opcionais.
+    const modEl = formDialog.querySelector('input[name="f-mod"]:checked');
+    const mod = modEl ? (TIPOS[tipo].modalidades || []).find((m) => m.id === modEl.value) : null;
+    const kmTxt = mod && mod.km && $('f-km') ? $('f-km').value.trim().replace(',', '.') : '';
+    const km = kmTxt ? Number(kmTxt) : null;
+    if (kmTxt && (!/^\d+(\.\d{1,2})?$/.test(kmTxt) || km <= 0 || km > 1000)) return erro('Informe a distância em km, entre 0,01 e 1000 (ex.: 12,5).');
+    const extraMod = { modalidade: mod ? mod.id : '', km: mod && mod.km ? km : null };
     const inicio = `${data}T${ini}`;
     const fim = isoLocal(new Date(new Date(inicio).getTime() + dur * 60000));
     // Regra 13: check-ins do mesmo dia não podem se sobrepor.
@@ -501,7 +530,7 @@
     if (choque) return erro(`Esse horário se sobrepõe ao ${TIPOS[choque.tipo].nome} ${horarioTexto(choque)}. Ajuste o início ou a duração.`);
     if (editado) {
       Object.assign(editado, {
-        tipo, inicio, fim, semHorario: false,
+        tipo, inicio, fim, semHorario: false, ...extraMod,
         ...($('f-obs') ? { obs: $('f-obs').value.trim() } : {}), retroativo: data < hoje(),
       });
       salvarCheckin(editado);
@@ -516,7 +545,7 @@
       return;
     }
     const novo = {
-      id: novoId(), tipo, inicio, fim, semHorario: false,
+      id: novoId(), tipo, inicio, fim, semHorario: false, ...extraMod,
       obs: $('f-obs') ? $('f-obs').value.trim() : '',
       retroativo: data < hoje(), series: {},
     };
@@ -524,7 +553,7 @@
     salvarCheckin(novo);
     aplicarFotoForm(novo);
     formDialog.close();
-    registrarEvento('checkin_criado', { tipo, retroativo: novo.retroativo, origem: telaAtual() });
+    registrarEvento('checkin_criado', { tipo, retroativo: novo.retroativo, origem: telaAtual(), ...(extraMod.modalidade ? { modalidade: extraMod.modalidade, km: !!extraMod.km } : {}) });
     diaSel = data;
     mesExibido = { ano: deData(data).getFullYear(), mes: deData(data).getMonth() };
     atualizarCheckinUI();
