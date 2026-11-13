@@ -124,8 +124,8 @@ const perfil = async (p) => (await H.banco(p)).perfis.find((x) => x.id === 'u1')
     await p.click('#editar-treinos'); await p.waitForTimeout(150);
     await p.locator('#editor-body [data-ed-remover]').first().click(); await p.waitForTimeout(100);
     await p.click('[data-ed-salvar]'); await p.waitForTimeout(400);
-    ok(await p.isVisible('.bv-montando') && (await p.innerText('#jornada-title')) === 'Atualizando seus treinos' && await p.evaluate(() => document.body.classList.contains('bv-ativa')),
-      'salvar com mudança: animação "Atualizando seus treinos" em tela cheia', await p.innerText('#jornada-title').catch(() => ''));
+    ok(await p.isVisible('.bv-montando') && /^Atualizando Treino \d$/.test(await p.innerText('#jornada-title')) && await p.evaluate(() => document.body.classList.contains('bv-ativa')),
+      'salvar com mudança: animação "Atualizando <treino editado>" em tela cheia (RF-73)', await p.innerText('#jornada-title').catch(() => ''));
     await p.screenshot({ path: `${H.SAIDA}/atualizando-light.png` });
     await p.waitForSelector('#jornada-dialog', { state: 'hidden', timeout: 15000 }); await p.waitForTimeout(300);
     ok(/Treinos salvos/.test(await p.locator('#toast, .toast').first().innerText().catch(() => '')) && await p.evaluate(() => !document.body.classList.contains('bv-ativa')),

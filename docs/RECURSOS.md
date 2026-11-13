@@ -11,6 +11,7 @@ Ao mudar um recurso, atualize só a seção dele (ache pelo índice).
 - [Atualização automática](#atualização-automática)
 - [Aviso de novidade (Evolução)](#aviso-de-novidade-evolução)
 - [Futebol e Futvôlei](#futebol-e-futvôlei)
+- [Tipos de check-in (painel) e Cardio com km](#tipos-de-check-in-painel-e-cardio-com-km)
 - [Celebração do check-in](#celebração-do-check-in)
 - [Temporizador de descanso](#temporizador-de-descanso)
 - [Jornadas prontas](#jornadas-prontas)
@@ -39,6 +40,7 @@ Cada pessoa pode montar até 6 treinos (t1 a t6), com até 15 exercícios cada, 
 - **Desfazer e versão anterior:** ao salvar, aparece "Desfazer" por 8 s, e a versão de antes (treinos e semana) fica em `perfis.treinos_anterior`. Em Você → Meus treinos, "Restaurar versão anterior" traz ela de volta depois.
 - **Treino excluído:** sai da semana. Os check-ins e pesos dele continuam no Dashboard, com o nome "Treino N".
 - **Histórico de pesos:** a carga da última vez e os recordes seguem o exercício em qualquer treino.
+- **Animação ao salvar:** mostra só os treinos que mudaram, com os exercícios novos primeiro e marcados como "Novo"; a semana só aparece se ela mudou (ex.: um treino excluído). Excluir este treino e Voltar ao plano pronto têm a largura toda e 48 px, como os outros botões.
 
 Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 a t6 nos check-ins e nas cargas e cria as colunas `treinos`, `novidade_treinos` e `novidade_oculta`.
 
@@ -72,6 +74,15 @@ Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 a t6 nos check-i
 
 - Tipos de check-in `futebol` (selo F) e `futvolei` (selo V), cada um com cor própria e 90 min por padrão. Entram no check-in, na Minha semana, no Dashboard, no resumo semanal por e-mail e no monitoramento.
 - **Para ligar:** rode de novo o `supabase/schema.sql` (o banco passa a aceitar os dois tipos) e publique de novo a função `resumo-semanal`.
+
+## Tipos de check-in (painel) e Cardio com km
+
+- **No painel → Tipos de check-in:** o administrador cria e muda as atividades além da musculação: nome, letra do selo, cor no tema claro e no escuro, duração padrão, posição na lista, ativo e **modalidades** (cada uma com "Pede os km"). Vale para todos ao abrir o app, sem publicar nada.
+- **No app:** os tipos ativos aparecem no check-in, na Minha semana, nas metas da semana e na Evolução, na ordem do painel. Desativar tira o tipo do check-in e da semana; os check-ins antigos continuam com o nome. Um tipo novo ganha a cor escolhida; os do app (Jiu Jitsu, Muay Thai, Surf, Futebol, Futvôlei, Cardio) continuam com a cor de cada tema e estilo, a menos que o administrador escolha outra.
+- **Cardio:** vem com as modalidades Bike e Corrida, as duas pedindo os km. No check-in de Cardio a pessoa escolhe a modalidade (opcional) e, se ela pede km, informa a distância (ex.: 12,5). O Dashboard mostra "Corrida · 7,5 km" no check-in.
+- **No banco:** tabela `tipos_checkin` (id, nome, selo, cor, cor_escura, duracao, ordem, ativo, modalidades) e colunas `checkins.modalidade` e `checkins.km`. O id do tipo vem do nome (sem acento) e não muda depois; um gatilho só aceita check-in de tipo cadastrado (ou t1 a t6). O app guarda uma cópia dos tipos no aparelho.
+- **E-mail semanal:** os tipos novos entram como os opcionais (só para quem fez ou planejou), com a cor do tema claro.
+- **Para ligar:** rode `supabase/migracoes/002-tipos-de-checkin.sql` no Supabase e publique de novo a função `resumo-semanal`. Sem a migração, o app continua com os tipos de sempre e o check-in não mostra a modalidade.
 
 ## Celebração do check-in
 

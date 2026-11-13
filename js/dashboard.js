@@ -57,14 +57,11 @@
       : `${ds.getDate()} de ${nomeMes(ds.getFullYear(), ds.getMonth())} a ${dd.getDate()} de ${nomeMes(dd.getFullYear(), dd.getMonth())}`;
     // Planejado = quantas vezes cada tipo aparece na semana montada pelo usuário.
     const planejado = (g) => config.semana.flat().filter((t) => (ehTreino(t) ? 'musc' : t) === g).length;
+    // Cada atividade aparece quando está na semana ou teve check-in (na ordem dos tipos cadastrados no painel).
+    const outras = [...ATIVIDADES, ...new Set(daSemana.map((c) => TIPOS[c.tipo].grupo).filter((g) => g !== 'musc' && !ATIVIDADES.includes(g)))];
     $('metas').innerHTML =
       linha('Musculação', 't1', 'musc', conta('musc'), planejado('musc')) +
-      linha('Jiu Jitsu', 'jiu', 'jiu', conta('jiu'), planejado('jiu')) +
-      linha('Muay Thai', 'muay', 'muay', conta('muay'), planejado('muay')) +
-      linha('Surf', 'surf', 'surf', conta('surf'), planejado('surf')) +
-      // Futebol e futvôlei aparecem quando estão na semana ou tiveram check-in.
-      ['futebol', 'futvolei'].filter((g) => conta(g) || planejado(g)).map((g) => linha(TIPOS[g].nome, g, g, conta(g), planejado(g))).join('') +
-      linha('Cardio', 'bike', 'bike', conta('bike'), planejado('bike'));
+      outras.map((g) => linha(TIPOS[g].nome, g, g, conta(g), planejado(g))).join('');
   }
 
   function renderCalendario() {
@@ -174,7 +171,7 @@
     }
     $('dia-lista').innerHTML = `<ul class="cks">${lista.map((c) => {
       const dur = duracaoMin(c);
-      const meta = [capitalizar(horarioTexto(c)), dur != null ? fmtDur(dur) : '']
+      const meta = [capitalizar(horarioTexto(c)), dur != null ? fmtDur(dur) : '', detalheCardio(c)]
         .filter(Boolean).join(', ');
       const aberto = ckExpandido === c.id;
       return `
@@ -215,7 +212,8 @@
   // e as cargas que o app já carrega.
   // Evolução ligada para todos (dev e produção). Para esconder de novo, troque para false (ou só no dev: !!(window.AMBIENTE && window.AMBIENTE.dev)).
   const EVOLUCAO_LIGADA = true;
-  const GRUPOS_EVO = ['musc', ...ATIVIDADES];
+  // Musculação, as atividades ativas e as desativadas (check-ins antigos), na ordem dos tipos.
+  const gruposEvo = () => ['musc', ...ATIVIDADES, ...Object.keys(TIPOS).filter((k) => !/^t\d+$/.test(k) && !ATIVIDADES.includes(k))];
   const NOMES_GRUPO = { musc: 'Musculação' };
   const nomeGrupo = (g) => NOMES_GRUPO[g] || TIPOS[g].nome;
   const chaveMes = (ano, mes) => `${ano}-${pad(mes + 1)}`;
@@ -238,9 +236,9 @@
   // ate: só até esse dia do mês (para comparar o mês em andamento com o mesmo trecho do mês anterior).
   function resumoDoMes(chave, ate = 31) {
     const doMes = checkins.filter((c) => dataDe(c).startsWith(chave) && Number(dataDe(c).slice(8, 10)) <= ate);
-    const porGrupo = Object.fromEntries(GRUPOS_EVO.map((g) => [g, 0]));
+    const porGrupo = Object.fromEntries(gruposEvo().map((g) => [g, 0]));
     const porTipo = {};
-    doMes.forEach((c) => { porGrupo[TIPOS[c.tipo].grupo] += 1; porTipo[c.tipo] = (porTipo[c.tipo] || 0) + 1; });
+    doMes.forEach((c) => { const g = TIPOS[c.tipo].grupo; porGrupo[g] = (porGrupo[g] || 0) + 1; porTipo[c.tipo] = (porTipo[c.tipo] || 0) + 1; });
     // % do plano: o que a semana montada pede em cada dia do mês (até hoje, no mês atual), até 100%.
     const [a, mm] = chave.split('-').map(Number);
     const ultimo = Math.min(new Date(a, mm, 0).getDate(), chave === hoje().slice(0, 7) ? Number(hoje().slice(8, 10)) : 31, ate);
@@ -265,7 +263,7 @@
     const ano = (k) => k.slice(0, 4);
     $('evo-periodo').textContent = `${nomeMesChave(meses[0]).slice(0, 3)}${ano(meses[0]) === ano(meses[5]) ? '' : ` de ${ano(meses[0])}`} a ${nomeMesChave(meses[5]).slice(0, 3)} de ${ano(meses[5])}`;
     graficoMeses(dados);
-    const usados = GRUPOS_EVO.filter((g) => dados.some((d) => d.porGrupo[g]));
+    const usados = gruposEvo().filter((g) => dados.some((d) => d.porGrupo[g]));
     $('evo-legenda').innerHTML = usados.map((g) => `<li><span class="selo ${g}" aria-hidden="true">${g === 'musc' ? '' : TIPOS[g].selo}</span><span>${esc(nomeGrupo(g))}</span></li>`).join('');
     $('evo-legenda').hidden = !usados.length;
     $('evo-tabela').innerHTML = `<table><thead><tr><th scope="col">Mês</th>${usados.map((g) => `<th scope="col">${esc(nomeGrupo(g))}</th>`).join('')}<th scope="col">Total</th></tr></thead><tbody>
@@ -288,7 +286,7 @@
     const cols = dados.map((d, i) => {
       const x = banda * i + (banda - larg) / 2;
       let acima = y(0);
-      const partes = GRUPOS_EVO.filter((g) => d.porGrupo[g]);
+      const partes = gruposEvo().filter((g) => d.porGrupo[g]);
       const segs = partes.map((g, k) => {
         const h = (d.porGrupo[g] / teto) * alto;
         const topoSeg = acima - h;
@@ -335,7 +333,7 @@
       <div><dt>Horas treinadas</dt><dd>${fmtNum(r.minutos / 60)}<small> h</small>${delta(Math.round(r.minutos / 6) / 10, Math.round(ant.minutos / 6) / 10, (n) => `${fmtNum(n)} h`)}</dd></div>
       <div><dt>Do plano</dt><dd>${pct(r.plano)}${r.plano !== null && ant.plano !== null ? delta(Math.round(r.plano * 100), Math.round(ant.plano * 100), (n) => `${n} p.p.`) : ''}</dd></div>`;
     // O que você treinou: por tipo, com os treinos de musculação.
-    const grupos = GRUPOS_EVO.filter((g) => r.porGrupo[g]);
+    const grupos = gruposEvo().filter((g) => r.porGrupo[g]);
     $('evo-quais').innerHTML = grupos.length ? grupos.map((g) => {
       const treinos = g === 'musc' ? TIPOS_MUSC.filter((t) => r.porTipo[t]).map((t) => `${TIPOS[t].nome} · ${r.porTipo[t]}×`).join(', ') : '';
       return `<li><span class="evo-nome">${seloHTML(g === 'musc' ? (TIPOS_MUSC.find((t) => r.porTipo[t]) || 't1') : g)}${esc(nomeGrupo(g))}</span>

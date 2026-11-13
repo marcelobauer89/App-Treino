@@ -386,6 +386,7 @@
     const animar = !ed.daBoasVindas && edMudou();
     const valor = mesmoQuePadrao(ed.treinos) ? null : treinosParaSalvar(ed.treinos);
     const antes = Object.keys(TREINOS);
+    const salvoAntes = treinosParaSalvar(TREINOS);
     // Cópia do que existia antes de salvar, para Desfazer agora ou restaurar depois.
     treinosAnterior = fotoDosTreinos();
     TREINOS = montarTreinos(valor) || planoPronto();
@@ -418,8 +419,20 @@
       : novos.length || fora.length ? 'Treinos salvos. Coloque os treinos na semana em Você → Minha semana.'
         : 'Treinos salvos.', 'Desfazer', () => restaurarAnterior('desfazer'));
     if (!animar) return avisar();
-    animarMontagem({ titulo: 'Atualizando seus treinos', inicio: 'Salvando suas mudanças…', fimTitulo: 'Treinos atualizados!',
-      aoTerminar: () => { fecharJornadas('editor'); avisar(); } });
+    // A animação mostra só os treinos que mudaram (e os exercícios novos de cada um); a semana só entra se mudou.
+    const salvoDepois = treinosParaSalvar(TREINOS);
+    const mudados = Object.keys(TREINOS).filter((id) => JSON.stringify(salvoAntes[id]) !== JSON.stringify(salvoDepois[id]));
+    const novosEx = Object.fromEntries(mudados.map((id) => {
+      const tinha = new Set(((salvoAntes[id] || {}).exercicios || []).map((e) => e.nome));
+      return [id, TREINOS[id].exercicios.filter((e) => !tinha.has(e.nome)).map((e) => e.nome)];
+    }));
+    const umSo = mudados.length === 1 ? TREINOS[mudados[0]].nome : '';
+    animarMontagem({
+      titulo: umSo ? `Atualizando ${umSo}` : 'Atualizando seus treinos', inicio: 'Salvando suas mudanças…',
+      fimTitulo: umSo ? `${umSo} atualizado!` : 'Treinos atualizados!',
+      ids: mudados.length ? mudados : null, novosEx, comSemana: saiuDaSemana || !mudados.length,
+      aoTerminar: () => { fecharJornadas('editor'); avisar(); },
+    });
   }
 
   const fotoDosTreinos = () => ({ treinos: treinosParaSalvar(TREINOS), semana: copiaSemana(config.semana), em: new Date().toISOString(), jornada });
@@ -872,21 +885,27 @@
     aplicarJornada(id, jd.modo, { semAviso: true });
     animarMontagem({ rotulo: `Treinos de ${j.nome}`, aoTerminar: () => { fecharJornadas('jornada'); avisarJornada(j); } });
   }
-  function animarMontagem({ titulo = 'Montando seus treinos', inicio = 'Analisando seu objetivo…', fimTitulo = 'Treinos prontos!', rotulo = 'Seus treinos', aoTerminar }) {
+  // ids: só esses treinos (ex.: o que foi editado), com os exercícios de novosEx[id] marcados como novos; comSemana: false
+  // tira a semana (ela não mudou).
+  function animarMontagem({ titulo = 'Montando seus treinos', inicio = 'Analisando seu objetivo…', fimTitulo = 'Treinos prontos!', rotulo = 'Seus treinos',
+    ids: soEstes = null, novosEx = {}, comSemana = true, aoTerminar }) {
     if (!jd) jd = { modo: 'editor' };
     jd.passo = 'montando';
     jornadaDialog.classList.add('bv-tela');
     document.body.classList.add('bv-ativa');
     if (!jornadaDialog.open) jornadaDialog.showModal();
-    const ids = Object.keys(TREINOS);
+    const ids = soEstes ? soEstes.filter((n) => TREINOS[n]) : Object.keys(TREINOS);
     const treinos = ids.map((n, i) => {
       const t = TREINOS[n];
-      const mostra = t.exercicios.slice(0, 4);
+      // Treino editado: os exercícios novos primeiro (marcados), depois os outros, até 6 na tela.
+      const novos = new Set(novosEx[n] || []);
+      const lista = novos.size ? [...t.exercicios.filter((e) => novos.has(e.nome)), ...t.exercicios.filter((e) => !novos.has(e.nome))] : t.exercicios;
+      const mostra = lista.slice(0, soEstes ? 6 : 4);
       const resto = t.exercicios.length - mostra.length;
       return `
         <li class="mt-treino" data-mt-treino="${i}">
           <div class="mt-treino-topo">${seloHTML(`t${n}`)}<b>${esc(t.nome)}</b><span class="mt-estado" aria-hidden="true"><i class="mt-gira"></i>${ICON_CHECK}</span></div>
-          <ul>${mostra.map((e, k) => `<li style="--k:${k}">${esc(nomeDe(e))}</li>`).join('')}${resto > 0 ? `<li class="mt-mais" style="--k:${mostra.length}">+${resto} exercício${resto > 1 ? 's' : ''}</li>` : ''}</ul>
+          <ul>${mostra.map((e, k) => `<li style="--k:${k}"${novos.has(e.nome) ? ' class="mt-novo"' : ''}>${esc(nomeDe(e))}${novos.has(e.nome) ? ' <span class="mt-novo-tag">Novo</span>' : ''}</li>`).join('')}${resto > 0 ? `<li class="mt-mais" style="--k:${mostra.length}">+${resto} exercício${resto > 1 ? 's' : ''}</li>` : ''}</ul>
         </li>`;
     }).join('');
     // Semana começando na segunda, como no Dashboard.
@@ -907,7 +926,7 @@
           <p class="mt-etapa" id="mt-etapa" role="status" aria-live="polite">${inicio}</p>
         </div>
         <ol class="mt-treinos" aria-label="${esc(rotulo)}">${treinos}</ol>
-        <div class="mt-semana-box"><p class="mt-rotulo">Sua semana</p><ol class="mt-semana">${semana}</ol></div>
+        ${comSemana ? `<div class="mt-semana-box"><p class="mt-rotulo">Sua semana</p><ol class="mt-semana">${semana}</ol></div>` : ''}
       </div>`;
     $('jornada-title').focus();
     const raiz = $('jornada-body').querySelector('.bv-montando');
@@ -927,13 +946,20 @@
       }]);
       t += passo;
     });
-    linha.push([t, () => {
-      etapa('Organizando sua semana…');
-      raiz.querySelector(`[data-mt-treino="${ids.length - 1}"]`).classList.add('feito');
-      raiz.classList.add('semana-on');
-      raiz.style.setProperty('--prog', '0.92');
-    }]);
-    t += reduzido ? 250 : 1500;
+    if (comSemana) {
+      linha.push([t, () => {
+        etapa('Organizando sua semana…');
+        raiz.querySelector(`[data-mt-treino="${ids.length - 1}"]`).classList.add('feito');
+        raiz.classList.add('semana-on');
+        raiz.style.setProperty('--prog', '0.92');
+      }]);
+      t += reduzido ? 250 : 1500;
+    } else {
+      // Sem a semana: o treino editado fica aberto mais um pouco, com os exercícios à vista.
+      t += reduzido ? 150 : 900;
+      linha.push([t, () => { raiz.querySelector(`[data-mt-treino="${ids.length - 1}"]`).classList.add('feito'); raiz.style.setProperty('--prog', '0.92'); }]);
+      t += reduzido ? 100 : 300;
+    }
     linha.push([t, () => {
       etapa('Tudo pronto! Bons treinos.');
       $('jornada-title').textContent = fimTitulo;
