@@ -36,7 +36,7 @@ const presenca = (p, topico, meta) => p.evaluate(([t, m]) => {
   ok(db.log.includes('realtime:setAuth') && db.log.includes('track:online:u1:treino'), 'track na tela treino', db.log.filter((l) => /track|realtime/.test(l)).join(','));
   const meta = db.presenca['online:u1'].u1[0];
   ok(meta.tela === 'treino' && !Number.isNaN(Date.parse(meta.desde)) && meta.sistema, 'meta com tela, desde e sistema', JSON.stringify(meta));
-  ok(Object.keys(meta).filter((k) => k !== 'acao').sort().join() === 'desde,sistema,tela', 'presença não leva dados pessoais (acao vem do Mundo ao vivo)', Object.keys(meta).join());
+  ok(Object.keys(meta).sort().join() === 'desde,sistema,tela', 'presença leva só tela, desde e sistema (sem dados pessoais nem última ação)', Object.keys(meta).join());
   await p.click('[data-tela="dashboard"]'); await p.waitForTimeout(100);
   db = await H.banco(p);
   ok(db.presenca['online:u1'].u1[0].tela === 'dashboard', 'troca de tela atualiza presença');
