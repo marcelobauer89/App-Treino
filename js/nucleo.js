@@ -453,15 +453,8 @@
   // um evento recusado pelo banco não derruba os outros; só a falta da tabela desliga o envio nesta sessão.
   // Não levam pesos corporais, cargas nem observações.
   let eventosFila = [], eventosTimer = null, eventosLigados = true;
-  const ACOES_AO_VIVO = ['exercicio_concluido', 'recorde', 'checkin_criado', 'checkin_encerrado', 'video', 'semana_alterada'];
-  let ultimaAcao = null;
   function registrarEvento(tipo, dados = {}) {
     if (!usuario) return;
-    if (ACOES_AO_VIVO.includes(tipo)) {
-      // O lote leva até 10 s; o Mundo ao vivo (mundo.html) recebe a ação na hora pela presença.
-      ultimaAcao = { tipo, exercicio: dados.exercicio, treino: dados.treino, checkin: dados.tipo, retroativo: dados.retroativo, em: new Date().toISOString() };
-      marcarPresenca();
-    }
     if (!eventosLigados) return;
     eventosFila.push({ usuario_id: usuario.id, tipo, dados: caberNoBanco(dados) });
     if (eventosFila.length >= 20) enviarEventos();
@@ -629,7 +622,7 @@
   }
   function marcarPresenca() {
     if (!canalOnline || !usuario || document.visibilityState === 'hidden') return;
-    canalOnline.track({ tela: telaAtual(), desde: presencaDesde, sistema: infoAparelho().sistema, acao: ultimaAcao })
+    canalOnline.track({ tela: telaAtual(), desde: presencaDesde, sistema: infoAparelho().sistema })
       .then((r) => {
         // "error" com o canal conectado é falha real (ex.: permissão); "timed out" costuma ser a rede.
         if (r === 'error' && statusPresenca === 'SUBSCRIBED') avisarErroPresenca(`track: ${r}`);
@@ -638,7 +631,6 @@
   }
   function desligarPresenca() {
     clearTimeout(timerPresenca); timerPresenca = null;
-    ultimaAcao = null;
     if (!canalOnline) return;
     const canal = canalOnline;
     canalOnline = null;
