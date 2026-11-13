@@ -576,11 +576,15 @@
      Empurra a tela para baixo (body.com-pendentes), para não cobrir nada. */
   .pendentes {
     position: fixed; z-index: 25; top: 0; left: 0; right: 0;
-    padding: calc(6px + env(safe-area-inset-top, 0px)) 16px 6px; min-height: 32px;
-    background: var(--tinta); color: var(--gi); text-align: center; font-size: 13px; font-weight: 700; line-height: 20px;
+    display: flex; align-items: flex-start; justify-content: center; gap: 8px;
+    padding: calc(7px + env(safe-area-inset-top, 0px)) 16px 7px;
+    background: var(--tinta); color: var(--gi); font-size: 13px; font-weight: 600; line-height: 18px;
   }
-  body.com-pendentes { padding-top: calc(32px + env(safe-area-inset-top, 0px)); }
-  body.com-pendentes .controles { top: calc(32px + env(safe-area-inset-top, 0px)); }
+  .pendentes b { font-weight: 800; }
+  .pendentes-ic { flex: 0 0 auto; margin-top: 0; }
+  .pendentes span { max-width: 560px; }
+  body.com-pendentes { padding-top: var(--pendentes-h, 32px); }
+  body.com-pendentes .controles { top: var(--pendentes-h, 32px); }
   body.deslogado .pendentes { display: none; }
   body.deslogado .toast { top: max(16px, env(safe-area-inset-top, 0px)); bottom: auto; }
   body.com-ativo .toast { bottom: calc(var(--nav-h) + var(--ativo-h) + env(safe-area-inset-bottom, 0px) + 84px); }

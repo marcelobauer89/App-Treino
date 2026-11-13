@@ -41,7 +41,8 @@ const local = (p, k) => p.evaluate((k) => JSON.parse(localStorage.getItem(k) || 
   ok(db.checkins.length === 0, 'sem internet: nada chegou ao servidor');
   const pend = await local(p, 'bauer-pendentes-u1');
   ok(Array.isArray(pend) && pend.length === 1 && pend[0].t === 'checkin' && pend[0].linha.tipo === 'jiu', 'check-in guardado na fila do aparelho', JSON.stringify(pend));
-  ok(/Sem internet: ficou salvo no aparelho/.test(await txt(p, '#toast')), 'aviso de salvo no aparelho', await txt(p, '#toast'));
+  ok(/Sem internet: ficou guardado no aparelho e será salvo na sua conta assim que a internet voltar/.test(await txt(p, '#toast')), 'aviso de guardado no aparelho', await txt(p, '#toast'));
+  ok(await p.locator('#pendentes svg.pendentes-ic').count() === 1 && /será salva na sua conta assim que a internet voltar/.test(await txt(p, '#pendentes')), 'faixa com ícone de sem wi-fi e frase de quando volta', await txt(p, '#pendentes'));
   ok(/1 alteração guardada/.test(await txt(p, '#pendentes')), 'selo com 1 alteração guardada', await txt(p, '#pendentes'));
   ok(!/Não foi possível salvar/.test(await txt(p, '#toast')), 'sem internet não recarrega nem descarta');
   await p.screenshot({ path: `${H.SAIDA}/offline-selo.png` });
@@ -67,13 +68,30 @@ const local = (p, k) => p.evaluate((k) => JSON.parse(localStorage.getItem(k) || 
   await H.gravacoes(p);
   const pend2 = await local(p, 'bauer-pendentes-u1') || [];
   ok(pend2.length === 2 && pend2.some((x) => x.t === 'carga'), 'peso também entra na fila', JSON.stringify(pend2.map((x) => x.t)));
+  ok(/2 alterações guardadas/.test(await txt(p, '#pendentes')), 'faixa: 2 alterações', await txt(p, '#pendentes'));
+  // Pesos em mais dois exercícios do mesmo treino: um pedido só, mas cada exercício conta como uma alteração.
+  for (const i of [1, 2]) {
+    await p.locator('.ex .log-btn').nth(i).click();
+    await p.fill('#kg-0', String(30 + i));
+    await p.click('[data-concluir]');
+    await H.gravacoes(p);
+  }
+  // Corrigir o peso de um exercício já contado não soma de novo.
+  await p.locator('.ex .log-btn').first().click();
+  await p.fill('#kg-0', '21');
+  await p.click('[data-concluir]');
+  await H.gravacoes(p);
+  const pend3 = await local(p, 'bauer-pendentes-u1') || [];
+  ok(pend3.length === 2, 'pesos do mesmo treino continuam num pedido só', JSON.stringify(pend3.map((x) => x.t)));
+  ok(/4 alterações guardadas/.test(await txt(p, '#pendentes')), 'faixa conta cada exercício: 4 alterações', await txt(p, '#pendentes'));
+  await p.screenshot({ path: `${H.SAIDA}/offline-faixa-4.png` });
 
   // 6. A internet volta: a fila sai sozinha, na ordem, e o selo some.
   await rede(p, true, { sessaoVencida: false });
   await H.gravacoes(p); await H.gravacoes(p);
   db = await H.banco(p);
   ok(db.checkins.length === 1 && db.checkins[0].tipo === 'jiu', 'internet de volta: check-in enviado', JSON.stringify(db.checkins.map((c) => c.tipo)));
-  ok((db.cargas || []).length === 1, 'internet de volta: peso enviado', JSON.stringify(db.cargas));
+  ok((db.cargas || []).length === 1 && Object.keys(db.cargas[0].series).length === 3, 'internet de volta: pesos dos 3 exercícios enviados', JSON.stringify(db.cargas));
   ok(!(await local(p, 'bauer-pendentes-u1')), 'fila do aparelho vazia');
   ok(await p.locator('#pendentes').isHidden(), 'selo some');
   ok(/suas alterações foram enviadas/.test(await txt(p, '#toast')), 'aviso de enviado', await txt(p, '#toast'));
