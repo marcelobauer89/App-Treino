@@ -403,6 +403,11 @@
               if (nome === 'eh_admin') return { data: eh, error: null };
               if (!eh) return { data: null, error: { message: 'acesso restrito' } };
               if (nome === 'admin_emails' && a.semEmails) return { data: null, error: { message: 'Could not find the function public.admin_emails without parameters' } };
+              // admin_eventos(desde): como no banco, só os eventos a partir do instante pedido.
+              if (nome === 'admin_eventos' && args && args.desde) {
+                const d2 = ler(); d2.log.push(`admin_eventos:desde:${args.desde}`); gravar(d2);
+                return { data: (a.eventos || []).filter((e) => e.criado_em >= args.desde), error: null };
+              }
               return { data: a[nome.slice(6)] || [], error: null };
             }
             if (db.semFuncaoAcesso) { gravar(db); return { data: null, error: { message: `Could not find the function public.${nome} without parameters` } }; }

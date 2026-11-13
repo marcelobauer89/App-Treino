@@ -153,18 +153,32 @@
     }
   }
 
+  // Eventos são a lista que mais cresce: o painel busca só os do período escolhido e do anterior (para a comparação),
+  // e no mínimo os últimos 35 dias ("Quem sumiu" olha 4 semanas + 7 dias). Só "Tudo" baixa o histórico inteiro.
+  // Trocar para um período mais longo do que o já buscado busca de novo.
+  let eventosDesde; // 'AAAA-MM-DD' do primeiro dia buscado; null = histórico inteiro; undefined = ainda não buscou
+  function eventosNecessarios(p) {
+    if (p === 'tudo') return null;
+    const n = p === 'hoje' ? 1 : Number(p);
+    return somarDias(hoje(), -Math.max(2 * n, 35));
+  }
+  const eventosCobrem = (p) => eventosDesde === null || (eventosDesde !== undefined && eventosNecessarios(p) !== null && eventosDesde <= eventosNecessarios(p));
+
   async function carregar() {
     const primeira = !dados;
     if (primeira) mostrarCarregando('Buscando usuários, check-ins e e-mails…');
     $('atualizar').disabled = true;
     $('atualizar').classList.add('girando');
-    const [u, c, e, em, cv] = await Promise.all(['admin_usuarios', 'admin_checkins', 'admin_eventos', 'admin_emails', 'admin_convites'].map((nome) => todas(nome)));
+    const desde = eventosNecessarios(periodo);
+    const argsEventos = desde ? { desde: deYmd(desde).toISOString() } : undefined;
+    const [u, c, e, em, cv] = await Promise.all([['admin_usuarios'], ['admin_checkins'], ['admin_eventos', argsEventos], ['admin_emails'], ['admin_convites']].map(([nome, args]) => todas(nome, args)));
     $('atualizar').disabled = false;
     $('atualizar').classList.remove('girando');
     if (u.error || c.error || e.error) {
       return mostrarEstado(`<p>Não foi possível carregar os dados. ${esc((u.error || c.error || e.error).message)}</p>${botaoTentar()}`);
     }
     // Sem a função admin_emails (schema antigo), só a aba E-mails fica sem dados.
+    eventosDesde = desde;
     dados = { usuarios: u.data || [], checkins: (c.data || []).filter((x) => TIPOS[x.tipo]), eventos: e.data || [],
       emails: em.error ? null : (em.data || []).filter((x) => x.tipo === 'resumo_semanal'), erroEmails: em.error ? em.error.message : '',
       convites: cv.error ? null : cv.data || [] };
@@ -1233,7 +1247,10 @@
     if (p) {
       periodo = p.dataset.periodo;
       document.querySelectorAll('[data-periodo]').forEach((b) => b.setAttribute('aria-pressed', String(b === p)));
-      return render();
+      render();
+      // Período mais longo do que os eventos já buscados: mostra na hora e busca de novo (o botão Atualizar gira enquanto isso).
+      if (!eventosCobrem(periodo)) carregar();
+      return;
     }
     const alt = e.target.closest('[data-alternar]');
     if (alt) {
