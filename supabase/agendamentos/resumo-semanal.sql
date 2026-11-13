@@ -1,7 +1,7 @@
 -- Agendamento do resumo semanal por e-mail: toda sexta-feira às 9h (Brasília).
 -- Rode no SQL Editor do Supabase DEPOIS de:
 --   1. ligar as extensões (ou rode as duas linhas abaixo);
---   2. publicar a Edge Function "resumo-semanal" e cadastrar os segredos dela (veja o README).
+--   2. publicar a Edge Function "resumo-semanal" e cadastrar os segredos dela (veja docs/RECURSOS.md → "Resumo semanal por e-mail").
 -- Pode rodar de novo quando quiser: atualiza o token e o horário sem duplicar nada.
 
 create extension if not exists pg_cron with schema pg_catalog;

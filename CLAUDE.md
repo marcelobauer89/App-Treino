@@ -1,5 +1,11 @@
 # Instruções para o Claude
 
+## Onde achar as coisas (gastar menos tokens)
+
+- **`docs/MAPA.md`**: em que seção de cada arquivo fica cada tela ou recurso, e quais testes cobrem cada área. Comece por ele; procure a seção pelo comentário `// ---------- Nome ----------` e leia só aquele trecho, nunca o `index.html` ou o `admin.html` inteiros.
+- **`docs/RECURSOS.md`**: como cada recurso funciona e como ligar (índice no topo). **`docs/PRD.md`**: requisitos; ache a linha pelo ID (`grep -n 'RF-02 ' docs/PRD.md`).
+- Não abra imagens (PNG/JPG) nem `tests/saida/` sem necessidade.
+
 ## PRs: perguntar antes de abrir; depois, fazer o merge sem esperar aprovação
 
 O dono do repositório não quer abrir nem aceitar PRs pelo GitHub. Ao terminar uma mudança:
@@ -22,7 +28,7 @@ O backlog do app fica numa tabela do Notion (página App-Treino → **Backlog**,
 Toda vez que fizer o merge de `dev` para `main`:
 
 1. Liste o que entrou em produção (os commits e PRs do merge de `dev` para `main`).
-2. Para cada mudança, procure o item na tabela: pelo `ID` (RF-xx, quando a mudança cita um requisito do PRD) ou pelo nome e pelos `Detalhes`.
+2. Para cada mudança, procure o item na tabela: pelo `ID` (RF-xx, quando a mudança cita um requisito do PRD) ou pelo nome e pelos `Detalhes`. Busque só esses itens (consulta filtrada pelo ID ou pelo nome), sem ler a tabela inteira.
 3. Se existir, atualize a **Situação** (`Feito` quando estiver completo; `Parcial` quando só uma parte entrou) e acrescente em `Detalhes` o que mudou e a data. Não altere Prioridade, Área nem Pedido por.
 4. Se não existir, crie um item novo com Situação, Área, Origem (`PRD` se estiver no `docs/PRD.md`) e Detalhes, sem duplicar um item parecido.
 5. Na resposta, diga quais itens foram atualizados ou criados, com o link da tabela.
@@ -35,17 +41,18 @@ Os testes ficam em `tests/` (ver `tests/README.md`) e rodam em paralelo com `nod
 
 - Testes locais antes do PR para a `dev` (para gastar menos tempo e tokens):
   - mudança só de texto, estilo ou documentação: **nenhum teste local**; o GitHub confere no PR;
-  - outras mudanças: rodar **só os testes da área mexida** (`node tests/rodar.cjs testNN …`) e abrir o PR com eles verdes;
+  - outras mudanças: rodar **só os testes da área mexida** (a lista por área está em `docs/MAPA.md`: `node tests/rodar.cjs testNN …`) e abrir o PR com eles verdes;
   - **bateria completa local** só em mudança arriscada: login e abertura do app, avisos que aparecem ao abrir, `supabase/schema.sql` (mais `tests/sql/rodar.sh`) e o harness dos testes (`tests/apoio/`).
 - Cada PR para a `dev` ou a `main` roda os testes no GitHub (workflow **Testes**: app e painel, banco e e-mail). Fazer o merge só com os três verdes; se algum ficar vermelho, corrigir antes. Mudança no `supabase/schema.sql` precisa passar também no `tests/sql/rodar.sh`.
 - Teste novo de cada mudança vai para `tests/e2e/`, só com dados de exemplo (nunca nomes, e-mails ou ids de vídeo reais).
-- O dono quer acompanhar os testes **em tempo real, sempre**:
+- Acompanhamento dos testes (enxuto, para gastar menos tokens):
   - avisar quando começam, com o link para acompanhar quando for no GitHub;
-  - mandar o resultado de cada teste (ou de cada parte, no GitHub) assim que sai;
-  - no fim, mandar o resumo. Não esperar o fim para dar notícias.
+  - avisar **na hora** se algum teste (ou parte, no GitHub) falhar;
+  - no fim, mandar o resumo. Não mandar mensagem a cada teste verde nem consultar o GitHub repetidas vezes: esperar o aviso do fim (inscrição no PR) em vez de ficar verificando.
 
 ## Ritmo de entrega
 
 - Juntar os ajustes pedidos em sequência num PR só, em vez de um PR por ajuste. Quando o dono pedir dev e produção juntos, fazer os dois ciclos em seguida.
-- PRD (`docs/PRD.md`) e README: atualizar no mesmo PR da mudança, sem PR separado só de documentação.
+- PRD (`docs/PRD.md`), `docs/RECURSOS.md`, `docs/MAPA.md` e README: atualizar no mesmo PR da mudança, sem PR separado só de documentação, e **só a seção mexida** (achar pelo índice ou pelo RF-xx; não reler o arquivo inteiro).
+- README fica curto (instalação e operação); o detalhe de cada recurso vai em `docs/RECURSOS.md`.
 - Notion: atualizar só no merge de `dev` para `main` (ver "Backlog no Notion").

@@ -2,6 +2,8 @@
 
 2026-11-06 · @Bauer
 
+**Sumário:** [Visão geral](#visão-geral) · [Estado atual do app](#estado-atual-do-app) · [Público-alvo e persona](#público-alvo-e-persona) · [Objetivos e métricas de sucesso](#objetivos-e-métricas-de-sucesso) · [Escopo do MVP](#escopo-do-mvp) · [Requisitos funcionais](#requisitos-funcionais) · [Modelo de dados](#modelo-de-dados) · [Fluxos e telas principais](#fluxos-e-telas-principais) · [Regras de negócio](#regras-de-negócio) · [Requisitos não funcionais](#requisitos-não-funcionais) · [LGPD](#lgpd) · [Roadmap, riscos e questões em aberto](#roadmap-riscos-e-questões-em-aberto). Cada requisito é uma linha da tabela de [Requisitos funcionais](#requisitos-funcionais), achada pelo ID (ex.: `RF-02`).
+
 ### Visão geral
 
 O OSS é um hub para organizar e acompanhar todas as atividades físicas de uma pessoa num lugar só: musculação, Jiu Jitsu, muay thai, surf, futebol, futvôlei e cardio. É uma aplicação web responsiva, usada no navegador do celular, que monta a semana, diz o que fazer hoje, registra cargas e check-ins e mostra a evolução. Cada pessoa tem sua conta, seus dados e seus objetivos.
@@ -451,7 +453,7 @@ Pendências e cuidados:
 | Resumo semanal enviado para todos por engano num teste | A função só envia para todos com o pedido explícito `enviar`; simulação e prévia não enviam para o grupo |
 | Resumo semanal cair no spam ou passar do limite do Gmail | Envio pelo Gmail com senha de app e cabeçalho de cancelamento de inscrição; o limite de cerca de 500 e-mails por dia é folgado para o grupo |
 | Usuários estranharem o registro de uso | A Política de Privacidade e Você → Privacidade explicam o que o administrador vê; nada de pesos, cargas ou observações nos eventos; só administradores leem |
-| A política ficar desatualizada quando o app mudar | Ao mudar o que é coletado ou mostrado no painel, atualizar `privacidade.html` e `POLITICA_VERSAO` no app, para todos verem o aviso de novo (README, seção Privacidade e LGPD) |
+| A política ficar desatualizada quando o app mudar | Ao mudar o que é coletado ou mostrado no painel, atualizar `privacidade.html` e `POLITICA_VERSAO` no app, para todos verem o aviso de novo (docs/RECURSOS.md, seção Privacidade e LGPD) |
 | Esquecer de rodar o `schema.sql` após uma atualização | O app abre normalmente e avisa ao salvar ("rode de novo o supabase/schema.sql"); o README explica o passo |
 | No iPhone, o navegador limita notificações e armazenamento offline | Orientar a instalar na tela inicial; sincronizar sempre que houver conexão |
 | O plano foi montado para o perfil do Bauer e pode não servir a todos os amigos | Cada um monta a semana, define alvo e cargas; aviso para buscar profissional antes de começar |
