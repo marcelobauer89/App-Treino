@@ -150,7 +150,10 @@
   // { liberado, pedidoEm }: contas novas só usam o app depois de um convite ou de um administrador liberar.
   let acesso = { liberado: true, pedidoEm: null };
   // Política de Privacidade: versão atual (mude junto com privacidade.html) e se a pessoa já viu esta versão.
-  const POLITICA_VERSAO = '2026-11-14';
+  // Área do personal: ligada só onde o ambiente.js diz (por enquanto, no ambiente de testes).
+  const AREA_PERSONAL = !!(window.AMBIENTE && window.AMBIENTE.areaPersonal);
+  // A versão de 14/11/2026 explica o acompanhamento por personal; sem a área, vale a anterior.
+  const POLITICA_VERSAO = AREA_PERSONAL ? '2026-11-14' : '2026-10-27';
   let politica = { disponivel: false, aceita: true, contaNova: false };
   let perfilLinha = null;
   // Versão anterior dos treinos (perfis.treinos_anterior): { treinos, semana, em, jornada }. Serve para Desfazer e recuperar.

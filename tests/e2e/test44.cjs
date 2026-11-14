@@ -25,7 +25,7 @@ async function abrir(b, perfil, op = {}) {
     ok((await p.getAttribute('#politica-body a', 'href')) === 'privacidade.html', `${scheme}: link para a política completa`);
     await p.waitForTimeout(300); await p.screenshot({ path: `${H.SAIDA}/lgpd-aviso-${scheme}.png` });
     await p.click('[data-politica-ok]'); await H.gravacoes(p);
-    ok((await H.banco(p)).perfis[0].politica_versao === '2026-11-14', `${scheme}: "Entendi" grava a versão`);
+    ok((await H.banco(p)).perfis[0].politica_versao === '2026-10-27', `${scheme}: "Entendi" grava a versão`);
     ok(await p.locator('#novidade-dialog[open]').isVisible(), `${scheme}: depois vem o aviso de treinos`);
     await p.click('#novidade-body [data-fechar]');
     await p.reload(); await H.prontos(p); await p.waitForTimeout(300);
