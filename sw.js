@@ -17,16 +17,14 @@ self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
-  // A biblioteca do Supabase (endereço com a versão fixa) também fica guardada, para o app abrir sem internet.
-  const biblioteca = url.href.startsWith('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@');
-  // Fora ela, só os arquivos do próprio site, dentro do escopo. O /dev/ tem o seu próprio service worker.
-  if (!biblioteca && (url.origin !== location.origin || !url.pathname.startsWith(ESCOPO))) return;
+  // Só os arquivos do próprio site (a biblioteca do Supabase fica em js/vendor/), dentro do escopo. O /dev/ tem o seu próprio service worker.
+  if (url.origin !== location.origin || !url.pathname.startsWith(ESCOPO)) return;
   if (url.pathname.startsWith(`${ESCOPO}dev/`)) return;
   if (url.pathname.endsWith('/versao.json') || url.pathname.endsWith('/sw.js')) return;
   const navegacao = req.mode === 'navigate';
   e.respondWith(fetch(req).then((resp) => {
     // Volta do login (?code=...) e respostas com erro não ficam guardadas.
-    if ((resp.ok || resp.type === 'opaque') && (resp.type === 'basic' || biblioteca) && !url.search.includes('code=')) {
+    if (resp.ok && resp.type === 'basic' && !url.search.includes('code=')) {
       const copia = resp.clone();
       caches.open(CACHE).then((c) => c.put(navegacao ? new Request(url.origin + url.pathname) : req, copia)).catch(() => {});
     }

@@ -11,8 +11,10 @@ Ao criar, renomear ou apagar uma seção ou um teste, atualize este mapa no mesm
 | `index.html` | HTML das telas e janelas do app; carrega `css/app.css` e os arquivos de `js/` na ordem abaixo |
 | `css/app.css` | Estilos do app |
 | `js/*.js` | JavaScript do app, um arquivo por área (tabela abaixo). Todos dividem o mesmo escopo global: o que um arquivo define, os seguintes usam. Código que roda ao carregar só pode usar o que já foi carregado antes |
+| `js/antes-da-pintura.js`, `js/admin-antes-da-pintura.js` | Tema aplicado antes da primeira pintura (index e admin); fora do HTML por causa da CSP |
+| `js/vendor/supabase-<versão>.js` | Biblioteca do Supabase guardada no site (ver RECURSOS → Segurança) |
 | `admin.html`, `css/admin.css`, `js/admin.js` | Monitoramento (só administradores) |
-| `privacidade.html` | Política de Privacidade |
+| `privacidade.html`, `js/privacidade.js` | Política de Privacidade e o script dela |
 | `manifest.webmanifest`, `manifest-dev.webmanifest`, `icones/`, `sw.js` | App instalável (PWA): manifesto, ícones e service worker (registrado no `js/inicio.js`) |
 | `ambiente.js` | Projeto Supabase de produção ou de testes (por endereço) e o selo DEV |
 | `supabase/schema.sql` | Banco inteiro (tabelas, RLS, funções); roda de novo sem duplicar |
@@ -115,4 +117,5 @@ Rode só os da área mexida: `node tests/rodar.cjs test20 test22 …`.
 | App instalável (PWA), service worker, Instalar o app e sem internet (cópia dos dados e fila de envio) | test83, test84, test85 |
 | Identidade "Gestão de Treinos" (nome, descrição, semana padrão sem jiu, ordem dos objetivos) | test86 |
 | Tipos de check-in do painel, Cardio com modalidade e km, botões do editor e animação ao salvar | test87 |
+| Segurança do site: CSP nas três páginas, sem script inline, biblioteca do Supabase em `js/vendor/`, o que fica fora da publicação | test88 |
 | Harness dos testes (`tests/apoio/`) | todos |

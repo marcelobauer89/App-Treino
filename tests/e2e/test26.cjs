@@ -55,7 +55,8 @@ const card = (p, nome) => p.locator('.ex', { has: p.locator('h3', { hasText: nom
   await p.clock.runFor(3500); await esconder(p); await p.waitForTimeout(150);
   ok((await tipos(p)).filter((x) => x === 'semana_alterada').length === 1, 'semana_alterada debounced');
   // erro de JS
-  await p.evaluate(() => { const sc = document.createElement('script'); sc.textContent = "throw new Error('falha de teste')"; document.body.appendChild(sc); });
+  // Erro solto na página (sem <script> inline, que a CSP bloqueia).
+  await p.evaluate(() => window.dispatchEvent(new ErrorEvent('error', { message: 'Uncaught Error: falha de teste' })));
   await esconder(p); await p.waitForTimeout(150);
   ok((await eventos(p)).some((e) => e.tipo === 'erro' && e.dados.origem === 'js' && e.dados.mensagem.includes('falha de teste')), 'js error event');
   // sair: envia e limpa marca de sessão

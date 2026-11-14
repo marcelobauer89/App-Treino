@@ -150,7 +150,7 @@ Como cada recurso funciona, onde fica no banco e o que rodar para ligar está em
 Scripts em `supabase/ajustes/` corrigem dados já gravados e rodam uma vez só, no **SQL Editor**, depois do `schema.sql`:
 
 - `2026-10-20-peso-zero-para-sem-peso.sql`: marca como **Sem peso** os exercícios em que todas as cargas registradas pelo usuário são zero (gravadas como número ou como texto, como `"0"`). A primeira consulta do arquivo mostra o que vai mudar; a segunda faz o ajuste. Não apaga nenhum registro de peso.
-- `2026-10-20-zero-vira-feito-marcelo.sql`: para o usuário Marcelo Bauer (troque o nome no arquivo para outro usuário), marca como **Sem peso** os exercícios registrados só com carga zero e troca esses zeros pelo registro de "feito" do dia. Exercícios com algum peso maior que zero não mudam.
+- `2026-10-20-zero-vira-feito-usuario.sql`: para um usuário (troque o nome no arquivo antes de rodar), marca como **Sem peso** os exercícios registrados só com carga zero e troca esses zeros pelo registro de "feito" do dia. Exercícios com algum peso maior que zero não mudam.
 - `2026-10-29-nome-vazio.sql`: preenche o nome dos perfis que ficaram sem nome com o nome do Google e lista quem continua sem nome (a conta do Google não tem nome). Pode rodar de novo; só mexe em quem está sem nome. O painel já mostra o nome do Google quando o perfil está vazio (depois do `schema.sql`).
 - `2026-10-20-diagnostico-sem-peso.sql`: só consulta. Lista, por usuário, os exercícios que têm alguma carga zero, com quantas séries são zero, quantas têm peso, quantas estão gravadas como texto e se o exercício já está como Sem peso.
 

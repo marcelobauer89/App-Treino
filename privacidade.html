@@ -6,17 +6,11 @@
 <meta name="theme-color" content="#f3f4f6" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0f1115" media="(prefers-color-scheme: dark)">
 <title>Política de Privacidade • Gestão de Treinos</title>
+<!-- Segurança (CSP): o navegador só roda scripts do próprio site e só conversa com o Supabase. Ao usar um serviço
+     externo novo (imagem, vídeo, API), acrescente o endereço nas três páginas: index, admin e privacidade. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-src 'self' https://www.youtube-nocookie.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <script src="ambiente.js"></script>
-<script>
-  // Mesmo tema escolhido no app (Você → Aparência).
-  try {
-    var temaSalvo = localStorage.getItem('bauer-tema');
-    if (temaSalvo === 'claro') document.documentElement.dataset.theme = 'light';
-    if (temaSalvo === 'escuro') document.documentElement.dataset.theme = 'dark';
-  } catch (_) {}
-  // Aberta dentro do app (janela da política): sem o "Voltar" nem o título, que já estão na janela.
-  if (/[?&]embed=1/.test(location.search)) document.documentElement.classList.add('embed');
-</script>
+<script src="js/privacidade.js?v=dev"></script>
 <link rel="stylesheet" href="fonts/archivo.css">
 <style>
   :root {
@@ -164,26 +158,5 @@
     <p>Gestão de Treinos · Desenvolvido por Marcelo Bauer.</p>
   </footer>
 </main>
-<script>
-  // Dentro do app, os links da política abrem fora da janela (o site em outra aba, o e-mail no app de e-mail).
-  if (document.documentElement.classList.contains('embed')) {
-    document.querySelectorAll('main a:not(#voltar)').forEach(function (a) { a.target = '_blank'; a.rel = 'noopener'; });
-  }
-  // A política abre numa aba nova a partir do app: "Voltar" fecha esta aba e volta para o app
-  // como estava, sem carregar tudo de novo. Aberta direto pelo link, volta pelo histórico ou abre o app.
-  document.getElementById('voltar').addEventListener('click', function (e) {
-    var doApp = false;
-    try { doApp = !!document.referrer && new URL(document.referrer).origin === location.origin; } catch (_) {}
-    if (history.length <= 1) {
-      e.preventDefault();
-      window.close();
-      // Se o navegador não deixar fechar, segue para o app.
-      setTimeout(function () { location.href = './'; }, 300);
-    } else if (doApp) {
-      e.preventDefault();
-      history.back();
-    }
-  });
-</script>
 </body>
 </html>

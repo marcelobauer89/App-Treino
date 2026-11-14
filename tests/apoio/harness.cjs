@@ -1,4 +1,4 @@
-// Monta páginas de teste: servidor local, fonte local e Supabase falso no lugar do CDN.
+// Monta páginas de teste: servidor local, fonte local e Supabase falso no lugar da biblioteca (js/vendor/).
 const fs = require('fs'), path = require('path'), http = require('http');
 const F = path.join(__dirname, 'fontes');
 // Raiz do repositório e pastas dos testes. Cada execução pode usar outra porta (PORTA_TESTE), para rodar várias ao mesmo tempo.
@@ -8,7 +8,7 @@ const SAIDA = path.join(__dirname, '..', 'saida');
 fs.mkdirSync(SAIDA, { recursive: true });
 const PORTA = Number(process.env.PORTA_TESTE) || 8765;
 const PAGINA = `http://localhost:${PORTA}/index.html`;
-const CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js';
+const CDN = /\/js\/vendor\/supabase-[\d.]+\.js$/;
 const MOCK = fs.readFileSync(path.join(__dirname, 'mock-supabase.js'), 'utf8');
 
 function servidor() {
