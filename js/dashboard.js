@@ -420,7 +420,8 @@
     const itens = [...todos].sort((a, b) => b.melhor - a.melhor || a.chave.localeCompare(b.chave, 'pt-BR'));
     const MOSTRAR = 5;
     const visiveis = evo.pesosTodos ? itens : itens.slice(0, MOSTRAR);
-    const recente = somarDias(hoje(), -30);
+    // Troféu: recorde nas últimas 4 semanas (a partir de 4 semanas sem subir, o exercício vai para os estagnados).
+    const recente = somarDias(hoje(), -27);
     $('evo-pesos').innerHTML = itens.length ? visiveis.map((it, i) => {
       const subiu = it.melhor - it.primeiro.kg;
       const partes = [`recorde em ${dataCurta(it.quando)}`];
@@ -428,7 +429,7 @@
       else if (it.h.length > 1 && it.ultimo.kg === it.melhor) partes.push(`mesma carga desde ${mesCurto(it.primeiro.data)}`);
       if (it.ultimo.kg < it.melhor) partes.push(`último treino: ${fmtKg(it.ultimo.kg)} kg`);
       return `
-      <li><span class="evo-nome"><span class="evo-pos" aria-hidden="true">${i + 1}</span>${esc(it.chave)}${it.quando >= recente && it.h.length > 1 && subiu > 0 ? ' <span title="Recorde nos últimos 30 dias" aria-label="Recorde nos últimos 30 dias">🏆</span>' : ''}</span>
+      <li><span class="evo-nome"><span class="evo-pos" aria-hidden="true">${i + 1}</span>${esc(it.chave)}${it.quando >= recente && it.h.length > 1 && subiu > 0 ? ' <span title="Recorde nas últimas 4 semanas" aria-label="Recorde nas últimas 4 semanas">🏆</span>' : ''}</span>
         <span class="evo-valor">${fmtKg(it.melhor)} kg</span>
         <small>${esc(partes.join(' · '))}</small></li>`;
     }).join('') : '<li class="evo-vazio-txt">Nenhum peso registrado ainda. Anote as cargas no treino para ver sua evolução.</li>';
