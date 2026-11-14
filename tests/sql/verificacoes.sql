@@ -228,5 +228,130 @@ do $$ begin
   if not (select 'evolucao' = any(novidades_ocultas) from public.perfis where id = auth.uid()) then raise exception 'FALHOU: "não mostrar esta novidade" ficou salvo'; end if;
 end $$;
 
+-- ---------- Área do personal ----------
+-- Paula (444) pede para ser personal; Bruno (333) vira aluno dela; Ana (222) não é aluna e nada dela aparece.
+reset role;
+insert into auth.users (id, email, raw_user_meta_data) values
+  ('44444444-4444-4444-4444-444444444444', 'paula@exemplo.com', '{"full_name":"Paula"}'),
+  ('55555555-5555-5555-5555-555555555555', 'caio@exemplo.com', '{"full_name":"Caio"}');
+insert into public.cargas (usuario_id, data, treino, series)
+  values ('33333333-3333-3333-3333-333333333333', '2026-11-05', 't1', '{"Supino reto":[{"carga":30}]}');
+set local role authenticated;
+do $$ begin perform set_config('request.jwt.claim.sub', '44444444-4444-4444-4444-444444444444', true); end $$;
+do $$ begin
+  perform public.pedir_acesso_profissional('Paula Exemplo', '000000-g', 'sp');
+  if public.eh_profissional() then raise exception 'FALHOU: o pedido sozinho não libera a área do personal'; end if;
+  begin perform public.personal_criar_convite('Bruno');
+    raise exception 'FALHOU: sem liberação, não gera convite de aluno';
+  exception when raise_exception then if sqlerrm like 'FALHOU%' then raise; end if; end;
+  if (select count(*) from public.profissionais) + (select count(*) from public.vinculos) <> 0
+    then raise exception 'FALHOU: profissionais e vínculos não são lidos direto (só pelas funções)'; end if;
+  if (select cref from public.meu_cadastro_profissional()) <> '000000-G' then raise exception 'FALHOU: o cadastro guarda o CREF'; end if;
+end $$;
+
+-- O administrador libera; a lista mostra o pedido.
+reset role;
+set local role authenticated;
+do $$ begin perform set_config('request.jwt.claim.sub', '11111111-1111-1111-1111-111111111111', true); end $$;
+do $$ begin
+  if (select count(*) from public.admin_profissionais()) <> 1 then raise exception 'FALHOU: o administrador vê o pedido do profissional'; end if;
+  perform public.admin_liberar_profissional('44444444-4444-4444-4444-444444444444', true);
+end $$;
+
+-- Paula gera dois convites e monta uma ficha.
+reset role;
+set local role authenticated;
+do $$ begin perform set_config('request.jwt.claim.sub', '44444444-4444-4444-4444-444444444444', true); end $$;
+create temp table conv (quem text, codigo text);
+grant all on conv to authenticated;
+do $$ declare f uuid; begin
+  if not public.eh_profissional() then raise exception 'FALHOU: liberada, a área do personal abre'; end if;
+  insert into conv values ('bruno', public.personal_criar_convite('Bruno')), ('caio', public.personal_criar_convite('Caio'));
+  if (select count(*) from public.personal_alunos()) <> 0 then raise exception 'FALHOU: convite não aceito ainda não é aluno'; end if;
+  f := public.personal_salvar_ficha('{"nome":"Ficha A","treinos":{"1":{"nome":"A","subtitulo":"Peito","exercicios":[{"nome":"Supino reto","dose":"4×8","pse":8}]}},"semana":[[],["t1"],[],[],[],[],[]]}');
+  if (select count(*) from public.personal_fichas()) <> 1 then raise exception 'FALHOU: a ficha fica salva'; end if;
+  begin perform public.personal_salvar_ficha('{"nome":"Vazia","treinos":{"1":{"nome":"A","exercicios":[]}}}');
+    raise exception 'FALHOU: ficha com treino sem exercício é recusada';
+  exception when check_violation then null; end;
+end $$;
+
+-- Bruno vê o convite e aceita; Caio é aluno de outro jeito? Não: Caio aceita e depois encerra.
+reset role;
+set local role authenticated;
+do $$ begin perform set_config('request.jwt.claim.sub', '33333333-3333-3333-3333-333333333333', true); end $$;
+do $$ declare c text := (select codigo from conv where quem = 'bruno'); begin
+  if (select situacao from public.ver_convite_personal(c)) <> 'ok' then raise exception 'FALHOU: o aluno vê o convite válido'; end if;
+  if (select cref from public.ver_convite_personal(c)) <> '000000-G' then raise exception 'FALHOU: o aluno vê o CREF do personal'; end if;
+  if public.aceitar_vinculo(c) <> 'ok' then raise exception 'FALHOU: o aluno aceita o convite'; end if;
+  if (select nome from public.meu_personal()) <> 'Paula Exemplo' then raise exception 'FALHOU: o aluno vê quem o acompanha'; end if;
+  if public.aceitar_vinculo('ZZZZZZ') <> 'invalido' then raise exception 'FALHOU: código inexistente é inválido'; end if;
+end $$;
+reset role;
+set local role authenticated;
+do $$ begin perform set_config('request.jwt.claim.sub', '55555555-5555-5555-5555-555555555555', true); end $$;
+do $$ declare c text := (select codigo from conv where quem = 'caio'); begin
+  if (select liberado from public.perfis where id = auth.uid()) then raise exception 'FALHOU: conta nova começa sem acesso'; end if;
+  if public.aceitar_vinculo((select codigo from conv where quem = 'bruno')) <> 'usado' then raise exception 'FALHOU: convite já aceito por outro é recusado'; end if;
+  if public.aceitar_vinculo(c) <> 'ok' then raise exception 'FALHOU: o segundo aluno aceita'; end if;
+  if not (select liberado from public.perfis where id = auth.uid()) then raise exception 'FALHOU: aceitar o convite do personal libera a conta'; end if;
+  perform public.encerrar_vinculo();
+  if (select count(*) from public.meu_personal()) <> 0 then raise exception 'FALHOU: o aluno encerra o acompanhamento'; end if;
+end $$;
+
+-- Paula vê só o Bruno: check-ins, cargas e uso; aplica a ficha e o Bruno não muda os treinos sozinho.
+reset role;
+set local role authenticated;
+do $$ begin perform set_config('request.jwt.claim.sub', '44444444-4444-4444-4444-444444444444', true); end $$;
+do $$ declare f uuid := (select id from public.personal_fichas() limit 1); begin
+  if (select count(*) from public.personal_alunos()) <> 1 then raise exception 'FALHOU: o personal vê só os alunos com vínculo ativo'; end if;
+  if (select count(*) from public.personal_checkins()) <> 1 then raise exception 'FALHOU: o personal vê os check-ins do aluno, e só dele'; end if;
+  if (select count(*) from public.personal_cargas()) <> 1 then raise exception 'FALHOU: o personal vê as cargas do aluno, e só dele'; end if;
+  if exists (select 1 from public.personal_checkins() where usuario_id <> '33333333-3333-3333-3333-333333333333') then raise exception 'FALHOU: nada de quem não é aluno'; end if;
+  if (select count(*) from public.perfis) <> 1 then raise exception 'FALHOU: o personal não lê o perfil do aluno direto'; end if;
+  if public.personal_aplicar_ficha(f, array['33333333-3333-3333-3333-333333333333', '22222222-2222-2222-2222-222222222222']::uuid[], true) <> 1
+    then raise exception 'FALHOU: a ficha vale só para os próprios alunos'; end if;
+  perform public.personal_salvar_treinos('33333333-3333-3333-3333-333333333333',
+    '{"1":{"nome":"A","subtitulo":"","exercicios":[{"nome":"Supino reto","dose":"5×5","pse":9}]}}');
+  begin perform public.personal_salvar_treinos('22222222-2222-2222-2222-222222222222', '{"1":{"nome":"A","exercicios":[{"nome":"Supino reto"}]}}');
+    raise exception 'FALHOU: não monta treino de quem não é aluno';
+  exception when raise_exception then if sqlerrm like 'FALHOU%' then raise; end if; end;
+end $$;
+reset role;
+do $$ begin
+  if (select treinos->'1'->'exercicios'->0->>'dose' from public.perfis where id = '33333333-3333-3333-3333-333333333333') <> '5×5'
+    then raise exception 'FALHOU: o ajuste do personal chega ao aluno'; end if;
+  if (select semana->>1 from public.perfis where id = '33333333-3333-3333-3333-333333333333') <> '["t1"]' then raise exception 'FALHOU: a semana sugerida foi aplicada'; end if;
+  if (select treinos_anterior->'treinos' from public.perfis where id = '33333333-3333-3333-3333-333333333333') is null then raise exception 'FALHOU: a versão anterior fica guardada'; end if;
+  if (select treinos from public.perfis where id = '22222222-2222-2222-2222-222222222222')->'1'->'exercicios'->0->>'dose' = '5×5' then raise exception 'FALHOU: quem não é aluno não muda'; end if;
+end $$;
+set local role authenticated;
+do $$ begin perform set_config('request.jwt.claim.sub', '33333333-3333-3333-3333-333333333333', true); end $$;
+do $$ begin
+  begin update public.perfis set treinos = null where id = auth.uid();
+    raise exception 'FALHOU: com personal, o aluno não muda os treinos';
+  exception when insufficient_privilege then null; end;
+  update public.perfis set semana = '[[], [], ["jiu"], [], [], [], []]' where id = auth.uid();
+  perform public.encerrar_vinculo();
+  update public.perfis set treinos = null where id = auth.uid();
+  if (select (meus_dados_extras()->'acompanhamento'->0->>'personal')) <> 'Paula Exemplo' then raise exception 'FALHOU: Baixar meus dados traz o acompanhamento'; end if;
+end $$;
+reset role;
+set local role authenticated;
+do $$ begin perform set_config('request.jwt.claim.sub', '44444444-4444-4444-4444-444444444444', true); end $$;
+do $$ begin
+  if (select count(*) from public.personal_alunos()) <> 0 or (select count(*) from public.personal_cargas()) <> 0
+    then raise exception 'FALHOU: depois de encerrado, o personal não vê mais o aluno'; end if;
+end $$;
+-- Bloqueada pelo administrador, a área fecha.
+reset role;
+update public.profissionais set bloqueado_em = now();
+set local role authenticated;
+do $$ begin perform set_config('request.jwt.claim.sub', '44444444-4444-4444-4444-444444444444', true); end $$;
+do $$ begin
+  begin perform 1 from public.personal_alunos();
+    raise exception 'FALHOU: personal bloqueado não lê os alunos';
+  exception when insufficient_privilege then null; end;
+end $$;
+
 rollback;
 \echo 'Regras de acesso: tudo OK'

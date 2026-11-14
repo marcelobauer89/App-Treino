@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="pt-BR" data-painel="personal">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="Área do personal do Gestão de Treinos: monte as fichas, vincule aos alunos e acompanhe quem treinou.">
+<title>Área do personal • Gestão de Treinos</title>
+<!-- Segurança (CSP): o navegador só roda scripts do próprio site e só conversa com o Supabase. Ao usar um serviço
+     externo novo (imagem, vídeo, API), acrescente o endereço nas quatro páginas: index, admin, personal e privacidade. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-src 'self' https://www.youtube-nocookie.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<script src="ambiente.js"></script>
+<script src="js/admin-antes-da-pintura.js?v=dev"></script>
+<link rel="stylesheet" href="fonts/archivo.css">
+<link rel="stylesheet" href="css/admin.css?v=dev">
+<link rel="stylesheet" href="css/personal.css?v=dev">
+</head>
+<body>
+
+<header class="wrap topo">
+  <h1>Área do personal</h1>
+  <div class="controles" id="controles" hidden>
+    <div class="periodo" role="group" aria-label="Período">
+      <button type="button" data-periodo="hoje" aria-pressed="false">Hoje</button>
+      <button type="button" data-periodo="7" aria-pressed="false">7 dias</button>
+      <button type="button" data-periodo="30" aria-pressed="true">30 dias</button>
+      <button type="button" data-periodo="90" aria-pressed="false">90 dias</button>
+      <button type="button" data-periodo="tudo" aria-pressed="false">Tudo</button>
+    </div>
+    <button class="btn-sec" type="button" id="atualizar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 4v5h-5"/></svg>
+      Atualizar
+    </button>
+  </div>
+  <!-- Descrição à esquerda e a hora da última atualização no canto direito, na mesma linha. -->
+  <div class="sub-linha">
+    <p class="sub">Seus alunos, as fichas que você monta e quem está treinando.</p>
+    <span class="atualizado" id="atualizado" aria-live="polite"></span>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="estado" id="estado" aria-live="polite">
+    <p>Carregando…</p>
+  </section>
+
+  <div id="painel" hidden>
+    <div class="abas" role="tablist" aria-label="Seções da área do personal">
+      <button type="button" role="tab" id="tab-geral" data-aba="geral" aria-controls="aba-geral" aria-selected="true"><span class="aba-longo">Visão geral</span><span class="aba-curto" aria-hidden="true">Geral</span><span class="ponto on aba-online" id="aba-online" hidden></span></button>
+      <button type="button" role="tab" id="tab-usuarios" data-aba="usuarios" aria-controls="aba-usuarios" aria-selected="false" tabindex="-1">Alunos</button>
+      <button type="button" role="tab" id="tab-fichas" data-aba="fichas" aria-controls="aba-fichas" aria-selected="false" tabindex="-1">Fichas</button>
+      <button type="button" role="tab" id="tab-convidar" data-aba="convidar" aria-controls="aba-convidar" aria-selected="false" tabindex="-1">Convidar<span class="aba-alerta" id="alerta-convidar" hidden></span></button>
+    </div>
+
+    <div role="tabpanel" id="aba-geral" aria-labelledby="tab-geral">
+    <dl class="kpis" id="kpis"></dl>
+
+    <div class="graficos">
+      <section class="bloco cartao" aria-labelledby="g1-titulo">
+        <div class="bloco-topo">
+          <div class="titulo-info">
+            <h2 id="g1-titulo">Check-ins por <span data-unidade>dia</span></h2>
+            <button class="info" type="button" data-info="info-g1" aria-expanded="false" aria-controls="info-g1" aria-label="Como funciona: gráfico de check-ins"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button>
+          </div>
+          <button class="link-btn" type="button" data-alternar="g1" aria-expanded="false">Ver tabela</button>
+        </div>
+        <p class="info-txt" id="info-g1" role="note" hidden></p>
+        <ul class="legenda" aria-label="Tipos de treino">
+          <li><i style="background:var(--musc)"></i>Musculação</li>
+          <li><i style="background:var(--jiu)"></i>Jiu Jitsu</li>
+          <li><i style="background:var(--bike)"></i>Cardio</li>
+          <li><i style="background:var(--muay)"></i>Muay Thai</li>
+          <li><i style="background:var(--surf)"></i>Surf</li>
+          <li><i style="background:var(--futebol)"></i>Futebol</li>
+          <li><i style="background:var(--futvolei)"></i>Futvôlei</li>
+        </ul>
+        <div class="grafico" id="g1"></div>
+        <div class="tabela-rolagem" id="g1-tabela" hidden></div>
+      </section>
+      <section class="bloco cartao" aria-labelledby="g2-titulo">
+        <div class="bloco-topo">
+          <div class="titulo-info">
+            <h2 id="g2-titulo">Usuários ativos por <span data-unidade>dia</span></h2>
+            <button class="info" type="button" data-info="info-g2" aria-expanded="false" aria-controls="info-g2" aria-label="Como funciona: gráfico de usuários ativos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button>
+          </div>
+          <button class="link-btn" type="button" data-alternar="g2" aria-expanded="false">Ver tabela</button>
+        </div>
+        <p class="info-txt" id="info-g2" role="note" hidden></p>
+        <p class="nota" id="g2-nota">Ativo: abriu o app ou fez check-in no dia.</p>
+        <div class="grafico" id="g2"></div>
+        <div class="tabela-rolagem" id="g2-tabela" hidden></div>
+      </section>
+    </div>
+    <div class="graficos">
+      <section class="bloco cartao" aria-labelledby="treinos-titulo">
+        <div class="bloco-topo">
+          <div class="titulo-info">
+            <h2 id="treinos-titulo">Treinos mais feitos</h2>
+            <button class="info" type="button" data-info="info-treinos" aria-expanded="false" aria-controls="info-treinos" aria-label="Como funciona: treinos mais feitos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button>
+          </div>
+        </div>
+        <p class="info-txt" id="info-treinos" role="note" hidden>Check-ins do período por tipo de treino, somando todos os usuários, do mais feito para o menos feito. A porcentagem é a parte de cada tipo no total de check-ins, e "pessoas" conta quem fez aquele treino pelo menos uma vez. Em Musculação, aparece também quantos check-ins teve cada treino (Treino 1, Treino 2…).</p>
+        <ol class="ranking-treinos" id="treinos-lista" aria-label="Check-ins por tipo de treino"></ol>
+      </section>
+    </div>
+    <div class="graficos listas-geral">
+      <section class="bloco cartao" aria-labelledby="sumiu-titulo">
+        <div class="bloco-topo">
+          <div class="titulo-info">
+            <h2 id="sumiu-titulo">Quem sumiu</h2>
+            <button class="info" type="button" data-info="info-sumiu" aria-expanded="false" aria-controls="info-sumiu" aria-label="Como funciona: quem sumiu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button>
+          </div>
+        </div>
+        <p class="info-txt" id="info-sumiu" role="note" hidden>Possíveis churn: quem usou o app nas últimas 4 semanas, mas está há 7 dias ou mais sem usar. Qualquer uso conta (fazer check-in, registrar pesos ou só abrir o app), então quem registra pesos sem fazer check-in não aparece aqui. Quem usava o app mais dias por semana aparece primeiro. Não muda com o período escolhido.</p>
+        <div class="lista-cartao lista-interna" id="sumiu-lista"></div>
+      </section>
+      <section class="bloco cartao" aria-labelledby="evoluiu-titulo">
+        <div class="bloco-topo">
+          <div class="titulo-info">
+            <h2 id="evoluiu-titulo">Quem mais evoluiu</h2>
+            <button class="info" type="button" data-info="info-evoluiu" aria-expanded="false" aria-controls="info-evoluiu" aria-label="Como funciona: quem mais evoluiu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button>
+          </div>
+        </div>
+        <p class="info-txt" id="info-evoluiu" role="note" hidden>Recordes pessoais no período: quando alguém supera o próprio peso máximo num exercício (o primeiro peso registrado não conta). Mostra quem bateu mais recordes e em quais exercícios. Os pesos não aparecem aqui.</p>
+        <div class="lista-cartao lista-interna" id="evoluiu-lista"></div>
+      </section>
+    </div>
+    </div>
+
+    <div role="tabpanel" id="aba-usuarios" aria-labelledby="tab-usuarios" hidden>
+    <section class="bloco" aria-labelledby="u-titulo">
+      <div class="bloco-topo">
+        <h2 id="u-titulo">Alunos</h2>
+        <div class="filtros">
+          <label class="ordenar-cel">Ordenar
+            <select id="ordenar-cel">
+              <option value="ultimo">Último uso</option>
+              <option value="nome">Nome</option>
+              <option value="checkins">Check-ins</option>
+              <option value="aderencia">Aderência</option>
+              <option value="acessos">Acessos</option>
+            </select>
+          </label>
+          <label class="so-checkin"><input type="checkbox" id="so-checkin"> Só quem fez check-in no período</label>
+          <input class="busca" id="busca" type="search" placeholder="Buscar pelo nome" aria-label="Buscar aluno">
+          <button class="btn-sec" type="button" id="csv">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0-4-4m4 4 4-4M5 21h14"/></svg>
+            Exportar CSV
+          </button>
+        </div>
+      </div>
+      <p class="u-contagem" id="u-contagem" aria-live="polite"></p>
+      <div class="cartao">
+        <table class="usuarios" id="usuarios">
+          <thead>
+            <tr>
+              <th scope="col" data-col="nome"><button type="button">Aluno</button></th>
+              <th scope="col" data-col="situacao"><button type="button">Situação</button></th>
+              <th scope="col" data-col="ultimo"><button type="button">Último uso</button></th>
+              <th scope="col" data-col="acessos" class="num"><button type="button">Acessos</button></th>
+              <th scope="col" data-col="checkins" class="num"><button type="button">Check-ins</button></th>
+              <th scope="col" data-col="aderencia"><button type="button">Aderência</button></th>
+              <th scope="col" data-col="treino"><button type="button">Último treino</button></th>
+            </tr>
+          </thead>
+          <tbody id="usuarios-corpo"></tbody>
+        </table>
+      </div>
+      <p class="nota" style="margin-top:8px">Situação: <b>Ativo</b> usou nos últimos 7 dias; <b>Em risco</b> entre 8 e 14 dias; <b>Inativo</b> há mais de 14 dias. Check-ins e aderência consideram o período escolhido. Toque num aluno para ver a ficha, os pesos e encerrar o acompanhamento.</p>
+    </section>
+    </div>
+
+    <div role="tabpanel" id="aba-fichas" aria-labelledby="tab-fichas" hidden>
+      <section class="bloco" aria-labelledby="fichas-titulo">
+        <div class="bloco-topo">
+          <h2 id="fichas-titulo">Fichas</h2>
+          <button class="btn" type="button" id="ficha-nova">Nova ficha</button>
+        </div>
+        <p class="nota" style="margin:-4px 0 12px">Cada ficha tem até 6 treinos de até 15 exercícios e a semana sugerida. Monte uma vez e aplique a quantos alunos quiser; depois dá para ajustar a de cada aluno na ficha dele.</p>
+        <div class="cartao lista-cartao" id="fichas-lista"><p class="vazio">Carregando…</p></div>
+      </section>
+    </div>
+
+    <div role="tabpanel" id="aba-convidar" aria-labelledby="tab-convidar" hidden>
+      <section class="bloco cartao conv-novo" aria-labelledby="pc-titulo">
+        <h2 id="pc-titulo">Convidar aluno</h2>
+        <p class="nota" style="margin:4px 0 12px">Cada link vale para um aluno e por 7 dias. O aluno entra com o Google, vê o que você vai acompanhar e aceita. Quem ainda não usa o app entra por ele.</p>
+        <form class="conv-form" id="pc-form" novalidate>
+          <label class="sr" for="pc-nome">Para quem?</label>
+          <input id="pc-nome" type="text" maxlength="80" autocomplete="off" placeholder="Para quem? (opcional, ex.: João)">
+          <button class="btn" type="submit" id="pc-gerar">Gerar convite</button>
+        </form>
+        <div id="pc-gerado"></div>
+      </section>
+      <section class="bloco" aria-labelledby="pc-aguardando-titulo">
+        <div class="bloco-topo"><h2 id="pc-aguardando-titulo">Aguardando o aluno</h2></div>
+        <div class="cartao lista-cartao" id="pc-aguardando"></div>
+      </section>
+      <section class="bloco" aria-labelledby="pc-historico-titulo">
+        <div class="bloco-topo"><h2 id="pc-historico-titulo">Convites aceitos e encerrados</h2></div>
+        <div class="cartao lista-cartao" id="pc-historico"></div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  <p>Área para personal trainers. Você vê os treinos, a semana, os check-ins e os pesos de quem aceitou o seu convite; observações e fotos dos check-ins nunca aparecem aqui. O aluno pode encerrar o acompanhamento quando quiser.</p>
+</footer>
+
+<dialog class="ex-dialog" id="ficha-dialog" aria-labelledby="ficha-title">
+  <div class="ex-corpo" id="ficha-body"></div>
+</dialog>
+<dialog class="modal-excluir" id="pc-dialog" aria-labelledby="pc-dialog-title">
+  <div class="excluir-corpo" id="pc-dialog-body"></div>
+</dialog>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<dialog class="detalhe" id="detalhe" aria-labelledby="det-nome">
+  <div class="det-corpo" id="det-corpo"></div>
+</dialog>
+
+<!-- Biblioteca do Supabase guardada no próprio site (conferida com o hash do jsDelivr), sem depender de CDN. -->
+<script src="js/vendor/supabase-2.117.2.js"></script>
+<script src="js/dados.js?v=dev"></script>
+<script src="js/personal.js?v=dev"></script>
+<script src="js/admin.js?v=dev"></script>
+</body>
+</html>

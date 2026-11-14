@@ -1,0 +1,45 @@
+/* Área do personal (personal.html): o painel usa css/admin.css; aqui só o que é da área (cadastro, fichas, editor,
+   aplicar a alunos e a ficha do aluno). Cores e campos vêm dos tokens do admin.css, nos dois temas. */
+.pf-cadastro { display: grid; gap: 14px; max-width: 560px; height: auto; padding: 20px; border: 1px solid var(--fio); border-radius: 16px; background: var(--papel); }
+.pf-cadastro h2 { margin: 0; font-size: 24px; }
+.pf-cadastro p { margin: 0; color: var(--tinta-2); }
+.pf-acoes { display: flex; flex-wrap: wrap; gap: 8px; }
+.pf-acoes .btn, .pf-acoes .btn-sec { min-height: 48px; }
+
+/* Fichas: nome em cima, números embaixo e os botões numa linha que quebra no celular. */
+.ficha-item .conv-botoes { grid-row: auto; grid-column: 1 / -1; flex-wrap: wrap; margin-top: 8px; }
+
+/* Editor de ficha: cada treino num bloco com borda; exercícios em linhas (nome, séries, PSE e botões). */
+.pf-treino { padding: 14px; border: 1px solid var(--fio) !important; border-radius: 14px; }
+.pf-treino legend { padding: 0 6px; margin-left: -6px; }
+.pf-exs { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+.pf-exs li { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 1.3fr) 76px auto; gap: 8px; align-items: end; padding-bottom: 10px; border-bottom: 1px dashed var(--fio); }
+.pf-ex-botoes { display: flex; gap: 2px; padding-bottom: 4px; }
+.pf-icone { width: 40px; height: 40px; display: grid; place-items: center; border: 0; border-radius: 10px; background: transparent; color: var(--tinta-2); cursor: pointer; }
+.pf-icone:hover:not(:disabled) { background: var(--gi); color: var(--tinta); }
+.pf-icone:disabled { opacity: .35; cursor: default; }
+.pf-perigo { border-color: var(--erro) !important; color: var(--erro) !important; }
+@media (max-width: 560px) {
+  .pf-exs li { grid-template-columns: minmax(0, 1fr) 76px; }
+  .pf-ex-nome { grid-column: 1 / -1; }
+  .pf-ex-botoes { grid-column: 1 / -1; justify-content: flex-end; padding: 0; }
+}
+.pf-semana { display: grid; gap: 8px; }
+.pf-dia { display: grid; grid-template-columns: 80px minmax(0, 1fr) minmax(0, 1fr); gap: 8px; align-items: center; }
+.pf-dia b { font-size: 14px; }
+@media (max-width: 420px) { .pf-dia { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .pf-dia b { grid-column: 1 / -1; } }
+
+/* Aplicar ficha: lista de alunos com a ficha de hoje embaixo do nome. */
+.pf-aplicar { display: grid; gap: 14px; height: auto; }
+.pf-alunos { display: grid; max-height: 40dvh; overflow-y: auto; }
+.pf-alunos .excluir-entendi { padding: 8px 0; border-bottom: 1px solid var(--fio); }
+.pf-sub { display: block; margin-top: 2px; font-size: 13px; font-weight: 400; color: var(--tinta-2); }
+
+/* Ficha do aluno no detalhe: treinos e pesos. */
+.pf-treinos-lista, .pf-pesos { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.pf-treinos-lista li, .pf-pesos li { padding: 10px 12px; border-radius: 10px; background: var(--gi); font-size: 14px; }
+.pf-pesos li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; }
+.pf-pesos .pf-sub { grid-column: 1 / -1; }
+.pf-rec { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pf-rec small { font-weight: 400; color: var(--tinta-2); }
+.pf-alerta { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: var(--recorde-suave); color: var(--recorde-tinta); font-size: 12px; }
