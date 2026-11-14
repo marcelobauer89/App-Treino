@@ -360,6 +360,18 @@ do $$ begin
   if (select count(*) from public.personal_alunos()) <> 0 or (select count(*) from public.personal_cargas()) <> 0
     then raise exception 'FALHOU: depois de encerrado, o personal não vê mais o aluno'; end if;
 end $$;
+-- Com o ajuste 'convite_proprio' (banco de testes), o personal vira aluno de si mesmo e aplica a ficha em si.
+reset role;
+insert into public.ajustes_banco values ('convite_proprio', 'sim');
+set local role authenticated;
+do $$ begin perform set_config('request.jwt.claim.sub', '44444444-4444-4444-4444-444444444444', true); end $$;
+do $$ declare c text := public.personal_criar_convite('Eu'); f uuid := (select id from public.personal_fichas() limit 1); begin
+  if public.aceitar_vinculo(c) <> 'ok' then raise exception 'FALHOU: com o ajuste, o personal aceita o próprio convite'; end if;
+  if public.personal_aplicar_ficha(f, array[auth.uid()], false) <> 1 then raise exception 'FALHOU: o personal aplica a ficha em si mesmo'; end if;
+  perform public.encerrar_vinculo();
+end $$;
+reset role;
+delete from public.ajustes_banco;
 -- Bloqueada pelo administrador, a área fecha.
 reset role;
 update public.profissionais set bloqueado_em = now();
