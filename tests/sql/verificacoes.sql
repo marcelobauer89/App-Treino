@@ -284,8 +284,13 @@ do $$ declare e uuid; begin
   begin perform public.personal_salvar_exercicio(jsonb_build_object('nome', (select nome from public.exercicios limit 1))); raise exception 'FALHOU: nome da biblioteca é recusado';
   exception when raise_exception then if sqlerrm like 'FALHOU%' then raise; end if; end;
   if (select count(*) from public.exercicios_personal) <> 0 then raise exception 'FALHOU: a tabela não é lida direto pela API'; end if;
-  perform public.personal_salvar_exercicio(jsonb_build_object('id', e, 'nome', 'Remada no TRX', 'pse', 8));
+  perform public.personal_salvar_exercicio(jsonb_build_object('id', e, 'nome', 'Remada no TRX', 'pse', 8, 'hipertrofia', 'alta', 'forca', 'zzz',
+    'explicacao', 'Costas e pegada', 'variacoes', jsonb_build_array('TRX row', ' '), 'video_id', 'abcdefghijk'));
   if (select nome from public.personal_exercicios()) <> 'Remada no TRX' then raise exception 'FALHOU: o personal renomeia o exercício'; end if;
+  if (select hipertrofia || forca || explicacao || array_to_string(variacoes, '|') || video_id from public.personal_exercicios())
+    <> 'altabaixaCostas e pegadaTRX rowabcdefghijk' then raise exception 'FALHOU: níveis, explicação, outros nomes e vídeo são gravados (nível inválido vira baixa)'; end if;
+  begin perform public.personal_salvar_exercicio(jsonb_build_object('id', e, 'nome', 'Remada no TRX', 'video_id', 'javascript:x')); raise exception 'FALHOU: vídeo inválido é recusado';
+  exception when raise_exception then if sqlerrm like 'FALHOU%' then raise; end if; end;
 end $$;
 
 -- O próprio convite: bloqueado por padrão; liberado só com o ajuste 'convite_proprio' (projeto de testes).

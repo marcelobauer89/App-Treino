@@ -2168,6 +2168,8 @@
       sb, $, esc, toast: (m) => toast(m), recarregar: () => carregar(), abrirDetalhe: (id) => abrirDetalhe(id),
       dados: () => dados, detalheAberto: () => ($('detalhe').open ? detalheId : null), fecharDetalhe: () => $('detalhe').close(),
       tipos: () => TIPOS, iniciais, fmtData, fmtNum, deYmd, ymd, hoje, relativo, diaDeInstante, mostrarAba: (a) => mostrarAba(a),
+      // As regras do cadastro de exercício (catálogo), para o "Novo exercício" do personal ser a mesma tela.
+      exercicio: { GRUPOS_EX, rotuloGrupoEx, NIVEIS_EX, ROTULO_NIVEL, lerDose, montarDose, traco, padronizarNome, codigoVideo, ICON },
     };
   }
   iniciar();
