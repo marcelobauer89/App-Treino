@@ -104,10 +104,170 @@
           return { data: null, error: { message: 'checkins_um_aberto' } };
         }
       }
+      // Como o gatilho do banco: com personal, o próprio aluno não muda os treinos.
+      if (this.op === 'update' && this.tabela === 'perfis' && this.dados && 'treinos' in this.dados
+        && linhas.filter(casa).some((r) => r.acompanhado_por && db.sessao && r.id === db.sessao.user.id && JSON.stringify(r.treinos ?? null) !== JSON.stringify(this.dados.treinos ?? null))) {
+        gravar(db); return { data: null, error: { code: '42501', message: 'Seus treinos são montados pelo seu personal.' } };
+      }
       if (this.op === 'update') linhas.filter(casa).forEach((r) => Object.assign(r, this.dados));
       if (this.op === 'delete') db[this.tabela] = linhas.filter((r) => !casa(r));
       gravar(db);
       return { data: null, error: null };
+    }
+  }
+
+  // ---------- Área do personal (as mesmas regras das funções do banco, em versão simples) ----------
+  function rpcPersonal(db, nome, a) {
+    db.profissionais = db.profissionais || []; db.vinculos = db.vinculos || []; db.fichas = db.fichas || [];
+    const eu = db.sessao && db.sessao.user.id;
+    const agora = new Date().toISOString();
+    const ok = (data) => ({ data, error: null });
+    const erro = (message, code) => ({ data: null, error: { message, code } });
+    const prof = (id) => db.profissionais.find((p) => p.usuario_id === id);
+    const ehProf = (id) => { const p = prof(id); return !!(p && p.liberado_em && !p.bloqueado_em); };
+    const ativos = (pid) => db.vinculos.filter((v) => v.personal_id === pid && v.aceito_em && !v.encerrado_em);
+    const meuAluno = (id) => ehProf(eu) && ativos(eu).some((v) => v.aluno_id === id);
+    const perfil = (id) => db.perfis.find((p) => p.id === id);
+    const codigo = (c) => String(c || '').replace(/\s/g, '').toUpperCase();
+    const restrito = () => erro('acesso restrito', '42501');
+    const ehAdmin = !!(eu && ((db.admin || {}).ids || []).includes(eu));
+    const situacao = (c) => {
+      const v = db.vinculos.find((x) => x.codigo === codigo(c));
+      const p = v && prof(v.personal_id);
+      if (!v || !p || !p.liberado_em || p.bloqueado_em) return { s: 'invalido' };
+      let s = 'ok';
+      if (v.cancelado_em) s = 'cancelado';
+      else if (v.aceito_em) s = v.aluno_id === eu && !v.encerrado_em ? 'ok' : 'usado';
+      else if (v.expira_em < agora) s = 'expirado';
+      else if (v.personal_id === eu) s = 'proprio';
+      else if (ativos(v.personal_id).length >= (p.limite_alunos || 30)) s = 'lotado';
+      return { s, v, p };
+    };
+    switch (nome) {
+      case 'eh_profissional': return ok(ehProf(eu));
+      case 'meu_cadastro_profissional': { const p = prof(eu); return ok(p ? [p] : []); }
+      case 'pedir_acesso_profissional': {
+        const p = prof(eu);
+        const dados = { nome: a.p_nome, cref: String(a.p_cref).toUpperCase(), uf: String(a.p_uf).toUpperCase() };
+        if (p) Object.assign(p, dados, p.liberado_em ? {} : { pedido_em: agora });
+        else db.profissionais.push({ usuario_id: eu, ...dados, pedido_em: agora, liberado_em: null, bloqueado_em: null, limite_alunos: 30 });
+        return ok(null);
+      }
+      case 'admin_profissionais':
+        if (!ehAdmin) return restrito();
+        return ok(db.profissionais.map((p) => ({ ...p, email: (perfil(p.usuario_id) || {}).email || '', alunos: ativos(p.usuario_id).length,
+          fichas: db.fichas.filter((f) => f.personal_id === p.usuario_id).length,
+          convites: db.vinculos.filter((v) => v.personal_id === p.usuario_id && !v.aceito_em && !v.cancelado_em && v.expira_em > agora).length })));
+      case 'admin_liberar_profissional': {
+        if (!ehAdmin) return erro('Acesso restrito a administradores.');
+        const p = prof(a.alvo);
+        if (p) { if (a.liberar) { p.liberado_em = p.liberado_em || agora; p.bloqueado_em = null; } else p.bloqueado_em = agora; }
+        return ok(null);
+      }
+      case 'personal_criar_convite': {
+        if (!ehProf(eu)) return erro('Área restrita a profissionais liberados.');
+        const c = (db.proximoCodigoPersonal || []).shift() || Math.random().toString(36).slice(2, 8).toUpperCase().replace(/[01IO]/g, 'K');
+        db.vinculos.push({ codigo: c, personal_id: eu, nome: a.p_nome || '', criado_em: agora, expira_em: new Date(Date.now() + 7 * 864e5).toISOString(), cancelado_em: null, aluno_id: null, aceito_em: null, encerrado_em: null, encerrado_por: null });
+        return ok(c);
+      }
+      case 'personal_convites':
+        if (!ehProf(eu)) return restrito();
+        return ok(db.vinculos.filter((v) => v.personal_id === eu).map((v) => ({ ...v, aluno_nome: v.aluno_id ? (perfil(v.aluno_id) || {}).nome || '' : '' }))
+          .sort((x, y) => (x.criado_em < y.criado_em ? 1 : -1)));
+      case 'personal_cancelar_convite': {
+        const v = db.vinculos.find((x) => x.codigo === a.p_codigo && x.personal_id === eu && !x.aceito_em);
+        if (v) v.cancelado_em = agora;
+        return ok(null);
+      }
+      case 'ver_convite_personal': {
+        const r = situacao(a.p_codigo);
+        if (r.s === 'invalido') return ok([{ situacao: 'invalido', nome: '', cref: '', uf: '', atual: '' }]);
+        const outro = db.vinculos.find((x) => x.aluno_id === eu && x.aceito_em && !x.encerrado_em && x.personal_id !== r.v.personal_id);
+        return ok([{ situacao: r.s, nome: r.p.nome, cref: r.p.cref, uf: r.p.uf, atual: outro ? (prof(outro.personal_id) || {}).nome || '' : '' }]);
+      }
+      case 'aceitar_vinculo': {
+        const r = situacao(a.p_codigo);
+        if (r.s !== 'ok') return ok(r.s);
+        if (r.v.aluno_id === eu && r.v.aceito_em) return ok('ok');
+        db.vinculos.filter((x) => x.aluno_id === eu && x.aceito_em && !x.encerrado_em).forEach((x) => { x.encerrado_em = agora; x.encerrado_por = 'troca'; });
+        Object.assign(r.v, { aluno_id: eu, aceito_em: agora });
+        const p = perfil(eu);
+        if (p) { if (!p.liberado) { p.liberado_como = 'personal'; p.liberado_em = agora; } Object.assign(p, { acompanhado_por: r.v.personal_id, liberado: true, acesso_pedido_em: null }); }
+        return ok('ok');
+      }
+      case 'meu_personal': {
+        const v = db.vinculos.find((x) => x.aluno_id === eu && x.aceito_em && !x.encerrado_em);
+        const p = v && prof(v.personal_id);
+        return ok(p ? [{ nome: p.nome, cref: p.cref, uf: p.uf, desde: v.aceito_em }] : []);
+      }
+      case 'encerrar_vinculo':
+      case 'personal_encerrar_vinculo': {
+        const aluno = nome === 'encerrar_vinculo' ? eu : a.p_aluno;
+        if (nome === 'personal_encerrar_vinculo' && !meuAluno(aluno)) return erro('Este aluno não está com você.');
+        db.vinculos.filter((x) => x.aluno_id === aluno && x.aceito_em && !x.encerrado_em).forEach((x) => { x.encerrado_em = agora; x.encerrado_por = nome === 'encerrar_vinculo' ? 'aluno' : 'personal'; });
+        const p = perfil(aluno); if (p) p.acompanhado_por = null;
+        return ok(null);
+      }
+      case 'personal_alunos':
+        if (!ehProf(eu)) return restrito();
+        return ok(ativos(eu).map((v) => { const p = perfil(v.aluno_id) || {}; return {
+          id: v.aluno_id, nome: p.nome || 'Aluno sem nome', email: '', cadastro: v.aceito_em, ultimo_acesso: p.ultimo_acesso || null, acessos: p.acessos || 0,
+          semana: p.semana || null, dias_jiu: p.dias_jiu || [], sem_peso: p.sem_peso || [], treinos: p.treinos || null, treinos_por_mim: p.treinos_por === eu,
+          treinos_em: p.treinos_em || null, ficha_id: p.ficha_id || null, vinculado_em: v.aceito_em, foto: '' }; }));
+      case 'personal_checkins':
+      case 'personal_eventos':
+      case 'personal_cargas': {
+        if (!ehProf(eu)) return restrito();
+        const ids = new Set(ativos(eu).map((v) => v.aluno_id));
+        const tab = { personal_checkins: 'checkins', personal_eventos: 'eventos', personal_cargas: 'cargas' }[nome];
+        return ok((db[tab] || []).filter((x) => ids.has(x.usuario_id)));
+      }
+      case 'personal_fichas':
+        if (!ehProf(eu)) return restrito();
+        return ok(db.fichas.filter((f) => f.personal_id === eu).map((f) => ({ ...f, alunos: db.perfis.filter((p) => p.ficha_id === f.id && p.acompanhado_por === eu).length })));
+      case 'personal_salvar_ficha': {
+        if (!ehProf(eu)) return erro('Área restrita a profissionais liberados.');
+        const p = a.p || {};
+        const t = p.treinos || {};
+        if (!Object.keys(t).length || Object.values(t).some((x) => !x.exercicios || !x.exercicios.length || x.exercicios.length > 15)) return erro('new row violates check constraint "fichas_personal_treinos_check"', '23514');
+        if (p.id) {
+          const f = db.fichas.find((x) => x.id === p.id && x.personal_id === eu);
+          if (!f) return erro('Ficha não encontrada.');
+          Object.assign(f, { nome: p.nome, descricao: p.descricao || '', treinos: t, semana: p.semana || null, atualizado_em: agora });
+          return ok(f.id);
+        }
+        const id = `f${db.fichas.length + 1}`;
+        db.fichas.push({ id, personal_id: eu, nome: p.nome, descricao: p.descricao || '', treinos: t, semana: p.semana || null, criado_em: agora, atualizado_em: agora });
+        return ok(id);
+      }
+      case 'personal_excluir_ficha':
+        db.fichas = db.fichas.filter((f) => !(f.id === a.p_id && f.personal_id === eu));
+        db.perfis.forEach((p) => { if (p.ficha_id === a.p_id) p.ficha_id = null; });
+        return ok(null);
+      case 'personal_aplicar_ficha': {
+        if (!ehProf(eu)) return erro('Área restrita a profissionais liberados.');
+        const f = db.fichas.find((x) => x.id === a.p_ficha && x.personal_id === eu);
+        if (!f) return erro('Ficha não encontrada.');
+        let n = 0;
+        (a.p_alunos || []).forEach((id) => {
+          const p = perfil(id);
+          if (!p || p.acompanhado_por !== eu || !meuAluno(id)) return;
+          p.treinos_anterior = { treinos: p.treinos || null, semana: p.semana || null, em: agora, jornada: p.jornada || null };
+          Object.assign(p, { treinos: JSON.parse(JSON.stringify(f.treinos)), jornada: null, ficha_id: f.id, treinos_por: eu, treinos_em: agora });
+          if (a.p_semana && f.semana) p.semana = JSON.parse(JSON.stringify(f.semana));
+          n += 1;
+        });
+        return ok(n);
+      }
+      case 'personal_salvar_treinos': {
+        if (!meuAluno(a.p_aluno)) return erro('Este aluno não está com você.');
+        const p = perfil(a.p_aluno);
+        p.treinos_anterior = { treinos: p.treinos || null, semana: p.semana || null, em: agora, jornada: p.jornada || null };
+        Object.assign(p, { treinos: a.p_treinos, jornada: null, treinos_por: eu, treinos_em: agora });
+        if (Array.isArray(a.p_semana)) p.semana = a.p_semana;
+        return ok(null);
+      }
+      default: return erro(`função ${nome} não simulada`);
     }
   }
 
@@ -249,6 +409,18 @@
             const db = ler();
             db.log.push(`rpc:${nome}`);
             if (db.semRede) { gravar(db); return { data: null, error: { message: 'TypeError: Failed to fetch', code: '' } }; }
+            // Área do personal (migração 003): db.profissionais, db.vinculos e db.fichas; os dados dos alunos vêm das
+            // tabelas de sempre (perfis, checkins, cargas, eventos). semPersonal = migração ainda não rodada.
+            const FN_PERSONAL = ['eh_profissional', 'meu_cadastro_profissional', 'pedir_acesso_profissional', 'admin_profissionais', 'admin_liberar_profissional',
+              'personal_criar_convite', 'personal_convites', 'personal_cancelar_convite', 'ver_convite_personal', 'aceitar_vinculo', 'meu_personal',
+              'encerrar_vinculo', 'personal_encerrar_vinculo', 'personal_alunos', 'personal_checkins', 'personal_eventos', 'personal_cargas',
+              'personal_fichas', 'personal_salvar_ficha', 'personal_excluir_ficha', 'personal_aplicar_ficha', 'personal_salvar_treinos'];
+            if (FN_PERSONAL.includes(nome)) {
+              if (db.semPersonal) { gravar(db); return { data: null, error: { message: `Could not find the function public.${nome} in the schema cache` } }; }
+              const r = rpcPersonal(db, nome, args || {});
+              db.log.push(`${nome}:${r.error ? 'erro' : 'ok'}`);
+              gravar(db); return r;
+            }
             // Apps conectados: db.integracoes = [{ id, nome, prefixo, criada_em, ultimo_uso_em, revogada_em }]; semIntegracoes = schema antigo.
             if (['criar_codigo_conexao', 'minhas_integracoes', 'revogar_integracao'].includes(nome)) {
               if (db.semIntegracoes) { gravar(db); return { data: null, error: { message: `Could not find the function public.${nome} in the schema cache` } }; }

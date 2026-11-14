@@ -265,6 +265,7 @@
   const altas = (ex) => DIMS.filter(({ k }) => ex[k] === 'alta').map(({ label }) => label.toLowerCase());
 
   function abrirEditor({ doZero = false, daBoasVindas = false } = {}) {
+    if (acompanhamento) return toast('Seus treinos são montados pelo seu personal. Para mudar algo, fale com ele.');
     const treinos = doZero ? { 1: { nome: 'Treino 1', subtitulo: '', exercicios: [] } } : copiaTreinos(TREINOS);
     const sel = doZero ? '1' : (treinos[estado.treino] ? estado.treino : Object.keys(treinos)[0]);
     ed = { treinos, sel, vista: doZero ? 'escolher' : 'treino', busca: '', grupo: 'todos', confirmar: null, erro: '', doZero, daBoasVindas };
@@ -647,7 +648,11 @@
   // Resumo dos treinos em Você.
   function renderMeusTreinos() {
     const j = jornadaAtual();
-    $('meus-treinos-nota').textContent = j
+    // Com personal: só leitura (o personal monta os treinos na área dele).
+    $('editar-treinos').hidden = $('trocar-jornada').hidden = !!acompanhamento;
+    $('meus-treinos-nota').textContent = acompanhamento
+      ? `Seus treinos são montados ${meuPersonal && meuPersonal.nome ? `por ${meuPersonal.nome}, seu personal` : 'pelo seu personal'}. Para mudar algo, fale com ${meuPersonal ? 'ele' : 'o seu personal'}; o que ele enviar aparece aqui na hora.`
+      : j
       ? (ehDaJornada(j) ? `Seu objetivo é ${j.nome}. Mude exercícios, séries, PSE e a ordem quando quiser.`
         : `Seu objetivo é ${j.nome}, com os treinos personalizados por você. Mude o que quiser ou mude o objetivo.`)
       : treinosDaConta
@@ -655,10 +660,11 @@
         : 'Você está usando o plano pronto. Monte os seus treinos com os exercícios da biblioteca.';
     $('meus-treinos').innerHTML = Object.entries(TREINOS).map(([id, t]) => `
       <li>${seloHTML(`t${id}`)}<span><b>${t.nome}</b> <small>${t.subtitulo ? `${t.subtitulo} · ` : ''}${qtdExercicios(t.exercicios.length)}</small></span></li>`).join('');
+    if (acompanhamento) { $('treinos-anterior').innerHTML = ''; return; }
     renderTreinosAnterior();
   }
   $('editar-treinos').addEventListener('click', () => abrirEditor());
-  $('trocar-jornada').addEventListener('click', () => abrirJornadas('trocar'));
+  $('trocar-jornada').addEventListener('click', () => (acompanhamento ? abrirEditor() : abrirJornadas('trocar')));
   let restaurarConfirmando = false;
   function renderTreinosAnterior() {
     const el = $('treinos-anterior');
@@ -1117,8 +1123,9 @@
   function renderMenuVoce() {
     const n = Object.keys(TREINOS).length;
     const j = jornadaAtual();
-    $('valor-treinos').textContent = j ? (ehDaJornada(j) ? j.nome : `${j.nome} (personalizada)`)
+    $('valor-treinos').textContent = acompanhamento ? 'Do seu personal' : j ? (ehDaJornada(j) ? j.nome : `${j.nome} (personalizada)`)
       : treinosDaConta ? `${n} ${n === 1 ? 'treino' : 'treinos'}` : 'Plano pronto';
+    $('valor-personal').textContent = acompanhamento ? ((meuPersonal && meuPersonal.nome) || 'Acompanhando') : 'Nenhum';
     const ativ = config.semana.flat().length;
     const descanso = config.semana.filter((d) => !d.length).length;
     $('valor-semana').textContent = `${ativ} ${ativ === 1 ? 'atividade' : 'atividades'}${descanso ? '' : ', sem descanso'}`;

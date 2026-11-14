@@ -1,11 +1,34 @@
 // js/admin.js: o monitoramento (admin.html), só para administradores. Seções em docs/MAPA.md.
+// O mesmo painel serve a área do personal (personal.html, <html data-painel="personal">): lá os dados vêm das
+// funções personal_* (só os alunos do personal) e o que é só do administrador fica de fora. O resto da área
+// (cadastro, fichas, convites e o que vai na ficha do aluno) fica em js/personal.js, pelos ganchos window.PersonalHooks.
 (() => {
+  const PERSONAL = document.documentElement.dataset.painel === 'personal';
+  const GANCHOS = () => window.PersonalHooks || {};
   // ---------- Conexão (mesmo projeto do app, definido no ambiente.js) ----------
   const SUPABASE_URL = window.AMBIENTE.url;
   const SUPABASE_KEY = window.AMBIENTE.chave;
   const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { flowType: 'pkce' } }) : null;
 
-  const $ = (id) => document.getElementById(id);
+  // Na área do personal não existem as abas só do administrador (Saúde, E-mails, Convites, Exercícios, Tipos):
+  // um elemento que não está na página vira um "fantasma" fora da tela, para o código compartilhado seguir sem erro.
+  const fantasmas = new Map();
+  const fantasma = (id) => { if (!fantasmas.has(id)) fantasmas.set(id, document.createElement('div')); return fantasmas.get(id); };
+  const $ = (id) => document.getElementById(id) || (PERSONAL ? fantasma(id) : null);
+  // Funções do banco de cada modo: no personal, as mesmas listas, só com os alunos com vínculo ativo.
+  const FN = PERSONAL
+    ? { acesso: 'eh_profissional', usuarios: 'personal_alunos', checkins: 'personal_checkins', eventos: 'personal_eventos' }
+    : { acesso: 'eh_admin', usuarios: 'admin_usuarios', checkins: 'admin_checkins', eventos: 'admin_eventos' };
+  // Na área do personal, "usuário" vira "aluno" nos textos do painel compartilhado.
+  function trocarPalavras(raiz) {
+    if (!PERSONAL || !raiz) return;
+    const troca = (t) => t.replace(/(U|u)suári(os?)/g, (_, u, f) => `${u === 'U' ? 'A' : 'a'}lun${f}`);
+    const w = document.createTreeWalker(raiz, NodeFilter.SHOW_TEXT);
+    for (let n = w.nextNode(); n; n = w.nextNode()) if (/suári/.test(n.nodeValue)) n.nodeValue = troca(n.nodeValue);
+    raiz.querySelectorAll('[aria-label*="suári"], [title*="suári"]').forEach((el) => {
+      ['aria-label', 'title'].forEach((a) => { if (el.hasAttribute(a)) el.setAttribute(a, troca(el.getAttribute(a))); });
+    });
+  }
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const pad = (n) => String(n).padStart(2, '0');
   const ymd = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -122,14 +145,18 @@
     if (!sb) return mostrarEstado('<p>Não foi possível carregar a biblioteca do Supabase. Confira a internet e recarregue a página.</p>');
     const { data: { session } } = await sb.auth.getSession();
     if (!session) {
-      return mostrarEstado(`
+      return mostrarEstado(PERSONAL ? `
+        <p>Entre com a sua conta Google para abrir a área do personal.</p>
+        <button class="btn" type="button" id="entrar">Entrar com Google</button>` : `
         <p>Entre com a sua conta Google de administrador para ver o monitoramento.</p>
         <button class="btn" type="button" id="entrar">Entrar com Google</button>`);
     }
     meuId = session.user.id;
     mostrarCarregando('Conferindo seu acesso…');
-    const { data: admin, error } = await sb.rpc('eh_admin');
+    const { data: admin, error } = await sb.rpc(FN.acesso);
     if (error) return mostrarEstado(`<p>Não foi possível verificar o acesso. Confira se o <code>supabase/schema.sql</code> foi aplicado.</p>${botaoTentar()}`);
+    // Personal ainda sem liberação: o cadastro (nome, CREF e UF) e a situação do pedido ficam em js/personal.js.
+    if (!admin && PERSONAL) return GANCHOS().semAcesso(session, mostrarEstado);
     if (!admin) {
       return mostrarEstado(`
         <p><b>Acesso restrito.</b> A conta ${esc(session.user.email)} não é administradora.</p>
@@ -181,13 +208,19 @@
 
   async function carregar() {
     const primeira = !dados;
-    if (primeira) mostrarCarregando('Buscando usuários, check-ins e e-mails…');
+    if (primeira) mostrarCarregando(PERSONAL ? 'Buscando seus alunos e os treinos deles…' : 'Buscando usuários, check-ins e e-mails…');
     $('atualizar').disabled = true;
     $('atualizar').classList.add('girando');
     const desde = eventosNecessarios(periodo);
     const argsEventos = desde ? { desde: deYmd(desde).toISOString() } : undefined;
     const tiposP = sb.from('tipos_checkin').select('*').then((r) => r, () => ({ error: true }));
-    const [u, c, e, em, cv] = await Promise.all([['admin_usuarios'], ['admin_checkins'], ['admin_eventos', argsEventos], ['admin_emails'], ['admin_convites']].map(([nome, args]) => todas(nome, args)));
+    const vazio = Promise.resolve({ data: [], error: null });
+    const [u, c, e, em, cv, extra] = await Promise.all([
+      todas(FN.usuarios), todas(FN.checkins), todas(FN.eventos, argsEventos),
+      PERSONAL ? vazio : todas('admin_emails'), PERSONAL ? vazio : todas('admin_convites'),
+      // Personal: cargas dos alunos, fichas e convites (js/personal.js).
+      PERSONAL && GANCHOS().carregar ? GANCHOS().carregar(todas) : null,
+    ]);
     $('atualizar').disabled = false;
     $('atualizar').classList.remove('girando');
     if (u.error || c.error || e.error) {
@@ -213,11 +246,14 @@
     $('estado').removeAttribute('aria-busy');
     $('painel').hidden = false;
     $('controles').hidden = false;
+    if (PERSONAL && GANCHOS().aplicar) GANCHOS().aplicar(extra);
     render();
     if (primeira) entrarEmCascata();
+    if (PERSONAL) return;
     ligarOnline();
     carregarExercicios();
     renderTipos();
+    carregarProfissionais();
   }
 
   // Primeira abertura: os blocos da aba visível entram um depois do outro (sem movimento, se o sistema pedir).
@@ -414,8 +450,13 @@
     renderGraficos(j, ativosMap);
     renderListasGeral(j, ativosMap);
     renderTreinos(j);
-    renderJornadas(j);
+    if (!PERSONAL) renderJornadas(j);
     renderUsuarios(j, ativosMap);
+    if (PERSONAL) {
+      if (GANCHOS().render) GANCHOS().render();
+      trocarPalavras($('painel'));
+      return;
+    }
     renderSaude(j);
     renderEmails(j);
     renderConvites();
@@ -1004,7 +1045,7 @@
   }
 
   // ---------- Abas ----------
-  const ABAS = ['geral', 'usuarios', 'saude', 'emails', 'convites', 'exercicios', 'tipos'];
+  const ABAS = PERSONAL ? ['geral', 'usuarios', 'fichas', 'convidar'] : ['geral', 'usuarios', 'saude', 'emails', 'convites', 'exercicios', 'tipos', 'profissionais'];
   let aba = ABAS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'geral';
   // Gráficos são desenhados na largura real, então são redesenhados ao aparecer.
   function renderVisivel() {
@@ -1055,6 +1096,8 @@
     excluir_conta: () => 'Abriu a opção de excluir a conta',
     convite_usado: (d) => ({ ok: 'Entrou com um convite', ja_liberado: 'Abriu um convite (já tinha acesso)', invalido: 'Tentou um código de convite inválido', usado: 'Tentou um convite já usado', expirado: 'Tentou um convite expirado', cancelado: 'Tentou um convite cancelado' }[d.resultado] || 'Tentou usar um convite'),
     acesso_pedido: () => 'Pediu acesso ao app',
+    personal_convite: (d) => ({ visto: 'Abriu o convite de um personal', aceitou: 'Aceitou o acompanhamento de um personal', recusou: 'Deixou o convite do personal para depois' }[d.resultado] || `Tentou um convite de personal (${d.resultado})`),
+    personal_encerrado: () => 'Encerrou o acompanhamento do personal',
     novidade_evolucao: (d) => ({ viu: 'Viu o aviso da Evolução', ver: 'Abriu a Evolução pelo aviso', depois: 'Deixou o aviso da Evolução para depois', fechou: 'Fechou o aviso da Evolução' }[d.escolha] || 'Respondeu ao aviso da Evolução') + (d.ocultou ? ' e pediu para não mostrar mais' : ''),
     novidade_treinos: (d) => ({ viu: 'Viu o aviso dos treinos personalizados', personalizar: 'Quis personalizar os treinos', montar: 'Escolheu montar os treinos', manter: 'Manteve o treino atual', fechou: 'Fechou o aviso dos treinos personalizados' }[d.escolha] || 'Respondeu ao aviso dos treinos') + (d.ocultou ? ' e pediu para não mostrar mais' : ''),
     editor_treinos: () => 'Abriu Meus treinos',
@@ -1143,7 +1186,7 @@
         <button class="fechar" type="button" data-fechar aria-label="Fechar">${ICON.x}</button>
       </div>
       <p><span class="situacao ${l.sit.chave}">${l.sit.icone}${l.sit.rotulo}</span> <span id="det-online">${seloOnline(id)}</span>
-        <span class="nota" style="display:inline">&nbsp;Cadastro em ${u.cadastro ? fmtData(diaDeInstante(u.cadastro), { day: 'numeric', month: 'short', year: 'numeric' }) : '—'} · último uso ${relativo(l.ultimo)} · último treino ${l.ultimoTreino ? fmtData(l.ultimoTreino) : '—'}${typeof u.emails_resumo === 'boolean' ? ` · resumo por e-mail ${u.emails_resumo ? 'ligado' : 'desligado'}` : ''}</span></p>
+        <span class="nota" style="display:inline">&nbsp;${PERSONAL ? 'Aluno desde' : 'Cadastro em'} ${u.cadastro ? fmtData(diaDeInstante(u.cadastro), { day: 'numeric', month: 'short', year: 'numeric' }) : '—'} · último uso ${relativo(l.ultimo)} · último treino ${l.ultimoTreino ? fmtData(l.ultimoTreino) : '—'}${typeof u.emails_resumo === 'boolean' ? ` · resumo por e-mail ${u.emails_resumo ? 'ligado' : 'desligado'}` : ''}</span></p>
       <dl class="mini">
         <div><dt>Check-ins no período</dt><dd>${fmtNum(l.checkins)}</dd></div>
         <div><dt>Aderência no período</dt><dd>${pctAder(l.aderencia)}</dd></div>
@@ -1188,6 +1231,7 @@
         <h3 id="det-tempo">Atividade recente</h3>
         <div id="det-atividade"></div>
       </section>
+      ${PERSONAL ? (GANCHOS().detalhe ? GANCHOS().detalhe(u) : '') : `
       <!-- Excluir conta fica aqui, no fim da ficha, e não a um toque em cada linha da tabela (Fitts). -->
       <section class="det-sec" aria-labelledby="det-excluir-t">
         <h3 id="det-excluir-t">Excluir conta</h3>
@@ -1195,8 +1239,9 @@
           ? '<p class="nota">Esta é a sua conta: para excluí-la, use o app (Você → Excluir conta).</p>'
           : `<div class="det-acesso"><span class="nota" style="flex:1 1 200px">Apaga para sempre os check-ins, pesos, treinos e preferências de ${esc(u.nome || u.email)}.</span>
           <button class="btn-peq perigo" type="button" data-excluir="${u.id}">Excluir conta</button></div>`}
-      </section>`;
+      </section>`}`;
     renderAtividade();
+    trocarPalavras($('det-corpo'));
     const dlg = $('detalhe');
     if (!dlg.open) dlg.showModal();
   }
@@ -1551,7 +1596,7 @@
     if (b.dataset.bloquear) return acaoAcesso('admin_bloquear_usuario', b.dataset.bloquear, `${nome(b.dataset.bloquear)} foi bloqueado.`);
   });
 
-  $('busca').addEventListener('input', (e) => { busca = e.target.value; if (dados) renderUsuarios(janela(periodo), diasAtivos()); });
+  $('busca').addEventListener('input', (e) => { busca = e.target.value; if (dados) { renderUsuarios(janela(periodo), diasAtivos()); trocarPalavras($('aba-usuarios')); } });
   $('so-checkin').checked = soCheckin;
   $('so-checkin').addEventListener('change', (e) => {
     soCheckin = e.target.checked;
@@ -1929,6 +1974,56 @@
     timerTamanho = setTimeout(renderVisivel, 150);
   });
 
+  // ---------- Profissionais (área do personal) ----------
+  // Quem pediu para usar a área do personal (personal.html), com nome, CREF e UF. Liberar também libera a conta no app;
+  // bloquear fecha a área (os alunos continuam com os treinos). A situação do CREF é conferida à mão antes de liberar.
+  const prof = { lista: null, erro: '' };
+  async function carregarProfissionais() {
+    const r = await sb.rpc('admin_profissionais');
+    prof.lista = r.error ? null : r.data || [];
+    prof.erro = r.error ? (r.error.message || 'erro') : '';
+    renderProfissionais();
+  }
+  function renderProfissionais() {
+    const el = $('prof-lista');
+    const pendentes = (prof.lista || []).filter((x) => !x.liberado_em && !x.bloqueado_em).length;
+    $('alerta-prof').hidden = !pendentes;
+    $('alerta-prof').textContent = pendentes ? String(pendentes) : '';
+    if (!prof.lista) {
+      el.innerHTML = `<p class="vazio">${/admin_profissionais|schema cache|does not exist/.test(prof.erro)
+        ? 'A área do personal ainda não está no banco: rode a migração supabase/migracoes/003-area-do-personal.sql no Supabase.'
+        : prof.erro ? `Não foi possível carregar os profissionais. ${esc(prof.erro)}` : 'Carregando…'}</p>`;
+      return;
+    }
+    if (!prof.lista.length) { el.innerHTML = '<p class="vazio">Ninguém pediu acesso à área do personal ainda.</p>'; return; }
+    const situacao = (x) => (x.bloqueado_em ? ['bloqueado', 'Bloqueado'] : x.liberado_em ? ['ativo', 'Liberado'] : ['risco', 'Aguardando']);
+    el.innerHTML = prof.lista.map((x) => {
+      const [cls, rot] = situacao(x);
+      const acao = x.liberado_em && !x.bloqueado_em
+        ? `<button class="btn-peq sec" type="button" data-prof="${x.usuario_id}" data-prof-liberar="nao">Bloquear</button>`
+        : `<button class="btn-peq prim" type="button" data-prof="${x.usuario_id}" data-prof-liberar="sim">Liberar</button>`;
+      return `<div class="item-lista prof-item">
+        <div class="item-topo prof-topo">
+          <span class="item-titulo">${esc(x.nome)}</span>
+          <span class="situacao ${cls}">${rot}</span>
+          <span class="item-sub">CREF ${esc(x.cref)}/${esc(x.uf)} · ${esc(x.email)} · pediu ${relativo(diaDeInstante(x.pedido_em))}</span>
+          <span class="item-sub">${fmtNum(x.alunos)} ${x.alunos === 1 ? 'aluno' : 'alunos'} de ${fmtNum(x.limite_alunos)} · ${fmtNum(x.fichas)} ${x.fichas === 1 ? 'ficha' : 'fichas'} · ${fmtNum(x.convites)} ${x.convites === 1 ? 'convite aguardando' : 'convites aguardando'}</span>
+        </div>
+        <div class="prof-acao">${acao}</div>
+      </div>`;
+    }).join('');
+  }
+  document.addEventListener('click', async (e) => {
+    const b = e.target.closest('[data-prof-liberar]');
+    if (!b || PERSONAL) return;
+    b.disabled = true;
+    const liberar = b.dataset.profLiberar === 'sim';
+    const { error } = await sb.rpc('admin_liberar_profissional', { alvo: b.dataset.prof, liberar });
+    if (error) { b.disabled = false; return toast(`Não foi possível ${liberar ? 'liberar' : 'bloquear'}. ${error.message}`); }
+    toast(liberar ? 'Profissional liberado: a área do personal já abre para ele.' : 'Profissional bloqueado: a área do personal fechou para ele.');
+    carregarProfissionais();
+  });
+
   // ---------- Tipos de check-in (tabela tipos_checkin) ----------
   // Leitura direta da tabela (todos leem) e gravação pela função admin_salvar_tipo_checkin (só administradores).
   const tps = { lista: null, erro: '', atual: null };
@@ -2066,6 +2161,14 @@
       if (evento === 'SIGNED_OUT') { desligarOnline(); dados = null; }
       if (evento === 'SIGNED_IN' || evento === 'SIGNED_OUT') setTimeout(iniciar, 0);
     });
+  }
+  // O que a área do personal (js/personal.js) usa do painel.
+  if (PERSONAL) {
+    window.Painel = {
+      sb, $, esc, toast: (m) => toast(m), recarregar: () => carregar(), abrirDetalhe: (id) => abrirDetalhe(id),
+      dados: () => dados, detalheAberto: () => ($('detalhe').open ? detalheId : null), fecharDetalhe: () => $('detalhe').close(),
+      tipos: () => TIPOS, iniciais, fmtData, fmtNum, deYmd, ymd, hoje, relativo, diaDeInstante, mostrarAba: (a) => mostrarAba(a),
+    };
   }
   iniciar();
 })();

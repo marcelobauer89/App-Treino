@@ -78,6 +78,7 @@
         ${novidadeFoto ? `<li>${ICON_CHECK}<span>Agora dá para anexar uma foto ao check-in, se quiser. Ela fica guardada de forma privada: só você vê; o administrador não.</span></li>` : ''}
         <li>${ICON_CHECK}<span>O administrador vê quem está com o app aberto, em que tela, e o histórico de uso. Não vê pesos, cargas nem observações.</span></li>
         <li>${ICON_CHECK}<span>Observações nos check-ins ficam desligadas até você ligar em Você → Privacidade.</span></li>
+        <li>${ICON_CHECK}<span>Se um personal trainer convidar você e você aceitar, ele vê seus treinos, semana, check-ins e pesos (nunca observações e fotos) até você encerrar em Você → Meu personal.</span></li>
         <li>${ICON_CHECK}<span>Em Você → Privacidade você baixa seus dados, e em Você dá para excluir a conta.</span></li>
       </ul>`;
   }
@@ -203,7 +204,17 @@
     cancelado: 'Esse convite foi cancelado. Peça um novo para quem te convidou.',
   };
   // Libera a entrada no app: conta liberada, administrador ou convite válido. Senão mostra a tela de convidados.
+  // Um convite de personal (?personal=CODIGO) vem antes: aceitar também libera a conta.
   async function temAcesso() {
+    const codPersonal = codigoPersonalGuardado();
+    if (codPersonal) {
+      esquecerCodigoPersonal();
+      if ((await oferecerPersonal(codPersonal)) === 'ok') {
+        acesso.liberado = true;
+        await carregarDados();
+      }
+    }
+    if (acompanhamento) buscarMeuPersonal();
     if (acesso.liberado) return true;
     const admin = await sb.rpc('eh_admin');
     if (!admin.error && admin.data) return true;
@@ -265,3 +276,136 @@
     renderPedido();
   });
   $('convite-sair').addEventListener('click', async () => { await enviarEventos(); await sb.auth.signOut(); });
+
+  // ---------- Meu personal (aluno) ----------
+  // O link ?personal=CODIGO (gerado na área do personal) é guardado no aparelho para sobreviver ao login do Google.
+  // Ao abrir o app, o aluno vê quem é o personal (nome e CREF), o que ele vai ver e o que nunca vai ver, e aceita ou não.
+  const CHAVE_PERSONAL = 'bauer-convite-personal';
+  const codigoPersonalGuardado = () => { try { return localStorage.getItem(CHAVE_PERSONAL) || ''; } catch (_) { return ''; } };
+  const esquecerCodigoPersonal = () => { try { localStorage.removeItem(CHAVE_PERSONAL); } catch (_) {} };
+  (() => {
+    const busca = new URLSearchParams(location.search);
+    const codigo = (busca.get('personal') || '').replace(/\s/g, '').toUpperCase().slice(0, 12);
+    if (!codigo) return;
+    try { localStorage.setItem(CHAVE_PERSONAL, codigo); } catch (_) {}
+    busca.delete('personal');
+    history.replaceState(null, '', location.pathname + (busca.toString() ? `?${busca}` : '') + location.hash);
+  })();
+  const personalDialog = $('personal-dialog');
+  const MOTIVOS_PERSONAL = {
+    invalido: 'Não encontramos esse convite. Confira o link com o seu personal.',
+    usado: 'Esse convite já foi usado. Peça um novo ao seu personal.',
+    expirado: 'Esse convite expirou (ele vale 7 dias). Peça um novo ao seu personal.',
+    cancelado: 'Esse convite foi cancelado. Peça um novo ao seu personal.',
+    proprio: 'Esse é um convite seu, para os seus alunos. Mande o link para o aluno abrir no celular dele.',
+    lotado: 'O seu personal chegou ao limite de alunos. Avise ele para liberar uma vaga.',
+  };
+  const itensPersonal = () => `
+    <ul class="novidade-lista">
+      <li>${ICON_CHECK}<span><b>Vai ver:</b> seus treinos, sua semana, quando você treinou (todas as atividades) e os pesos que você registra.</span></li>
+      <li>${ICON_CHECK}<span><b>Vai montar:</b> os seus treinos. Eles chegam aqui sozinhos, e você não precisa montar nada.</span></li>
+      <li>${ICON_CHECK}<span><b>Nunca vê:</b> suas observações e as fotos dos check-ins.</span></li>
+      <li>${ICON_CHECK}<span>Você encerra quando quiser em Você → Meu personal, e os treinos continuam com você.</span></li>
+    </ul>`;
+  // Mostra o convite e espera a resposta: 'ok' (aceitou), 'nao' ou o motivo de o convite não valer.
+  async function oferecerPersonal(codigo) {
+    const { data, error } = await sb.rpc('ver_convite_personal', { p_codigo: codigo });
+    const c = !error && data && data[0];
+    const situacao = error ? 'erro' : c ? c.situacao : 'invalido';
+    registrarEvento('personal_convite', { resultado: situacao === 'ok' ? 'visto' : situacao });
+    return new Promise((resolver) => {
+      const fim = (r) => { personalDialog.close(); resolver(r); };
+      if (situacao !== 'ok') {
+        $('personal-body').innerHTML = `
+          <div class="modal-head"><div><span class="novidade-selo">Convite do personal</span><h3 id="personal-title">Não deu certo</h3></div></div>
+          <p class="resumo-enc">${situacao === 'erro' ? 'Não foi possível conferir o convite. Confira a internet e abra o link de novo.' : MOTIVOS_PERSONAL[situacao] || MOTIVOS_PERSONAL.invalido}</p>
+          <div class="novidade-acoes"><button class="modal-done" type="button" data-personal="nao">Entendi</button></div>`;
+      } else {
+        $('personal-body').innerHTML = `
+          <div class="modal-head"><div><span class="novidade-selo">Convite do personal</span><h3 id="personal-title">${esc(c.nome)} quer acompanhar seus treinos</h3></div></div>
+          <p class="resumo-enc">Personal trainer · CREF ${esc(c.cref)}/${esc(c.uf)}</p>
+          ${itensPersonal()}
+          ${c.atual ? `<p class="aviso">Hoje quem acompanha você é ${esc(c.atual)}. Ao aceitar, esse acompanhamento termina.</p>` : ''}
+          <p class="aviso personal-erro" id="personal-erro" role="alert" hidden></p>
+          <div class="novidade-acoes">
+            <button class="modal-done" type="button" data-personal="aceitar">Aceitar acompanhamento</button>
+            <button class="btn-sec" type="button" data-personal="nao">Agora não</button>
+          </div>`;
+      }
+      personalDialog.onclick = async (e) => {
+        const b = e.target.closest('[data-personal]');
+        if (!b) return;
+        if (b.dataset.personal === 'nao') { registrarEvento('personal_convite', { resultado: 'recusou' }); return fim('nao'); }
+        b.disabled = true;
+        const r = await sb.rpc('aceitar_vinculo', { p_codigo: codigo });
+        const res = r.error ? 'erro' : r.data;
+        registrarEvento('personal_convite', { resultado: res === 'ok' ? 'aceitou' : res });
+        if (res !== 'ok') {
+          b.disabled = false;
+          $('personal-erro').textContent = res === 'erro' ? 'Não foi possível aceitar. Confira a internet e tente de novo.' : MOTIVOS_PERSONAL[res] || MOTIVOS_PERSONAL.invalido;
+          $('personal-erro').hidden = false;
+          return;
+        }
+        meuPersonal = { nome: c.nome, cref: c.cref, uf: c.uf, desde: new Date().toISOString() };
+        guardarMeuPersonal();
+        toast(`Pronto! ${c.nome} agora acompanha seus treinos.`);
+        fim('ok');
+      };
+      personalDialog.oncancel = (e) => { e.preventDefault(); fim('nao'); };
+      personalDialog.showModal();
+    });
+  }
+  const chaveMeuPersonal = () => `bauer-meu-personal-${usuario ? usuario.id : ''}`;
+  function guardarMeuPersonal() { try { localStorage.setItem(chaveMeuPersonal(), JSON.stringify(meuPersonal)); } catch (_) {} }
+  async function buscarMeuPersonal() {
+    try { meuPersonal = JSON.parse(localStorage.getItem(chaveMeuPersonal()) || 'null'); } catch (_) {}
+    const { data, error } = await sb.rpc('meu_personal');
+    if (error) return;
+    meuPersonal = (data || [])[0] || null;
+    guardarMeuPersonal();
+    if (telaAtual() === 'voce') { renderConfig(); if (paginaVoce() === 'personal') renderMeuPersonal(); }
+  }
+  // Aviso quando o personal mandou treinos novos desde a última vez que este aparelho viu.
+  function avisarTreinosDoPersonal() {
+    if (!acompanhamento || !treinosDoPersonalEm) return;
+    const chave = `bauer-treinos-personal-${usuario.id}`;
+    let visto = '';
+    try { visto = localStorage.getItem(chave) || ''; } catch (_) {}
+    if (visto === treinosDoPersonalEm) return;
+    try { localStorage.setItem(chave, treinosDoPersonalEm); } catch (_) {}
+    toast(`${meuPersonal && meuPersonal.nome ? meuPersonal.nome : 'Seu personal'} atualizou seus treinos. Eles já estão na tela Treino.`);
+  }
+  let encerrandoPersonal = false;
+  function renderMeuPersonal() {
+    const el = $('meu-personal');
+    if (!acompanhamento) {
+      el.innerHTML = `<p class="nota-campo">Você não tem personal no app. Quando um personal trainer mandar um convite, abra o link no celular para aceitar; ele passa a montar os seus treinos e a acompanhar a sua semana.</p>`;
+      return;
+    }
+    const p = meuPersonal;
+    el.innerHTML = `
+      <p class="mp-nome"><b>${p ? esc(p.nome) : 'Seu personal'}</b>${p ? `<small>CREF ${esc(p.cref)}/${esc(p.uf)}${p.desde ? ` · acompanha você desde ${fmtData(isoLocal(new Date(p.desde)).slice(0, 10), { day: 'numeric', month: 'short' })}` : ''}</small>` : ''}</p>
+      ${itensPersonal()}
+      ${encerrandoPersonal ? `<div class="aviso mp-confirmar" role="alert">
+          <p>Encerrar o acompanhamento? ${p ? esc(p.nome) : 'O personal'} deixa de ver os seus dados na hora. Os treinos atuais continuam com você, e você volta a poder mudá-los.</p>
+          <div class="novidade-acoes"><button class="btn perigo" type="button" id="mp-encerrar-sim">Encerrar acompanhamento</button>
+          <button class="btn-sec" type="button" id="mp-encerrar-nao">Continuar com o personal</button></div></div>`
+    : '<button class="btn-sec perigo-sec" type="button" id="mp-encerrar">Encerrar acompanhamento</button>'}`;
+  }
+  $('meu-personal').addEventListener('click', async (e) => {
+    if (e.target.closest('#mp-encerrar')) { encerrandoPersonal = true; renderMeuPersonal(); $('mp-encerrar-sim').focus(); return; }
+    if (e.target.closest('#mp-encerrar-nao')) { encerrandoPersonal = false; renderMeuPersonal(); return; }
+    if (!e.target.closest('#mp-encerrar-sim')) return;
+    e.target.closest('#mp-encerrar-sim').disabled = true;
+    const { error } = await sb.rpc('encerrar_vinculo');
+    if (error) { e.target.closest('#mp-encerrar-sim').disabled = false; return toast('Não foi possível encerrar. Confira a internet e tente de novo.'); }
+    registrarEvento('personal_encerrado');
+    encerrandoPersonal = false;
+    acompanhamento = null;
+    meuPersonal = null;
+    guardarMeuPersonal();
+    if (perfilLinha) perfilLinha.acompanhado_por = null;
+    toast('Acompanhamento encerrado. Seus treinos continuam aqui, e agora você pode mudá-los.');
+    renderConfig();
+    renderMeuPersonal();
+  });

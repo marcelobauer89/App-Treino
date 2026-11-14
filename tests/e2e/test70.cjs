@@ -83,7 +83,8 @@ const contador = (p) => p.locator('#desc-contador').innerText();
     await p.click('#descanso-body [data-desc-tempo="30"]');
     await p.click('[data-desc-iniciar]'); await p.waitForTimeout(50);
     ok((await contador(p)) === '0:30', `${tag}: começa em 0:30`, await contador(p));
-    await p.clock.runFor(10000); await p.waitForTimeout(50);
+    // 10,3 s: o contador da tela se atualiza a cada 250 ms; ler bem na virada do segundo podia pegar o 0:21 ainda.
+    await p.clock.runFor(10300); await p.waitForTimeout(50);
     ok((await contador(p)) === '0:20', `${tag}: desce com o tempo`, await contador(p));
     await p.click('[data-desc-ajuste="15"]');
     ok((await contador(p)) === '0:35', `${tag}: +15 s`, await contador(p));

@@ -169,9 +169,10 @@
     .aba-longo { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
     .aba-curto { display: inline; }
   }
-  /* Celular estreito: as 6 abas ainda cabem numa linha. */
+  /* Celular estreito: as abas quebram em linhas de 4 (o monitoramento tem 8), sem rolagem para o lado. */
   @media (max-width: 400px) {
-    .abas [role="tab"] { padding: 0 2px; font-size: 13px; gap: 4px; }
+    .abas { flex-wrap: wrap; }
+    .abas [role="tab"] { flex: 1 1 22%; padding: 0 2px; font-size: 13px; gap: 4px; }
   }
   .abas [role="tab"][aria-selected="true"] { color: var(--marca-tinta); border-bottom-color: var(--marca); }
   .aba-alerta {
@@ -739,3 +740,9 @@
 .tp-mod .excluir-entendi { margin: 0 0 10px; }
 .tp-item b .selo { vertical-align: -3px; margin-right: 4px; }
 #tp-mod-mais { justify-self: start; }
+/* Profissionais (área do personal): nome, situação e números à esquerda; Liberar ou Bloquear à direita. */
+.prof-item { display: flex; flex-wrap: wrap; align-items: center; gap: 0 12px; }
+.prof-topo { flex: 1 1 260px; width: auto; }
+.prof-topo .situacao { justify-self: end; }
+.prof-acao { padding: 0 0 12px; }
+@media (min-width: 560px) { .prof-acao { padding: 0; } }

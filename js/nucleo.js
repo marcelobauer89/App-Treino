@@ -150,13 +150,18 @@
   // { liberado, pedidoEm }: contas novas só usam o app depois de um convite ou de um administrador liberar.
   let acesso = { liberado: true, pedidoEm: null };
   // Política de Privacidade: versão atual (mude junto com privacidade.html) e se a pessoa já viu esta versão.
-  const POLITICA_VERSAO = '2026-10-27';
+  const POLITICA_VERSAO = '2026-11-14';
   let politica = { disponivel: false, aceita: true, contaNova: false };
   let perfilLinha = null;
   // Versão anterior dos treinos (perfis.treinos_anterior): { treinos, semana, em, jornada }. Serve para Desfazer e recuperar.
   let treinosAnterior = null;
   // Jornada escolhida (perfis.jornada): mostra "Jornada X" em Meus treinos e se ela foi personalizada.
   let jornada = null;
+  // Personal que acompanha a conta (perfis.acompanhado_por, gravado só pelo banco). Com personal, os treinos são os
+  // que ele monta (o banco recusa mudança feita pelo próprio aluno) e não há escolha de objetivo nas boas-vindas.
+  let acompanhamento = null;
+  let treinosDoPersonalEm = null; // perfis.treinos_em quando foi o personal que montou (aviso "ficha nova")
+  let meuPersonal = null; // { nome, cref, uf, desde } (função meu_personal), com cópia no aparelho
   const limpar = (t, max) => String(t ?? '').replace(/[<>"&]/g, '').trim().slice(0, max);
   function exercicioCompleto(e) {
     const base = exDaBiblioteca(e.nome) || { nome: limpar(e.nome, 80), grupo: '', H: 'baixa', M: 'baixa', F: 'baixa', E: 'baixa', why: '' };
@@ -176,6 +181,8 @@
         ? t.exercicios.filter((e) => e && e.nome).slice(0, MAX_EXERCICIOS).map(exercicioCompleto) : [];
       if (!exercicios.length) continue;
       treinos[n] = { nome: limpar(t.nome, 40) || `Treino ${n}`, subtitulo: limpar(t.subtitulo, 60), exercicios };
+      // Recado do personal para o treino (aparece na ficha, em cima dos exercícios).
+      if (t.recado) treinos[n].recado = limpar(t.recado, 200);
       // O texto "Sobre o treino" do plano pronto (ou de uma jornada) só vale enquanto os exercícios forem os mesmos.
       const p = [...(catalogo ? catalogo.jornadas : []), ...JORNADAS_APP].map((j) => j.treinos[n]).find((x) => x && nomesDos(x.exercicios) === nomesDos(exercicios));
       if (p) {
@@ -187,7 +194,7 @@
   }
   // Formato gravado em perfis.treinos.
   const treinosParaSalvar = (treinos) => Object.fromEntries(Object.entries(treinos).map(([id, t]) => [id, {
-    nome: t.nome, subtitulo: t.subtitulo, exercicios: t.exercicios.map(({ nome, dose, pse }) => ({ nome, dose, pse })),
+    nome: t.nome, subtitulo: t.subtitulo, ...(t.recado ? { recado: t.recado } : {}), exercicios: t.exercicios.map(({ nome, dose, pse }) => ({ nome, dose, pse })),
   }]));
   // Plano pronto (contas sem treinos próprios): a lista de exercícios é sempre a do app, e não muda quando o objetivo
   // Jiu Jitsu é editado no banco; os detalhes de cada exercício vêm do catálogo.
@@ -1004,7 +1011,10 @@
     perfilLinha = linha;
     treinosAnterior = linha.treinos_anterior && linha.treinos_anterior.treinos ? linha.treinos_anterior : null;
     jornada = jornadaPorId(linha.jornada) ? linha.jornada : null;
-    novidade = { disponivel: true, vista: !!linha.novidade_oculta || ocultaNoAparelho, contaNova: !d.c.length && !cargas.length };
+    acompanhamento = linha.acompanhado_por || null;
+    treinosDoPersonalEm = linha.treinos_por && linha.treinos_por === linha.acompanhado_por ? linha.treinos_em || null : null;
+    // Com personal, quem decide os treinos é ele: sem boas-vindas de objetivo nem o aviso "Baita atualização!".
+    novidade = { disponivel: true, vista: !!linha.novidade_oculta || ocultaNoAparelho || !!acompanhamento, contaNova: !d.c.length && !cargas.length };
     let ocultasNoAparelho = [];
     try { ocultasNoAparelho = JSON.parse(localStorage.getItem(chaveNovidades()) || '[]'); } catch (_) {}
     novidadesOcultas = new Set([...(Array.isArray(linha.novidades_ocultas) ? linha.novidades_ocultas : []), ...(Array.isArray(ocultasNoAparelho) ? ocultasNoAparelho : [])]);

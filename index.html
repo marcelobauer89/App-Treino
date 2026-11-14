@@ -27,7 +27,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <!-- Segurança (CSP): o navegador só roda scripts do próprio site e só conversa com o Supabase. Ao usar um serviço
-     externo novo (imagem, vídeo, API), acrescente o endereço nas três páginas: index, admin e privacidade. -->
+     externo novo (imagem, vídeo, API), acrescente o endereço nas quatro páginas: index, admin, personal e privacidade. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-src 'self' https://www.youtube-nocookie.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <script src="ambiente.js"></script>
 <script src="js/antes-da-pintura.js?v=dev"></script>
@@ -227,6 +227,7 @@
     <ul class="voce-grupo" aria-label="Treinos">
       <li><button class="voce-linha" type="button" data-voce="treinos"><svg class="voce-ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg><span class="voce-rotulo">Meus treinos</span><span class="voce-valor" id="valor-treinos"></span><svg class="voce-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button></li>
       <li><button class="voce-linha" type="button" data-voce="semana"><svg class="voce-ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span class="voce-rotulo">Minha semana</span><span class="voce-valor" id="valor-semana"></span><svg class="voce-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button></li>
+      <li><button class="voce-linha" type="button" data-voce="personal"><svg class="voce-ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="7" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 3.5a3.5 3.5 0 0 1 0 7M18 13.5a6.5 6.5 0 0 1 3.5 6.5"/></svg><span class="voce-rotulo">Meu personal</span><span class="voce-valor" id="valor-personal"></span><svg class="voce-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button></li>
     </ul>
     <ul class="voce-grupo" aria-label="Configurações">
       <li><button class="voce-linha" type="button" data-voce="aparencia"><svg class="voce-ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.7-.9 1.4-1.9l-.3-.8c-.4-1.2.5-2.3 1.7-2.3H17a4 4 0 0 0 4-4c0-5-4-9-9-9Z"/><circle cx="7.5" cy="11.5" r="1.2"/><circle cx="10.5" cy="7.5" r="1.2"/><circle cx="15" cy="7.8" r="1.2"/></svg><span class="voce-rotulo">Aparência</span><span class="voce-valor" id="valor-aparencia"></span><svg class="voce-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button></li>
@@ -336,6 +337,14 @@
       <button class="btn-sec" type="button" id="semana-padrao">Voltar à semana padrão</button>
     </div>
   
+  </section>
+
+  <section class="voce-pagina" data-pagina="personal" aria-labelledby="pag-personal-titulo" hidden>
+    <div class="voce-topo">
+      <button class="voce-voltar" type="button" data-voltar><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Você</button>
+      <h1 id="pag-personal-titulo">Meu personal</h1>
+    </div>
+    <div class="cartao meu-personal" id="meu-personal"></div>
   </section>
 
   <section class="voce-pagina" data-pagina="temporizador" aria-labelledby="pag-temporizador-titulo" hidden>
@@ -465,6 +474,9 @@
 </dialog>
 <dialog class="modal" id="novidade-dialog" aria-labelledby="novidade-title">
   <div class="modal-body" id="novidade-body"></div>
+</dialog>
+<dialog class="modal" id="personal-dialog" aria-labelledby="personal-title">
+  <div class="modal-body" id="personal-body"></div>
 </dialog>
 <dialog class="modal" id="politica-dialog" aria-labelledby="politica-title">
   <div class="modal-body" id="politica-body"></div>

@@ -138,7 +138,7 @@
     else mostrarNovidadeSeFaltar();
     if (esquecido) {
       toast(`O check-in do ${TIPOS[esquecido.tipo].nome} ficou aberto e foi encerrado às ${horaDe(esquecido.fim)}.`);
-    }
+    } else avisarTreinosDoPersonal();
     // Mantém o horário do topo e a barra de treino em andamento atualizados.
     if (!relogio) relogio = setInterval(() => { renderHoje(); renderAtivo(); }, 15000);
     // O que foi feito sem internet em outra abertura sai agora (ou quando a conexão voltar).
