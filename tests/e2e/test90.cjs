@@ -77,11 +77,15 @@ const base = (extra = {}) => ({
     await p.click('#tab-fichas'); await p.waitForTimeout(80);
     ok(/ainda não tem fichas/.test(await p.locator('#fichas-lista').innerText()), `${scheme}: fichas vazias explicam o que fazer`);
     await p.click('#ficha-nova'); await p.waitForSelector('#ficha-dialog[open]');
-    await p.click('#ficha-salvar'); await p.waitForTimeout(80);
-    ok(/nome à ficha/.test(await p.locator('#ficha-erro').innerText()), `${scheme}: ficha sem nome é recusada`);
+    ok((await p.locator('.pf-passos li').count()) === 4 && /Início/.test(await p.locator('.pf-passos .atual').innerText()), `${scheme}: ficha nova é um passo a passo (4 passos, começa no Início)`);
+    ok(await p.locator('.pf-passo[data-passo="1"]').isHidden(), `${scheme}: os treinos ficam para o passo 2`);
+    await p.click('#ficha-proximo'); await p.waitForTimeout(80);
+    ok(/nome à ficha/.test(await p.locator('#ficha-erro').innerText()) && /Início/.test(await p.locator('.pf-passos .atual').innerText()), `${scheme}: sem nome, não passa do Início`);
     await p.selectOption('#pf-modelo', 'plano'); await p.waitForTimeout(80);
     ok((await p.locator('.pf-treino').count()) === 3, `${scheme}: começar do plano pronto traz os 3 treinos`);
     await p.fill('#pf-ficha-nome', 'Base iniciante');
+    await p.click('#ficha-proximo'); await p.waitForTimeout(80);
+    ok(/Treinos/.test(await p.locator('.pf-passos .atual').innerText()) && await p.locator('.pf-treino').first().isVisible(), `${scheme}: Próximo leva aos treinos`);
     // Troca a dose do 1º exercício, sobe o 2º e acrescenta um exercício que não está na biblioteca (recusado) e depois um que está.
     await p.locator('.pf-treino[data-t="0"] li[data-x="0"] [data-campo="ex-dose"]').fill('4×12');
     const segundo = await p.locator('.pf-treino[data-t="0"] li[data-x="1"] [data-campo="ex-nome"]').inputValue();
@@ -89,12 +93,29 @@ const base = (extra = {}) => ({
     ok((await p.locator('.pf-treino[data-t="0"] li[data-x="0"] [data-campo="ex-nome"]').inputValue()) === segundo, `${scheme}: subir exercício muda a ordem`);
     await p.locator('.pf-treino[data-t="2"] [data-pf-ex-mais]').click(); await p.waitForTimeout(60);
     const novo = p.locator('.pf-treino[data-t="2"] li').last().locator('[data-campo="ex-nome"]');
-    await novo.fill('Exercício inventado'); await p.click('#ficha-salvar'); await p.waitForTimeout(80);
-    ok(/não está na biblioteca/.test(await p.locator('#ficha-erro').innerText()), `${scheme}: exercício fora da biblioteca é recusado`);
+    await novo.fill('Exercício inventado'); await p.click('#ficha-proximo'); await p.waitForTimeout(80);
+    ok(/não está na biblioteca/.test(await p.locator('#ficha-erro').innerText()) && /Treinos/.test(await p.locator('.pf-passos .atual').innerText()), `${scheme}: exercício fora da biblioteca segura no passo Treinos`);
     await novo.fill('supino reto'); await novo.dispatchEvent('change'); await p.waitForTimeout(60);
     ok((await novo.inputValue()) === 'Supino reto', `${scheme}: o nome vira o da biblioteca`);
     ok((await p.locator('.pf-treino[data-t="2"] li').last().locator('[data-campo="ex-dose"]').inputValue()) !== '', `${scheme}: séries vêm da biblioteca`);
+    // Exercício próprio criado de dentro da ficha: entra no treino e na lista "Meus exercícios".
+    await p.locator('.pf-treino[data-t="1"] [data-pf-ex-criar]').click(); await p.waitForSelector('#pc-ex-form');
+    await p.fill('#pc-ex-nome', 'Supino reto'); await p.click('#pc-ex-salvar'); await p.waitForTimeout(80);
+    ok(/biblioteca do app/.test(await p.locator('#pc-erro').innerText()), `${scheme}: exercício próprio com nome da biblioteca é recusado`);
+    await p.fill('#pc-ex-nome', 'Remada no TRX da Paula'); await p.selectOption('#pc-ex-grupo', 'Costas'); await p.fill('#pc-ex-dose', '3×12');
+    await p.click('#pc-ex-salvar'); await p.waitForFunction(() => !document.querySelector('#pc-dialog').open); await p.waitForTimeout(80);
+    ok((await p.locator('.pf-treino[data-t="1"] li').last().locator('[data-campo="ex-nome"]').inputValue()) === 'Remada no TRX da Paula', `${scheme}: exercício criado entra no treino`);
+    ok(/seu/.test(await p.locator('.pf-treino[data-t="1"] li').last().innerText()), `${scheme}: exercício próprio marcado como "seu" no editor`);
     await p.locator('#ficha-dialog').screenshot({ path: `${H.SAIDA}/personal-editor-${scheme}.png` });
+    await p.click('#ficha-proximo'); await p.waitForTimeout(80);
+    ok(/Semana/.test(await p.locator('.pf-passos .atual').innerText()) && await p.locator('.pf-semana').isVisible(), `${scheme}: passo 3 é a semana sugerida`);
+    await p.click('#ficha-proximo'); await p.waitForTimeout(80);
+    const rev = await p.locator('.pf-revisao').innerText();
+    ok(/Base iniciante/.test(rev) && /3 treinos/.test(rev) && /Remada no TRX da Paula/.test(rev), `${scheme}: revisão mostra nome, treinos e exercícios`, rev.slice(0, 80));
+    await p.locator('#ficha-dialog').screenshot({ path: `${H.SAIDA}/personal-revisao-${scheme}.png` });
+    await p.click('.pf-revisao [data-pf-passo="0"]'); await p.waitForTimeout(60);
+    ok(/Início/.test(await p.locator('.pf-passos .atual').innerText()), `${scheme}: "Mudar" na revisão volta ao passo`);
+    await p.click('.pf-passos [data-pf-passo="3"]'); await p.waitForTimeout(60);
     await p.click('#ficha-salvar'); await p.waitForFunction(() => !document.querySelector('#ficha-dialog').open);
     await p.waitForTimeout(250);
     let db = await H.banco(p);
@@ -102,6 +123,9 @@ const base = (extra = {}) => ({
     ok(db.fichas[0].treinos['1'].exercicios.some((x) => x.dose === '4×12'), `${scheme}: dose alterada salva`);
     ok(Array.isArray(db.fichas[0].semana) && db.fichas[0].semana[1].includes('t2'), `${scheme}: semana sugerida do plano pronto vai junto`);
     ok(/Base iniciante/.test(await p.locator('#fichas-lista').innerText()), `${scheme}: ficha aparece na lista`);
+    ok(db.fichas[0].treinos['2'].exercicios.some((x) => x.nome === 'Remada no TRX da Paula'), `${scheme}: exercício próprio vai na ficha`);
+    ok(db.exercicios_personal.length === 1 && db.exercicios_personal[0].personal_id === 'u1' && db.exercicios_personal[0].grupo === 'Costas', `${scheme}: exercício próprio gravado só para o personal`);
+    ok(/Remada no TRX da Paula/.test(await p.locator('#meus-ex-lista').innerText()) && /Costas · 3×12/.test(await p.locator('#meus-ex-lista').innerText()), `${scheme}: Meus exercícios lista o exercício`);
 
     // Aplicar a um aluno, com a semana.
     await p.click('[data-ficha-aplicar]'); await p.waitForSelector('#pc-dialog[open]');
@@ -109,7 +133,11 @@ const base = (extra = {}) => ({
     await p.check('[name="pc-aluno"][value="a1"]'); await p.check('#pc-semana');
     ok(/1 aluno/.test(await p.locator('#pc-aplicar').innerText()), `${scheme}: botão diz quantos alunos`);
     await p.locator('#pc-dialog').screenshot({ path: `${H.SAIDA}/personal-aplicar-${scheme}.png` });
-    await p.click('#pc-aplicar'); await p.waitForFunction(() => !document.querySelector('#pc-dialog').open); await p.waitForTimeout(250);
+    await p.click('#pc-aplicar'); await p.waitForSelector('.pf-envio');
+    ok(/Ficha enviada/.test(await p.locator('.pf-envio').innerText()) && (await p.locator('.pf-envio-av').count()) === 1, `${scheme}: aplicar mostra a animação da ficha indo ao aluno`);
+    await p.waitForTimeout(1900);
+    await p.locator('#pc-dialog').screenshot({ path: `${H.SAIDA}/personal-enviada-${scheme}.png` });
+    await p.click('#pc-pronto'); await p.waitForFunction(() => !document.querySelector('#pc-dialog').open); await p.waitForTimeout(250);
     db = await H.banco(p);
     const a1 = db.perfis.find((x) => x.id === 'a1');
     ok(a1.ficha_id === db.fichas[0].id && a1.treinos['1'].exercicios[1].dose === '4×12' && a1.treinos_por === 'u1', `${scheme}: aluna recebe a ficha`);

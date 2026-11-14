@@ -118,7 +118,7 @@
 
   // ---------- Área do personal (as mesmas regras das funções do banco, em versão simples) ----------
   function rpcPersonal(db, nome, a) {
-    db.profissionais = db.profissionais || []; db.vinculos = db.vinculos || []; db.fichas = db.fichas || [];
+    db.profissionais = db.profissionais || []; db.vinculos = db.vinculos || []; db.fichas = db.fichas || []; db.exercicios_personal = db.exercicios_personal || [];
     const eu = db.sessao && db.sessao.user.id;
     const agora = new Date().toISOString();
     const ok = (data) => ({ data, error: null });
@@ -240,6 +240,31 @@
         db.fichas.push({ id, personal_id: eu, nome: p.nome, descricao: p.descricao || '', treinos: t, semana: p.semana || null, criado_em: agora, atualizado_em: agora });
         return ok(id);
       }
+      case 'personal_exercicios':
+        if (!ehProf(eu)) return restrito();
+        return ok(db.exercicios_personal.filter((e) => e.personal_id === eu).map(({ personal_id, ...e }) => e)
+          .sort((x, y) => x.nome.localeCompare(y.nome, 'pt-BR')));
+      case 'personal_salvar_exercicio': {
+        if (!ehProf(eu)) return erro('Área restrita a profissionais liberados.');
+        const p = a.p || {};
+        const nomeEx = String(p.nome || '').trim().replace(/\s+/g, ' ');
+        const k = nomeEx.toLowerCase();
+        if (nomeEx.length < 2 || nomeEx.length > 80) return erro('Dê um nome ao exercício (de 2 a 80 letras).');
+        if ((db.exercicios || []).some((x) => String(x.nome).toLowerCase() === k)) return erro('Esse exercício já está na biblioteca do app.');
+        if (db.exercicios_personal.some((x) => x.personal_id === eu && x.nome.toLowerCase() === k && x.id !== p.id)) return erro('Você já tem um exercício com esse nome.');
+        const dados = { nome: nomeEx, grupo: p.grupo || '', dose: p.dose || '3×10', pse: Number(p.pse) || 8 };
+        if (p.id) {
+          const e = db.exercicios_personal.find((x) => x.id === p.id && x.personal_id === eu);
+          if (!e) return erro('Exercício não encontrado.');
+          Object.assign(e, dados); return ok(e.id);
+        }
+        const id = `e${db.exercicios_personal.length + 1}`;
+        db.exercicios_personal.push({ id, personal_id: eu, ...dados, criado_em: agora });
+        return ok(id);
+      }
+      case 'personal_excluir_exercicio':
+        db.exercicios_personal = db.exercicios_personal.filter((e) => !(e.id === a.p_id && e.personal_id === eu));
+        return ok(null);
       case 'personal_excluir_ficha':
         db.fichas = db.fichas.filter((f) => !(f.id === a.p_id && f.personal_id === eu));
         db.perfis.forEach((p) => { if (p.ficha_id === a.p_id) p.ficha_id = null; });
@@ -414,7 +439,8 @@
             const FN_PERSONAL = ['eh_profissional', 'meu_cadastro_profissional', 'pedir_acesso_profissional', 'admin_profissionais', 'admin_liberar_profissional',
               'personal_criar_convite', 'personal_convites', 'personal_cancelar_convite', 'ver_convite_personal', 'aceitar_vinculo', 'meu_personal',
               'encerrar_vinculo', 'personal_encerrar_vinculo', 'personal_alunos', 'personal_checkins', 'personal_eventos', 'personal_cargas',
-              'personal_fichas', 'personal_salvar_ficha', 'personal_excluir_ficha', 'personal_aplicar_ficha', 'personal_salvar_treinos'];
+              'personal_fichas', 'personal_salvar_ficha', 'personal_excluir_ficha', 'personal_aplicar_ficha', 'personal_salvar_treinos',
+              'personal_exercicios', 'personal_salvar_exercicio', 'personal_excluir_exercicio'];
             if (FN_PERSONAL.includes(nome)) {
               if (db.semPersonal) { gravar(db); return { data: null, error: { message: `Could not find the function public.${nome} in the schema cache` } }; }
               const r = rpcPersonal(db, nome, args || {});

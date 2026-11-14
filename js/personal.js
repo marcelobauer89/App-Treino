@@ -2,7 +2,7 @@
 // no modo personal); aqui ficam o cadastro do profissional, as fichas (montar, aplicar aos alunos e ajustar por aluno),
 // os convites e o que entra na ficha de cada aluno (treinos atuais, pesos e encerrar). Seções em docs/MAPA.md.
 (() => {
-  const P = { cargas: [], fichas: null, convites: null, catalogo: null, erroFichas: '' };
+  const P = { cargas: [], fichas: null, convites: null, catalogo: null, meus: null, erroFichas: '' };
   const painel = () => window.Painel;
   const sb = () => window.Painel.sb;
   const $ = (id) => document.getElementById(id);
@@ -14,6 +14,8 @@
   const dataCurta = (iso) => (iso ? new Date(iso).toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' }).replace(/\./g, '') : '—');
   const XIS = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>';
   const SOBE = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg>';
+  const CHECK = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>';
+  const GRUPOS = ['Mobilidade', 'Core', 'Explosivos', 'Pernas', 'Costas', 'Peito', 'Ombros', 'Braços', 'Pescoço', 'Cardio'];
   const DESCE = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
 
   // ---------- Cadastro do profissional ----------
@@ -81,11 +83,12 @@
 
   // ---------- Dados da área (carregados junto com o painel) ----------
   async function carregar(todas) {
-    const [k, f, c, ex] = await Promise.all([
+    const [k, f, c, ex, m] = await Promise.all([
       todas('personal_cargas'), sb().rpc('personal_fichas'), sb().rpc('personal_convites'),
       sb().from('exercicios').select('nome, grupo, dose, pse, ativo').then((r) => r, () => ({ error: true })),
+      sb().rpc('personal_exercicios').then((r) => r, () => ({ error: true })),
     ]);
-    return { k, f, c, ex };
+    return { k, f, c, ex, m };
   }
   function aplicar(x) {
     if (!x) return;
@@ -95,11 +98,19 @@
     P.convites = x.c.error ? null : (x.c.data || []);
     // Biblioteca: a do banco (ativos), ou a cópia que vem no app (js/dados.js) quando o banco não responde.
     const doBanco = !x.ex.error && Array.isArray(x.ex.data) && x.ex.data.length ? x.ex.data.filter((e) => e.ativo !== false) : null;
-    P.catalogo = (doBanco || BIBLIOTECA_APP).map((e) => ({ nome: e.nome, grupo: e.grupo, dose: e.dose, pse: e.pse }))
+    P.biblioteca = (doBanco || BIBLIOTECA_APP).map((e) => ({ nome: e.nome, grupo: e.grupo, dose: e.dose, pse: e.pse }));
+    // Meus exercícios (só deste personal). Sem a função no banco (migração 006 não rodada), a lista fica vazia.
+    P.meus = x.m.error ? (x.m.error === true || /personal_exercicios/.test(x.m.error.message || '') ? [] : null) : (x.m.data || []);
+    montarCatalogo();
+  }
+  // Catálogo do editor: a biblioteca do app mais os exercícios do personal (marcados com meu: true).
+  function montarCatalogo() {
+    P.catalogo = [...(P.biblioteca || []), ...(P.meus || []).map((e) => ({ nome: e.nome, grupo: e.grupo, dose: e.dose, pse: e.pse, meu: true }))]
       .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
   }
   function render() {
     renderFichas();
+    renderMeus();
     renderConvites();
   }
   const alunos = () => (painel().dados() || { usuarios: [] }).usuarios;
@@ -153,7 +164,7 @@
       nome: f ? (cfg.duplicar ? `${f.nome} (cópia)` : f.nome).slice(0, 60) : '', descricao: f ? f.descricao || '' : '',
       treinos: u ? paraLista(u.treinos || (u.treinos === null ? PLANO_PADRAO : {})) : f ? paraLista(f.treinos) : [{ nome: 'Treino 1', subtitulo: '', recado: '', exercicios: [] }],
       semana: u ? (Array.isArray(u.semana) && u.semana.length === 7 ? u.semana.map((d) => [...d]) : semanaVazia()) : f && Array.isArray(f.semana) ? f.semana.map((d) => [...d]) : semanaVazia(),
-      trocarSemana: false, novo: !f && !u, erro: '', alunoNome: u ? u.nome : '',
+      trocarSemana: false, novo: !f && !u, erro: '', alunoNome: u ? u.nome : '', passo: 0, modelo: '',
     };
     renderEditor();
     if (!$('ficha-dialog').open) $('ficha-dialog').showModal();
@@ -164,8 +175,12 @@
     const outros = Object.entries(tipos).filter(([k]) => !/^t\d$/.test(k)).map(([k, t]) => [k, t.nome]);
     return `<option value="">${idx === 0 ? 'Descanso' : '—'}</option>${[...treinos, ...outros].map(([k, n]) => `<option value="${esc(k)}"${k === valor ? ' selected' : ''}>${esc(n)}</option>`).join('')}`;
   }
+  // Ficha nova ou editada: passo a passo (Início → Treinos → Semana → Revisão). Os treinos de um aluno: página única.
+  const PASSOS = ['Início', 'Treinos', 'Semana', 'Revisão'];
   function renderEditor() {
     const titulo = ed.modo === 'aluno' ? `Treinos de ${ed.alunoNome || 'aluno'}` : ed.id ? 'Editar ficha' : 'Nova ficha';
+    const passo = ed.modo === 'ficha' ? ed.passo : null;
+    const mostra = (n) => (passo === null || passo === n ? '' : ' hidden');
     const pses = Array.from({ length: 10 }, (_, i) => i + 1);
     const treinoHTML = (t, i) => `<fieldset class="ex-bloco pf-treino" data-t="${i}">
       <legend>Treino ${i + 1}</legend>
@@ -175,7 +190,7 @@
       </div>
       <label class="ex-campo">Recado para o aluno (opcional)<input data-campo="recado" maxlength="200" value="${esc(t.recado)}" placeholder="Ex.: Suba a carga do supino quando fizer as 10 repetições"></label>
       <ol class="pf-exs">${t.exercicios.map((x, j) => `<li data-x="${j}">
-        <label class="ex-campo pf-ex-nome">Exercício<input data-campo="ex-nome" list="pf-biblioteca" maxlength="80" autocomplete="off" value="${esc(x.nome)}" placeholder="Busque na biblioteca"></label>
+        <label class="ex-campo pf-ex-nome"><span>Exercício${exDoCatalogo(x.nome) && exDoCatalogo(x.nome).meu ? ' <span class="pf-meu">seu</span>' : ''}</span><input data-campo="ex-nome" list="pf-biblioteca" maxlength="80" autocomplete="off" value="${esc(x.nome)}" placeholder="Busque na biblioteca"></label>
         <label class="ex-campo pf-ex-dose">Séries<input data-campo="ex-dose" maxlength="30" autocomplete="off" value="${esc(x.dose)}" placeholder="3×10"></label>
         <label class="ex-campo pf-ex-pse">PSE<select data-campo="ex-pse">${pses.map((n) => `<option${n === x.pse ? ' selected' : ''}>${n}</option>`).join('')}</select></label>
         <span class="pf-ex-botoes">
@@ -187,37 +202,64 @@
       ${t.exercicios.length ? '' : '<p class="ex-dica">Nenhum exercício ainda.</p>'}
       <div class="pf-acoes">
         <button class="btn-sec" type="button" data-pf-ex-mais${t.exercicios.length >= MAX_EXERCICIOS ? ' disabled' : ''}>+ Exercício</button>
+        <button class="btn-sec" type="button" data-pf-ex-criar${t.exercicios.length >= MAX_EXERCICIOS ? ' disabled' : ''}>Criar exercício</button>
         ${ed.treinos.length > 1 ? `<button class="btn-sec pf-perigo" type="button" data-pf-treino-tirar>Tirar este treino</button>` : ''}
       </div>
     </fieldset>`;
     const semanaHTML = DIAS.map(([d, nome]) => `<div class="pf-dia"><b>${nome}</b>
       <select data-dia="${d}" data-pos="0" aria-label="${nome}: 1ª atividade">${opcoesAtividades((ed.semana[d] || [])[0] || '', 0)}</select>
       <select data-dia="${d}" data-pos="1" aria-label="${nome}: 2ª atividade">${opcoesAtividades((ed.semana[d] || [])[1] || '', 1)}</select></div>`).join('');
+    const passosHTML = passo === null ? '' : `<ol class="pf-passos" aria-label="Passos da ficha">${PASSOS.map((nome, n) => `<li>
+        <button type="button" data-pf-passo="${n}" class="${n === passo ? 'atual' : n < passo ? 'feito' : ''}"${n === passo ? ' aria-current="step"' : ''}>
+          <span class="pf-passo-num" aria-hidden="true">${n < passo ? CHECK : n + 1}</span><span class="pf-passo-nome">${nome}</span></button></li>`).join('')}</ol>`;
+    const rodape = passo === null
+      ? `<button class="btn-sec" type="button" data-ficha-fechar>Cancelar</button>
+        <button class="btn" type="submit" id="ficha-salvar">Salvar e enviar ao aluno</button>`
+      : `${passo === 0 ? '<button class="btn-sec" type="button" data-ficha-fechar>Cancelar</button>' : '<button class="btn-sec" type="button" data-pf-voltar>Voltar</button>'}
+        ${passo < PASSOS.length - 1 ? `<button class="btn" type="button" id="ficha-proximo" data-pf-proximo>Próximo: ${PASSOS[passo + 1]}</button>` : '<button class="btn" type="submit" id="ficha-salvar">Salvar ficha</button>'}`;
     $('ficha-body').innerHTML = `<form class="ex-form" id="ficha-form" novalidate>
       <div class="ex-topo"><h2 id="ficha-title">${esc(titulo)}</h2>
         <button class="excluir-fechar" type="button" data-ficha-fechar aria-label="Fechar">${XIS}</button></div>
       <div class="ex-meio">
-        ${ed.modo === 'ficha' ? `
-        ${ed.novo ? `<label class="ex-campo">Começar de<select id="pf-modelo">${MODELOS().map(([v, n]) => `<option value="${v}">${esc(n)}</option>`).join('')}</select></label>` : ''}
-        <label class="ex-campo">Nome da ficha<input id="pf-ficha-nome" maxlength="60" value="${esc(ed.nome)}" placeholder="Ex.: Hipertrofia iniciante" required></label>
-        <label class="ex-campo">Descrição (opcional)<input id="pf-ficha-desc" maxlength="300" value="${esc(ed.descricao)}" placeholder="Para quem é e por quanto tempo"></label>`
+        ${passosHTML}
+        ${ed.modo === 'ficha' ? `<div class="pf-passo" data-passo="0"${mostra(0)}>
+          <p class="ex-dica">Comece de um modelo ou em branco, e dê um nome que ajude a achar a ficha depois.</p>
+          ${ed.novo ? `<label class="ex-campo">Começar de<select id="pf-modelo">${MODELOS().map(([v, n]) => `<option value="${v}"${v === (ed.modelo || '') ? ' selected' : ''}>${esc(n)}</option>`).join('')}</select></label>` : ''}
+          <label class="ex-campo">Nome da ficha<input id="pf-ficha-nome" maxlength="60" value="${esc(ed.nome)}" placeholder="Ex.: Hipertrofia iniciante" required></label>
+          <label class="ex-campo">Descrição (opcional)<input id="pf-ficha-desc" maxlength="300" value="${esc(ed.descricao)}" placeholder="Para quem é e por quanto tempo"></label>
+        </div>`
     : '<p class="ex-dica">O que você salvar aqui chega na hora ao app do aluno. A versão de antes fica guardada.</p>'}
-        ${ed.treinos.map(treinoHTML).join('')}
-        <button class="btn-sec" type="button" data-pf-treino-mais${ed.treinos.length >= MAX_TREINOS ? ' disabled' : ''}>+ Treino (${ed.treinos.length} de ${MAX_TREINOS})</button>
-        <fieldset class="ex-bloco"><legend>${ed.modo === 'aluno' ? 'Semana do aluno' : 'Semana sugerida'}</legend>
+        <div class="pf-passo" data-passo="1"${mostra(1)}>
+          ${passo === 1 ? `<p class="ex-dica">Até ${MAX_TREINOS} treinos de até ${MAX_EXERCICIOS} exercícios. Não achou um exercício na lista? Toque em <b>Criar exercício</b>: ele fica só para você.</p>` : ''}
+          ${ed.treinos.map(treinoHTML).join('')}
+          <button class="btn-sec" type="button" data-pf-treino-mais${ed.treinos.length >= MAX_TREINOS ? ' disabled' : ''}>+ Treino (${ed.treinos.length} de ${MAX_TREINOS})</button>
+        </div>
+        <fieldset class="ex-bloco pf-passo" data-passo="2"${mostra(2)}><legend>${ed.modo === 'aluno' ? 'Semana do aluno' : 'Semana sugerida'}</legend>
           ${ed.modo === 'aluno'
     ? `<label class="excluir-entendi"><input type="checkbox" id="pf-trocar-semana"${ed.trocarSemana ? ' checked' : ''}><span>Trocar também a semana do aluno por esta</span></label>`
-    : '<p class="ex-dica">Até 2 atividades por dia. Ao aplicar a ficha, você escolhe se troca também a semana do aluno.</p>'}
+    : '<p class="ex-dica">Opcional. Até 2 atividades por dia. Ao aplicar a ficha, você escolhe se troca também a semana do aluno.</p>'}
           <div class="pf-semana"${ed.modo === 'aluno' && !ed.trocarSemana ? ' hidden' : ''}>${semanaHTML}</div>
         </fieldset>
+        ${passo === 3 ? `<div class="pf-passo" data-passo="3">${revisaoHTML()}</div>` : ''}
         <p class="excluir-erro" id="ficha-erro" role="alert"${ed.erro ? '' : ' hidden'}>${esc(ed.erro)}</p>
       </div>
-      <div class="ex-rodape">
-        <button class="btn-sec" type="button" data-ficha-fechar>Cancelar</button>
-        <button class="btn" type="submit" id="ficha-salvar">${ed.modo === 'aluno' ? 'Salvar e enviar ao aluno' : 'Salvar ficha'}</button>
-      </div>
-      <datalist id="pf-biblioteca">${(P.catalogo || []).map((x) => `<option value="${esc(x.nome)}"></option>`).join('')}</datalist>
+      <div class="ex-rodape">${rodape}</div>
+      <datalist id="pf-biblioteca">${(P.catalogo || []).map((x) => `<option value="${esc(x.nome)}">${x.meu ? 'Seu exercício' : ''}</option>`).join('')}</datalist>
     </form>`;
+  }
+  // Revisão (último passo): o que vai ser salvo, com atalho para voltar a cada parte.
+  function revisaoHTML() {
+    const tipos = painel().tipos();
+    const nomeAtiv = (a) => { const m = /^t(\d)$/.exec(a); return m ? (ed.treinos[Number(m[1]) - 1] || {}).nome || `Treino ${m[1]}` : (tipos[a] || {}).nome || a; };
+    const dias = DIAS.filter(([d]) => (ed.semana[d] || []).length);
+    return `<div class="pf-revisao">
+      <section><div class="pf-rev-topo"><h3>${esc(ed.nome.trim() || 'Sem nome')}</h3><button class="pf-link" type="button" data-pf-passo="0">Mudar</button></div>
+        ${ed.descricao.trim() ? `<p>${esc(ed.descricao.trim())}</p>` : ''}</section>
+      <section><div class="pf-rev-topo"><h3>${qtd(ed.treinos.length, 'treino', 'treinos')} · ${qtd(ed.treinos.reduce((n, t) => n + t.exercicios.filter((x) => x.nome).length, 0), 'exercício', 'exercícios')}</h3><button class="pf-link" type="button" data-pf-passo="1">Mudar</button></div>
+        <ul>${ed.treinos.map((t, i) => `<li><b>${esc(t.nome.trim() || `Treino ${i + 1}`)}</b>${t.subtitulo.trim() ? ` · ${esc(t.subtitulo.trim())}` : ''}<small class="pf-sub">${t.exercicios.filter((x) => x.nome).map((x) => esc(x.nome)).join(', ')}</small></li>`).join('')}</ul></section>
+      <section><div class="pf-rev-topo"><h3>Semana sugerida</h3><button class="pf-link" type="button" data-pf-passo="2">Mudar</button></div>
+        ${dias.length ? `<ul>${dias.map(([d, nome]) => `<li><b>${nome}</b> · ${ed.semana[d].map((a) => esc(nomeAtiv(a))).join(' + ')}</li>`).join('')}</ul>` : '<p>Sem semana sugerida: ao aplicar, o aluno mantém a semana dele.</p>'}</section>
+    </div>`;
   }
   // Lê os campos para o estado antes de redesenhar (os campos não guardam nada sozinhos).
   function lerEditor() {
@@ -243,9 +285,9 @@
     if ($('pf-trocar-semana')) ed.trocarSemana = $('pf-trocar-semana').checked;
   }
   // Redesenha a partir do estado (quem chama já leu os campos com lerEditor antes de mudar o estado).
-  const redesenhar = (foco) => {
+  const redesenhar = (foco, doTopo) => {
     const rolagem = document.querySelector('#ficha-form .ex-meio');
-    const topo = rolagem ? rolagem.scrollTop : 0;
+    const topo = rolagem && !doTopo ? rolagem.scrollTop : 0;
     renderEditor();
     const r = document.querySelector('#ficha-form .ex-meio');
     if (r) r.scrollTop = topo;
@@ -255,6 +297,11 @@
     if (e.target === $('ficha-dialog') || e.target.closest('[data-ficha-fechar]')) return $('ficha-dialog').close();
     const fs = e.target.closest('.pf-treino');
     const ti = fs ? Number(fs.dataset.t) : -1;
+    const passoBtn = e.target.closest('[data-pf-passo]');
+    if (passoBtn) return irPara(Number(passoBtn.dataset.pfPasso));
+    if (e.target.closest('[data-pf-proximo]')) return irPara(ed.passo + 1);
+    if (e.target.closest('[data-pf-voltar]')) return irPara(ed.passo - 1);
+    if (e.target.closest('[data-pf-ex-criar]')) { lerEditor(); return abrirExercicio({ ti }); }
     if (e.target.closest('[data-pf-treino-mais]')) {
       lerEditor();
       ed.treinos.push({ nome: `Treino ${ed.treinos.length + 1}`, subtitulo: '', recado: '', exercicios: [] });
@@ -297,6 +344,7 @@
     if (e.target.id === 'pf-modelo') {
       const v = e.target.value;
       lerEditor();
+      ed.modelo = v;
       if (!v) { ed.treinos = [{ nome: 'Treino 1', subtitulo: '', recado: '', exercicios: [] }]; ed.semana = semanaVazia(); }
       else if (v === 'plano') { ed.treinos = paraLista(PLANO_PADRAO); ed.semana = [[], ['t2'], [], ['t1'], [], ['t3'], ['bike']]; }
       else {
@@ -316,15 +364,29 @@
       }
     }
   });
-  function validarEditor() {
-    if (ed.modo === 'ficha' && !ed.nome.trim()) return 'Dê um nome à ficha.';
+  // Cada passo confere a sua parte: Início (nome) e Treinos (exercícios). A semana é opcional.
+  const validarPasso = (n) => (n === 0 ? validarInicio() : n === 1 ? validarTreinos() : '');
+  const validarInicio = () => (ed.modo === 'ficha' && !ed.nome.trim() ? 'Dê um nome à ficha.' : '');
+  function validarEditor() { return validarInicio() || validarTreinos(); }
+  // Vai para o passo n: para a frente, só passando pelos passos que estão completos (para no primeiro com problema).
+  function irPara(n) {
+    lerEditor();
+    const alvo = Math.max(0, Math.min(PASSOS.length - 1, n));
+    for (let k = ed.passo; k < alvo; k++) {
+      const erro = validarPasso(k);
+      if (erro) { ed.passo = k; ed.erro = erro; return redesenhar('#ficha-erro', true); }
+    }
+    ed.passo = alvo; ed.erro = '';
+    redesenhar(alvo === 0 ? '#pf-ficha-nome' : '#ficha-title', true);
+  }
+  function validarTreinos() {
     for (const [i, t] of ed.treinos.entries()) {
       const nomeT = t.nome.trim() || `Treino ${i + 1}`;
       const exs = t.exercicios.filter((x) => x.nome);
       if (!exs.length) return `${nomeT}: coloque pelo menos um exercício.`;
       if (exs.length > MAX_EXERCICIOS) return `${nomeT}: no máximo ${MAX_EXERCICIOS} exercícios.`;
       const fora = exs.find((x) => !exDoCatalogo(x.nome));
-      if (fora) return `${nomeT}: "${fora.nome}" não está na biblioteca. Escolha um exercício da lista.`;
+      if (fora) return `${nomeT}: "${fora.nome}" não está na biblioteca. Escolha um exercício da lista ou toque em Criar exercício.`;
       const vistos = new Set();
       const repetido = exs.find((x) => { const k = chave(x.nome); if (vistos.has(k)) return true; vistos.add(k); return false; });
       if (repetido) return `${nomeT}: "${repetido.nome}" aparece duas vezes.`;
@@ -338,8 +400,12 @@
   $('ficha-dialog').addEventListener('submit', async (e) => {
     e.preventDefault();
     lerEditor();
+    if (ed.modo === 'ficha' && ed.passo < PASSOS.length - 1) return irPara(ed.passo + 1); // Enter num campo: próximo passo
     ed.erro = validarEditor();
-    if (ed.erro) return redesenhar('#ficha-erro');
+    if (ed.erro) {
+      if (ed.modo === 'ficha') ed.passo = validarInicio() ? 0 : 1;
+      return redesenhar('#ficha-erro', true);
+    }
     $('ficha-salvar').disabled = true;
     const treinos = paraBanco();
     const semana = ed.semana.some((d) => d.length) ? ed.semana : null;
@@ -360,6 +426,71 @@
     const aberto = alunoId || painel().detalheAberto();
     await painel().recarregar();
     if (aberto && alunos().some((u) => u.id === aberto)) painel().abrirDetalhe(aberto);
+  }
+
+  // ---------- Meus exercícios ----------
+  // Exercícios criados pelo personal (tabela exercicios_personal): só ele vê, e entram nas fichas como os da biblioteca.
+  function renderMeus() {
+    const el = $('meus-ex-lista');
+    if (!el) return;
+    if (!P.meus) { el.innerHTML = '<p class="vazio">Não foi possível carregar os seus exercícios.</p>'; return; }
+    if (!P.meus.length) {
+      el.innerHTML = '<p class="vazio">Nenhum exercício seu ainda. Crie aqui ou direto na ficha, em <b>Criar exercício</b>.</p>';
+      return;
+    }
+    el.innerHTML = P.meus.map((x) => `<div class="conv-item ficha-item">
+        <b>${esc(x.nome)}</b>
+        <small>${x.grupo ? `${esc(x.grupo)} · ` : ''}${esc(x.dose)} · PSE ${esc(x.pse)}</small>
+        <div class="conv-botoes varios">
+          <button class="btn-peq sec" type="button" data-meu-ex-editar="${esc(x.id)}">Editar</button>
+          <button class="btn-peq sec" type="button" data-meu-ex-excluir="${esc(x.id)}">Excluir</button>
+        </div>
+      </div>`).join('');
+  }
+  // Criar ou editar um exercício. Aberto da ficha (ti = índice do treino), o exercício criado já entra naquele treino.
+  function abrirExercicio({ id = null, ti = -1, nome = '' } = {}) {
+    const x = id ? (P.meus || []).find((e) => e.id === id) : null;
+    acao = { tipo: 'exercicio', id, ti };
+    const pses = Array.from({ length: 10 }, (_, i) => i + 1);
+    abrirJanela(`${topoJanela(x ? 'Editar exercício' : 'Novo exercício')}
+      <form class="ex-form pf-aplicar" id="pc-ex-form" novalidate>
+        <p class="nota" style="margin:0">Só você vê este exercício e pode usá-lo nas suas fichas. Outros personais não têm acesso.</p>
+        <label class="ex-campo">Nome<input id="pc-ex-nome" maxlength="80" autocomplete="off" value="${esc(x ? x.nome : nome)}" placeholder="Ex.: Remada no TRX" required></label>
+        <label class="ex-campo">Grupo (opcional)<select id="pc-ex-grupo"><option value="">—</option>${GRUPOS.map((g) => `<option${x && x.grupo === g ? ' selected' : ''}>${g}</option>`).join('')}</select></label>
+        <div class="ex-grade2">
+          <label class="ex-campo">Séries<input id="pc-ex-dose" maxlength="30" autocomplete="off" value="${esc(x ? x.dose : '3×10')}" placeholder="3×10"></label>
+          <label class="ex-campo">PSE<select id="pc-ex-pse">${pses.map((n) => `<option${n === (x ? Number(x.pse) : 8) ? ' selected' : ''}>${n}</option>`).join('')}</select></label>
+        </div>
+        <p class="excluir-erro" id="pc-erro" role="alert" hidden></p>
+        <div class="excluir-acoes"><button class="btn" type="submit" id="pc-ex-salvar">${x ? 'Salvar' : ti >= 0 ? 'Criar e pôr no treino' : 'Criar exercício'}</button>
+          <button class="btn-sec" type="button" data-janela-fechar>Cancelar</button></div>
+      </form>`);
+    setTimeout(() => $('pc-ex-nome') && $('pc-ex-nome').focus(), 30);
+  }
+  async function salvarExercicio() {
+    const nome = $('pc-ex-nome').value.trim().replace(/\s+/g, ' ');
+    const erro = (t) => { $('pc-erro').textContent = t; $('pc-erro').hidden = false; $('pc-ex-salvar').disabled = false; };
+    if (nome.length < 2) return erro('Dê um nome ao exercício.');
+    if ((P.biblioteca || []).some((e) => chave(e.nome) === chave(nome))) return erro('Esse exercício já está na biblioteca do app: escolha ele na lista.');
+    if ((P.meus || []).some((e) => chave(e.nome) === chave(nome) && e.id !== acao.id)) return erro('Você já tem um exercício com esse nome.');
+    $('pc-ex-salvar').disabled = true;
+    const dados = { id: acao.id || '', nome, grupo: $('pc-ex-grupo').value, dose: $('pc-ex-dose').value.trim() || '3×10', pse: Number($('pc-ex-pse').value) || 8 };
+    const r = await sb().rpc('personal_salvar_exercicio', { p: dados });
+    if (r.error) return erro(`Não foi possível salvar. ${r.error.message}`);
+    const l = await sb().rpc('personal_exercicios');
+    if (!l.error) P.meus = l.data || [];
+    montarCatalogo();
+    renderMeus();
+    const { ti } = acao;
+    $('pc-dialog').close();
+    if (ti >= 0 && ed && $('ficha-dialog').open && ed.treinos[ti]) {
+      ed.treinos[ti].exercicios.push({ nome, dose: dados.dose, pse: dados.pse });
+      redesenhar(`.pf-treino[data-t="${ti}"] li[data-x="${ed.treinos[ti].exercicios.length - 1}"] [data-campo="ex-dose"]`);
+      painel().toast(`"${nome}" criado e colocado no treino.`);
+    } else {
+      if (ed && $('ficha-dialog').open) redesenhar();
+      painel().toast(acao.id ? 'Exercício salvo. As fichas já montadas guardam o nome de antes.' : 'Exercício criado: já aparece na lista do editor de fichas.');
+    }
   }
 
   // ---------- Aplicar ficha e confirmações ----------
@@ -405,6 +536,7 @@
   }
   $('pc-dialog').addEventListener('change', (e) => { if (acao && acao.tipo === 'aplicar') atualizarAplicar(); });
   $('pc-dialog').addEventListener('submit', async (e) => {
+    if (e.target.id === 'pc-ex-form') { e.preventDefault(); return salvarExercicio(); }
     if (e.target.id !== 'pc-aplicar-form') return;
     e.preventDefault();
     const ids = [...document.querySelectorAll('[name="pc-aluno"]:checked')].map((x) => x.value);
@@ -412,10 +544,27 @@
     $('pc-aplicar').disabled = true;
     const { data, error } = await sb().rpc('personal_aplicar_ficha', { p_ficha: f.id, p_alunos: ids, p_semana: !$('pc-semana-linha').hidden && $('pc-semana').checked });
     if (error) { $('pc-erro').textContent = `Não foi possível aplicar. ${error.message}`; $('pc-erro').hidden = false; $('pc-aplicar').disabled = false; return; }
-    $('pc-dialog').close();
-    painel().toast(`Ficha "${f.nome}" aplicada a ${qtd(data || ids.length, 'aluno', 'alunos')}.`);
-    await recarregarMantendo(acao.alunoId);
+    mostrarEnvio(f, ids, data || ids.length);
+    recarregarMantendo(acao.alunoId);
   });
+  // Animação de "ficha enviada": a ficha voa até os alunos e aparece o visto. Sem animação para quem pediu menos movimento.
+  function mostrarEnvio(f, ids, n) {
+    acao = { tipo: 'enviado' };
+    const lista = alunos();
+    const iniciais = (nome) => String(nome || '?').trim().split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0].toUpperCase()).join('') || '?';
+    const vis = ids.slice(0, 4).map((id) => (lista.find((u) => u.id === id) || {}).nome);
+    abrirJanela(`<div class="pf-envio" role="status">
+        <div class="pf-envio-cena" aria-hidden="true">
+          <div class="pf-envio-ficha"><span></span><span></span><span></span></div>
+          <div class="pf-envio-alunos">${vis.map((nome, i) => `<span class="pf-envio-av" style="--i:${i}">${esc(iniciais(nome))}</span>`).join('')}${ids.length > 4 ? `<span class="pf-envio-av mais" style="--i:4">+${ids.length - 4}</span>` : ''}</div>
+          <svg class="pf-envio-ok" viewBox="0 0 52 52"><circle cx="26" cy="26" r="24"/><path d="m15 27 7.5 7.5L37.5 19"/></svg>
+        </div>
+        <h2 id="pc-dialog-title">Ficha enviada</h2>
+        <p><b>${esc(f.nome)}</b> já está no app de ${n === 1 && vis[0] ? esc(vis[0]) : qtd(n, 'aluno', 'alunos')}. Os treinos de antes ficaram guardados.</p>
+        <div class="excluir-acoes"><button class="btn" type="button" data-janela-fechar id="pc-pronto">Pronto</button></div>
+      </div>`);
+    setTimeout(() => $('pc-pronto') && $('pc-pronto').focus(), 50);
+  }
   function confirmar(tipo, titulo, texto, botao, dados) {
     acao = { tipo, ...dados };
     abrirJanela(`${topoJanela(titulo)}<p>${texto}</p><p class="excluir-erro" id="pc-erro" role="alert" hidden></p>
@@ -432,21 +581,28 @@
       excluir: () => sb().rpc('personal_excluir_ficha', { p_id: acao.fichaId }),
       encerrar: () => sb().rpc('personal_encerrar_vinculo', { p_aluno: acao.alunoId }),
       cancelar: () => sb().rpc('personal_cancelar_convite', { p_codigo: acao.codigo }),
+      excluirEx: () => sb().rpc('personal_excluir_exercicio', { p_id: acao.exId }),
     };
     const { error } = await chamadas[acao.tipo]();
     if (error) { $('pc-erro').textContent = error.message; $('pc-erro').hidden = false; e.target.closest('[data-confirmar]').disabled = false; return; }
     $('pc-dialog').close();
     if (acao.tipo === 'encerrar') painel().fecharDetalhe();
-    painel().toast({ excluir: 'Ficha excluída. Os alunos continuam com os treinos que já receberam.', encerrar: 'Acompanhamento encerrado. O aluno continua com a ficha.', cancelar: 'Convite cancelado: o link parou de funcionar.' }[acao.tipo]);
+    painel().toast({ excluirEx: 'Exercício excluído. As fichas e os alunos que já têm ele continuam com ele.', excluir: 'Ficha excluída. Os alunos continuam com os treinos que já receberam.', encerrar: 'Acompanhamento encerrado. O aluno continua com a ficha.', cancelar: 'Convite cancelado: o link parou de funcionar.' }[acao.tipo]);
     await painel().recarregar();
   });
 
   // Botões das listas e da ficha do aluno.
   document.addEventListener('click', (e) => {
-    const b = e.target.closest('[data-ficha-aplicar], [data-ficha-editar], [data-ficha-duplicar], [data-ficha-excluir], [data-pf-editar-aluno], [data-pf-aplicar-aluno], [data-pf-encerrar], [data-pc-copiar], [data-pc-cancelar], #ficha-nova, [data-pf-pesos-todos]');
+    const b = e.target.closest('[data-ficha-aplicar], [data-ficha-editar], [data-ficha-duplicar], [data-ficha-excluir], [data-pf-editar-aluno], [data-pf-aplicar-aluno], [data-pf-encerrar], [data-pc-copiar], [data-pc-cancelar], #ficha-nova, [data-pf-pesos-todos], #meu-ex-novo, [data-meu-ex-editar], [data-meu-ex-excluir]');
     if (!b) return;
     if (b.id === 'ficha-nova') return abrirEditor({});
+    if (b.id === 'meu-ex-novo') return abrirExercicio({});
     const d = b.dataset;
+    if (d.meuExEditar) return abrirExercicio({ id: d.meuExEditar });
+    if (d.meuExExcluir) {
+      const x = (P.meus || []).find((m) => m.id === d.meuExExcluir);
+      return confirmar('excluirEx', 'Excluir exercício?', `<b>${esc(x ? x.nome : 'Este exercício')}</b> sai da sua lista e do editor de fichas. As fichas e os alunos que já têm ele continuam com ele.`, 'Excluir exercício', { exId: d.meuExExcluir });
+    }
     if (d.fichaAplicar) return abrirAplicar({ fichaId: d.fichaAplicar });
     if (d.fichaEditar) return abrirEditor({ fichaId: d.fichaEditar });
     if (d.fichaDuplicar) return abrirEditor({ fichaId: d.fichaDuplicar, duplicar: true });
