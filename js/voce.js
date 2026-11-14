@@ -1125,6 +1125,7 @@
     const j = jornadaAtual();
     $('valor-treinos').textContent = acompanhamento ? 'Do seu personal' : j ? (ehDaJornada(j) ? j.nome : `${j.nome} (personalizada)`)
       : treinosDaConta ? `${n} ${n === 1 ? 'treino' : 'treinos'}` : 'Plano pronto';
+    $('grupo-personal').hidden = !AREA_PERSONAL && !acompanhamento;
     $('valor-personal').textContent = acompanhamento ? ((meuPersonal && meuPersonal.nome) || 'Acompanhando') : 'Nenhum';
     const ativ = config.semana.flat().length;
     const descanso = config.semana.filter((d) => !d.length).length;

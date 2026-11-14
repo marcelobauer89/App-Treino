@@ -4,6 +4,8 @@
 // (cadastro, fichas, convites e o que vai na ficha do aluno) fica em js/personal.js, pelos ganchos window.PersonalHooks.
 (() => {
   const PERSONAL = document.documentElement.dataset.painel === 'personal';
+  // Área do personal ligada neste ambiente (ambiente.js; por enquanto, só no de testes).
+  const AREA_PERSONAL = !!(window.AMBIENTE && window.AMBIENTE.areaPersonal);
   const GANCHOS = () => window.PersonalHooks || {};
   // ---------- Conexão (mesmo projeto do app, definido no ambiente.js) ----------
   const SUPABASE_URL = window.AMBIENTE.url;
@@ -143,6 +145,7 @@
   // ---------- Acesso ----------
   async function iniciar() {
     if (!sb) return mostrarEstado('<p>Não foi possível carregar a biblioteca do Supabase. Confira a internet e recarregue a página.</p>');
+    if (PERSONAL && !AREA_PERSONAL) return mostrarEstado('<p><b>A área do personal ainda não está disponível.</b> Ela está em testes e chega em breve.</p>');
     const { data: { session } } = await sb.auth.getSession();
     if (!session) {
       return mostrarEstado(PERSONAL ? `
@@ -253,7 +256,7 @@
     ligarOnline();
     carregarExercicios();
     renderTipos();
-    carregarProfissionais();
+    if (AREA_PERSONAL) carregarProfissionais();
   }
 
   // Primeira abertura: os blocos da aba visível entram um depois do outro (sem movimento, se o sistema pedir).
@@ -1045,7 +1048,10 @@
   }
 
   // ---------- Abas ----------
-  const ABAS = PERSONAL ? ['geral', 'usuarios', 'fichas', 'convidar'] : ['geral', 'usuarios', 'saude', 'emails', 'convites', 'exercicios', 'tipos', 'profissionais'];
+  const ABAS = PERSONAL ? ['geral', 'usuarios', 'fichas', 'convidar']
+    : ['geral', 'usuarios', 'saude', 'emails', 'convites', 'exercicios', 'tipos', ...(AREA_PERSONAL ? ['profissionais'] : [])];
+  // Sem a área do personal, a aba Profissionais nem aparece.
+  if (!AREA_PERSONAL && $('tab-profissionais')) $('tab-profissionais').hidden = true;
   let aba = ABAS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'geral';
   // Gráficos são desenhados na largura real, então são redesenhados ao aparecer.
   function renderVisivel() {

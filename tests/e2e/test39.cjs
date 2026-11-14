@@ -14,11 +14,11 @@ const txt = async (p, s) => ((await p.locator(s).first().innerText()) || '').rep
     ok(await p.locator('#voce-menu').isVisible() && (await p.locator('.voce-pagina:not([hidden])').count()) === 0, `${tag}: Você abre na lista`);
     ok((await txt(p, '#voce-menu-nome')) === 'Marcelo Bauer' && (await txt(p, '#voce-menu-email')) === 'marcelo@exemplo.com' && (await txt(p, '#voce-menu-avatar')) === 'MB', `${tag}: perfil no topo com foto, nome e e-mail`);
     // "Instalar o app" (#grupo-instalar) só aparece quando o navegador oferece a instalação: fica fora desta conta (test84).
-    const rotulos = await p.locator('.voce-grupo:not(#grupo-instalar) .voce-linha .voce-rotulo').allInnerTexts();
-    ok(rotulos.join('|') === 'Meus treinos|Minha semana|Meu personal|Aparência|Temporizador|Notificações|Privacidade|Sair da conta|Excluir conta', `${tag}: opções em grupos`, rotulos.join('|'));
-    ok((await p.locator('.voce-grupo:not(#grupo-instalar)').count()) === 3, `${tag}: 3 grupos`);
+    const rotulos = await p.locator('.voce-grupo:not(#grupo-instalar):not(#grupo-personal) .voce-linha .voce-rotulo').allInnerTexts();
+    ok(rotulos.join('|') === 'Meus treinos|Minha semana|Aparência|Temporizador|Notificações|Privacidade|Sair da conta|Excluir conta', `${tag}: opções em grupos`, rotulos.join('|'));
+    ok((await p.locator('.voce-grupo:not(#grupo-instalar):not(#grupo-personal)').count()) === 3, `${tag}: 3 grupos`);
     ok((await txt(p, '#valor-treinos')) === 'Plano pronto' && (await txt(p, '#valor-semana')) === '6 atividades' && (await txt(p, '#valor-aparencia')) === 'Automático' && (await txt(p, '#valor-notificacoes')) === 'Resumo ligado', `${tag}: valor à direita de cada opção`);
-    ok((await p.locator('.voce-grupo:not(#grupo-instalar) .voce-linha:not(.perigo) .voce-chev').count()) === 7 && (await p.locator('.voce-grupo:not(#grupo-instalar) .voce-linha .voce-ic').count()) === 9, `${tag}: ícone e seta nas linhas`);
+    ok((await p.locator('.voce-grupo:not(#grupo-instalar):not(#grupo-personal) .voce-linha:not(.perigo) .voce-chev').count()) === 6 && (await p.locator('.voce-grupo:not(#grupo-instalar):not(#grupo-personal) .voce-linha .voce-ic').count()) === 8, `${tag}: ícone e seta nas linhas`);
     ok(await p.evaluate(() => getComputedStyle(document.getElementById('sair')).color) !== await p.evaluate(() => getComputedStyle(document.querySelector('[data-voce="semana"]')).color), `${tag}: Sair em vermelho`);
     ok(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${tag}: sem rolagem horizontal`);
     {

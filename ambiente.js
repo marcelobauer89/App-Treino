@@ -17,7 +17,9 @@
     },
   };
   var p = dev ? projetos.desenvolvimento : projetos.producao;
-  window.AMBIENTE = { dev: dev, url: p.url, chave: p.chave };
+  // Área do personal (personal.html, convite do personal e Meu personal no app): por enquanto só no ambiente de
+  // testes. Para ligar em produção, troque areaPersonal: dev por areaPersonal: true (docs/RECURSOS.md → Área do personal).
+  window.AMBIENTE = { dev: dev, url: p.url, chave: p.chave, areaPersonal: dev };
   if (!dev) return;
 
   // App instalável do dev com outro nome ("[DEV] Gestão de Treinos"), para não confundir com o de verdade na tela inicial.

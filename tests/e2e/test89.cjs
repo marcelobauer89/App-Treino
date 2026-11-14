@@ -15,7 +15,7 @@ const TREINOS = { 1: { nome: 'Treino A', subtitulo: 'Peito', recado: 'Suba a car
 
   // 1. Conta nova sem acesso abre o link do personal: vê nome e CREF, aceita e entra no app sem a escolha de objetivo.
   for (const scheme of ['light', 'dark']) {
-    const p = await H.novaPagina(b, { scheme, viewport: { width: 390, height: 844 },
+    const p = await H.novaPagina(b, { personal: true, scheme, viewport: { width: 390, height: 844 },
       extra: { perfis: [{ id: 'u1', nome: 'Aluna Nova', email: 'nova@exemplo.com', liberado: false, novidade_oculta: null }], profissionais: [PROF], vinculos: [convite()] } });
     await p.clock.install({ time: T });
     await p.goto(`${H.PAGINA}?personal=pqr234`); await p.waitForSelector('#personal-dialog[open]');
@@ -38,7 +38,7 @@ const TREINOS = { 1: { nome: 'Treino A', subtitulo: 'Peito', recado: 'Suba a car
 
   // 2. Já é aluno: treinos do personal com recado, aviso de treinos novos, Meus treinos só de leitura e encerrar.
   {
-    const p = await H.novaPagina(b, { viewport: { width: 390, height: 844 },
+    const p = await H.novaPagina(b, { personal: true, viewport: { width: 390, height: 844 },
       extra: { perfis: [{ id: 'u1', nome: 'Aluna', email: 'aluna@exemplo.com', acompanhado_por: 'p1', treinos_por: 'p1', treinos_em: ISO(0), treinos: TREINOS }],
         profissionais: [PROF], vinculos: [convite({ aluno_id: 'u1', aceito_em: ISO(3) })] } });
     await p.clock.install({ time: T });
@@ -69,7 +69,7 @@ const TREINOS = { 1: { nome: 'Treino A', subtitulo: 'Peito', recado: 'Suba a car
 
   // 3. Convite que não vale: explica o motivo; sem acesso, cai na tela de convidados.
   {
-    const p = await H.novaPagina(b, { extra: { perfis: [{ id: 'u1', nome: 'Visitante', email: 'v@exemplo.com', liberado: false }], profissionais: [PROF], vinculos: [convite({ expira_em: ISO(1) })] } });
+    const p = await H.novaPagina(b, { personal: true, extra: { perfis: [{ id: 'u1', nome: 'Visitante', email: 'v@exemplo.com', liberado: false }], profissionais: [PROF], vinculos: [convite({ expira_em: ISO(1) })] } });
     await p.clock.install({ time: T });
     await p.goto(`${H.PAGINA}?personal=PQR234`); await p.waitForSelector('#personal-dialog[open]');
     ok(/expirou/.test(await p.locator('#personal-body').innerText()), 'convite vencido explica o motivo');

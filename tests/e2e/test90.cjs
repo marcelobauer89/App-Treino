@@ -40,7 +40,7 @@ const base = (extra = {}) => ({
 
   // 1. Sem cadastro: pede nome, CREF e UF; depois mostra o pedido aguardando.
   {
-    const p = await H.novaPagina(b, { extra: base({ profissionais: [], vinculos: [] }) });
+    const p = await H.novaPagina(b, { personal: true, extra: base({ profissionais: [], vinculos: [] }) });
     await p.clock.install({ time: T });
     await p.goto(PERSONAL); await p.waitForSelector('#pf-form');
     ok((await p.locator('#pf-nome').inputValue()) === 'Marcelo Bauer', 'cadastro: nome da conta Google preenchido');
@@ -58,7 +58,7 @@ const base = (extra = {}) => ({
 
   // 2. Liberado: monitoramento só dos alunos, fichas, aplicar, ajustar, convidar e encerrar.
   for (const [scheme, viewport] of [['light', { width: 390, height: 844 }], ['dark', { width: 1280, height: 900 }]]) {
-    const p = await H.novaPagina(b, { scheme, viewport, extra: base() });
+    const p = await H.novaPagina(b, { personal: true, scheme, viewport, extra: base() });
     await p.clock.install({ time: T });
     await p.goto(PERSONAL); await p.waitForSelector('#painel:not([hidden])');
     await p.waitForTimeout(300);
@@ -157,7 +157,7 @@ const base = (extra = {}) => ({
 
   // 3. Monitoramento do administrador: aba Profissionais com o pedido e o botão Liberar.
   {
-    const p = await H.novaPagina(b, { extra: base({ admin: { ids: ['u1'] }, profissionais: [{ usuario_id: 'a3', nome: 'Pessoa Fora', cref: '999999-G', uf: 'MG', pedido_em: ISO(1), liberado_em: null, bloqueado_em: null, limite_alunos: 30 }] }) });
+    const p = await H.novaPagina(b, { personal: true, extra: base({ admin: { ids: ['u1'] }, profissionais: [{ usuario_id: 'a3', nome: 'Pessoa Fora', cref: '999999-G', uf: 'MG', pedido_em: ISO(1), liberado_em: null, bloqueado_em: null, limite_alunos: 30 }] }) });
     await p.clock.install({ time: T });
     await p.goto(H.PAGINA.replace('index.html', 'admin.html#profissionais')); await p.waitForSelector('#painel:not([hidden])');
     await p.waitForTimeout(300);
@@ -168,6 +168,22 @@ const base = (extra = {}) => ({
     ok(!!(await H.banco(p)).profissionais[0].liberado_em, 'admin: Liberar grava a liberação');
     ok(/Liberado/.test(await p.locator('#prof-lista').innerText()), 'admin: situação muda para Liberado');
     ok(!p.errs.length, 'admin: sem erros na página', p.errs.join(' | '));
+    await p.context().close();
+  }
+
+  // 4. Área desligada (produção, por enquanto): a página avisa, o app ignora o convite e o monitoramento não tem Profissionais.
+  {
+    const p = await H.novaPagina(b, { extra: base({ admin: { ids: ['u1'] } }) });
+    await p.clock.install({ time: T });
+    await p.goto(PERSONAL); await p.waitForSelector('text=ainda não está disponível');
+    ok(await p.locator('#painel').isHidden(), 'desligada: a área do personal não abre');
+    await p.goto(`${H.PAGINA}?personal=PQR234`); await H.prontos(p); await p.waitForTimeout(300);
+    ok(!(await p.locator('#personal-dialog[open]').count()) && !/personal=/.test(await p.evaluate(() => location.search)), 'desligada: o app ignora o convite do personal');
+    await H.voce(p); await p.waitForTimeout(80);
+    ok(await p.locator('#grupo-personal').isHidden(), 'desligada: Você sem Meu personal');
+    await p.goto(H.PAGINA.replace('index.html', 'admin.html')); await p.waitForSelector('#painel:not([hidden])');
+    ok(await p.locator('#tab-profissionais').isHidden(), 'desligada: monitoramento sem a aba Profissionais');
+    ok(!p.errs.length, 'desligada: sem erros na página', p.errs.join(' | '));
     await p.context().close();
   }
 

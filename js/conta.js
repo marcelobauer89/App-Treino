@@ -78,7 +78,7 @@
         ${novidadeFoto ? `<li>${ICON_CHECK}<span>Agora dá para anexar uma foto ao check-in, se quiser. Ela fica guardada de forma privada: só você vê; o administrador não.</span></li>` : ''}
         <li>${ICON_CHECK}<span>O administrador vê quem está com o app aberto, em que tela, e o histórico de uso. Não vê pesos, cargas nem observações.</span></li>
         <li>${ICON_CHECK}<span>Observações nos check-ins ficam desligadas até você ligar em Você → Privacidade.</span></li>
-        <li>${ICON_CHECK}<span>Se um personal trainer convidar você e você aceitar, ele vê seus treinos, semana, check-ins e pesos (nunca observações e fotos) até você encerrar em Você → Meu personal.</span></li>
+        ${AREA_PERSONAL ? `<li>${ICON_CHECK}<span>Se um personal trainer convidar você e você aceitar, ele vê seus treinos, semana, check-ins e pesos (nunca observações e fotos) até você encerrar em Você → Meu personal.</span></li>` : ''}
         <li>${ICON_CHECK}<span>Em Você → Privacidade você baixa seus dados, e em Você dá para excluir a conta.</span></li>
       </ul>`;
   }
@@ -206,7 +206,7 @@
   // Libera a entrada no app: conta liberada, administrador ou convite válido. Senão mostra a tela de convidados.
   // Um convite de personal (?personal=CODIGO) vem antes: aceitar também libera a conta.
   async function temAcesso() {
-    const codPersonal = codigoPersonalGuardado();
+    const codPersonal = AREA_PERSONAL ? codigoPersonalGuardado() : '';
     if (codPersonal) {
       esquecerCodigoPersonal();
       if ((await oferecerPersonal(codPersonal)) === 'ok') {
@@ -287,7 +287,8 @@
     const busca = new URLSearchParams(location.search);
     const codigo = (busca.get('personal') || '').replace(/\s/g, '').toUpperCase().slice(0, 12);
     if (!codigo) return;
-    try { localStorage.setItem(CHAVE_PERSONAL, codigo); } catch (_) {}
+    // Com a área desligada (produção, por enquanto), o código só sai do endereço.
+    if (AREA_PERSONAL) try { localStorage.setItem(CHAVE_PERSONAL, codigo); } catch (_) {}
     busca.delete('personal');
     history.replaceState(null, '', location.pathname + (busca.toString() ? `?${busca}` : '') + location.hash);
   })();

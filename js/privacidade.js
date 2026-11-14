@@ -6,6 +6,13 @@
     if (temaSalvo === 'claro') document.documentElement.dataset.theme = 'light';
     if (temaSalvo === 'escuro') document.documentElement.dataset.theme = 'dark';
   } catch (_) {}
+  // Área do personal desligada neste ambiente (ambiente.js): o que fala dela some e vale a data da versão anterior.
+  if (!(window.AMBIENTE && window.AMBIENTE.areaPersonal)) {
+    document.addEventListener('DOMContentLoaded', function () {
+      document.querySelectorAll('[data-area-personal]').forEach(function (el) { el.hidden = true; });
+      document.querySelectorAll('[data-sem-personal]').forEach(function (el) { el.hidden = false; });
+    });
+  }
   // Aberta dentro do app (janela da política): sem o "Voltar" nem o título, que já estão na janela.
   if (/[?&]embed=1/.test(location.search)) document.documentElement.classList.add('embed');
 })();
