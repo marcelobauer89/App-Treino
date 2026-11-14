@@ -297,7 +297,7 @@
     usado: 'Esse convite já foi usado. Peça um novo ao seu personal.',
     expirado: 'Esse convite expirou (ele vale 7 dias). Peça um novo ao seu personal.',
     cancelado: 'Esse convite foi cancelado. Peça um novo ao seu personal.',
-    proprio: 'Esse é um convite seu, para os seus alunos. Mande o link para o aluno abrir no celular dele.',
+    proprio: 'Você abriu o convite na sua própria conta de personal. Ele continua valendo: mande o link para o aluno abrir no celular dele, logado na conta dele.',
     lotado: 'O seu personal chegou ao limite de alunos. Avise ele para liberar uma vaga.',
   };
   const itensPersonal = () => `
@@ -317,7 +317,7 @@
       const fim = (r) => { personalDialog.close(); resolver(r); };
       if (situacao !== 'ok') {
         $('personal-body').innerHTML = `
-          <div class="modal-head"><div><span class="novidade-selo">Convite do personal</span><h3 id="personal-title">Não deu certo</h3></div></div>
+          <div class="modal-head"><div><span class="novidade-selo">Convite do personal</span><h3 id="personal-title">${situacao === 'proprio' ? 'Esse convite é seu' : 'Não deu certo'}</h3></div></div>
           <p class="resumo-enc">${situacao === 'erro' ? 'Não foi possível conferir o convite. Confira a internet e abra o link de novo.' : MOTIVOS_PERSONAL[situacao] || MOTIVOS_PERSONAL.invalido}</p>
           <div class="novidade-acoes"><button class="modal-done" type="button" data-personal="nao">Entendi</button></div>`;
       } else {

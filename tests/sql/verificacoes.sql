@@ -275,6 +275,24 @@ do $$ declare f uuid; begin
   exception when check_violation then null; end;
 end $$;
 
+-- O próprio convite: bloqueado por padrão; liberado só com o ajuste 'convite_proprio' (projeto de testes).
+do $$ begin
+  if (select situacao from public.ver_convite_personal((select codigo from conv where quem = 'bruno'))) <> 'proprio' then
+    raise exception 'FALHOU: o personal não aceita o próprio convite'; end if;
+  begin insert into public.ajustes_banco values ('convite_proprio', 'sim'); raise exception 'FALHOU: a API não grava em ajustes_banco';
+  exception when insufficient_privilege then null; end;
+end $$;
+reset role;
+insert into public.ajustes_banco values ('convite_proprio', 'sim');
+set local role authenticated;
+do $$ begin perform set_config('request.jwt.claim.sub', '44444444-4444-4444-4444-444444444444', true); end $$;
+do $$ begin
+  if (select situacao from public.ver_convite_personal((select codigo from conv where quem = 'bruno'))) <> 'ok' then
+    raise exception 'FALHOU: com o ajuste ligado, o personal pode abrir o próprio convite'; end if;
+end $$;
+reset role;
+delete from public.ajustes_banco;
+
 -- Bruno vê o convite e aceita; Caio é aluno de outro jeito? Não: Caio aceita e depois encerra.
 reset role;
 set local role authenticated;
