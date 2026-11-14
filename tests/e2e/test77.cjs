@@ -59,8 +59,11 @@ const colunas = (p) => p.locator('.evo-col').evaluateAll((gs) => gs.map((g) => `
     ok(/Musculação 2 Treino 1 · 1×, Treino 2 · 1×/.test(quais) && /Jiu Jitsu 1/.test(quais) && /Futebol 1/.test(quais), `${tag}: quais foram, com os treinos de musculação`, quais);
     const pesos = await p.locator('#evo-pesos li').allInnerTexts();
     const pz = pesos.map((t) => t.replace(/\s+/g, ' ').trim());
-    ok(pz[0] && /^Puxada 🏆 40 kg ▲ 2,5 kg em relação a outubro/.test(pz[0]), `${tag}: Puxada subiu e é recorde (primeiro da lista)`, pz[0]);
-    ok(pz.some((t) => /^Remada inversa 10 kg igual ao mês anterior/.test(t)) && pz.some((t) => /^Supino no chão 17,5 kg ▼ 2,5 kg/.test(t)) && pz.some((t) => /^Desenvolvimento 12 kg novo neste mês/.test(t)), `${tag}: igual, caiu e novo`, pz.join(' | '));
+    ok(pz[0] && /^1 ?Puxada 🏆 40 kg ▲ 2,5 kg em relação a outubro/.test(pz[0]), `${tag}: Puxada subiu e é recorde (primeiro da lista)`, pz[0]);
+    ok(pz.map((t) => t.replace(/^\d+ ?/, '').split(' ')[0]).join(',') === 'Puxada,Supino,Desenvolvimento,Remada', `${tag}: maiores pesos do mais pesado para o mais leve`, pz.join(' | '));
+    ok(await p.locator('#evo-pesos-todos').isHidden(), `${tag}: com 4 exercícios, sem "Ver todos"`);
+    ok((await txt(p, '#evo-pesos-titulo')) === 'Seus maiores pesos' && (await txt(p, '#evo-parados-titulo')) === 'Pesos estagnados', `${tag}: títulos dos cards de pesos`);
+    ok(pz.some((t) => /^\d+ ?Remada inversa 10 kg igual ao mês anterior/.test(t)) && pz.some((t) => /^\d+ ?Supino no chão 17,5 kg ▼ 2,5 kg/.test(t)) && pz.some((t) => /^\d+ ?Desenvolvimento 12 kg novo neste mês/.test(t)), `${tag}: igual, caiu e novo`, pz.join(' | '));
     ok(!pz.some((t) => /Desenvolvimento 🏆/.test(t)), `${tag}: primeiro registro não conta como recorde`);
     // Quanto falta: novembro tem 21 treinos no plano (seg 5, ter 4, qua 4, qui 4, sex 4); 4 feitos; 20 dias contando hoje.
     const falta = await txt(p, '#evo-falta');
@@ -73,13 +76,14 @@ const colunas = (p) => p.locator('.evo-col').evaluateAll((gs) => gs.map((g) => `
     ok(/^💡 A quinta é o dia que você mais pula nos últimos 3 meses \(treinou em 1 de 9\)/.test(await txt(p, '#evo-dica')) && await p.getAttribute('#evo-dica a', 'href') === '#voce/semana', `${tag}: dica do dia que mais falha, com o atalho`, await txt(p, '#evo-dica'));
     // Hora de subir a carga?: parado há 3 meses (com a sugestão) e o que caiu.
     const par = (await p.locator('#evo-parados li').allInnerTexts()).map((t) => t.replace(/\s+/g, ' ').trim());
-    ok(par.length === 2 && /^Remada inversa parado 10 kg Mesma carga desde setembro \(3 meses, 3 treinos\)\. Se as séries estão fáceis, tente 12 kg\./.test(par[0]) && /^Supino no chão caiu 17,5 kg Abaixo dos 20 kg de outubro/.test(par[1]), `${tag}: hora de subir a carga`, par.join(' | '));
+    ok(par.length === 2 && /^Remada inversa estagnado 10 kg Mesma carga desde setembro \(3 meses, 3 treinos\)\. Se as séries estão fáceis, tente 12 kg\./.test(par[0]) && /^Supino no chão caiu 17,5 kg Abaixo dos 20 kg de outubro/.test(par[1]), `${tag}: hora de subir a carga`, par.join(' | '));
     await p.screenshot({ path: `${H.SAIDA}/evolucao-${tag}.png`, fullPage: true });
     // Tocar em outubro muda o resumo.
     await p.click('[data-evo-mes="2026-10"]'); await p.waitForTimeout(120);
     ok((await txt(p, '#evo-mes-titulo')) === 'Outubro de 2026' && /Treinos 6 ?▲ 3/.test(await txt(p, '#evo-numeros')), `${tag}: tocar em outubro mostra outubro`, await txt(p, '#evo-numeros'));
     ok(/Musculação 4 Treino 1 · 2×, Treino 2 · 2×/.test(await txt(p, '#evo-quais')), `${tag}: outubro, quais foram`);
-    ok(await p.locator('#evo-falta').isHidden() && await p.locator('#evo-dica').isHidden() && await p.locator('#evo-parados-bloco').isHidden(), `${tag}: mês passado sem "quanto falta", sem dica e sem parados`);
+    ok(await p.locator('#evo-falta').isHidden() && await p.locator('#evo-dica').isHidden(), `${tag}: mês passado sem "quanto falta" e sem dica`);
+    ok(/^Remada inversa estagnado 10 kg Mesma carga desde setembro \(2 meses/.test(await txt(p, '#evo-parados li')), `${tag}: outubro: 2 meses com a mesma carga já é estagnado`, await txt(p, '#evo-parados li'));
     ok((await txt(p, '#evo-plano-quando')) === 'mês inteiro' && /^J Jiu Jitsu terça e quinta 1 de 9/.test(await txt(p, '#evo-plano li')), `${tag}: plano de outubro no mês inteiro`, await txt(p, '#evo-plano li'));
     // Tabela
     await p.click('#evo-tabela-btn'); await p.waitForTimeout(80);
@@ -111,7 +115,7 @@ const colunas = (p) => p.locator('.evo-col').evaluateAll((gs) => gs.map((g) => `
     await p.click('[data-tela="dashboard"]'); await p.click('#dash-aba-evolucao'); await p.waitForTimeout(150);
     ok(/Faça o primeiro check-in/.test(await txt(p, '#evo-quais')) && /Nenhum peso registrado/.test(await txt(p, '#evo-pesos')), 'conta nova: mensagens');
     ok(await p.locator('[data-evo-nav="-1"]').isDisabled(), 'conta nova: sem meses para trás');
-    ok(await p.locator('#evo-parados-bloco').isHidden() && await p.locator('#evo-dica').isHidden(), 'conta nova: sem parados e sem dica');
+    ok(/Registre os pesos/.test(await txt(p, '#evo-parados')) && await p.locator('#evo-dica').isHidden(), 'conta nova: estagnados com a mensagem e sem dica');
     ok(!p.errs.length, 'conta nova: sem erros', p.errs.join(' | '));
     await p.context().close();
   }
@@ -124,7 +128,7 @@ const colunas = (p) => p.locator('.evo-col').evaluateAll((gs) => gs.map((g) => `
     const p = await abrir(b, { cargas, extra: c });
     await p.click('[data-tela="dashboard"]'); await p.click('#dash-aba-evolucao'); await p.waitForTimeout(150);
     const pz = (await p.locator('#evo-pesos li').allInnerTexts()).map((t) => t.replace(/\s+/g, ' ').trim());
-    ok(pz.some((t) => /^Puxada frontal 🏆 42,5 kg ▲ 5 kg/.test(t)) && !pz.some((t) => /^Puxada \d/.test(t)), 'renomeado: nome novo e o histórico do nome antigo junto', pz.join(' | '));
+    ok(pz.some((t) => /^\d+ ?Puxada frontal 🏆 42,5 kg ▲ 5 kg/.test(t)) && !pz.some((t) => /^\d+ ?Puxada \d/.test(t)), 'renomeado: nome novo e o histórico do nome antigo junto', pz.join(' | '));
     ok(!p.errs.length, 'renomeado: sem erros', p.errs.join(' | '));
     await p.context().close();
   }

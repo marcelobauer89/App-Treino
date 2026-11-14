@@ -720,6 +720,9 @@
   .evo-dica { margin: 8px 2px 0; color: var(--tinta-2); font-size: 14px; line-height: 1.45; }
   .evo-dica b { color: var(--tinta); }
   .evo-dica a { white-space: nowrap; }
+  /* Seus maiores pesos: posição no ranking. */
+  .evo-pos { display: inline-grid; place-items: center; min-width: 20px; height: 20px; margin-right: 8px; border-radius: 6px; background: var(--marca-suave); color: var(--marca-tinta); font-size: 12px; font-weight: 800; vertical-align: 1px; }
+  #evo-pesos-todos { margin-top: 10px; }
   .evo-aviso { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 999px; background: var(--recorde-suave); color: var(--recorde-tinta); font-size: 12px; font-weight: 800; }
   .evo-lista .evo-vazio-txt { display: block; padding: 6px 0; color: var(--tinta-2); font-size: 14px; border: 0; }
   .bloco { margin-top: 28px; }

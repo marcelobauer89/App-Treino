@@ -100,7 +100,7 @@ Rode só os da área mexida: `node tests/rodar.cjs test20 test22 …`.
 | Pesos, Sem peso e recordes | test20, test22, test24, test80 |
 | Check-in (botão, formulário, foto, celebração) | test19, test51, test72 |
 | Atividades (muay, surf, futebol, calistenia) | test37, test48, test68, test75 |
-| Dashboard e Evolução | test23, test76, test77 |
+| Dashboard e Evolução (inclui os cards de maiores pesos e pesos estagnados) | test23, test76, test77 |
 | Você (perfil, lista, temporizador) | test25, test39, test70 |
 | Minha semana | test17 |
 | Meus treinos, biblioteca e jornadas | test36, test38, test40, test55, test58, test59, test63, test71, test73 |

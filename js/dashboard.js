@@ -339,19 +339,27 @@
       return `<li><span class="evo-nome">${seloHTML(g === 'musc' ? (TIPOS_MUSC.find((t) => r.porTipo[t]) || 't1') : g)}${esc(nomeGrupo(g))}</span>
         <span class="evo-valor">${r.porGrupo[g]}</span>${treinos ? `<small>${esc(treinos)}</small>` : ''}</li>`;
     }).join('') : `<li class="evo-vazio-txt">${checkins.length ? `Nenhum treino em ${esc(nomeMesChave(evo.sel))}.` : 'Seus treinos vão aparecer aqui. Faça o primeiro check-in!'}</li>`;
-    // Pesos: maior carga de cada exercício no mês, a variação para o mês anterior e o recorde.
+    // Seus maiores pesos: os exercícios do mês do mais pesado para o mais leve, com o recorde e a variação para o
+    // mês anterior. Mostra os 5 primeiros; "Ver todos" abre o resto.
     const noMes = maioresCargas((d) => d.startsWith(evo.sel));
     const antes = maioresCargas((d) => d.startsWith(somarMeses(evo.sel, -1)));
     const itens = [...noMes.entries()].map(([chave, v]) => {
       const a = antes.get(chave);
       const rec = recordeAntes(v.nome, `${evo.sel}-01`);
       return { chave, kg: v.kg, dif: a ? v.kg - a.kg : null, recorde: !!rec && v.kg > rec.kg };
-    }).sort((x, y2) => (y2.dif ?? -Infinity) - (x.dif ?? -Infinity) || x.chave.localeCompare(y2.chave, 'pt-BR'));
-    $('evo-pesos').innerHTML = itens.length ? itens.map((it) => `
-      <li><span class="evo-nome">${esc(it.chave)}${it.recorde ? ' <span title="Recorde no mês" aria-label="Recorde no mês">🏆</span>' : ''}</span>
+    }).sort((x, y2) => y2.kg - x.kg || x.chave.localeCompare(y2.chave, 'pt-BR'));
+    const MOSTRAR = 5;
+    const visiveis = evo.pesosTodos ? itens : itens.slice(0, MOSTRAR);
+    $('evo-pesos-quando').textContent = itens.length ? `${itens.length} exercício${itens.length > 1 ? 's' : ''}` : '';
+    $('evo-pesos').innerHTML = itens.length ? visiveis.map((it, i) => `
+      <li><span class="evo-nome"><span class="evo-pos" aria-hidden="true">${i + 1}</span>${esc(it.chave)}${it.recorde ? ' <span title="Recorde no mês" aria-label="Recorde no mês">🏆</span>' : ''}</span>
         <span class="evo-valor">${fmtKg(it.kg)} kg</span>
         <small>${it.dif === null ? 'novo neste mês' : it.dif === 0 ? 'igual ao mês anterior' : `${it.dif > 0 ? '▲' : '▼'} ${fmtKg(Math.abs(it.dif))} kg em relação a ${esc(nomeMesChave(somarMeses(evo.sel, -1)))}`}</small></li>`).join('')
       : '<li class="evo-vazio-txt">Nenhum peso registrado neste mês.</li>';
+    const btn = $('evo-pesos-todos');
+    btn.hidden = itens.length <= MOSTRAR;
+    btn.textContent = evo.pesosTodos ? 'Ver só os 5 maiores' : `Ver todos (${itens.length})`;
+    btn.setAttribute('aria-expanded', String(!!evo.pesosTodos));
     renderFaltaEvo(r);
     renderPlanoEvo();
     renderParadosEvo(noMes, antes);
@@ -418,8 +426,8 @@
     dica.innerHTML = `💡 ${pior.d === 0 || pior.d === 6 ? 'O' : 'A'} <b>${NOMES_DIA[pior.d]}</b> é o dia que você mais pula nos últimos 3 meses (treinou em ${pior.feito} de ${pior.plano}). Que tal rever esse dia? <a class="link-btn" href="#voce/semana">Abrir Minha semana</a>`;
     dica.hidden = false;
   }
-  // Hora de subir a carga?: exercícios com a mesma carga máxima há 3 meses seguidos ou mais (com a sugestão de
-  // +2 kg até 20 kg e +2,5 kg acima) e os que caíram em relação ao mês anterior. Sem nenhum, a seção some.
+  // Pesos estagnados: exercícios com a mesma carga máxima há 2 meses seguidos ou mais (com a sugestão de +2 kg até
+  // 20 kg e +2,5 kg acima) e os que caíram em relação ao mês anterior. Sem nenhum, a seção diz que está tudo subindo.
   function renderParadosEvo(noMes, antes) {
     const cache = new Map();
     const doMes = (k) => { if (!cache.has(k)) cache.set(k, maioresCargas((d) => d.startsWith(k))); return cache.get(k); };
@@ -431,20 +439,20 @@
         if (!x || x.kg !== v.kg) break;
         meses += 1; ini = k;
       }
-      if (meses >= 3) {
+      if (meses >= 2) {
         const treinos = cargas.filter((r) => r.data >= `${ini}-01` && r.data.slice(0, 7) <= evo.sel
           && Object.entries(r.series || {}).some(([n, s]) => nomeAtual(n) === chave && maxDoDia(s) > 0)).length;
         const sug = v.kg + (v.kg < 20 ? 2 : 2.5);
-        itens.push({ chave, kg: v.kg, tipo: 'parado', txt: `Mesma carga desde ${nomeMesChave(ini)} (${meses} meses, ${treinos} ${treinos === 1 ? 'treino' : 'treinos'}). Se as séries estão fáceis, tente ${fmtKg(sug)} kg.` });
+        itens.push({ chave, kg: v.kg, tipo: 'estagnado', txt: `Mesma carga desde ${nomeMesChave(ini)} (${meses} meses, ${treinos} ${treinos === 1 ? 'treino' : 'treinos'}). Se as séries estão fáceis, tente ${fmtKg(sug)} kg.` });
         return;
       }
       const a = antes.get(chave);
       if (a && v.kg < a.kg) itens.push({ chave, kg: v.kg, tipo: 'caiu', txt: `Abaixo dos ${fmtKg(a.kg)} kg de ${nomeMesChave(somarMeses(evo.sel, -1))}. Vale conferir a técnica ou o descanso.` });
     });
-    itens.sort((x, y) => (x.tipo === y.tipo ? x.chave.localeCompare(y.chave, 'pt-BR') : x.tipo === 'parado' ? -1 : 1));
-    $('evo-parados-bloco').hidden = !itens.length;
-    $('evo-parados').innerHTML = itens.map((it) => `
-      <li><span class="evo-nome">${esc(it.chave)} <span class="evo-aviso">${it.tipo}</span></span><span class="evo-valor">${fmtKg(it.kg)} kg</span><small>${esc(it.txt)}</small></li>`).join('');
+    itens.sort((x, y) => (x.tipo === y.tipo ? x.chave.localeCompare(y.chave, 'pt-BR') : x.tipo === 'estagnado' ? -1 : 1));
+    $('evo-parados').innerHTML = itens.length ? itens.map((it) => `
+      <li><span class="evo-nome">${esc(it.chave)} <span class="evo-aviso">${it.tipo}</span></span><span class="evo-valor">${fmtKg(it.kg)} kg</span><small>${esc(it.txt)}</small></li>`).join('')
+      : `<li class="evo-vazio-txt">${noMes.size ? 'Nenhum peso estagnado: tudo subiu ou é novo neste mês. 💪' : 'Registre os pesos dos treinos para ver quais estão estagnados.'}</li>`;
   }
   function mostrarAbaDash(aba, { focar = false, url = true } = {}) {
     evo.aba = aba === 'evolucao' ? 'evolucao' : 'resumo';
@@ -480,6 +488,7 @@
       $('evo-tabela-btn').setAttribute('aria-expanded', String(evo.tabela));
       $('evo-tabela-btn').textContent = evo.tabela ? 'Esconder tabela' : 'Ver tabela';
     }
+    if (e.target.closest('#evo-pesos-todos')) { evo.pesosTodos = !evo.pesosTodos; renderMesEvolucao(); }
   });
   $('dash-evolucao').addEventListener('keydown', (e) => {
     const col = e.target.closest('[data-evo-mes]');
