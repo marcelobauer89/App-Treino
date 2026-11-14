@@ -286,7 +286,7 @@ O monitoramento usa mais duas tabelas e um canal ao vivo:
 
 Ajustes únicos de dados ficam em `supabase/ajustes/` e rodam uma vez no SQL Editor, depois do `schema.sql`:
 - **`2026-10-20-peso-zero-para-sem-peso.sql`:** marca como Sem peso os exercícios em que todas as cargas do usuário são zero (número ou texto, como `"0"`), com prévia antes de alterar; não apaga registros.
-- **`2026-10-20-zero-vira-feito-marcelo.sql`:** para um usuário (Marcelo Bauer no arquivo), marca como Sem peso os exercícios registrados só com zero e troca esses zeros pelo registro de feito do dia.
+- **`2026-10-20-zero-vira-feito-usuario.sql`:** para um usuário (troque o nome no arquivo), marca como Sem peso os exercícios registrados só com zero e troca esses zeros pelo registro de feito do dia.
 - **`2026-10-20-diagnostico-sem-peso.sql`:** só consulta; lista por usuário os exercícios com carga zero, quantas séries são zero, quantas têm peso, quantas estão como texto e se já estão como Sem peso.
 
 No primeiro login em cada aparelho, os check-ins e configurações que estavam só no navegador (versões anteriores) são enviados para a conta. Contas sem semana salva usam a padrão, montada com os antigos dias de Jiu Jitsu.

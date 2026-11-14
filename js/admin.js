@@ -1,9 +1,9 @@
 // js/admin.js: o monitoramento (admin.html), só para administradores. Seções em docs/MAPA.md.
-// O mesmo painel serve a área do personal (personal.html, window.MODO_PAINEL = 'personal'): lá os dados vêm das
+// O mesmo painel serve a área do personal (personal.html, <html data-painel="personal">): lá os dados vêm das
 // funções personal_* (só os alunos do personal) e o que é só do administrador fica de fora. O resto da área
 // (cadastro, fichas, convites e o que vai na ficha do aluno) fica em js/personal.js, pelos ganchos window.PersonalHooks.
 (() => {
-  const PERSONAL = window.MODO_PAINEL === 'personal';
+  const PERSONAL = document.documentElement.dataset.painel === 'personal';
   const GANCHOS = () => window.PersonalHooks || {};
   // ---------- Conexão (mesmo projeto do app, definido no ambiente.js) ----------
   const SUPABASE_URL = window.AMBIENTE.url;

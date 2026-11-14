@@ -5,17 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>Monitoramento • Gestão de Treinos</title>
+<!-- Segurança (CSP): o navegador só roda scripts do próprio site e só conversa com o Supabase. Ao usar um serviço
+     externo novo (imagem, vídeo, API), acrescente o endereço nas quatro páginas: index, admin, personal e privacidade. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-src 'self' https://www.youtube-nocookie.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <script src="ambiente.js"></script>
-<script>
-  // Mesmo tema escolhido no app (Você → Aparência), aplicado antes da primeira pintura.
-  try {
-    var temaSalvo = localStorage.getItem('bauer-tema');
-    if (temaSalvo === 'claro') document.documentElement.dataset.theme = 'light';
-    if (temaSalvo === 'escuro') document.documentElement.dataset.theme = 'dark';
-    var estiloSalvo = localStorage.getItem('bauer-estilo');
-    if (estiloSalvo && estiloSalvo !== 'padrao' && /^[a-z_]+$/.test(estiloSalvo)) document.documentElement.dataset.estilo = estiloSalvo;
-  } catch (_) {}
-</script>
+<script src="js/admin-antes-da-pintura.js?v=dev"></script>
 <link rel="stylesheet" href="fonts/archivo.css">
 <link rel="stylesheet" href="css/admin.css?v=dev">
 </head>
@@ -343,7 +337,8 @@
   <div class="det-corpo" id="det-corpo"></div>
 </dialog>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
+<!-- Biblioteca do Supabase guardada no próprio site (conferida com o hash do jsDelivr), sem depender de CDN. -->
+<script src="js/vendor/supabase-2.117.2.js"></script>
 <script src="js/admin.js?v=dev"></script>
 </body>
 </html>

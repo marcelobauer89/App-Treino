@@ -11,9 +11,11 @@ Ao criar, renomear ou apagar uma seção ou um teste, atualize este mapa no mesm
 | `index.html` | HTML das telas e janelas do app; carrega `css/app.css` e os arquivos de `js/` na ordem abaixo |
 | `css/app.css` | Estilos do app |
 | `js/*.js` | JavaScript do app, um arquivo por área (tabela abaixo). Todos dividem o mesmo escopo global: o que um arquivo define, os seguintes usam. Código que roda ao carregar só pode usar o que já foi carregado antes |
+| `js/antes-da-pintura.js`, `js/admin-antes-da-pintura.js` | Tema aplicado antes da primeira pintura (index e admin); fora do HTML por causa da CSP |
+| `js/vendor/supabase-<versão>.js` | Biblioteca do Supabase guardada no site (ver RECURSOS → Segurança) |
 | `admin.html`, `css/admin.css`, `js/admin.js` | Monitoramento (só administradores) |
-| `personal.html`, `css/personal.css`, `js/personal.js` | Área do personal: usa também o `js/admin.js` no modo personal (`window.MODO_PAINEL = 'personal'`) e o `js/dados.js` (biblioteca e treinos prontos) |
-| `privacidade.html` | Política de Privacidade |
+| `personal.html`, `css/personal.css`, `js/personal.js` | Área do personal: usa também o `js/admin.js` no modo personal (`<html data-painel="personal">`) e o `js/dados.js` (biblioteca e treinos prontos) |
+| `privacidade.html`, `js/privacidade.js` | Política de Privacidade e o script dela |
 | `manifest.webmanifest`, `manifest-dev.webmanifest`, `icones/`, `sw.js` | App instalável (PWA): manifesto, ícones e service worker (registrado no `js/inicio.js`) |
 | `ambiente.js` | Projeto Supabase de produção ou de testes (por endereço) e o selo DEV |
 | `supabase/schema.sql` | Banco inteiro (tabelas, RLS, funções); roda de novo sem duplicar |
@@ -84,7 +86,7 @@ Na ordem de carga. Cada linha é uma seção (comentário `// ---------- Nome --
 
 Conexão · Estado · Acesso · On-line agora (Presence) · Cálculos (números da Visão geral) · Render (Visão geral e gráficos) · Usuários · Saúde do app · E-mails · Abas · Detalhe do usuário · Eventos de interface · Excluir conta de um usuário · Convites · Exercícios (catálogo) · Profissionais (área do personal) · Tipos de check-in (tabela tipos_checkin).
 
-No modo personal (`personal.html`), o começo do arquivo troca as funções do banco (`FN`), devolve um elemento "fantasma" para o que só existe no `admin.html` e troca "usuário" por "aluno" (`trocarPalavras`); o resto da área fica nos ganchos `window.PersonalHooks`.
+No modo personal (`personal.html`, `<html data-painel="personal">`), o começo do arquivo troca as funções do banco (`FN`), devolve um elemento "fantasma" para o que só existe no `admin.html` e troca "usuário" por "aluno" (`trocarPalavras`); o resto da área fica nos ganchos `window.PersonalHooks`.
 
 ## `js/personal.js` (área do personal): seções
 
@@ -123,6 +125,7 @@ Rode só os da área mexida: `node tests/rodar.cjs test20 test22 …`.
 | App instalável (PWA), service worker, Instalar o app e sem internet (cópia dos dados e fila de envio) | test83, test84, test85 |
 | Identidade "Gestão de Treinos" (nome, descrição, semana padrão sem jiu, ordem dos objetivos) | test86 |
 | Tipos de check-in do painel, Cardio com modalidade e km, botões do editor e animação ao salvar | test87 |
-| Área do personal (`personal.html`, aba Profissionais do monitoramento) | test88 |
+| Segurança do site: CSP nas quatro páginas (index, admin, personal e privacidade), sem script inline, biblioteca do Supabase em `js/vendor/`, o que fica fora da publicação | test88 |
+| Área do personal (`personal.html`, aba Profissionais do monitoramento) | test90 |
 | Aluno do personal no app (convite, Meu personal, treinos só de leitura, recado) | test89 |
 | Harness dos testes (`tests/apoio/`) | todos |
