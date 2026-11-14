@@ -18,8 +18,10 @@
 }
 
 /* Editor de ficha: cada treino num bloco com borda; exercícios em linhas (nome, séries, PSE e botões). */
-.pf-treino { padding: 14px; border: 1px solid var(--fio) !important; border-radius: 14px; }
-.pf-treino legend { padding: 0 6px; margin-left: -6px; }
+/* .ex-form fieldset zera o padding (regra mais forte): o treino precisa do espaço interno para os campos não encostarem na borda. */
+.ex-form .pf-treino { padding: 14px; border: 1px solid var(--fio); border-radius: 14px; background: var(--papel); }
+.ex-form .pf-treino legend { float: left; width: 100%; margin: 0 0 4px; padding: 0; font-size: 16px; }
+.ex-form .pf-treino legend + * { clear: both; }
 .pf-exs { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
 .pf-exs li { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 1.3fr) 76px auto; gap: 8px; align-items: end; padding-bottom: 10px; border-bottom: 1px dashed var(--fio); }
 .pf-ex-botoes { display: flex; gap: 2px; padding-bottom: 4px; }
@@ -27,10 +29,14 @@
 .pf-icone:hover:not(:disabled) { background: var(--gi); color: var(--tinta); }
 .pf-icone:disabled { opacity: .35; cursor: default; }
 .pf-perigo { border-color: var(--erro) !important; color: var(--erro) !important; }
+/* Celular: os botões (subir, descer, tirar) ficam na linha do rótulo "Exercício", sem uma linha só para eles. */
 @media (max-width: 560px) {
-  .pf-exs li { grid-template-columns: minmax(0, 1fr) 76px; }
+  .pf-exs li { position: relative; grid-template-columns: minmax(0, 1fr) 76px; }
   .pf-ex-nome { grid-column: 1 / -1; }
-  .pf-ex-botoes { grid-column: 1 / -1; justify-content: flex-end; padding: 0; }
+  .pf-ex-nome > span:first-child { min-height: 36px; display: flex; align-items: center; padding-right: 124px; }
+  .pf-ex-botoes { position: absolute; top: -2px; right: -6px; padding: 0; }
+  .pf-acoes > .btn-sec { flex: 1 1 140px; }
+  .pf-treino .ex-grade2 { grid-template-columns: minmax(0, 1fr); }
 }
 .pf-semana { display: grid; gap: 8px; }
 .pf-dia { display: grid; grid-template-columns: 80px minmax(0, 1fr) minmax(0, 1fr); gap: 8px; align-items: center; }
