@@ -252,7 +252,10 @@
         if (nomeEx.length < 2 || nomeEx.length > 80) return erro('Dê um nome ao exercício (de 2 a 80 letras).');
         if ((db.exercicios || []).some((x) => String(x.nome).toLowerCase() === k)) return erro('Esse exercício já está na biblioteca do app.');
         if (db.exercicios_personal.some((x) => x.personal_id === eu && x.nome.toLowerCase() === k && x.id !== p.id)) return erro('Você já tem um exercício com esse nome.');
-        const dados = { nome: nomeEx, grupo: p.grupo || '', dose: p.dose || '3×10', pse: Number(p.pse) || 8 };
+        if (p.video_id && !/^[\w-]{11}$/.test(p.video_id)) return erro('Vídeo inválido: use o link do YouTube ou o código de 11 letras.');
+        const nv = (v) => (['baixa', 'media', 'alta'].includes(v) ? v : 'baixa');
+        const dados = { nome: nomeEx, grupo: p.grupo || '', dose: p.dose || '3×10', pse: Number(p.pse) || 8, hipertrofia: nv(p.hipertrofia), forca: nv(p.forca),
+          explosao: nv(p.explosao), mobilidade: nv(p.mobilidade), explicacao: p.explicacao || '', variacoes: p.variacoes || [], video_id: p.video_id || '' };
         if (p.id) {
           const e = db.exercicios_personal.find((x) => x.id === p.id && x.personal_id === eu);
           if (!e) return erro('Exercício não encontrado.');

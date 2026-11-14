@@ -105,7 +105,7 @@
   }
   // Catálogo do editor: a biblioteca do app mais os exercícios do personal (marcados com meu: true).
   function montarCatalogo() {
-    P.catalogo = [...(P.biblioteca || []), ...(P.meus || []).map((e) => ({ nome: e.nome, grupo: e.grupo, dose: e.dose, pse: e.pse, meu: true }))]
+    P.catalogo = [...(P.biblioteca || []), ...(P.meus || []).map((e) => ({ ...e, meu: true }))]
       .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
   }
   function render() {
@@ -118,6 +118,9 @@
   const exDoCatalogo = (nome) => (P.catalogo || []).find((e) => chave(e.nome) === chave(nome)) || null;
   const qtd = (n, um, varios) => `${n} ${n === 1 ? um : varios}`;
   const contarExercicios = (treinos) => Object.values(treinos || {}).reduce((n, t) => n + ((t && t.exercicios) || []).length, 0);
+  // Exercício do personal: grupo, níveis, explicação e vídeo vão junto no treino (o app do aluno não tem o cadastro dele).
+  const extraDoMeu = (e) => ({ grupo: e.grupo || '', H: e.hipertrofia || 'baixa', F: e.forca || 'baixa', E: e.explosao || 'baixa', M: e.mobilidade || 'baixa',
+    ...(e.explicacao ? { why: e.explicacao } : {}), ...(e.video_id ? { video: e.video_id } : {}) });
   const iguais = (a, b) => JSON.stringify(a || null) === JSON.stringify(b || null);
 
   // ---------- Fichas ----------
@@ -151,7 +154,7 @@
   let ed = null;
   const paraLista = (treinos) => Object.keys(treinos || {}).sort((a, b) => a - b).map((k) => {
     const t = treinos[k] || {};
-    return { nome: t.nome || `Treino ${k}`, subtitulo: t.subtitulo || '', recado: t.recado || '', exercicios: (t.exercicios || []).map((x) => ({ nome: x.nome, dose: x.dose || '', pse: Number(x.pse) || 8 })) };
+    return { nome: t.nome || `Treino ${k}`, subtitulo: t.subtitulo || '', recado: t.recado || '', exercicios: (t.exercicios || []).map((x) => ({ nome: x.nome, dose: x.dose || '', pse: Number(x.pse) || 8, ...(x.extra ? { extra: x.extra } : {}) })) };
   });
   const semanaVazia = () => [[], [], [], [], [], [], []];
   const semanaDeJornada = (s) => { const v = semanaVazia(); Object.entries(s || {}).forEach(([d, l]) => { v[Number(d)] = [...l]; }); return v; };
@@ -244,7 +247,7 @@
         <p class="excluir-erro" id="ficha-erro" role="alert"${ed.erro ? '' : ' hidden'}>${esc(ed.erro)}</p>
       </div>
       <div class="ex-rodape">${rodape}</div>
-      <datalist id="pf-biblioteca">${(P.catalogo || []).map((x) => `<option value="${esc(x.nome)}">${x.meu ? 'Seu exercício' : ''}</option>`).join('')}</datalist>
+      <datalist id="pf-biblioteca">${(P.catalogo || []).map((x) => `<option value="${esc(x.nome)}">${x.meu ? `Seu exercício${(x.variacoes || []).length ? ` · também: ${esc(x.variacoes.join(', '))}` : ''}` : ''}</option>`).join('')}</datalist>
     </form>`;
   }
   // Revisão (último passo): o que vai ser salvo, com atalho para voltar a cada parte.
@@ -271,7 +274,9 @@
       ['nome', 'subtitulo', 'recado'].forEach((c) => { t[c] = fs.querySelector(`[data-campo="${c}"]`).value; });
       fs.querySelectorAll('li[data-x]').forEach((li) => {
         const x = t.exercicios[Number(li.dataset.x)];
-        x.nome = li.querySelector('[data-campo="ex-nome"]').value.trim();
+        const nomeNovo = li.querySelector('[data-campo="ex-nome"]').value.trim();
+        if (nomeNovo !== x.nome) delete x.extra; // trocou o exercício: o cadastro do anterior não vale mais
+        x.nome = nomeNovo;
         x.dose = li.querySelector('[data-campo="ex-dose"]').value.trim();
         x.pse = Number(li.querySelector('[data-campo="ex-pse"]').value) || 8;
       });
@@ -385,7 +390,7 @@
       const exs = t.exercicios.filter((x) => x.nome);
       if (!exs.length) return `${nomeT}: coloque pelo menos um exercício.`;
       if (exs.length > MAX_EXERCICIOS) return `${nomeT}: no máximo ${MAX_EXERCICIOS} exercícios.`;
-      const fora = exs.find((x) => !exDoCatalogo(x.nome));
+      const fora = exs.find((x) => !exDoCatalogo(x.nome) && !x.extra); // x.extra: exercício de personal que já estava no treino
       if (fora) return `${nomeT}: "${fora.nome}" não está na biblioteca. Escolha um exercício da lista ou toque em Criar exercício.`;
       const vistos = new Set();
       const repetido = exs.find((x) => { const k = chave(x.nome); if (vistos.has(k)) return true; vistos.add(k); return false; });
@@ -395,7 +400,11 @@
   }
   const paraBanco = () => Object.fromEntries(ed.treinos.map((t, i) => [String(i + 1), {
     nome: t.nome.trim() || `Treino ${i + 1}`, subtitulo: t.subtitulo.trim(), ...(t.recado.trim() ? { recado: t.recado.trim() } : {}),
-    exercicios: t.exercicios.filter((x) => x.nome).map((x) => ({ nome: exDoCatalogo(x.nome).nome, dose: x.dose || exDoCatalogo(x.nome).dose || '3×10', pse: x.pse })),
+    exercicios: t.exercicios.filter((x) => x.nome).map((x) => {
+      const c = exDoCatalogo(x.nome) || { nome: x.nome, dose: x.dose };
+      const extra = c.meu ? extraDoMeu(c) : x.extra;
+      return { nome: c.nome, dose: x.dose || c.dose || '3×10', pse: x.pse, ...(extra ? { extra } : {}) };
+    }),
   }]));
   $('ficha-dialog').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -440,58 +449,142 @@
     }
     el.innerHTML = P.meus.map((x) => `<div class="conv-item ficha-item">
         <b>${esc(x.nome)}</b>
-        <small>${x.grupo ? `${esc(x.grupo)} · ` : ''}${esc(x.dose)} · PSE ${esc(x.pse)}</small>
+        <small>${x.grupo ? `${esc(x.grupo)} · ` : ''}${esc(x.dose)} · PSE ${esc(x.pse)}${x.video_id ? ' · com vídeo' : ''}${(x.variacoes || []).length ? ` · também: ${esc(x.variacoes.join(', '))}` : ''}</small>
         <div class="conv-botoes varios">
           <button class="btn-peq sec" type="button" data-meu-ex-editar="${esc(x.id)}">Editar</button>
           <button class="btn-peq sec" type="button" data-meu-ex-excluir="${esc(x.id)}">Excluir</button>
         </div>
       </div>`).join('');
   }
-  // Criar ou editar um exercício. Aberto da ficha (ti = índice do treino), o exercício criado já entra naquele treino.
+  // Criar ou editar um exercício: a mesma tela do catálogo do administrador (nome, grupo, PSE, séries sugeridas, níveis,
+  // explicação, outros nomes e vídeo), sem objetivos nem "ativo", que só valem para a biblioteca do app.
+  // Aberto da ficha (ti = índice do treino), o exercício criado já entra naquele treino.
+  let mx = null;
+  const EX = () => painel().exercicio;
   function abrirExercicio({ id = null, ti = -1, nome = '' } = {}) {
+    const F = EX();
     const x = id ? (P.meus || []).find((e) => e.id === id) : null;
-    acao = { tipo: 'exercicio', id, ti };
-    const pses = Array.from({ length: 10 }, (_, i) => i + 1);
-    abrirJanela(`${topoJanela(x ? 'Editar exercício' : 'Novo exercício')}
-      <form class="ex-form pf-aplicar" id="pc-ex-form" novalidate>
-        <p class="nota" style="margin:0">Só você vê este exercício e pode usá-lo nas suas fichas. Outros personais não têm acesso.</p>
-        <label class="ex-campo">Nome<input id="pc-ex-nome" maxlength="80" autocomplete="off" value="${esc(x ? x.nome : nome)}" placeholder="Ex.: Remada no TRX" required></label>
-        <label class="ex-campo">Grupo (opcional)<select id="pc-ex-grupo"><option value="">—</option>${GRUPOS.map((g) => `<option${x && x.grupo === g ? ' selected' : ''}>${g}</option>`).join('')}</select></label>
-        <div class="ex-grade2">
-          <label class="ex-campo">Séries<input id="pc-ex-dose" maxlength="30" autocomplete="off" value="${esc(x ? x.dose : '3×10')}" placeholder="3×10"></label>
-          <label class="ex-campo">PSE<select id="pc-ex-pse">${pses.map((n) => `<option${n === (x ? Number(x.pse) : 8) ? ' selected' : ''}>${n}</option>`).join('')}</select></label>
+    mx = { id, ti, x };
+    const v = x || { nome, grupo: '', dose: '3×10', pse: 8, hipertrofia: 'baixa', forca: 'baixa', explosao: 'baixa', mobilidade: 'baixa', explicacao: '', variacoes: [], video_id: '' };
+    const opcoes = (lista, sel) => lista.map(([val, rot]) => `<option value="${esc(val)}"${val === sel ? ' selected' : ''}>${esc(rot)}</option>`).join('');
+    const dose = F.lerDose(v.dose);
+    const d = dose || { series: '3', valor: '10', unidade: 'rep', lado: false, conta: '' };
+    const pses = [...new Set([4, 5, 6, 7, 8, 9, 10, Number(v.pse) || 8])].sort((a, b) => a - b);
+    const nivel = ([k, rot]) => `
+          <fieldset class="ex-nivel"><legend>${rot}</legend>
+            <div class="ex-seg">${Object.entries(F.ROTULO_NIVEL).map(([val, r]) => `<label><input type="radio" name="mx-${k}" value="${val}"${(v[k] || 'baixa') === val ? ' checked' : ''}><span>${r}</span></label>`).join('')}</div>
+          </fieldset>`;
+    $('mx-body').innerHTML = `
+      <form class="ex-form" id="mx-form" novalidate>
+        <div class="ex-topo"><h2 id="mx-title">${x ? 'Editar exercício' : 'Novo exercício'}</h2>
+          <button class="excluir-fechar" type="button" data-mx-fechar aria-label="Fechar">${XIS}</button></div>
+        <div class="ex-meio">
+          <p class="ex-dica pf-mx-aviso">Só você vê este exercício e pode usá-lo nas suas fichas. Outros personais não têm acesso.</p>
+          <label class="ex-campo">Nome<input id="mx-nome" maxlength="80" autocomplete="off" value="${esc(v.nome)}" required></label>
+          <div class="ex-grade2">
+            <label class="ex-campo">Grupo<select id="mx-grupo">${v.grupo ? '' : '<option value="">Escolha</option>'}${opcoes(F.GRUPOS_EX.map((g) => [g, F.rotuloGrupoEx(g)]), v.grupo)}</select></label>
+            <label class="ex-campo">PSE<select id="mx-pse">${opcoes(pses.map((n) => [String(n), String(n)]), String(v.pse))}</select></label>
+          </div>
+          <fieldset class="ex-bloco"><legend>Séries sugeridas</legend>
+            <div class="ex-grade-dose" id="mx-dose-campos">
+              <label class="ex-campo">Séries<input id="mx-series" inputmode="numeric" maxlength="5" autocomplete="off" value="${esc(d.series)}" placeholder="3"></label>
+              <span class="ex-vezes" aria-hidden="true">×</span>
+              <label class="ex-campo">Repetições ou tempo<input id="mx-valor" inputmode="numeric" maxlength="7" autocomplete="off" value="${esc(d.valor)}" placeholder="10"></label>
+              <label class="ex-campo">Unidade<select id="mx-unidade">${opcoes([['rep', 'repetições'], ['s', 'segundos'], ['min', 'minutos']], d.unidade)}</select></label>
+              <label class="ex-campo">Contagem<select id="mx-conta">${opcoes([['', 'normal'], ['totais', 'totais'], ['válidas', 'válidas']], d.conta)}</select></label>
+              <label class="excluir-entendi ex-lado"><input type="checkbox" id="mx-lado"${d.lado ? ' checked' : ''}><span>Por lado</span></label>
+            </div>
+            <label class="ex-campo" id="mx-dose-texto" hidden>Outro formato<input id="mx-dose" maxlength="30" autocomplete="off" value="${esc(v.dose)}"></label>
+            <p class="ex-dica" id="mx-dose-previa" aria-live="polite"></p>
+            <label class="excluir-entendi"><input type="checkbox" id="mx-dose-livre"${dose ? '' : ' checked'}><span>Outro formato (texto livre)</span></label>
+          </fieldset>
+          <fieldset class="ex-bloco"><legend>Níveis</legend>
+            <div class="ex-niveis">${F.NIVEIS_EX.map(nivel).join('')}</div>
+          </fieldset>
+          <label class="ex-campo">Explicação<textarea id="mx-why" maxlength="400" rows="3" placeholder="Para que serve e o que trabalha (aparece no app do aluno, abaixo dos níveis)">${esc(v.explicacao)}</textarea></label>
+          <label class="ex-campo">Outros nomes<input id="mx-var" autocomplete="off" value="${esc((v.variacoes || []).join(', '))}" placeholder="Separe por vírgula (ex.: Remada suspensa)"></label>
+          <p class="ex-dica">A busca do editor de fichas acha o exercício por eles.</p>
+          <label class="ex-campo">Vídeo do YouTube<input id="mx-video" autocomplete="off" inputmode="url" value="${esc(v.video_id || '')}" placeholder="Link ou código do vídeo (opcional)"></label>
+          <p class="excluir-erro" id="mx-erro" role="alert" hidden></p>
+          ${x ? `<div class="ex-excluir"><button class="ex-excluir-btn" type="button" data-meu-ex-excluir="${esc(x.id)}">${F.ICON.lixeira}<span>Excluir exercício</span></button></div>` : ''}
         </div>
-        <p class="excluir-erro" id="pc-erro" role="alert" hidden></p>
-        <div class="excluir-acoes"><button class="btn" type="submit" id="pc-ex-salvar">${x ? 'Salvar' : ti >= 0 ? 'Criar e pôr no treino' : 'Criar exercício'}</button>
-          <button class="btn-sec" type="button" data-janela-fechar>Cancelar</button></div>
-      </form>`);
-    setTimeout(() => $('pc-ex-nome') && $('pc-ex-nome').focus(), 30);
+        <div class="ex-rodape">
+          <button class="btn-sec" type="button" data-mx-fechar>Cancelar</button>
+          <button class="btn" type="submit" id="mx-salvar">${x ? 'Salvar' : ti >= 0 ? 'Criar e pôr no treino' : 'Criar exercício'}</button>
+        </div>
+      </form>`;
+    mostrarDoseMx();
+    if (!$('mx-dialog').open) $('mx-dialog').showModal();
+    if (!x) $('mx-nome').focus();
   }
-  async function salvarExercicio() {
-    const nome = $('pc-ex-nome').value.trim().replace(/\s+/g, ' ');
-    const erro = (t) => { $('pc-erro').textContent = t; $('pc-erro').hidden = false; $('pc-ex-salvar').disabled = false; };
-    if (nome.length < 2) return erro('Dê um nome ao exercício.');
-    if ((P.biblioteca || []).some((e) => chave(e.nome) === chave(nome))) return erro('Esse exercício já está na biblioteca do app: escolha ele na lista.');
-    if ((P.meus || []).some((e) => chave(e.nome) === chave(nome) && e.id !== acao.id)) return erro('Você já tem um exercício com esse nome.');
-    $('pc-ex-salvar').disabled = true;
-    const dados = { id: acao.id || '', nome, grupo: $('pc-ex-grupo').value, dose: $('pc-ex-dose').value.trim() || '3×10', pse: Number($('pc-ex-pse').value) || 8 };
+  function doseMx() {
+    if ($('mx-dose-livre').checked) return $('mx-dose').value.trim().replace(/\s+/g, ' ');
+    return EX().montarDose({ series: $('mx-series').value, valor: $('mx-valor').value, unidade: $('mx-unidade').value, lado: $('mx-lado').checked, conta: $('mx-conta').value });
+  }
+  function mostrarDoseMx() {
+    const livre = $('mx-dose-livre').checked;
+    $('mx-dose-campos').hidden = livre;
+    $('mx-dose-texto').hidden = !livre;
+    const d = doseMx();
+    $('mx-dose-previa').textContent = d ? `No app: ${d}` : 'Preencha as séries e as repetições ou o tempo (ex.: 3 e 10, ou 2–3 e 10–15).';
+  }
+  $('mx-dialog').addEventListener('input', (ev) => { if (/^mx-(series|valor|unidade|conta|lado|dose|dose-livre)$/.test(ev.target.id)) mostrarDoseMx(); });
+  $('mx-dialog').addEventListener('change', (ev) => {
+    if (/^mx-(unidade|conta|lado|dose-livre)$/.test(ev.target.id)) mostrarDoseMx();
+    if (ev.target.id === 'mx-dose-livre' && ev.target.checked && !$('mx-dose').value.trim()) $('mx-dose').value = doseMx() || '';
+  });
+  $('mx-dialog').addEventListener('focusout', (ev) => {
+    const F = EX();
+    if (ev.target.id === 'mx-nome') ev.target.value = F.padronizarNome(ev.target.value);
+    if (ev.target.id === 'mx-var') ev.target.value = ev.target.value.split(',').map(F.padronizarNome).filter(Boolean).join(', ');
+    if (ev.target.id === 'mx-series' || ev.target.id === 'mx-valor') { ev.target.value = F.traco(ev.target.value); mostrarDoseMx(); }
+  });
+  $('mx-dialog').addEventListener('click', (ev) => {
+    if (ev.target === $('mx-dialog') || ev.target.closest('[data-mx-fechar]')) $('mx-dialog').close();
+  });
+  $('mx-dialog').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const F = EX();
+    const erro = (msg) => { $('mx-erro').textContent = msg; $('mx-erro').hidden = !msg; if (msg) $('mx-erro').scrollIntoView({ block: 'nearest' }); };
+    const nome = F.padronizarNome($('mx-nome').value);
+    const grupo = $('mx-grupo').value;
+    const dose = doseMx();
+    const video = F.codigoVideo($('mx-video').value);
+    const variacoes = [...new Set($('mx-var').value.split(',').map(F.padronizarNome).filter(Boolean))];
+    if (nome.length < 2) return erro('Informe o nome do exercício.');
+    if ((P.biblioteca || []).some((e) => chave(e.nome) === chave(nome))) return erro('Esse exercício já está na biblioteca do app: escolha ele na lista da ficha.');
+    const repetido = (P.meus || []).find((e) => chave(e.nome) === chave(nome) && e.id !== mx.id);
+    if (repetido) return erro(`Você já tem um exercício com esse nome: ${repetido.nome}.`);
+    if (!grupo) return erro('Escolha o grupo do exercício.');
+    if (!dose) return erro($('mx-dose-livre').checked ? 'Escreva as séries sugeridas.' : 'Confira as séries: use números, como 3 e 10, ou faixas, como 2–3 e 10–15.');
+    if (dose.length > 30) return erro('As séries sugeridas têm até 30 letras.');
+    if (video === null) return erro('Não reconheci o vídeo: cole o link do YouTube ou o código de 11 letras.');
+    if (variacoes.length > 20 || variacoes.some((x) => x.length > 80)) return erro('Use até 20 outros nomes, cada um com até 80 letras.');
+    erro('');
+    const dados = {
+      id: mx.id || '', nome, grupo, dose, pse: Number($('mx-pse').value) || 8, explicacao: $('mx-why').value.trim(), variacoes, video_id: video,
+      ...Object.fromEntries(F.NIVEIS_EX.map(([k]) => [k, (document.querySelector(`input[name="mx-${k}"]:checked`) || {}).value || 'baixa'])),
+    };
+    const botao = $('mx-salvar');
+    const rotulo = botao.textContent;
+    botao.disabled = true; botao.textContent = 'Salvando…';
     const r = await sb().rpc('personal_salvar_exercicio', { p: dados });
-    if (r.error) return erro(`Não foi possível salvar. ${r.error.message}`);
+    if (r.error) { botao.disabled = false; botao.textContent = rotulo; return erro(`Não foi possível salvar. ${r.error.message}`); }
     const l = await sb().rpc('personal_exercicios');
     if (!l.error) P.meus = l.data || [];
     montarCatalogo();
     renderMeus();
-    const { ti } = acao;
-    $('pc-dialog').close();
+    const { ti } = mx;
+    $('mx-dialog').close();
     if (ti >= 0 && ed && $('ficha-dialog').open && ed.treinos[ti]) {
-      ed.treinos[ti].exercicios.push({ nome, dose: dados.dose, pse: dados.pse });
+      ed.treinos[ti].exercicios.push({ nome, dose, pse: dados.pse });
       redesenhar(`.pf-treino[data-t="${ti}"] li[data-x="${ed.treinos[ti].exercicios.length - 1}"] [data-campo="ex-dose"]`);
       painel().toast(`"${nome}" criado e colocado no treino.`);
     } else {
       if (ed && $('ficha-dialog').open) redesenhar();
-      painel().toast(acao.id ? 'Exercício salvo. As fichas já montadas guardam o nome de antes.' : 'Exercício criado: já aparece na lista do editor de fichas.');
+      painel().toast(mx.id ? `${nome} salvo. As fichas novas já usam a versão nova.` : `${nome} criado: já aparece na lista do editor de fichas.`);
     }
-  }
+  });
 
   // ---------- Aplicar ficha e confirmações ----------
   // Janela única (pc-dialog) para: aplicar uma ficha a alunos, excluir ficha, encerrar acompanhamento e cancelar convite.
@@ -536,7 +629,6 @@
   }
   $('pc-dialog').addEventListener('change', (e) => { if (acao && acao.tipo === 'aplicar') atualizarAplicar(); });
   $('pc-dialog').addEventListener('submit', async (e) => {
-    if (e.target.id === 'pc-ex-form') { e.preventDefault(); return salvarExercicio(); }
     if (e.target.id !== 'pc-aplicar-form') return;
     e.preventDefault();
     const ids = [...document.querySelectorAll('[name="pc-aluno"]:checked')].map((x) => x.value);
@@ -587,6 +679,7 @@
     if (error) { $('pc-erro').textContent = error.message; $('pc-erro').hidden = false; e.target.closest('[data-confirmar]').disabled = false; return; }
     $('pc-dialog').close();
     if (acao.tipo === 'encerrar') painel().fecharDetalhe();
+    if (acao.tipo === 'excluirEx' && $('mx-dialog').open) $('mx-dialog').close();
     painel().toast({ excluirEx: 'Exercício excluído. As fichas e os alunos que já têm ele continuam com ele.', excluir: 'Ficha excluída. Os alunos continuam com os treinos que já receberam.', encerrar: 'Acompanhamento encerrado. O aluno continua com a ficha.', cancelar: 'Convite cancelado: o link parou de funcionar.' }[acao.tipo]);
     await painel().recarregar();
   });

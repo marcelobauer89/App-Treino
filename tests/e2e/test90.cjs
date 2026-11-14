@@ -99,11 +99,19 @@ const base = (extra = {}) => ({
     ok((await novo.inputValue()) === 'Supino reto', `${scheme}: o nome vira o da biblioteca`);
     ok((await p.locator('.pf-treino[data-t="2"] li').last().locator('[data-campo="ex-dose"]').inputValue()) !== '', `${scheme}: séries vêm da biblioteca`);
     // Exercício próprio criado de dentro da ficha: entra no treino e na lista "Meus exercícios".
-    await p.locator('.pf-treino[data-t="1"] [data-pf-ex-criar]').click(); await p.waitForSelector('#pc-ex-form');
-    await p.fill('#pc-ex-nome', 'Supino reto'); await p.click('#pc-ex-salvar'); await p.waitForTimeout(80);
-    ok(/biblioteca do app/.test(await p.locator('#pc-erro').innerText()), `${scheme}: exercício próprio com nome da biblioteca é recusado`);
-    await p.fill('#pc-ex-nome', 'Remada no TRX da Paula'); await p.selectOption('#pc-ex-grupo', 'Costas'); await p.fill('#pc-ex-dose', '3×12');
-    await p.click('#pc-ex-salvar'); await p.waitForFunction(() => !document.querySelector('#pc-dialog').open); await p.waitForTimeout(80);
+    await p.locator('.pf-treino[data-t="1"] [data-pf-ex-criar]').click(); await p.waitForSelector('#mx-dialog[open]');
+    const form = await p.locator('#mx-form').innerText();
+    ok(/Séries sugeridas/.test(form) && /Níveis/.test(form) && /Explicação/.test(form) && /Outros nomes/.test(form) && /Vídeo do YouTube/.test(form),
+      `${scheme}: Novo exercício do personal é a mesma tela do administrador (séries, níveis, explicação, outros nomes e vídeo)`);
+    await p.fill('#mx-nome', 'Supino reto'); await p.click('#mx-salvar'); await p.waitForTimeout(80);
+    ok(/biblioteca do app/.test(await p.locator('#mx-erro').innerText()), `${scheme}: exercício próprio com nome da biblioteca é recusado`);
+    await p.fill('#mx-nome', 'remada no TRX da Paula'); await p.click('#mx-salvar'); await p.waitForTimeout(80);
+    ok(/grupo/.test(await p.locator('#mx-erro').innerText()), `${scheme}: sem grupo, pede o grupo (como no administrador)`);
+    await p.selectOption('#mx-grupo', 'Costas'); await p.fill('#mx-valor', '12');
+    await p.check('[name="mx-hipertrofia"][value="alta"]', { force: true }); await p.fill('#mx-why', 'Costas e pegada no TRX');
+    await p.fill('#mx-video', 'https://youtu.be/abcdefghij1');
+    await p.locator('#mx-dialog').screenshot({ path: `${H.SAIDA}/personal-exercicio-${scheme}.png` });
+    await p.click('#mx-salvar'); await p.waitForFunction(() => !document.querySelector('#mx-dialog').open); await p.waitForTimeout(80);
     ok((await p.locator('.pf-treino[data-t="1"] li').last().locator('[data-campo="ex-nome"]').inputValue()) === 'Remada no TRX da Paula', `${scheme}: exercício criado entra no treino`);
     ok(/seu/.test(await p.locator('.pf-treino[data-t="1"] li').last().innerText()), `${scheme}: exercício próprio marcado como "seu" no editor`);
     await p.locator('#ficha-dialog').screenshot({ path: `${H.SAIDA}/personal-editor-${scheme}.png` });
@@ -124,7 +132,11 @@ const base = (extra = {}) => ({
     ok(Array.isArray(db.fichas[0].semana) && db.fichas[0].semana[1].includes('t2'), `${scheme}: semana sugerida do plano pronto vai junto`);
     ok(/Base iniciante/.test(await p.locator('#fichas-lista').innerText()), `${scheme}: ficha aparece na lista`);
     ok(db.fichas[0].treinos['2'].exercicios.some((x) => x.nome === 'Remada no TRX da Paula'), `${scheme}: exercício próprio vai na ficha`);
-    ok(db.exercicios_personal.length === 1 && db.exercicios_personal[0].personal_id === 'u1' && db.exercicios_personal[0].grupo === 'Costas', `${scheme}: exercício próprio gravado só para o personal`);
+    const mx = db.exercicios_personal[0];
+    ok(db.exercicios_personal.length === 1 && mx.personal_id === 'u1' && mx.grupo === 'Costas' && mx.nome === 'Remada no TRX da Paula', `${scheme}: exercício próprio gravado só para o personal, com o nome no padrão`);
+    ok(mx.hipertrofia === 'alta' && mx.explicacao === 'Costas e pegada no TRX' && mx.video_id === 'abcdefghij1' && mx.dose === '3×12', `${scheme}: níveis, explicação, vídeo e séries gravados`);
+    const naFicha = db.fichas[0].treinos['2'].exercicios.find((x) => x.nome === 'Remada no TRX da Paula');
+    ok(naFicha && naFicha.extra && naFicha.extra.why === 'Costas e pegada no TRX' && naFicha.extra.video === 'abcdefghij1' && naFicha.extra.H === 'alta', `${scheme}: o cadastro do exercício vai junto na ficha (o aluno vê explicação, níveis e vídeo)`);
     ok(/Remada no TRX da Paula/.test(await p.locator('#meus-ex-lista').innerText()) && /Costas · 3×12/.test(await p.locator('#meus-ex-lista').innerText()), `${scheme}: Meus exercícios lista o exercício`);
 
     // Aplicar a um aluno, com a semana.

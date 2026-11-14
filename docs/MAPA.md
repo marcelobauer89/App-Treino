@@ -90,7 +90,7 @@ No modo personal (`personal.html`, `<html data-painel="personal">`), o começo d
 
 ## `js/personal.js` (área do personal): seções
 
-Cadastro do profissional · Dados da área (carregados junto com o painel) · Fichas (editor em passo a passo, que serve também aos treinos de um aluno em página única) · Meus exercícios · Aplicar ficha e confirmações (com a animação "Ficha enviada") · Ficha do aluno (dentro do detalhe do painel) · Convites do personal.
+Cadastro do profissional · Dados da área (carregados junto com o painel) · Fichas (editor em passo a passo, que serve também aos treinos de um aluno em página única) · Meus exercícios (a mesma tela do catálogo do admin, com as regras de `Painel.exercicio`) · Aplicar ficha e confirmações (com a animação "Ficha enviada") · Ficha do aluno (dentro do detalhe do painel) · Convites do personal.
 
 Os eventos vêm só do período escolhido (`eventosNecessarios`, em Acesso). Os dados vêm de `todas()` (páginas de 1.000) nas funções `admin_usuarios`, `admin_checkins`, `admin_eventos`, `admin_emails` e `admin_convites`.
 
