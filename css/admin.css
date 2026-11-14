@@ -380,9 +380,10 @@
     .usuarios td.cel-situacao { display: block; position: absolute; top: 12px; right: 0; }
     .quem { align-items: flex-start; }
     .quem button { flex: 1 1 auto; }
-    .quem b { padding-right: 116px; }
-    .resumo-cel { display: block; margin-top: 2px; font-size: 13px; color: var(--tinta-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .chev { display: grid; align-self: flex-end; color: var(--tinta-2); }
+    /* Nome em até 2 linhas (sem cortar cedo); a situação fica no alto à direita e a seta embaixo, alinhadas. */
+    .quem b { padding-right: 104px; white-space: normal; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+    .resumo-cel { display: block; margin-top: 2px; padding-right: 26px; font-size: 13px; color: var(--tinta-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .chev { display: grid; position: absolute; right: 2px; bottom: 14px; color: var(--tinta-2); }
     .chev svg { width: 18px; height: 18px; }
     .nenhum { display: block; }
     .ordenar-cel { display: flex; }
