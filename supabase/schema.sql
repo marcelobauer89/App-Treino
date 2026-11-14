@@ -1238,6 +1238,15 @@ create table if not exists public.profissionais (
 );
 alter table public.profissionais enable row level security;
 
+-- Ajustes de cada projeto do Supabase (chave → valor). Sem acesso pela API: só as funções leem.
+-- 'convite_proprio' = 'sim' deixa o personal aceitar o próprio convite e virar aluno de si mesmo, para testar o
+-- app do aluno com uma conta só. Ligar só no projeto de TESTES (ver a migração 004); em produção fica sem a linha.
+create table if not exists public.ajustes_banco (
+  chave text primary key,
+  valor text not null default ''
+);
+alter table public.ajustes_banco enable row level security;
+
 -- Vínculo personal → aluno. Nasce como convite (código de 6 letras, vale 7 dias) e vira acompanhamento quando o
 -- aluno aceita. Um aluno tem um personal por vez; aceitar outro encerra o anterior. Encerrar (aluno ou personal)
 -- corta o acesso na hora; a ficha continua com o aluno.
@@ -1476,7 +1485,8 @@ begin
   if v.cancelado_em is not null then s := 'cancelado';
   elsif v.aceito_em is not null then s := case when v.aluno_id = eu and v.encerrado_em is null then 'ok' else 'usado' end;
   elsif v.expira_em < now() then s := 'expirado';
-  elsif v.personal_id = eu then s := 'proprio';
+  elsif v.personal_id = eu and not exists (select 1 from public.ajustes_banco a where a.chave = 'convite_proprio' and a.valor = 'sim')
+    then s := 'proprio';
   elsif (select count(*) from public.vinculos x where x.personal_id = v.personal_id and x.aceito_em is not null and x.encerrado_em is null) >= p.limite_alunos then s := 'lotado';
   end if;
   return query select s, p.nome, p.cref, p.uf,
