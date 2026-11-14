@@ -66,7 +66,7 @@ const ok = (c, l, x = '') => { if (!c) fails++; console.log(`${c ? 'PASS' : 'FAI
   // carregando: segura o select dos dados
   const l = await H.novaPagina(b);
   // Atrasa a biblioteca do Supabase (falsa) para a tela ficar no estado de carregamento.
-  await l.route('https://cdn.jsdelivr.net/**', async (r) => { await new Promise((ok) => setTimeout(ok, 1200)); r.fallback(); });
+  await l.route(/\/js\/vendor\/supabase-[\d.]+\.js$/, async (r) => { await new Promise((ok) => setTimeout(ok, 1200)); r.fallback(); });
   const nav = l.goto(H.PAGINA).catch(() => {});
   await l.waitForSelector('#entrar-carga', { state: 'attached' });
   await l.evaluate(() => document.fonts.ready);

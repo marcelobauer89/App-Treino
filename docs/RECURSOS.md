@@ -22,6 +22,7 @@ Ao mudar um recurso, atualize só a seção dele (ache pelo índice).
 - [Excluir conta](#excluir-conta)
 - [Foto no check-in (opcional)](#foto-no-check-in-opcional)
 - [Privacidade e LGPD](#privacidade-e-lgpd)
+- [Segurança do site publicado](#segurança-do-site-publicado)
 - [Monitoramento de uso](#monitoramento-de-uso)
   - [On-line agora (Realtime)](#on-line-agora-realtime)
 - [Resumo semanal por e-mail](#resumo-semanal-por-e-mail)
@@ -119,7 +120,7 @@ Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 a t6 nos check-i
 - **Instalar:** no Android (Chrome), menu ⋮ → **Instalar app** ou **Adicionar à tela inicial**; no iPhone (Safari), **Compartilhar → Adicionar à Tela de Início**. O app abre em tela cheia, com o ícone "GT" (`icones/`) e o nome "Treinos".
 - **Instalar o app (em Você):** a linha aparece no Android quando o Chrome oferece a instalação (um toque abre o pedido do navegador) e no iPhone (abre o passo a passo do Safari). Some quando o app já está instalado e nos navegadores que não instalam apps. Evento `app_instalar` (instalou, desistiu ou passos_iphone) no Monitoramento.
 - **Manifesto:** `manifest.webmanifest` (nome, cores, ícones 192, 512 e maskable). O `/dev/` usa o `manifest-dev.webmanifest` ("[DEV] Gestão de Treinos", trocado pelo `ambiente.js`) e instala como um app separado, com o próprio escopo. Metas do iPhone (`apple-mobile-web-app-capable`, barra de status) no `index.html`.
-- **Service worker (`sw.js`):** registrado no `js/inicio.js`, só em https (no computador, em `localhost`, fica desligado). Sempre busca na rede primeiro, então quem está on-line recebe a versão nova na hora; quando a rede falha, usa a cópia dos arquivos do site (HTML, `css/`, `js/`, fontes, ícones) e da biblioteca do Supabase. Os dados e o `versao.json` nunca passam por ele. Produção e `/dev/` têm caches separados.
+- **Service worker (`sw.js`):** registrado no `js/inicio.js`, só em https (no computador, em `localhost`, fica desligado). Sempre busca na rede primeiro, então quem está on-line recebe a versão nova na hora; quando a rede falha, usa a cópia dos arquivos do site (HTML, `css/`, `js/`, fontes, ícones) incluindo a biblioteca do Supabase em `js/vendor/`. Os dados e o `versao.json` nunca passam por ele. Produção e `/dev/` têm caches separados.
 - **Sem internet (RF-04):**
   - **Cópia dos dados:** a cada abertura com internet, o app guarda no aparelho o perfil, os check-ins, os pesos e os vídeos (`bauer-copia-<id>`). Sem internet (ou com a internet tão ruim que a busca passa de 15 s), abre com essa cópia. Não espera o login: sem internet e com o login vencido, a biblioteca do Supabase passa até 30 s tentando renová-lo; com a conta (`bauer-copia-usuario`) e a cópia guardadas, o app abre na hora quando o aparelho diz que está sem internet, e depois de 3 s sem resposta do login (Wi-Fi sem internet, sinal fraco). O "sem sessão" que chega depois, ainda sem internet, não tira a pessoa do app; quando a internet volta, o login é renovado e a fila sai. A busca no servidor desiste em 8 s e usa a cópia. A cópia só existe depois de abrir o app uma vez com internet nesta versão.
   - **Fila de envio:** toda gravação (check-in, excluir check-in, pesos, perfil, treinos, semana, temporizador, observações) vira um pedido guardado no aparelho (`bauer-pendentes-<id>`) e enviado na ordem. Sem internet, fica guardado (mesmo fechando o app), aparece o aviso "Sem internet: ficou guardado no aparelho e será salvo na sua conta assim que a internet voltar." e, no topo, a faixa com o ícone de sem wi-fi: "Sem internet. N alterações guardadas no aparelho; serão salvas na sua conta assim que a internet voltar." A faixa conta alterações, não envios: os pesos de um treino num dia vão num envio só, mas cada exercício com peso mudado conta uma; várias edições do mesmo check-in contam uma; cada ajuste do perfil (semana, treinos, tema…) conta um. Quando a internet volta (ou o app volta para a frente, ou a cada 30 s), a fila sai sozinha, aparece "Conexão de volta: suas alterações foram enviadas." e o app busca os dados do servidor de novo. Um pedido recusado pelo banco por outro motivo sai da fila com o aviso de sempre e recarrega do servidor.
@@ -192,6 +193,14 @@ Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 a t6 nos check-i
 - **Tempo de guarda:** enquanto a conta existir; excluir a conta apaga tudo.
 - **Fonte:** a Archivo fica em `fonts/` (licença OFL, em `fonts/OFL.txt`), sem Google Fonts.
 - Para ligar, rode de novo o `supabase/schema.sql`. O texto da política não é parecer jurídico: vale revisar com um advogado.
+
+## Segurança do site publicado
+
+- **Chaves:** o `ambiente.js` só tem as chaves publicáveis (`sb_publishable_…`); quem protege os dados é a RLS do banco. Nunca coloque no repositório a chave secreta (`sb_secret_…` ou `service_role`).
+- **CSP:** `index.html`, `admin.html` e `privacidade.html` têm uma `<meta http-equiv="Content-Security-Policy">` igual: scripts só do próprio site (nenhum `<script>` dentro do HTML nem `onclick=`), conexões só com `*.supabase.co`, vídeos só do `youtube-nocookie.com`. Ao usar um serviço externo novo, acrescente o endereço nas três páginas; senão o navegador bloqueia (aparece no console).
+- **Biblioteca do Supabase:** fica em `js/vendor/supabase-<versão>.js`, sem CDN. Para atualizar: baixe `https://cdn.jsdelivr.net/npm/@supabase/supabase-js@<versão>/dist/umd/supabase.js`, confira o SHA-256 com o de `https://data.jsdelivr.com/v1/package/npm/@supabase/supabase-js@<versão>/flat` (`openssl dgst -sha256 -binary arquivo | base64`), troque o nome do arquivo e o `<script>` no `index.html` e no `admin.html`.
+- **O que é publicado:** o `publicar.yml` deixa fora do Pages `tests/`, `supabase/`, `docs/`, `CLAUDE.md` e `README.md` (continuam no repositório).
+- **No painel do Supabase (manual):** Redirect URLs só com os endereços do app (produção e `/dev/`), login por e-mail desligado se só o Google é usado, e o Security Advisor sem alertas.
 
 ## Monitoramento de uso
 

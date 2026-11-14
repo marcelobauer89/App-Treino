@@ -1,8 +1,8 @@
--- Ajuste único para o usuário Marcelo Bauer: exercícios registrados só com carga zero
+-- Ajuste único para um usuário (troque o nome em "alvo" antes de rodar): exercícios registrados só com carga zero
 -- (ex.: Escorpião e Superman com 0 / 0 / 0 kg) passam a ser "Sem peso", e esses zeros
 -- viram o registro de "feito" do dia ([{"feito": true}]), como acontece hoje ao concluir
 -- um exercício sem peso. Exercícios com algum peso maior que zero não mudam.
--- Rode tudo de uma vez no SQL Editor. Para outro usuário, troque o nome em "alvo".
+-- Rode tudo de uma vez no SQL Editor.
 
 create or replace function pg_temp.tem_carga(a jsonb) returns boolean language sql immutable as $$
   select jsonb_typeof(a) = 'array' and exists (
@@ -18,7 +18,7 @@ create or replace function pg_temp.so_zero(a jsonb) returns boolean language sql
 $$;
 
 create temp table alvo as
-  select id from public.perfis where nome = 'Marcelo Bauer';
+  select id from public.perfis where nome = 'Nome do Usuário';
 
 -- Exercícios do usuário em que todo registro com carga é só zero.
 create temp table ex_zero as
