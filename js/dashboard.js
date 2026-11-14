@@ -220,19 +220,6 @@
   const somarMeses = (chave, n) => { const [a, m] = chave.split('-').map(Number); const d = new Date(a, m - 1 + n, 1); return chaveMes(d.getFullYear(), d.getMonth()); };
   const nomeMesChave = (chave) => { const [a, m] = chave.split('-').map(Number); return nomeMes(a, m - 1); };
   const evo = { aba: 'resumo', fim: null, sel: null, tabela: false, animou: false };
-  // Maior carga de cada exercício num conjunto de dias (cargas registradas), juntando os nomes antigos do catálogo.
-  function maioresCargas(filtro) {
-    const m = new Map();
-    cargas.filter((r) => filtro(r.data)).forEach((r) => Object.entries(r.series || {}).forEach(([nome, series]) => {
-      if (config.semPeso.has(nome)) return;
-      const kg = maxDoDia(series);
-      if (kg <= 0) return;
-      const chave = nomeAtual(nome);
-      const atual = m.get(chave);
-      if (!atual || kg > atual.kg) m.set(chave, { kg, nome, data: r.data });
-    }));
-    return m;
-  }
   // ate: só até esse dia do mês (para comparar o mês em andamento com o mesmo trecho do mês anterior).
   function resumoDoMes(chave, ate = 31) {
     const doMes = checkins.filter((c) => dataDe(c).startsWith(chave) && Number(dataDe(c).slice(8, 10)) <= ate);
@@ -270,6 +257,7 @@
       ${dados.map((d) => `<tr><th scope="row">${esc(capitalizar(nomeMesChave(d.chave)))} ${d.chave.slice(0, 4)}</th>${usados.map((g) => `<td>${d.porGrupo[g]}</td>`).join('')}<td><b>${d.total}</b></td></tr>`).join('')}</tbody></table>`;
     $('evo-tabela').hidden = !evo.tabela;
     renderMesEvolucao();
+    renderPesosEvo();
   }
   function graficoMeses(dados) {
     const caixa = $('evo-grafico');
@@ -339,22 +327,8 @@
       return `<li><span class="evo-nome">${seloHTML(g === 'musc' ? (TIPOS_MUSC.find((t) => r.porTipo[t]) || 't1') : g)}${esc(nomeGrupo(g))}</span>
         <span class="evo-valor">${r.porGrupo[g]}</span>${treinos ? `<small>${esc(treinos)}</small>` : ''}</li>`;
     }).join('') : `<li class="evo-vazio-txt">${checkins.length ? `Nenhum treino em ${esc(nomeMesChave(evo.sel))}.` : 'Seus treinos vão aparecer aqui. Faça o primeiro check-in!'}</li>`;
-    // Pesos: maior carga de cada exercício no mês, a variação para o mês anterior e o recorde.
-    const noMes = maioresCargas((d) => d.startsWith(evo.sel));
-    const antes = maioresCargas((d) => d.startsWith(somarMeses(evo.sel, -1)));
-    const itens = [...noMes.entries()].map(([chave, v]) => {
-      const a = antes.get(chave);
-      const rec = recordeAntes(v.nome, `${evo.sel}-01`);
-      return { chave, kg: v.kg, dif: a ? v.kg - a.kg : null, recorde: !!rec && v.kg > rec.kg };
-    }).sort((x, y2) => (y2.dif ?? -Infinity) - (x.dif ?? -Infinity) || x.chave.localeCompare(y2.chave, 'pt-BR'));
-    $('evo-pesos').innerHTML = itens.length ? itens.map((it) => `
-      <li><span class="evo-nome">${esc(it.chave)}${it.recorde ? ' <span title="Recorde no mês" aria-label="Recorde no mês">🏆</span>' : ''}</span>
-        <span class="evo-valor">${fmtKg(it.kg)} kg</span>
-        <small>${it.dif === null ? 'novo neste mês' : it.dif === 0 ? 'igual ao mês anterior' : `${it.dif > 0 ? '▲' : '▼'} ${fmtKg(Math.abs(it.dif))} kg em relação a ${esc(nomeMesChave(somarMeses(evo.sel, -1)))}`}</small></li>`).join('')
-      : '<li class="evo-vazio-txt">Nenhum peso registrado neste mês.</li>';
     renderFaltaEvo(r);
     renderPlanoEvo();
-    renderParadosEvo(noMes, antes);
   }
   const previstoNoDia = (a, m, d) => (config.semana[new Date(a, m - 1, d).getDay()] || []).filter((t) => TIPOS[t]);
   // Quanto falta (só no mês atual): o plano do mês inteiro, o que já foi feito e o ritmo de agora.
@@ -418,33 +392,71 @@
     dica.innerHTML = `💡 ${pior.d === 0 || pior.d === 6 ? 'O' : 'A'} <b>${NOMES_DIA[pior.d]}</b> é o dia que você mais pula nos últimos 3 meses (treinou em ${pior.feito} de ${pior.plano}). Que tal rever esse dia? <a class="link-btn" href="#voce/semana">Abrir Minha semana</a>`;
     dica.hidden = false;
   }
-  // Hora de subir a carga?: exercícios com a mesma carga máxima há 3 meses seguidos ou mais (com a sugestão de
-  // +2 kg até 20 kg e +2,5 kg acima) e os que caíram em relação ao mês anterior. Sem nenhum, a seção some.
-  function renderParadosEvo(noMes, antes) {
-    const cache = new Map();
-    const doMes = (k) => { if (!cache.has(k)) cache.set(k, maioresCargas((d) => d.startsWith(k))); return cache.get(k); };
-    const itens = [];
-    noMes.forEach((v, chave) => {
-      let meses = 1, ini = evo.sel;
-      for (let k = somarMeses(evo.sel, -1); meses < 36; k = somarMeses(k, -1)) {
-        const x = doMes(k).get(chave);
-        if (!x || x.kg !== v.kg) break;
-        meses += 1; ini = k;
-      }
-      if (meses >= 3) {
-        const treinos = cargas.filter((r) => r.data >= `${ini}-01` && r.data.slice(0, 7) <= evo.sel
-          && Object.entries(r.series || {}).some(([n, s]) => nomeAtual(n) === chave && maxDoDia(s) > 0)).length;
-        const sug = v.kg + (v.kg < 20 ? 2 : 2.5);
-        itens.push({ chave, kg: v.kg, tipo: 'parado', txt: `Mesma carga desde ${nomeMesChave(ini)} (${meses} meses, ${treinos} ${treinos === 1 ? 'treino' : 'treinos'}). Se as séries estão fáceis, tente ${fmtKg(sug)} kg.` });
-        return;
-      }
-      const a = antes.get(chave);
-      if (a && v.kg < a.kg) itens.push({ chave, kg: v.kg, tipo: 'caiu', txt: `Abaixo dos ${fmtKg(a.kg)} kg de ${nomeMesChave(somarMeses(evo.sel, -1))}. Vale conferir a técnica ou o descanso.` });
+  // ---------- Pesos na Evolução (todo o histórico, não só o mês escolhido) ----------
+  // Histórico de cada exercício: a maior carga de cada dia, em ordem de data (nome de hoje no catálogo, juntando os antigos).
+  function historicoPesos() {
+    const m = new Map();
+    cargas.forEach((r) => Object.entries(r.series || {}).forEach(([nome, series]) => {
+      if (config.semPeso.has(nome)) return;
+      const kg = maxDoDia(series);
+      if (kg <= 0) return;
+      const chave = nomeAtual(nome);
+      if (!m.has(chave)) m.set(chave, new Map());
+      const dias = m.get(chave);
+      dias.set(r.data, Math.max(kg, dias.get(r.data) || 0));
+    }));
+    return [...m.entries()].map(([chave, dias]) => {
+      const h = [...dias.entries()].map(([data, kg]) => ({ data, kg })).sort((a, b) => (a.data < b.data ? -1 : 1));
+      const melhor = Math.max(...h.map((x) => x.kg));
+      return { chave, h, melhor, quando: h.find((x) => x.kg === melhor).data, primeiro: h[0], ultimo: h[h.length - 1] };
     });
-    itens.sort((x, y) => (x.tipo === y.tipo ? x.chave.localeCompare(y.chave, 'pt-BR') : x.tipo === 'parado' ? -1 : 1));
-    $('evo-parados-bloco').hidden = !itens.length;
-    $('evo-parados').innerHTML = itens.map((it) => `
-      <li><span class="evo-nome">${esc(it.chave)} <span class="evo-aviso">${it.tipo}</span></span><span class="evo-valor">${fmtKg(it.kg)} kg</span><small>${esc(it.txt)}</small></li>`).join('');
+  }
+  const dataCurta = (d) => fmtData(d, { day: 'numeric', month: 'short' }).replace('.', '');
+  const mesCurto = (d) => fmtData(d, { month: 'short', year: d.slice(0, 4) === hoje().slice(0, 4) ? undefined : 'numeric' }).replace('.', '');
+  // Seus maiores pesos: o recorde de cada exercício, do mais pesado para o mais leve, com quanto subiu desde o
+  // primeiro registro e o último treino quando ficou abaixo do recorde. 🏆 = recorde batido nos últimos 30 dias.
+  function renderPesosEvo() {
+    const todos = historicoPesos();
+    const itens = [...todos].sort((a, b) => b.melhor - a.melhor || a.chave.localeCompare(b.chave, 'pt-BR'));
+    const MOSTRAR = 5;
+    const visiveis = evo.pesosTodos ? itens : itens.slice(0, MOSTRAR);
+    // Troféu: recorde nas últimas 4 semanas (a partir de 4 semanas sem subir, o exercício vai para os estagnados).
+    const recente = somarDias(hoje(), -27);
+    $('evo-pesos').innerHTML = itens.length ? visiveis.map((it, i) => {
+      const subiu = it.melhor - it.primeiro.kg;
+      const partes = [`recorde em ${dataCurta(it.quando)}`];
+      if (subiu > 0) partes.push(`▲ ${fmtKg(subiu)} kg desde ${mesCurto(it.primeiro.data)} (${fmtKg(it.primeiro.kg)} kg)`);
+      else if (it.h.length > 1 && it.ultimo.kg === it.melhor) partes.push(`mesma carga desde ${mesCurto(it.primeiro.data)}`);
+      if (it.ultimo.kg < it.melhor) partes.push(`último treino: ${fmtKg(it.ultimo.kg)} kg`);
+      return `
+      <li><span class="evo-nome"><span class="evo-pos" aria-hidden="true">${i + 1}</span>${esc(it.chave)}${it.quando >= recente && it.h.length > 1 && subiu > 0 ? ' <span title="Recorde nas últimas 4 semanas" aria-label="Recorde nas últimas 4 semanas">🏆</span>' : ''}</span>
+        <span class="evo-valor">${fmtKg(it.melhor)} kg</span>
+        <small>${esc(partes.join(' · '))}</small></li>`;
+    }).join('') : '<li class="evo-vazio-txt">Nenhum peso registrado ainda. Anote as cargas no treino para ver sua evolução.</li>';
+    const btn = $('evo-pesos-todos');
+    btn.hidden = itens.length <= MOSTRAR;
+    btn.textContent = evo.pesosTodos ? 'Ver só os 5 maiores' : `Ver todos (${itens.length})`;
+    btn.setAttribute('aria-expanded', String(!!evo.pesosTodos));
+    renderParadosEvo(todos);
+  }
+  // Pesos estagnados: exercícios ainda em uso (treinados nos últimos 60 dias) que não batem o recorde há 4 semanas
+  // ou mais, com pelo menos 2 treinos depois dele. Sugestão de +2 kg até 20 kg e +2,5 kg acima.
+  function renderParadosEvo(todos) {
+    const hj = hoje();
+    const semanas = (d) => Math.floor((deData(hj) - deData(d)) / (7 * 864e5));
+    const itens = todos.filter((it) => it.ultimo.data >= somarDias(hj, -60) && semanas(it.quando) >= 4)
+      .map((it) => {
+        const depois = it.h.filter((x) => x.data > it.quando).length;
+        const sug = it.melhor + (it.melhor < 20 ? 2 : 2.5);
+        const abaixo = it.ultimo.kg < it.melhor ? ` No último treino: ${fmtKg(it.ultimo.kg)} kg.` : '';
+        return { ...it, depois, sem: semanas(it.quando),
+          txt: `Sem subir desde ${dataCurta(it.quando)} (${semanas(it.quando)} semanas, ${depois} ${depois === 1 ? 'treino' : 'treinos'} depois).${abaixo} Se as séries estão fáceis, tente ${fmtKg(sug)} kg.` };
+      })
+      .filter((it) => it.depois >= 2)
+      .sort((a, b) => b.sem - a.sem || a.chave.localeCompare(b.chave, 'pt-BR'));
+    $('evo-parados').innerHTML = itens.length ? itens.map((it) => `
+      <li><span class="evo-nome">${esc(it.chave)} <span class="evo-aviso">${it.sem} sem</span></span><span class="evo-valor">${fmtKg(it.melhor)} kg</span><small>${esc(it.txt)}</small></li>`).join('')
+      : `<li class="evo-vazio-txt">${todos.length ? 'Nenhum peso estagnado: seus exercícios bateram recorde nas últimas 4 semanas. 💪' : 'Registre os pesos dos treinos para ver quais estão estagnados.'}</li>`;
   }
   function mostrarAbaDash(aba, { focar = false, url = true } = {}) {
     evo.aba = aba === 'evolucao' ? 'evolucao' : 'resumo';
@@ -480,6 +492,7 @@
       $('evo-tabela-btn').setAttribute('aria-expanded', String(evo.tabela));
       $('evo-tabela-btn').textContent = evo.tabela ? 'Esconder tabela' : 'Ver tabela';
     }
+    if (e.target.closest('#evo-pesos-todos')) { evo.pesosTodos = !evo.pesosTodos; renderPesosEvo(); }
   });
   $('dash-evolucao').addEventListener('keydown', (e) => {
     const col = e.target.closest('[data-evo-mes]');
