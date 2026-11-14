@@ -44,7 +44,7 @@ async function novaPagina(b, opcoes = {}) {
       .replace("'https://mlovfgbndtpeczgnvivi.supabase.co'", destino).replace(/(desenvolvimento: \{\s*url: )'[^']*'/, (_, x) => x + (opcoes.dev ? destino : "'https://projeto-dev.supabase.co'"));
     r.fulfill({ response: resp, body: js });
   });
-  await ctx.route(new RegExp(`^http://localhost:${PORTA}/(index|admin)\\.html`), async (r) => {
+  await ctx.route(new RegExp(`^http://localhost:${PORTA}/(index|admin|personal)\\.html`), async (r) => {
     const resp = await r.fetch();
     const destino = configurar ? "'https://teste.supabase.co'" : "'https://SEU-PROJETO.supabase.co'";
     const html = (await resp.text()).replace("'https://mlovfgbndtpeczgnvivi.supabase.co'", destino);
@@ -67,7 +67,7 @@ async function novaPagina(b, opcoes = {}) {
   // Perfis sem o campo liberado (testes antigos) entram liberados; para testar convites, defina liberado: false.
   db.perfis = db.perfis.map((x) => ('liberado' in x ? x : { ...x, liberado: true }));
   // Testes antigos: política já aceita e consentimento de saúde dado (os campos aparecem como antes).
-  db.perfis = db.perfis.map((x) => ({ politica_versao: '2026-10-27', consentimento_saude: 'sim', ...x }));
+  db.perfis = db.perfis.map((x) => ({ politica_versao: '2026-11-14', consentimento_saude: 'sim', ...x }));
   // A celebração do check-in fica desligada nos testes antigos; celebracao: true liga (test72).
   if (!opcoes.celebracao) await ctx.addInitScript(() => { window.__semCelebracao = true; });
   // semearDev: true (com dev: true) já grava o banco falso e o "local" com o prefixo "dev:" do ambiente de desenvolvimento.

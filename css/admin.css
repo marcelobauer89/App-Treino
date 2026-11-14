@@ -739,3 +739,9 @@
 .tp-mod .excluir-entendi { margin: 0 0 10px; }
 .tp-item b .selo { vertical-align: -3px; margin-right: 4px; }
 #tp-mod-mais { justify-self: start; }
+/* Profissionais (área do personal): nome, situação e números à esquerda; Liberar ou Bloquear à direita. */
+.prof-item { display: flex; flex-wrap: wrap; align-items: center; gap: 0 12px; }
+.prof-topo { flex: 1 1 260px; width: auto; }
+.prof-topo .situacao { justify-self: end; }
+.prof-acao { padding: 0 0 12px; }
+@media (min-width: 560px) { .prof-acao { padding: 0; } }

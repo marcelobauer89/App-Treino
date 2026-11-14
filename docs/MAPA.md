@@ -12,6 +12,7 @@ Ao criar, renomear ou apagar uma seção ou um teste, atualize este mapa no mesm
 | `css/app.css` | Estilos do app |
 | `js/*.js` | JavaScript do app, um arquivo por área (tabela abaixo). Todos dividem o mesmo escopo global: o que um arquivo define, os seguintes usam. Código que roda ao carregar só pode usar o que já foi carregado antes |
 | `admin.html`, `css/admin.css`, `js/admin.js` | Monitoramento (só administradores) |
+| `personal.html`, `css/personal.css`, `js/personal.js` | Área do personal: usa também o `js/admin.js` no modo personal (`window.MODO_PAINEL = 'personal'`) e o `js/dados.js` (biblioteca e treinos prontos) |
 | `privacidade.html` | Política de Privacidade |
 | `manifest.webmanifest`, `manifest-dev.webmanifest`, `icones/`, `sw.js` | App instalável (PWA): manifesto, ícones e service worker (registrado no `js/inicio.js`) |
 | `ambiente.js` | Projeto Supabase de produção ou de testes (por endereço) e o selo DEV |
@@ -74,19 +75,26 @@ Na ordem de carga. Cada linha é uma seção (comentário `// ---------- Nome --
 | Excluir conta | |
 | Privacidade (LGPD) | Política, consentimento, baixar meus dados |
 | Convites | `?convite=` e pedir acesso |
+| Meu personal (aluno) | `?personal=` e o aceite do convite, Você → Meu personal (encerrar), aviso de treinos novos do personal |
 | **`js/inicio.js`** | |
 | Entrada (login com Google) | Tela de login e sessão |
 | Início | Abertura do app (chama `carregarDados`) |
 
 ## `js/admin.js` (monitoramento): seções
 
-Conexão · Estado · Acesso · On-line agora (Presence) · Cálculos (números da Visão geral) · Render (Visão geral e gráficos) · Usuários · Saúde do app · E-mails · Abas · Detalhe do usuário · Eventos de interface · Excluir conta de um usuário · Convites · Exercícios (catálogo) · Tipos de check-in (tabela tipos_checkin).
+Conexão · Estado · Acesso · On-line agora (Presence) · Cálculos (números da Visão geral) · Render (Visão geral e gráficos) · Usuários · Saúde do app · E-mails · Abas · Detalhe do usuário · Eventos de interface · Excluir conta de um usuário · Convites · Exercícios (catálogo) · Profissionais (área do personal) · Tipos de check-in (tabela tipos_checkin).
+
+No modo personal (`personal.html`), o começo do arquivo troca as funções do banco (`FN`), devolve um elemento "fantasma" para o que só existe no `admin.html` e troca "usuário" por "aluno" (`trocarPalavras`); o resto da área fica nos ganchos `window.PersonalHooks`.
+
+## `js/personal.js` (área do personal): seções
+
+Cadastro do profissional · Dados da área (carregados junto com o painel) · Fichas (editor, que serve também aos treinos de um aluno) · Aplicar ficha e confirmações · Ficha do aluno (dentro do detalhe do painel) · Convites do personal.
 
 Os eventos vêm só do período escolhido (`eventosNecessarios`, em Acesso). Os dados vêm de `todas()` (páginas de 1.000) nas funções `admin_usuarios`, `admin_checkins`, `admin_eventos`, `admin_emails` e `admin_convites`.
 
 ## `supabase/schema.sql`: ordem das partes
 
-Tabelas `perfis`, `checkins`, `cargas` e RLS → `criar_perfil`, `registrar_acesso`, `treinos_validos` → `admins`, `eh_admin`, `eventos`, funções `admin_*` de leitura → Presence (`realtime.messages`) → `emails_enviados` → excluir conta → `convites` e funções de acesso → `videos_exercicios` → `meus_dados_extras` → Storage `fotos-checkin` → catálogo (`exercicios`, `jornadas`, `admin_salvar_exercicio`, `admin_excluir_exercicio`). Procure a parte por `create table if not exists public.<nome>` ou `function public.<nome>`.
+Tabelas `perfis`, `checkins`, `cargas` e RLS → `criar_perfil`, `registrar_acesso`, `treinos_validos` → `admins`, `eh_admin`, `eventos`, funções `admin_*` de leitura → Presence (`realtime.messages`) → `emails_enviados` → excluir conta → `convites` e funções de acesso → `videos_exercicios` → Storage `fotos-checkin` → catálogo (`exercicios`, `jornadas`, `admin_salvar_exercicio`, `admin_excluir_exercicio`) → `tipos_checkin` → área do personal (`profissionais`, `vinculos`, `fichas_personal`, funções `personal_*` e `meus_dados_extras`). Procure a parte por `create table if not exists public.<nome>` ou `function public.<nome>`.
 
 ## Testes por área
 
@@ -115,4 +123,6 @@ Rode só os da área mexida: `node tests/rodar.cjs test20 test22 …`.
 | App instalável (PWA), service worker, Instalar o app e sem internet (cópia dos dados e fila de envio) | test83, test84, test85 |
 | Identidade "Gestão de Treinos" (nome, descrição, semana padrão sem jiu, ordem dos objetivos) | test86 |
 | Tipos de check-in do painel, Cardio com modalidade e km, botões do editor e animação ao salvar | test87 |
+| Área do personal (`personal.html`, aba Profissionais do monitoramento) | test88 |
+| Aluno do personal no app (convite, Meu personal, treinos só de leitura, recado) | test89 |
 | Harness dos testes (`tests/apoio/`) | todos |

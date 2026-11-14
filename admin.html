@@ -57,6 +57,7 @@
       <button type="button" role="tab" id="tab-convites" data-aba="convites" aria-controls="aba-convites" aria-selected="false" tabindex="-1">Convites<span class="aba-alerta" id="alerta-convites" hidden></span></button>
       <button type="button" role="tab" id="tab-exercicios" data-aba="exercicios" aria-controls="aba-exercicios" aria-selected="false" tabindex="-1"><span class="aba-longo">Exercícios</span><span class="aba-curto" aria-hidden="true">Exerc.</span></button>
       <button type="button" role="tab" id="tab-tipos" data-aba="tipos" aria-controls="aba-tipos" aria-selected="false" tabindex="-1"><span class="aba-longo">Tipos de check-in</span><span class="aba-curto" aria-hidden="true">Tipos</span></button>
+      <button type="button" role="tab" id="tab-profissionais" data-aba="profissionais" aria-controls="aba-profissionais" aria-selected="false" tabindex="-1"><span class="aba-longo">Profissionais</span><span class="aba-curto" aria-hidden="true">Personal</span><span class="aba-alerta" id="alerta-prof" hidden></span></button>
     </div>
 
     <div role="tabpanel" id="aba-geral" aria-labelledby="tab-geral">
@@ -291,6 +292,14 @@
         </div>
         <p class="info-txt" id="info-tp" role="note" hidden>As atividades além da musculação que aparecem no check-in, na Minha semana e no Dashboard. O que você muda aqui vale para todos ao abrir o app. Modalidades (ex.: Cardio → Bike e Corrida) aparecem no check-in do tipo, e as marcadas com km pedem a distância. Desativar tira o tipo do check-in e da semana; os check-ins antigos continuam com o nome.</p>
         <div class="cartao lista-cartao" id="tp-lista"><p class="vazio">Carregando…</p></div>
+      </section>
+    </div>
+
+    <div role="tabpanel" id="aba-profissionais" aria-labelledby="tab-profissionais" hidden>
+      <section class="bloco" aria-labelledby="prof-titulo">
+        <div class="bloco-topo"><h2 id="prof-titulo">Profissionais</h2></div>
+        <p class="nota" style="margin:-4px 0 10px">Personal trainers que pediram a área do personal (<code>personal.html</code>). Confira o CREF no site do conselho antes de liberar. Liberar também libera a conta no app; bloquear fecha a área, e os alunos continuam com os treinos.</p>
+        <div class="cartao lista-cartao" id="prof-lista"><p class="vazio">Carregando…</p></div>
       </section>
     </div>
   </div>

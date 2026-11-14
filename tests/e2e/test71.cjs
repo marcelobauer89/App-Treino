@@ -93,7 +93,7 @@ const perfil = async (p) => (await H.banco(p)).perfis.find((x) => x.id === 'u1')
 
   // Animação "Montando seus treinos" com movimento: treinos um a um, semana, "Tudo pronto!" e só então o app.
   for (const scheme of ['light', 'dark']) {
-    const p = await abrir(b, { perfis: [NOVA({ politica_versao: '2026-10-27' })] }, { scheme });
+    const p = await abrir(b, { perfis: [NOVA({ politica_versao: '2026-11-14' })] }, { scheme });
     await p.click('[data-jd-comecar]'); await p.click('[data-jd-marcar="hipertrofia"]'); await p.click('[data-jd-confirmar]');
     await p.waitForTimeout(1300);
     const nomes = await p.locator('.mt-treino b').allInnerTexts();
@@ -115,7 +115,7 @@ const perfil = async (p) => (await H.banco(p)).perfis.find((x) => x.id === 'u1')
 
   // Em Você → Meus treinos: salvar o editor com mudança anima ("Atualizando seus treinos"); sem mudança, não.
   {
-    const p = await abrir(b, { perfis: [NOVA({ politica_versao: '2026-10-27', novidade_oculta: '2026-10-01T00:00:00Z' })],
+    const p = await abrir(b, { perfis: [NOVA({ politica_versao: '2026-11-14', novidade_oculta: '2026-10-01T00:00:00Z' })],
       checkins: [{ id: 'c1', usuario_id: 'u1', tipo: 't1', inicio: '2026-10-20T10:00:00', fim: '2026-10-20T11:00:00', sem_horario: false, obs: '', retroativo: false, series: {} }] });
     await H.voce(p, 'treinos');
     await p.click('#editar-treinos'); await p.waitForTimeout(150);
@@ -147,7 +147,7 @@ const perfil = async (p) => (await H.banco(p)).perfis.find((x) => x.id === 'u1')
   await p.context().close();
 
   // Política já aceita: só 2 passos (o app → objetivo).
-  p = await abrir(b, { perfis: [NOVA({ politica_versao: '2026-10-27' })] });
+  p = await abrir(b, { perfis: [NOVA({ politica_versao: '2026-11-14' })] });
   ok((await passo(p)) === 'Etapa 1 de 2', 'política já aceita: 2 passos', await passo(p));
   await p.click('[data-jd-comecar]'); await p.waitForTimeout(100);
   ok((await titulo(p)) === 'Qual é o seu objetivo?', 'política já aceita: Começar vai direto ao objetivo');
@@ -165,7 +165,7 @@ const perfil = async (p) => (await H.banco(p)).perfis.find((x) => x.id === 'u1')
   await p.context().close();
 
   // Montar do zero: sair do editor sem salvar volta ao objetivo; salvar encerra as boas-vindas.
-  p = await abrir(b, { perfis: [NOVA({ politica_versao: '2026-10-27' })] });
+  p = await abrir(b, { perfis: [NOVA({ politica_versao: '2026-11-14' })] });
   await p.click('[data-jd-comecar]'); await H.escolherBV(p, 'zero');
   ok(await p.isVisible('#editor-dialog') && !(await p.isVisible('#jornada-dialog')), 'Montar do zero abre o editor');
   ok(await p.evaluate(() => document.body.classList.contains('bv-ativa')), 'Montar do zero: app continua escondido');
@@ -184,7 +184,7 @@ const perfil = async (p) => (await H.banco(p)).perfis.find((x) => x.id === 'u1')
   await p.context().close();
 
   // Quem já usa: sem boas-vindas; "Mudar meu objetivo" continua com X e fecha.
-  p = await abrir(b, { perfis: [NOVA({ politica_versao: '2026-10-27', novidade_oculta: '2026-10-01T00:00:00Z' })],
+  p = await abrir(b, { perfis: [NOVA({ politica_versao: '2026-11-14', novidade_oculta: '2026-10-01T00:00:00Z' })],
     checkins: [{ id: 'c1', usuario_id: 'u1', tipo: 't1', inicio: '2026-10-20T10:00:00', fim: '2026-10-20T11:00:00', sem_horario: false, obs: '', retroativo: false, series: {} }] });
   ok(!(await p.isVisible('#jornada-dialog')), 'quem já usa: sem boas-vindas');
   await H.voce(p, 'treinos');
@@ -195,7 +195,7 @@ const perfil = async (p) => (await H.banco(p)).perfis.find((x) => x.id === 'u1')
   await p.context().close();
 
   // Link de teste só no dev: /dev/?boas-vindas abre as 3 etapas mesmo numa conta que já usa; na produção, nada.
-  const USADA = { perfis: [NOVA({ politica_versao: '2026-10-27', novidade_oculta: '2026-10-01T00:00:00Z' })],
+  const USADA = { perfis: [NOVA({ politica_versao: '2026-11-14', novidade_oculta: '2026-10-01T00:00:00Z' })],
     checkins: [{ id: 'c1', usuario_id: 'u1', tipo: 't1', inicio: '2026-10-20T10:00:00', fim: '2026-10-20T11:00:00', sem_horario: false, obs: '', retroativo: false, series: {} }] };
   for (const dev of [true, false]) {
     p = await H.novaPagina(b, { viewport: { width: 390, height: 844 }, dev, extra: USADA });

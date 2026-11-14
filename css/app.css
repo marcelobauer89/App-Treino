@@ -1584,3 +1584,15 @@
   .amostra.lua_de_sangue i:last-child { box-shadow: none; }
   .amostra.miami i:first-child { background: linear-gradient(90deg, #ff4fa3, #ff9a3c); }
   html[data-estilo] #opcoes-tema { opacity: .5; }
+/* Meu personal (Você): nome e CREF em cima, o que o personal vê e o encerrar com confirmação na própria tela. */
+.meu-personal { display: grid; gap: 14px; }
+.mp-nome { margin: 0; display: grid; gap: 2px; font-size: 18px; }
+.mp-nome small { font-size: 14px; color: var(--tinta-2); }
+.perigo-sec { border-color: var(--erro) !important; color: var(--erro) !important; }
+.btn.perigo { background: var(--erro); color: var(--sobre-erro); }
+.mp-confirmar { display: grid; gap: 10px; }
+.mp-confirmar p { margin: 0; }
+.personal-erro { background: color-mix(in srgb, var(--erro) 12%, var(--papel)); color: var(--erro); }
+/* Recado do personal no topo da ficha do treino. */
+.recado-personal { margin: 0 0 12px; padding: 10px 12px; border-radius: 10px; background: var(--marca-suave); color: var(--tinta); font-size: 14px; }
+.recado-personal b { color: var(--marca-tinta); }

@@ -19,6 +19,7 @@ Ao mudar um recurso, atualize só a seção dele (ache pelo índice).
 - [Catálogo de exercícios e objetivos](#catálogo-de-exercícios-e-objetivos)
 - [Vídeos liberados por usuário](#vídeos-liberados-por-usuário)
 - [Convites (acesso só para convidados)](#convites-acesso-só-para-convidados)
+- [Área do personal](#área-do-personal)
 - [Excluir conta](#excluir-conta)
 - [Foto no check-in (opcional)](#foto-no-check-in-opcional)
 - [Privacidade e LGPD](#privacidade-e-lgpd)
@@ -167,6 +168,20 @@ Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 a t6 nos check-i
 - **Bloquear ou liberar:** no detalhe de cada usuário (aba Usuários), seção Acesso.
 - **Quem já tinha conta:** continua liberado. Administradores também entram sempre.
 - **No banco:** `perfis.liberado`, `perfis.acesso_pedido_em` e `perfis.liberado_como` / `liberado_em` (convite, pedido ou administrador; só as funções gravam), a tabela `convites` (sem acesso direto pela API) e as funções `usar_convite`, `pedir_acesso` e `admin_*_convite` (inclusive `admin_excluir_convite`) / `admin_liberar_usuario` / `admin_bloquear_usuario` / `admin_recusar_pedido`. Check-ins e cargas só são gravados por contas liberadas. A pessoa não consegue apagar nem recriar o próprio perfil pela API (só cria as colunas básicas, e `liberado` nasce falso), para ninguém pular o convite; visitantes sem login não têm permissão em nenhuma tabela. Para ligar, rode de novo o `supabase/schema.sql`.
+
+## Área do personal
+
+Página própria para personal trainers: `personal.html` (em produção, https://marcelobauer89.github.io/App-Treino/personal.html; no dev, `/App-Treino/dev/personal.html`). O personal monta as fichas, aplica aos alunos e acompanha quem treina. O aluno continua no app de sempre.
+
+- **Cadastro:** o personal abre a página, entra com o Google e envia nome profissional, CREF e UF. O pedido aparece no monitoramento, aba **Profissionais**, com o selo dos que aguardam. Confira o CREF no site do conselho e toque em **Liberar** (também libera a conta no app). **Bloquear** fecha a área; os alunos continuam com os treinos.
+- **Convidar aluno (aba Convidar):** gera um link por aluno, `…/App-Treino/?personal=CODIGO`, que vale 7 dias, com Copiar link, Enviar pelo WhatsApp e Cancelar. O aluno abre o link no celular, entra com o Google e vê o nome e o CREF do personal, o que ele vai ver e montar e o que nunca vê (observações e fotos). **Aceitar acompanhamento** cria o vínculo e libera a conta, mesmo sem convite do administrador. O código fica guardado no aparelho durante o login. Um aluno tem um personal por vez: aceitar outro encerra o anterior. Limite de 30 alunos ativos por personal (`profissionais.limite_alunos`, mude no SQL Editor).
+- **Fichas (aba Fichas):** até 6 treinos de até 15 exercícios da biblioteca, cada um com nome, foco, recado opcional para o aluno, séries e PSE (vêm da biblioteca ao escolher o exercício) e a ordem pelas setas, mais a semana sugerida (até 2 atividades por dia). Dá para começar em branco, do plano pronto ou de um objetivo pronto, e editar, duplicar e excluir. **Aplicar a alunos** escolhe os alunos e, se quiser, troca também a semana deles.
+- **Ajustar um aluno:** na ficha do aluno (aba Alunos), **Editar os treinos deste aluno** muda só os treinos dele (a ficha original não muda) e marca "ajustada para este aluno". A versão anterior de cada aluno fica guardada.
+- **Monitoramento:** Visão geral e Alunos são os do monitoramento do administrador (o `js/admin.js` no modo personal, `window.MODO_PAINEL = 'personal'`), só com os alunos com vínculo ativo e com "aluno" no lugar de "usuário". A ficha do aluno traz ainda os treinos atuais, os pesos de cada exercício (recorde, último treino, quanto subiu e se está parado há 4 semanas ou mais) e **Encerrar acompanhamento**. Ficam de fora o On-line agora, os objetivos escolhidos, a saúde do app, os e-mails, os convites do administrador, o catálogo e os tipos de check-in.
+- **No app do aluno:** com personal, Meus treinos fica só de leitura ("Seus treinos são montados por …") e o banco recusa a mudança feita pelo próprio aluno; a semana continua dele. O recado de cada treino aparece no topo da tela Treino, e "… atualizou seus treinos" aparece uma vez a cada envio. Conta nova com personal não passa pela escolha de objetivo. Em **Você → Meu personal**, o aluno vê quem acompanha e encerra quando quiser (os treinos ficam com ele).
+- **Privacidade:** o personal vê treinos, semana, check-ins (tipo e horário), pesos e o uso do app (sem aparelho e navegador), só dos alunos com vínculo ativo; nunca e-mail, observações nem fotos. A política mudou (versão `2026-11-14`, seção 3a), e todos veem o aviso da política nova ao abrir o app. "Baixar meus dados" inclui o acompanhamento e, para o personal, o cadastro e as fichas.
+- **No banco:** tabelas `profissionais`, `vinculos` e `fichas_personal` (sem acesso direto pela API), colunas `perfis.acompanhado_por`, `treinos_por`, `treinos_em` e `ficha_id`, o gatilho `perfis_treinos_do_personal` e as funções `eh_profissional`, `pedir_acesso_profissional`, `meu_cadastro_profissional`, `admin_profissionais`, `admin_liberar_profissional`, `personal_*` (convites, alunos, check-ins, eventos, cargas, fichas, aplicar e salvar treinos, encerrar), `ver_convite_personal`, `aceitar_vinculo`, `meu_personal` e `encerrar_vinculo`.
+- **Para ligar:** rode `supabase/migracoes/003-area-do-personal.sql` no SQL Editor (testes ao ir para a `dev`, produção ao ir para a `main`). Para o login do Google voltar à página, `…/App-Treino/**` precisa estar em **Authentication → URL Configuration → Redirect URLs** (já vale para o app e o monitoramento).
 
 ## Excluir conta
 

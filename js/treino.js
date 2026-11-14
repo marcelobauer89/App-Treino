@@ -25,9 +25,11 @@
 
   function renderSobre() {
     const t = TREINOS[estado.treino];
+    // Recado do personal para este treino (quando quem montou foi o personal).
+    const recado = t.recado ? `<p class="recado-personal"><b>Recado do seu personal:</b> ${esc(t.recado)}</p>` : '';
     // Treinos montados pela pessoa não têm o texto de objetivo e impacto.
-    if (!t.objetivo) { $('sobre').innerHTML = ''; return; }
-    $('sobre').innerHTML = `
+    if (!t.objetivo) { $('sobre').innerHTML = recado; return; }
+    $('sobre').innerHTML = `${recado}
       <details class="sobre"${estado.descAberta ? ' open' : ''}>
         <summary>
           <div class="sobre-head">
