@@ -10,9 +10,11 @@ const dia = (n, h = '07:00') => { const d = new Date(T); d.setDate(d.getDate() -
 const ISO = (n) => new Date(T.getTime() - n * 864e5).toISOString();
 
 // u1 (a conta logada nos testes) é o personal. a1 e a2 são alunos; a3 usa o app, mas não é aluno.
+// Foto de exemplo (1 pixel) enviada pelo app: o personal vê a foto da aluna; o aluno sem foto aparece com as iniciais.
+const FOTO = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
 const perfis = () => [
   { id: 'u1', nome: 'Paula Exemplo', email: 'paula@exemplo.com', tema: 'auto' },
-  { id: 'a1', nome: 'Aluna Um', email: 'a1@exemplo.com', acompanhado_por: 'u1', ultimo_acesso: ISO(0), acessos: 9, semana: [[], ['t1'], ['jiu'], ['t2'], [], ['t3'], []], treinos: null },
+  { id: 'a1', nome: 'Aluna Um', email: 'a1@exemplo.com', foto: FOTO, acompanhado_por: 'u1', ultimo_acesso: ISO(0), acessos: 9, semana: [[], ['t1'], ['jiu'], ['t2'], [], ['t3'], []], treinos: null },
   { id: 'a2', nome: 'Aluno Dois', email: 'a2@exemplo.com', acompanhado_por: 'u1', ultimo_acesso: ISO(10), acessos: 4, semana: null, treinos: null },
   { id: 'a3', nome: 'Pessoa Fora', email: 'a3@exemplo.com', ultimo_acesso: ISO(0), acessos: 20 },
 ];
@@ -79,6 +81,26 @@ const base = (extra = {}) => ({
     await p.click('#sem-ant');
     ok(/Semana passada/.test(await p.locator('#semana-intervalo').innerText()) && await p.locator('#sem-prox').isEnabled() && await p.locator('#semana-detalhes').isVisible(), `${scheme}: seta volta para a semana passada`);
     await p.click('#sem-prox'); await p.click('#sem-detalhes');
+    // Foto do aluno ao lado do nome (a enviada pelo app; sem foto, as iniciais).
+    ok(await p.locator('#semana-tabela .avatar.tem-foto img').count() === 1 && /AD/.test(await p.locator('#semana-tabela .avatar:not(.tem-foto)').first().innerText())
+      && await p.locator('#atencao-lista .avatar').count() === 2, `${scheme}: foto (ou iniciais) do aluno na semana e em Precisam de atenção`);
+    // Gerenciar: a semana em tela cheia, com números, filtros, 4 semanas e o detalhe do dia.
+    await p.click('#sem-gerenciar');
+    await p.waitForSelector('#gs-dialog[open]');
+    ok(/Cumprimento da turma/.test(await p.locator('#gs-kpis').innerText()) && await p.locator('#gs-tabela tbody tr').count() === 2 && /2 alunos/.test(await p.locator('#gs-conta').innerText()), `${scheme}: Gerenciar abre em tela cheia com os números e os dois alunos`);
+    await p.selectOption('#gs-sit', 'semsemana');
+    ok(await p.locator('#gs-tabela tbody tr').count() === 1 && /Aluno Dois/.test(await p.locator('#gs-tabela').innerText()) && await p.locator('#gs-limpar').isVisible(), `${scheme}: filtro de situação (sem semana montada)`);
+    await p.click('#gs-limpar');
+    await p.fill('#gs-busca', 'aluna');
+    ok(await p.locator('#gs-tabela tbody tr').count() === 1 && /Aluna Um/.test(await p.locator('#gs-tabela').innerText()), `${scheme}: busca pelo nome`);
+    await p.locator('#gs-tabela [data-gs-cel]').nth(1).click();
+    ok(await p.locator('#gs-info').isVisible() && /Aluna Um · Ter/.test(await p.locator('#gs-info').innerText()), `${scheme}: tocar no dia mostra o planejado e o feito`, await p.locator('#gs-info').innerText());
+    await p.click('[data-gs-vista="mes"]');
+    ok(await p.locator('#gs-tabela thead th').count() === 8 && /4 semanas/.test(await p.locator('#gs-intervalo').innerText()) && await p.locator('#gs-legenda').isHidden(), `${scheme}: visão das últimas 4 semanas`);
+    await p.screenshot({ path: `${H.SAIDA}/personal-gerenciar-${scheme}.png`, fullPage: false });
+    await p.click('[data-gs-vista="semana"]'); await p.fill('#gs-busca', '');
+    await p.click('[data-gs-fechar]');
+    ok(await p.locator('#gs-dialog[open]').count() === 0, `${scheme}: Gerenciar fecha`);
     ok(await p.locator('#sumiu-lista').count() === 0 && await p.locator('#g2').count() === 0, `${scheme}: sem os blocos do administrador (Quem sumiu, usuários ativos)`);
     ok(/Aluna Um/.test(await p.locator('#evoluiu-lista').innerText()), `${scheme}: Quem mais evoluiu mostra o recorde`);
     ok(/Sem treino seu/.test(await p.locator('#fichas-uso-lista').innerText()), `${scheme}: Fichas em uso conta quem está sem treino seu`);

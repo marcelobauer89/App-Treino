@@ -197,7 +197,7 @@
     $('atencao-lista').innerHTML = !total ? '<p class="vazio">Você ainda não tem alunos. Convide na aba Convidar.</p>'
       : atencao.length ? atencao.map(({ a, m }) => `<div class="item-lista">
         <button class="item-topo" type="button" data-abrir-usuario="${a.u.id}">
-          <span class="item-titulo">${esc(a.u.nome)}</span>
+          <span class="item-titulo com-avatar">${painel().avatar(a.u, 'av-p')}${esc(a.u.nome)}</span>
           <span class="pf-motivos">${m.map(([peso, t]) => `<span class="pf-motivo${peso >= 4 ? ' forte' : ''}">${esc(t)}</span>`).join('')}</span>
         </button></div>`).join('')
         : '<p class="vazio">Ninguém precisa de atenção agora: todos têm treino seu, estão treinando e seguindo o plano.</p>';
@@ -217,100 +217,103 @@
         ${semMim ? linha('Sem treino seu', semMim, 'com o plano pronto do app ou os treinos de antes', 'var(--erro)') : ''}</ol>
         ${!usos.length && !soDoAluno ? '<p class="vazio">Nenhum aluno está com uma ficha sua ainda. Monte na aba Treinos e aplique.</p>' : ''}`;
   }
-  // A semana (segunda a domingo) de cada aluno: planejado (semana do app) × feito (check-ins). As setas trocam a semana
-  // (só para trás) e "Ver detalhes" abre o resumo por aluno (feito ÷ planejado, faltas, extras e último treino).
-  const SEM = { desloc: 0, detalhes: false, lista: [] };
+  // ---------- Semana dos alunos e Gerenciar semana ----------
+  // O card mostra a semana (segunda a domingo) de cada aluno: planejado (semana do app) × feito (check-ins). As setas
+  // trocam a semana (só para trás) e "Ver detalhes" abre o resumo por aluno. "Gerenciar" abre a mesma semana em tela
+  // cheia, com números da turma, busca, filtros (situação e atividade), ordem, a visão das últimas 4 semanas e CSV.
+  const SEM = { desloc: 0, detalhes: false, lista: [], linhas: [], gs: { busca: '', sit: 'todos', tipo: '', ordem: 'nome', vista: 'semana' } };
   const DESCANSO = '<span class="pf-marca-dia descanso" title="Descanso"></span>';
-  function intervaloDaSemana(seg, dom) {
-    const a = painel().deYmd(seg), b = painel().deYmd(dom);
-    const mes = (x) => x.toLocaleDateString('pt-BR', { month: 'short' }).replace(/\./g, '');
-    return a.getMonth() === b.getMonth() ? `${a.getDate()} a ${b.getDate()} de ${mes(b)}` : `${a.getDate()} de ${mes(a)} a ${b.getDate()} de ${mes(b)}`;
+  const av = (u, cls) => painel().avatar(u, cls);
+  const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+  function intervaloDaSemana(seg, fim) {
+    const a = painel().deYmd(seg), b = painel().deYmd(fim || painel().calc.somarDias(seg, 6));
+    return a.getMonth() === b.getMonth() ? `${a.getDate()} a ${b.getDate()} de ${MESES[b.getMonth()]}` : `${a.getDate()} de ${MESES[a.getMonth()]} a ${b.getDate()} de ${MESES[b.getMonth()]}`;
+  }
+  function segundaDaSemana(desloc) {
+    const C = painel().calc, hoje = painel().hoje();
+    return C.somarDias(hoje, -((painel().deYmd(hoje).getDay() + 6) % 7) - 7 * desloc);
+  }
+  function rotuloDaSemana(desloc) {
+    const x = intervaloDaSemana(segundaDaSemana(desloc));
+    return desloc === 0 ? `Esta semana · ${x}` : desloc === 1 ? `Semana passada · ${x}` : x;
+  }
+  // Planejado × feito de um aluno numa semana (tipo, se vier, limita a uma atividade). Cada treino planejado é cumprido
+  // pelo mesmo tipo ou, se não, por outro do mesmo grupo (ex.: Treino B no dia do A); o que sobra é treino extra.
+  function semanaDoAluno(a, seg, tipo) {
+    const C = painel().calc, d = painel().dados(), hoje = painel().hoje(), T = painel().tipos();
+    const sem = Array.isArray(a.u.semana) && a.u.semana.length === 7 ? a.u.semana : null;
+    const meus = d.checkins.filter((c) => c.usuario_id === a.u.id);
+    const r = { a, sem: !!sem, feitos: 0, plan: 0, extras: [], faltas: [], faltasN: 0, treinou: 0, dias: [] };
+    for (let i = 0; i < 7; i++) {
+      const dia = C.somarDias(seg, i), wd = painel().deYmd(dia).getDay();
+      let plan = sem ? (sem[wd] || []).filter((t) => T[t]) : [];
+      let fez = meus.filter((c) => C.diaDeCheckin(c) === dia).map((c) => c.tipo);
+      if (tipo) { plan = plan.filter((t) => t === tipo); fez = fez.filter((t) => t === tipo); }
+      const sobra = fez.slice(), falta = [];
+      plan.forEach((t) => {
+        let k = sobra.indexOf(t);
+        if (k < 0) k = sobra.findIndex((f) => T[f] && T[f].grupo === T[t].grupo);
+        if (k >= 0) sobra.splice(k, 1); else falta.push(t);
+      });
+      const passado = dia < hoje;
+      if (dia <= hoje) { r.plan += plan.length; r.feitos += plan.length - falta.length; r.extras.push(...sobra); }
+      if (passado && falta.length) { r.faltas.push(CURTO[wd].toLowerCase()); r.faltasN += falta.length; }
+      if (fez.length) r.treinou += 1;
+      r.dias.push({ dia, wd, plan, fez, falta, passado, ehHoje: dia === hoje });
+    }
+    r.pct = r.plan ? r.feitos / r.plan : null;
+    return r;
+  }
+  const nomeTipo = (t) => { const T = painel().tipos(); return T[t] ? T[t].nome : t; };
+  function marcasDoDia(c, temSemana) {
+    const T = painel().tipos();
+    const itens = [...c.fez.map((t) => `<span class="pf-marca-dia feito" style="background:var(--${T[t] ? T[t].grupo : 'musc'})" title="${esc(nomeTipo(t))}: feito">${CHECK}</span>`),
+      ...c.falta.map((t) => `<span class="pf-marca-dia ${c.passado ? 'faltou' : 'planejado'}" title="${esc(nomeTipo(t))}: ${c.passado ? 'faltou' : 'a fazer'}">${c.passado ? XIS : esc(T[t].selo)}</span>`)];
+    return itens.join('') || (temSemana ? DESCANSO : '');
+  }
+  const descDoDia = (c) => [c.fez.length ? `feito: ${c.fez.map(nomeTipo).join(', ')}` : '', c.falta.length ? `${c.passado ? 'faltou' : 'a fazer'}: ${c.falta.map(nomeTipo).join(', ')}` : ''].filter(Boolean).join('; ') || 'descanso';
+  function ultimoTreinoTxt(a) {
+    if (!a.ultimoTreino) return 'ainda não fez check-in';
+    const n = painel().calc.diasEntre(a.ultimoTreino, painel().hoje());
+    return n === 0 ? 'treinou hoje' : n === 1 ? 'treinou ontem' : `último treino há ${n} dias`;
+  }
+  const cabecalhoDias = (dias) => dias.map((c) => { const x = painel().deYmd(c.dia); return `<th scope="col" class="${c.ehHoje ? 'hoje' : ''}">${CURTO[x.getDay()]}<small>${x.getDate()}</small></th>`; }).join('');
+  function celulaAluno(r, sub) {
+    return `<div class="pf-aluno-cel">${av(r.a.u, 'av-p')}<div><button class="link-btn pf-sem-grade-nome" type="button" data-abrir-usuario="${r.a.u.id}">${esc(r.a.u.nome)}</button>${sub}</div></div>`;
   }
   function renderSemana(lista) {
     if (lista) SEM.lista = lista;
     lista = SEM.lista;
-    const C = painel().calc, d = painel().dados(), hoje = painel().hoje(), T = painel().tipos();
-    const dow = painel().deYmd(hoje).getDay();
-    const seg = C.somarDias(hoje, -((dow + 6) % 7) - 7 * SEM.desloc);
-    const dias = ORDEM_DIAS.map((_, i) => C.somarDias(seg, i));
-    const nome = (t) => (T[t] ? T[t].nome : t);
-    const treinou = dias.map(() => new Set());
-    let feitos = 0, planejadosAteHoje = 0;
-    const resumo = [];
-    const linhas = lista.slice().sort((a, b) => a.u.nome.localeCompare(b.u.nome, 'pt-BR')).map((a) => {
-      const sem = Array.isArray(a.u.semana) && a.u.semana.length === 7 ? a.u.semana : null;
-      const r = { a, sem: !!sem, feitos: 0, plan: 0, extras: [], faltas: [] };
-      const cels = dias.map((dia, i) => {
-        const wd = painel().deYmd(dia).getDay();
-        const plan = sem ? (sem[wd] || []).filter((t) => T[t]) : [];
-        const fez = d.checkins.filter((c) => c.usuario_id === a.u.id && C.diaDeCheckin(c) === dia).map((c) => c.tipo);
-        const passado = dia < hoje, ehHoje = dia === hoje;
-        // Cada treino planejado é cumprido pelo mesmo tipo ou, se não, por outro do mesmo grupo (ex.: Treino B no dia do A).
-        const sobra = fez.slice(), falta = [];
-        plan.forEach((t) => {
-          let k = sobra.indexOf(t);
-          if (k < 0) k = sobra.findIndex((f) => T[f] && T[f].grupo === T[t].grupo);
-          if (k >= 0) sobra.splice(k, 1); else falta.push(t);
-        });
-        if (fez.length) treinou[i].add(a.u.id);
-        if (dia <= hoje) { r.plan += plan.length; r.feitos += plan.length - falta.length; r.extras.push(...sobra); }
-        if (passado && falta.length) r.faltas.push(CURTO[wd].toLowerCase());
-        const itens = [...fez.map((t) => `<span class="pf-marca-dia feito" style="background:var(--${T[t] ? T[t].grupo : 'musc'})" title="${esc(nome(t))}: feito">${CHECK}</span>`),
-          ...falta.map((t) => `<span class="pf-marca-dia ${passado ? 'faltou' : 'planejado'}" title="${esc(nome(t))}: ${passado ? 'faltou' : 'a fazer'}">${passado ? XIS : esc(T[t].selo)}</span>`)];
-        const desc = [fez.length ? `feito: ${fez.map(nome).join(', ')}` : '', falta.length ? `${passado ? 'faltou' : 'a fazer'}: ${falta.map(nome).join(', ')}` : ''].filter(Boolean).join('; ') || 'descanso';
-        return `<td class="${ehHoje ? 'hoje' : ''}"><span class="sr">${esc(desc)}</span><span class="pf-dias" aria-hidden="true">${itens.join('') || (sem ? DESCANSO : '')}</span></td>`;
-      }).join('');
-      feitos += r.feitos; planejadosAteHoje += r.plan;
-      resumo.push(r);
-      const sub = !sem ? 'sem semana montada' : r.plan ? `${r.feitos} de ${r.plan} feitos` : 'nada planejado até hoje';
-      return `<tr><th scope="row"><button class="link-btn pf-sem-grade-nome" type="button" data-abrir-usuario="${a.u.id}">${esc(a.u.nome)}</button><small class="pf-sub${sem && r.plan && r.feitos >= r.plan ? ' ok' : ''}">${sub}</small></th>${cels}</tr>`;
+    const seg = segundaDaSemana(SEM.desloc), atual = SEM.desloc === 0;
+    const resumo = lista.slice().sort((a, b) => a.u.nome.localeCompare(b.u.nome, 'pt-BR')).map((a) => semanaDoAluno(a, seg));
+    const feitos = resumo.reduce((x, r) => x + r.feitos, 0), plan = resumo.reduce((x, r) => x + r.plan, 0);
+    const linhas = resumo.map((r) => {
+      const sub = !r.sem ? 'sem semana montada' : r.plan ? `${r.feitos} de ${r.plan} feitos` : 'nada planejado até hoje';
+      return `<tr><th scope="row">${celulaAluno(r, `<small class="pf-sub${r.sem && r.plan && r.feitos >= r.plan ? ' ok' : ''}">${sub}</small>`)}</th>${r.dias.map((c) => `<td class="${c.ehHoje ? 'hoje' : ''}"><span class="sr">${esc(descDoDia(c))}</span><span class="pf-dias" aria-hidden="true">${marcasDoDia(c, r.sem)}</span></td>`).join('')}</tr>`;
     });
-    const atual = SEM.desloc === 0;
-    $('semana-intervalo').textContent = atual ? `Esta semana · ${intervaloDaSemana(dias[0], dias[6])}` : SEM.desloc === 1 ? `Semana passada · ${intervaloDaSemana(dias[0], dias[6])}` : intervaloDaSemana(dias[0], dias[6]);
+    const dias = resumo.length ? resumo[0].dias : [];
+    $('semana-intervalo').textContent = rotuloDaSemana(SEM.desloc);
     $('sem-prox').disabled = atual;
-    $('semana-resumo').textContent = planejadosAteHoje
-      ? `${feitos} de ${qtd(planejadosAteHoje, 'treino planejado feito', 'treinos planejados feitos')}${atual ? ' até hoje' : ''} (${Math.round(feitos / planejadosAteHoje * 100)}%)` : '';
+    $('semana-resumo').textContent = plan ? `${feitos} de ${qtd(plan, 'treino planejado feito', 'treinos planejados feitos')}${atual ? ' até hoje' : ''} (${Math.round(feitos / plan * 100)}%)` : '';
     $('semana-tabela').innerHTML = lista.length ? `<table class="pf-sem-grade">
-      <thead><tr><th scope="col">Aluno</th>${dias.map((dia) => { const x = painel().deYmd(dia); return `<th scope="col" class="${dia === hoje ? 'hoje' : ''}">${CURTO[x.getDay()]}<small>${x.getDate()}</small></th>`; }).join('')}</tr></thead>
+      <thead><tr><th scope="col">Aluno</th>${cabecalhoDias(dias)}</tr></thead>
       <tbody>${linhas.join('')}</tbody>
-      <tfoot><tr><th scope="row">Treinaram</th>${dias.map((dia, i) => `<td class="${dia === hoje ? 'hoje' : ''}">${dia > hoje ? '' : treinou[i].size}</td>`).join('')}</tr></tfoot></table>` : '<p class="vazio">Sem alunos ainda.</p>';
+      <tfoot><tr><th scope="row">Treinaram</th>${dias.map((c, i) => `<td class="${c.ehHoje ? 'hoje' : ''}">${c.dia > painel().hoje() ? '' : resumo.filter((r) => r.dias[i].fez.length).length}</td>`).join('')}</tr></tfoot></table>` : '<p class="vazio">Sem alunos ainda.</p>';
     $('sem-detalhes').hidden = !lista.length;
+    $('sem-gerenciar').hidden = !lista.length;
     $('sem-detalhes').setAttribute('aria-expanded', String(SEM.detalhes));
     $('sem-detalhes').firstChild.textContent = SEM.detalhes ? 'Esconder detalhes ' : 'Ver detalhes ';
     $('semana-detalhes').hidden = !SEM.detalhes || !lista.length;
     if (SEM.detalhes && lista.length) renderDetalhesSemana(resumo, atual);
+    if ($('gs-dialog').open) renderGerenciar();
   }
   function renderDetalhesSemana(resumo, atual) {
-    const C = painel().calc, hoje = painel().hoje(), T = painel().tipos();
-    const pct = (r) => (r.plan ? r.feitos / r.plan : null);
     const comPlano = resumo.filter((r) => r.plan);
     const tudo = comPlano.filter((r) => r.feitos >= r.plan).length;
     const nada = comPlano.filter((r) => !r.feitos).length;
     const extras = resumo.reduce((x, r) => x + r.extras.length, 0);
     const chip = (n, rot, cls) => `<li class="pf-sem-chip ${cls}"><strong>${n}</strong>${rot}</li>`;
-    const ultimo = (r) => {
-      const u = r.a.ultimoTreino;
-      if (!u) return 'ainda não fez check-in';
-      const n = C.diasEntre(u, hoje);
-      return n === 0 ? 'treinou hoje' : n === 1 ? 'treinou ontem' : `último treino há ${n} dias`;
-    };
-    const ordem = resumo.slice().sort((x, y) => (pct(x) ?? 2) - (pct(y) ?? 2) || x.a.u.nome.localeCompare(y.a.u.nome, 'pt-BR'));
-    const item = (r) => {
-      const p = pct(r);
-      const linhas = [];
-      if (!r.sem) linhas.push('Sem semana montada no app');
-      else if (!r.plan) linhas.push(atual ? 'Nada planejado até hoje' : 'Nada planejado na semana');
-      else if (r.faltas.length) linhas.push(`Faltou ${r.faltas.join(', ')}`);
-      else if (r.feitos >= r.plan) linhas.push(atual ? 'Em dia com o planejado' : 'Fez tudo o que estava planejado');
-      if (r.extras.length) linhas.push(`+${qtd(r.extras.length, 'treino extra', 'treinos extras')} (${[...new Set(r.extras.map((t) => (T[t] ? T[t].nome : t)))].join(', ')})`);
-      const cor = p === null ? 'var(--fio)' : p >= 1 ? 'var(--feito-tinta)' : p >= 0.5 ? 'var(--marca)' : 'var(--erro)';
-      return `<li class="pf-sem-det-item">
-        <button class="link-btn pf-sem-grade-nome" type="button" data-abrir-usuario="${r.a.u.id}">${esc(r.a.u.nome)}</button>
-        <span class="pf-sem-det-num">${p === null ? '—' : `${r.feitos}/${r.plan}<small>${Math.round(p * 100)}%</small>`}</span>
-        <span class="rt-trilho" aria-hidden="true"><span class="rt-barra" style="width:${p === null ? 0 : Math.min(1, p) * 100}%;background:${cor}"></span></span>
-        <span class="pf-sem-det-txt">${linhas.map(esc).join(' · ')}${linhas.length ? ' · ' : ''}${esc(ultimo(r))}</span>
-      </li>`;
-    };
+    const ordem = resumo.slice().sort((x, y) => (x.pct ?? 2) - (y.pct ?? 2) || x.a.u.nome.localeCompare(y.a.u.nome, 'pt-BR'));
     $('semana-detalhes').innerHTML = `<ul class="pf-sem-chips">
         ${chip(tudo, comPlano.length === 1 ? ' cumpriu tudo' : ' cumpriram tudo', 'ok')}
         ${chip(comPlano.length - tudo - nada, ' em parte', '')}
@@ -318,16 +321,162 @@
         ${chip(extras, extras === 1 ? ' treino extra' : ' treinos extras', '')}
       </ul>
       <p class="nota">Do menor para o maior cumprimento do planejado${atual ? ' até hoje' : ''}.</p>
-      <ol class="pf-sem-det">${ordem.map(item).join('')}</ol>`;
+      <ol class="pf-sem-det">${ordem.map((r) => itemDetalhe(r, atual)).join('')}</ol>`;
+  }
+  function situacaoTxt(r, atual) {
+    const l = [];
+    if (!r.sem) l.push('Sem semana montada no app');
+    else if (!r.plan) l.push(atual ? 'Nada planejado até hoje' : 'Nada planejado na semana');
+    else if (r.faltas.length) l.push(`Faltou ${r.faltas.join(', ')}`);
+    else if (r.feitos >= r.plan) l.push(atual ? 'Em dia com o planejado' : 'Fez tudo o que estava planejado');
+    if (r.extras.length) l.push(`+${qtd(r.extras.length, 'treino extra', 'treinos extras')} (${[...new Set(r.extras.map(nomeTipo))].join(', ')})`);
+    return l;
+  }
+  const corPct = (p) => (p === null ? 'var(--fio)' : p >= 1 ? 'var(--feito-tinta)' : p >= 0.5 ? 'var(--marca)' : 'var(--erro)');
+  function itemDetalhe(r, atual) {
+    const p = r.pct, l = situacaoTxt(r, atual);
+    return `<li class="pf-sem-det-item">
+        ${celulaAluno(r, '')}
+        <span class="pf-sem-det-num">${p === null ? '—' : `${r.feitos}/${r.plan}<small>${Math.round(p * 100)}%</small>`}</span>
+        <span class="rt-trilho" aria-hidden="true"><span class="rt-barra" style="width:${p === null ? 0 : Math.min(1, p) * 100}%;background:${corPct(p)}"></span></span>
+        <span class="pf-sem-det-txt">${l.map(esc).join(' · ')}${l.length ? ' · ' : ''}${esc(ultimoTreinoTxt(r.a))}</span>
+      </li>`;
+  }
+
+  // Gerenciar semana (tela cheia).
+  const SITUACOES = [['todos', 'Todos os alunos'], ['faltou', 'Faltaram algum treino'], ['nada', 'Não treinaram o planejado'], ['parte', 'Cumpriram em parte'],
+    ['emdia', 'Cumpriram tudo'], ['extra', 'Fizeram treino extra'], ['semplano', 'Nada planejado'], ['semsemana', 'Sem semana montada']];
+  const ORDENS = [['nome', 'Nome (A a Z)'], ['menor', 'Menor cumprimento'], ['maior', 'Maior cumprimento'], ['faltas', 'Mais faltas'], ['parado', 'Mais tempo sem treinar']];
+  function passaSituacao(r, sit) {
+    return sit === 'todos' || (sit === 'faltou' && r.faltasN > 0) || (sit === 'nada' && r.plan > 0 && !r.feitos)
+      || (sit === 'parte' && r.feitos > 0 && r.feitos < r.plan) || (sit === 'emdia' && r.plan > 0 && r.feitos >= r.plan)
+      || (sit === 'extra' && r.extras.length > 0) || (sit === 'semplano' && r.sem && !r.plan) || (sit === 'semsemana' && !r.sem);
+  }
+  // Soma as semanas (visão de 4 semanas) num resumo só, no mesmo formato de semanaDoAluno.
+  function somarSemanas(a, semanas) {
+    const r = { a, sem: semanas[0].sem, feitos: 0, plan: 0, extras: [], faltas: [], faltasN: 0, treinou: 0, semanas };
+    semanas.forEach((s) => { r.feitos += s.feitos; r.plan += s.plan; r.extras.push(...s.extras); r.faltasN += s.faltasN; r.treinou += s.treinou; });
+    r.pct = r.plan ? r.feitos / r.plan : null;
+    return r;
+  }
+  function linhasGerenciar() {
+    const g = SEM.gs, seg = segundaDaSemana(SEM.desloc), C = painel().calc;
+    const segs = g.vista === 'mes' ? [3, 2, 1, 0].map((k) => C.somarDias(seg, -7 * k)) : [seg];
+    const busca = chave(g.busca);
+    const todos = SEM.lista.map((a) => (g.vista === 'mes' ? somarSemanas(a, segs.map((s) => semanaDoAluno(a, s, g.tipo))) : semanaDoAluno(a, seg, g.tipo)));
+    const vis = todos.filter((r) => passaSituacao(r, g.sit) && (!busca || chave(r.a.u.nome).includes(busca)));
+    const nome = (x, y) => x.a.u.nome.localeCompare(y.a.u.nome, 'pt-BR');
+    const parado = (r) => (r.a.ultimoTreino ? C.diasEntre(r.a.ultimoTreino, painel().hoje()) : 99999);
+    const cmp = { nome, menor: (x, y) => (x.pct ?? 2) - (y.pct ?? 2) || nome(x, y), maior: (x, y) => (y.pct ?? -1) - (x.pct ?? -1) || nome(x, y),
+      faltas: (x, y) => y.faltasN - x.faltasN || nome(x, y), parado: (x, y) => parado(y) - parado(x) || nome(x, y) }[g.ordem] || nome;
+    return { todos, vis: vis.sort(cmp), segs };
+  }
+  function renderGerenciar() {
+    const g = SEM.gs, fmt = painel().fmtNum, atual = SEM.desloc === 0, T = painel().tipos();
+    const { todos, vis, segs } = linhasGerenciar();
+    SEM.linhas = vis;
+    $('gs-intervalo').textContent = g.vista === 'mes' ? `4 semanas · ${intervaloDaSemana(segs[0], painel().calc.somarDias(segs[3], 6))}` : rotuloDaSemana(SEM.desloc);
+    $('gs-prox').disabled = atual;
+    $('gs-hoje').hidden = atual;
+    document.querySelectorAll('[data-gs-vista]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.gsVista === g.vista)));
+    // Atividades: as que aparecem no planejado ou nos check-ins dos alunos.
+    const usados = new Set();
+    SEM.lista.forEach((a) => { (Array.isArray(a.u.semana) ? a.u.semana : []).forEach((dia) => (dia || []).forEach((t) => usados.add(t))); });
+    painel().dados().checkins.forEach((c) => { if (SEM.lista.some((a) => a.u.id === c.usuario_id)) usados.add(c.tipo); });
+    const tipos = [...usados].filter((t) => T[t]).sort((x, y) => nomeTipo(x).localeCompare(nomeTipo(y), 'pt-BR'));
+    if (g.tipo && !tipos.includes(g.tipo)) g.tipo = '';
+    $('gs-tipo').innerHTML = `<option value="">Todas</option>${tipos.map((t) => `<option value="${esc(t)}"${t === g.tipo ? ' selected' : ''}>${esc(nomeTipo(t))}</option>`).join('')}`;
+    $('gs-sit').value = g.sit; $('gs-ordem').value = g.ordem;
+    if ($('gs-busca').value !== g.busca) $('gs-busca').value = g.busca;
+    // Números dos alunos mostrados (seguem a busca e os filtros).
+    const comPlano = vis.filter((r) => r.plan);
+    const sf = vis.reduce((x, r) => x + r.feitos, 0), sp = vis.reduce((x, r) => x + r.plan, 0);
+    const kpi = (rot, val, sub, cls = '') => `<div class="pf-gs-kpi ${cls}"><dt>${rot}</dt><dd>${val}</dd><small>${sub}</small></div>`;
+    $('gs-kpis').innerHTML = [
+      kpi(vis.length === todos.length ? 'Cumprimento da turma' : 'Cumprimento (filtrado)', sp ? `${Math.round(sf / sp * 100)}<small>%</small>` : '—', sp ? `${sf} de ${qtd(sp, 'treino planejado', 'treinos planejados')}${atual ? ' até hoje' : ''}` : 'nada planejado', 'destaque'),
+      kpi('Cumpriram tudo', `${comPlano.filter((r) => r.feitos >= r.plan).length}<small> de ${comPlano.length}</small>`, 'alunos com treino planejado'),
+      kpi('Faltas', fmt(vis.reduce((x, r) => x + r.faltasN, 0)), 'treinos planejados que passaram sem check-in', vis.some((r) => r.faltasN) ? 'alerta' : ''),
+      kpi('Treinos extras', fmt(vis.reduce((x, r) => x + r.extras.length, 0)), 'feitos fora do planejado'),
+      kpi('Treinaram', `${vis.filter((r) => r.treinou).length}<small> de ${vis.length}</small>`, g.vista === 'mes' ? 'alunos com check-in nas 4 semanas' : 'alunos com check-in na semana'),
+    ].join('');
+    const filtrando = g.busca || g.sit !== 'todos' || g.tipo;
+    $('gs-conta').textContent = `${vis.length === todos.length ? qtd(todos.length, 'aluno', 'alunos') : `${vis.length} de ${qtd(todos.length, 'aluno', 'alunos')}`}${g.tipo ? ` · só ${nomeTipo(g.tipo)}` : ''}`;
+    $('gs-limpar').hidden = !filtrando;
+    $('gs-csv').disabled = !vis.length;
+    $('gs-legenda').hidden = g.vista === 'mes';
+    $('gs-info').hidden = true;
+    if (!vis.length) { $('gs-tabela').innerHTML = `<p class="vazio">${todos.length ? 'Nenhum aluno com esses filtros.' : 'Sem alunos ainda.'}</p>`; return; }
+    const pctCel = (r) => (r.pct === null ? '<span class="pf-gs-pct">—</span>' : `<span class="pf-gs-pct" style="--cor:${corPct(r.pct)}"><b>${r.feitos}/${r.plan}</b><small>${Math.round(r.pct * 100)}%</small></span>`);
+    const sub = (r) => `<small class="pf-sub">${esc(!r.sem ? 'sem semana montada' : ultimoTreinoTxt(r.a))}</small>`;
+    const resto = (r) => `<td>${pctCel(r)}</td><td class="num${r.faltasN ? ' ruim' : ''}">${r.faltasN || '—'}</td><td class="num">${r.extras.length || '—'}</td>`;
+    if (g.vista === 'mes') {
+      $('gs-tabela').innerHTML = `<table class="pf-sem-grade pf-gs-grade mes">
+        <thead><tr><th scope="col">Aluno</th>${segs.map((s, i) => `<th scope="col" class="${i === 3 && atual ? 'hoje' : ''}">${painel().deYmd(s).getDate()} ${MESES[painel().deYmd(s).getMonth()]}<small>${i === 3 && atual ? 'esta semana' : 'semana'}</small></th>`).join('')}<th scope="col">Total</th><th scope="col">Faltas</th><th scope="col">Extras</th></tr></thead>
+        <tbody>${vis.map((r) => `<tr><th scope="row">${celulaAluno(r, sub(r))}</th>${r.semanas.map((s, i) => `<td class="${i === 3 && atual ? 'hoje' : ''}">${s.plan ? `<span class="pf-gs-sem${s.feitos >= s.plan ? ' cheia' : ''}" style="--p:${Math.min(1, s.feitos / s.plan)}" title="${s.feitos} de ${s.plan} feitos">${s.feitos >= s.plan ? CHECK : ''}${s.feitos}/${s.plan}</span>` : `<span class="pf-gs-sem vazia" title="nada planejado">${s.extras.length ? `+${s.extras.length}` : '—'}</span>`}</td>`).join('')}${resto(r)}</tr>`).join('')}</tbody></table>`;
+      return;
+    }
+    const dias = vis[0].dias;
+    $('gs-tabela').innerHTML = `<table class="pf-sem-grade pf-gs-grade">
+      <thead><tr><th scope="col">Aluno</th>${cabecalhoDias(dias)}<th scope="col">Feito</th><th scope="col">Faltas</th><th scope="col">Extras</th></tr></thead>
+      <tbody>${vis.map((r, k) => `<tr><th scope="row">${celulaAluno(r, sub(r))}</th>${r.dias.map((c, i) => `<td class="${c.ehHoje ? 'hoje' : ''}"><button class="pf-gs-cel" type="button" data-gs-cel="${k}-${i}" aria-label="${esc(`${r.a.u.nome}, ${CURTO[c.wd]} ${painel().deYmd(c.dia).getDate()}: ${descDoDia(c)}`)}"><span class="pf-dias" aria-hidden="true">${marcasDoDia(c, r.sem)}</span></button></td>`).join('')}${resto(r)}</tr>`).join('')}</tbody>
+      <tfoot><tr><th scope="row">Treinaram</th>${dias.map((c, i) => `<td class="${c.ehHoje ? 'hoje' : ''}">${c.dia > painel().hoje() ? '' : vis.filter((r) => r.dias[i].fez.length).length}</td>`).join('')}<td></td><td></td><td></td></tr></tfoot></table>`;
+  }
+  function abrirGerenciar() {
+    renderGerenciar();
+    const dlg = $('gs-dialog');
+    if (!dlg.open) dlg.showModal();
+  }
+  function baixarCsvSemana() {
+    const g = SEM.gs, campo = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`, C = painel().calc;
+    const { vis, segs } = linhasGerenciar();
+    const cab = ['aluno', ...(g.vista === 'mes' ? segs.map((s) => `semana_${s}`) : segs.length ? [0, 1, 2, 3, 4, 5, 6].map((i) => C.somarDias(segs[0], i)) : []), 'feitos', 'planejados', 'cumprimento_pct', 'faltas', 'extras', 'ultimo_treino'];
+    const linhas = vis.map((r) => [r.a.u.nome, ...(g.vista === 'mes' ? r.semanas.map((s) => `${s.feitos}/${s.plan}`) : r.dias.map(descDoDia)),
+      r.feitos, r.plan, r.pct === null ? '' : Math.round(r.pct * 100), r.faltasN, r.extras.length, r.a.ultimoTreino || ''].map(campo).join(';'));
+    const blob = new Blob([`﻿${cab.join(';')}\n${linhas.join('\n')}\n`], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `semana-dos-alunos-${segs[0]}${g.vista === 'mes' ? '-4-semanas' : ''}.csv`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   }
   document.addEventListener('click', (e) => {
-    const b = e.target.closest('#sem-ant, #sem-prox, #sem-detalhes');
+    const b = e.target.closest('#sem-ant, #sem-prox, #sem-detalhes, #sem-gerenciar, #gs-ant, #gs-prox, #gs-hoje, [data-gs-vista], #gs-limpar, #gs-csv, [data-gs-fechar], [data-gs-cel], #gs-info-fechar');
     if (!b || !window.Painel || !painel().dados()) return;
-    if (b.id === 'sem-ant') SEM.desloc += 1;
-    else if (b.id === 'sem-prox') SEM.desloc = Math.max(0, SEM.desloc - 1);
-    else SEM.detalhes = !SEM.detalhes;
+    if (b.id === 'sem-ant' || b.id === 'gs-ant') SEM.desloc += 1;
+    else if (b.id === 'sem-prox' || b.id === 'gs-prox') SEM.desloc = Math.max(0, SEM.desloc - 1);
+    else if (b.id === 'gs-hoje') SEM.desloc = 0;
+    else if (b.id === 'sem-detalhes') SEM.detalhes = !SEM.detalhes;
+    else if (b.id === 'sem-gerenciar') return abrirGerenciar();
+    else if (b.dataset.gsVista) SEM.gs.vista = b.dataset.gsVista;
+    else if (b.id === 'gs-limpar') Object.assign(SEM.gs, { busca: '', sit: 'todos', tipo: '' });
+    else if (b.id === 'gs-csv') return baixarCsvSemana();
+    else if (b.hasAttribute('data-gs-fechar')) return $('gs-dialog').close();
+    else if (b.id === 'gs-info-fechar') { $('gs-info').hidden = true; return; }
+    else if (b.dataset.gsCel) {
+      const [k, i] = b.dataset.gsCel.split('-').map(Number), r = SEM.linhas[k], c = r && r.dias[i];
+      if (!c) return;
+      const x = painel().deYmd(c.dia);
+      $('gs-info-txt').innerHTML = `<b>${esc(r.a.u.nome)}</b> · ${CURTO[c.wd]}, ${x.getDate()} de ${MESES[x.getMonth()]}: ${esc(descDoDia(c))}`;
+      $('gs-info').hidden = false;
+      return;
+    }
     renderSemana();
   });
+  document.addEventListener('input', (e) => {
+    if (e.target.id === 'gs-busca') { SEM.gs.busca = e.target.value; renderGerenciar(); }
+  });
+  document.addEventListener('change', (e) => {
+    const id = e.target.id;
+    if (id === 'gs-sit') SEM.gs.sit = e.target.value;
+    else if (id === 'gs-tipo') SEM.gs.tipo = e.target.value;
+    else if (id === 'gs-ordem') SEM.gs.ordem = e.target.value;
+    else return;
+    renderGerenciar();
+  });
+  if ($('gs-sit')) {
+    $('gs-sit').innerHTML = SITUACOES.map(([v, t]) => `<option value="${v}">${t}</option>`).join('');
+    $('gs-ordem').innerHTML = ORDENS.map(([v, t]) => `<option value="${v}">${t}</option>`).join('');
+  }
 
   // ---------- Fichas ----------
   function renderFichas() {
@@ -815,7 +964,7 @@
         <fieldset class="ex-bloco"><legend>Alunos</legend>
           <div class="pf-alunos">${lista.map((u) => {
     const atual = u.ficha_id && fichaPorId(u.ficha_id);
-    return `<label class="excluir-entendi"><input type="checkbox" name="pc-aluno" value="${u.id}"${u.id === alunoId ? ' checked' : ''}><span>${esc(u.nome)}<small class="pf-sub">${atual ? `Hoje: ${esc(atual.nome)}` : u.treinos ? 'Hoje: treinos próprios' : 'Hoje: plano pronto do app'}</small></span></label>`;
+    return `<label class="excluir-entendi"><input type="checkbox" name="pc-aluno" value="${u.id}"${u.id === alunoId ? ' checked' : ''}>${painel().avatar(u, 'av-p')}<span>${esc(u.nome)}<small class="pf-sub">${atual ? `Hoje: ${esc(atual.nome)}` : u.treinos ? 'Hoje: treinos próprios' : 'Hoje: plano pronto do app'}</small></span></label>`;
   }).join('')}</div>
         </fieldset>
         <label class="excluir-entendi" id="pc-semana-linha"><input type="checkbox" id="pc-semana"><span>Trocar também a semana dos alunos pela semana sugerida da ficha</span></label>
@@ -849,16 +998,15 @@
   function mostrarEnvio(f, ids, n) {
     acao = { tipo: 'enviado' };
     const lista = alunos();
-    const iniciais = (nome) => String(nome || '?').trim().split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0].toUpperCase()).join('') || '?';
-    const vis = ids.slice(0, 4).map((id) => (lista.find((u) => u.id === id) || {}).nome);
+    const vis = ids.slice(0, 4).map((id) => lista.find((u) => u.id === id) || {});
     abrirJanela(`<div class="pf-envio" role="status">
         <div class="pf-envio-cena" aria-hidden="true">
           <div class="pf-envio-ficha"><span></span><span></span><span></span></div>
-          <div class="pf-envio-alunos">${vis.map((nome, i) => `<span class="pf-envio-av" style="--i:${i}">${esc(iniciais(nome))}</span>`).join('')}${ids.length > 4 ? `<span class="pf-envio-av mais" style="--i:4">+${ids.length - 4}</span>` : ''}</div>
+          <div class="pf-envio-alunos">${vis.map((u, i) => `<span class="pf-envio-av" style="--i:${i}">${painel().avatar(u, 'cheio')}</span>`).join('')}${ids.length > 4 ? `<span class="pf-envio-av mais" style="--i:4">+${ids.length - 4}</span>` : ''}</div>
           <svg class="pf-envio-ok" viewBox="0 0 52 52"><circle cx="26" cy="26" r="24"/><path d="m15 27 7.5 7.5L37.5 19"/></svg>
         </div>
         <h2 id="pc-dialog-title">Ficha enviada</h2>
-        <p><b>${esc(f.nome)}</b> já está no app de ${n === 1 && vis[0] ? esc(vis[0]) : qtd(n, 'aluno', 'alunos')}. Os treinos de antes ficaram guardados.</p>
+        <p><b>${esc(f.nome)}</b> já está no app de ${n === 1 && vis[0] && vis[0].nome ? esc(vis[0].nome) : qtd(n, 'aluno', 'alunos')}. Os treinos de antes ficaram guardados.</p>
         <div class="excluir-acoes"><button class="btn" type="button" data-janela-fechar id="pc-pronto">Pronto</button></div>
       </div>`);
     setTimeout(() => $('pc-pronto') && $('pc-pronto').focus(), 50);

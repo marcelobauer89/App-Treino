@@ -1651,7 +1651,7 @@ begin
   return query
     select p.id, coalesce(nullif(trim(p.nome), ''), 'Aluno sem nome')::text, ''::text, v.aceito_em, p.ultimo_acesso, p.acessos,
       p.semana, p.dias_jiu, p.sem_peso, p.treinos, p.treinos_por = (select auth.uid()), p.treinos_em, p.ficha_id, v.aceito_em,
-      case when p.foto like 'http%' then p.foto else '' end
+      case when p.foto like 'https://%' or p.foto like 'data:image/%' then p.foto else '' end
     from public.vinculos v join public.perfis p on p.id = v.aluno_id
     where v.personal_id = (select auth.uid()) and v.aceito_em is not null and v.encerrado_em is null
     order by 2;

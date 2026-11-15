@@ -93,18 +93,19 @@
     </div>
     <div class="graficos">
       <section class="bloco cartao" aria-labelledby="semana-titulo">
-        <div class="bloco-topo">
+        <div class="bloco-topo pf-sem-topo">
           <div class="titulo-info">
             <h2 id="semana-titulo">Semana dos alunos</h2>
             <button class="info" type="button" data-info="info-semana" aria-expanded="false" aria-controls="info-semana" aria-label="Como funciona: semana dos alunos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button>
           </div>
-          <div class="pf-sem-nav">
-            <button class="pf-sem-seta" type="button" id="sem-ant" aria-label="Semana anterior"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg></button>
-            <span id="semana-intervalo" aria-live="polite"></span>
-            <button class="pf-sem-seta" type="button" id="sem-prox" aria-label="Próxima semana"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>
-          </div>
+          <button class="btn-sec pf-sem-gerenciar" type="button" id="sem-gerenciar"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></svg>Gerenciar</button>
         </div>
-        <p class="info-txt" id="info-semana" role="note" hidden>De segunda a domingo: o que cada aluno tem planejado (pela semana montada no app ou pela que você sugeriu na ficha) e o que ele fez (check-ins). Use as setas para ver as semanas anteriores (o planejado é sempre a semana montada hoje). A linha "Treinaram" conta quantos alunos fizeram check-in em cada dia. Em "Ver detalhes", cada aluno com o quanto cumpriu, os dias em que faltou, os treinos extras e o último treino. Não muda com o período escolhido.</p>
+        <div class="pf-sem-nav">
+          <button class="pf-sem-seta" type="button" id="sem-ant" aria-label="Semana anterior"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg></button>
+          <span id="semana-intervalo" aria-live="polite"></span>
+          <button class="pf-sem-seta" type="button" id="sem-prox" aria-label="Próxima semana"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>
+        </div>
+        <p class="info-txt" id="info-semana" role="note" hidden>De segunda a domingo: o que cada aluno tem planejado (pela semana montada no app ou pela que você sugeriu na ficha) e o que ele fez (check-ins). Use as setas para ver as semanas anteriores (o planejado é sempre a semana montada hoje). A linha "Treinaram" conta quantos alunos fizeram check-in em cada dia. Em "Ver detalhes", cada aluno com o quanto cumpriu, os dias em que faltou, os treinos extras e o último treino. "Gerenciar" abre a semana em tela cheia, com busca, filtros, ordem, as últimas 4 semanas e CSV. Não muda com o período escolhido.</p>
         <p class="nota pf-sem-resumo" id="semana-resumo"></p>
         <ul class="legenda pf-sem-grade-legenda" aria-label="Legenda da semana">
           <li><span class="pf-marca-dia feito" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>Feito</li>
@@ -267,6 +268,46 @@
 </dialog>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
+<dialog class="pf-gs" id="gs-dialog" aria-labelledby="gs-titulo">
+  <!-- Gerenciar semana: a Semana dos alunos em tela cheia (js/personal.js → Semana dos alunos e Gerenciar semana). -->
+  <div class="pf-gs-topo">
+    <button class="fechar" type="button" data-gs-fechar aria-label="Fechar"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    <h2 id="gs-titulo">Semana dos alunos</h2>
+    <div class="pf-sem-nav">
+      <button class="pf-sem-seta" type="button" id="gs-ant" aria-label="Semana anterior"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg></button>
+      <span id="gs-intervalo" aria-live="polite"></span>
+      <button class="pf-sem-seta" type="button" id="gs-prox" aria-label="Próxima semana"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>
+      <button class="link-btn" type="button" id="gs-hoje" hidden>Voltar para esta semana</button>
+    </div>
+  </div>
+  <div class="pf-gs-corpo">
+    <dl class="pf-gs-kpis" id="gs-kpis"></dl>
+    <div class="pf-gs-filtros" role="search">
+      <div class="periodo" role="group" aria-label="Visão">
+        <button type="button" data-gs-vista="semana" aria-pressed="true">Semana</button>
+        <button type="button" data-gs-vista="mes" aria-pressed="false">Últimas 4 semanas</button>
+      </div>
+      <label class="ex-campo pf-gs-busca">Buscar aluno<input type="search" id="gs-busca" autocomplete="off" placeholder="Nome do aluno"></label>
+      <label class="ex-campo">Situação<select id="gs-sit"></select></label>
+      <label class="ex-campo">Atividade<select id="gs-tipo"></select></label>
+      <label class="ex-campo">Ordenar por<select id="gs-ordem"></select></label>
+    </div>
+    <div class="pf-gs-barra">
+      <span class="nota" id="gs-conta"></span>
+      <button class="link-btn" type="button" id="gs-limpar" hidden>Limpar filtros</button>
+      <button class="btn-sec" type="button" id="gs-csv">Baixar CSV</button>
+    </div>
+          <ul class="legenda pf-sem-grade-legenda" id="gs-legenda" aria-label="Legenda da semana">
+          <li><span class="pf-marca-dia feito" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>Feito</li>
+          <li><span class="pf-marca-dia faltou" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span>Faltou</li>
+          <li><span class="pf-marca-dia planejado" aria-hidden="true">A</span>A fazer (letra do treino)</li>
+          <li><span class="pf-marca-dia descanso" aria-hidden="true"></span>Descanso</li>
+        </ul>
+    <div class="cartao pf-gs-cartao"><div class="tabela-rolagem" id="gs-tabela"></div></div>
+    <p class="nota">Toque num dia para ver o que foi planejado e feito. Toque no nome para abrir a ficha do aluno. Nas semanas anteriores, o planejado é a semana montada hoje.</p>
+  </div>
+  <div class="pf-gs-info" id="gs-info" role="status" hidden><span id="gs-info-txt"></span><button class="fechar" type="button" id="gs-info-fechar" aria-label="Fechar"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+</dialog>
 <dialog class="detalhe" id="detalhe" aria-labelledby="det-nome">
   <div class="det-corpo" id="det-corpo"></div>
 </dialog>

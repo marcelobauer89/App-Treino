@@ -395,7 +395,7 @@
     $('on-corpo').innerHTML = (estado === 'erro'
       ? `<p class="on-vazio">Ao vivo indisponível. <button class="link-btn" type="button" id="tentar-online">Tentar de novo</button></p>${detalheErro}`
       : estado === 'parcial' ? detalheErro : '') + (estado === 'erro' ? '' : lista.length ? `<ul class="on-lista">${lista.map((u) => `<li><button type="button" data-abrir="${u.id}">
-          <span class="avatar on" aria-hidden="true">${esc(iniciais(u.nome, u.email))}</span>
+          ${avatar(u, 'on')}
           <span><b>${esc(u.nome || u.email)}</b><small>${esc(descricaoOnline(online.get(u.id)))}</small></span></button></li>`).join('')}</ul>`
         : `<p class="on-vazio">${estado === 'conectando' ? 'Conectando ao vivo…' : 'Ninguém on-line agora.'}</p>`);
     document.querySelectorAll('#usuarios-corpo tr[data-usuario]').forEach((tr) => {
@@ -609,7 +609,7 @@
       const u = dados.usuarios.find((x) => x.id === g.id);
       return `<div class="item-lista">
         <button class="item-topo" type="button"${u ? ` data-abrir-usuario="${g.id}"` : ''}>
-          <span class="item-titulo">${esc(u ? u.nome || u.email : 'Usuário removido')}</span>
+          <span class="item-titulo${PERSONAL ? ' com-avatar' : ''}">${PERSONAL ? avatar(u || {}, 'av-p') : ''}${esc(u ? u.nome || u.email : 'Usuário removido')}</span>
           <span class="item-num"><span class="trofeu-num">${i === 0 ? ICON.trofeu : ''}${g.n}</span><small>${g.n === 1 ? 'recorde' : 'recordes'}</small></span>
           <span class="item-sub">${exs(g)}</span>
         </button></div>`;
@@ -823,6 +823,18 @@
     const p = String(nome || email || '?').trim().split(/\s+/);
     return ((p[0] || '')[0] + (p.length > 1 ? p[p.length - 1][0] : '')).toUpperCase();
   };
+  // Foto da pessoa (a do Google ou a enviada no app) ou, sem foto, as iniciais. Se a imagem não carregar, voltam as iniciais.
+  const fotoValida = (f) => (/^https:\/\//.test(f || '') || /^data:image\/(jpeg|png|webp);base64,/.test(f || '') ? f : '');
+  const avatar = (u, cls = '') => {
+    const f = fotoValida(u && u.foto), ini = esc(iniciais(u && u.nome, u && u.email));
+    return `<span class="avatar${cls ? ` ${cls}` : ''}${f ? ' tem-foto' : ''}" aria-hidden="true">${f ? `<img src="${esc(f)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-ini="${ini}">` : ini}</span>`;
+  };
+  document.addEventListener('error', (e) => {
+    const img = e.target;
+    if (img && img.tagName === 'IMG' && img.dataset && img.dataset.ini !== undefined && img.parentNode) {
+      const av = img.parentNode; av.classList.remove('tem-foto'); av.textContent = img.dataset.ini;
+    }
+  }, true);
   const pctAder = (v) => (v === null ? '—' : `${fmtNum(v * 100)}%`);
   function linhasUsuarios(j, ativosMap) {
     return dados.usuarios.map((u) => {
@@ -862,7 +874,7 @@
     $('ordenar-cel').value = ordem.col;
     $('usuarios-corpo').innerHTML = linhas.length ? linhas.map((l) => `
       <tr data-usuario="${l.u.id}">
-        <td><div class="quem"><span class="avatar${online.has(l.u.id) ? ' on' : ''}" aria-hidden="true">${esc(iniciais(l.u.nome, l.u.email))}</span>
+        <td><div class="quem">${avatar(l.u, online.has(l.u.id) ? 'on' : '')}
           <button type="button" data-abrir="${l.u.id}"><b>${esc(l.u.nome || 'Sem nome')}${l.u.videos_liberados ? ' <span class="tag-videos">Vídeos</span>' : ''}</b><span class="sr on-sr"${online.has(l.u.id) ? '' : ' hidden'}>, on-line agora</span><small>${esc(l.u.email)}</small>
             <span class="resumo-cel">${l.ultimo ? relativo(l.ultimo) : 'sem uso'} · ${fmtNum(l.checkins)} check-in${l.checkins === 1 ? '' : 's'} · ${pctAder(l.aderencia)} do plano</span></button>
           <span class="chev" aria-hidden="true">${ICON.chev}</span></div></td>
@@ -1258,7 +1270,7 @@
     atividade = { itens, mostrados: POR_VEZ };
     $('det-corpo').innerHTML = `
       <div class="det-topo">
-        <span class="avatar" aria-hidden="true">${esc(iniciais(u.nome, u.email))}</span>
+        ${avatar(u)}
         <div><h2 id="det-nome">${esc(u.nome || 'Sem nome')}</h2><p>${esc(u.email)}</p></div>
         <button class="fechar" type="button" data-fechar aria-label="Fechar">${ICON.x}</button>
       </div>
@@ -2245,7 +2257,7 @@
     window.Painel = {
       sb, $, esc, toast: (m) => toast(m), recarregar: () => carregar(), abrirDetalhe: (id) => abrirDetalhe(id),
       dados: () => dados, detalheAberto: () => ($('detalhe').open ? detalheId : null), fecharDetalhe: () => $('detalhe').close(),
-      tipos: () => TIPOS, iniciais, fmtData, fmtNum, deYmd, ymd, hoje, relativo, diaDeInstante, mostrarAba: (a) => mostrarAba(a),
+      tipos: () => TIPOS, iniciais, avatar, fmtData, fmtNum, deYmd, ymd, hoje, relativo, diaDeInstante, mostrarAba: (a) => mostrarAba(a),
       // As regras do cadastro de exercício (catálogo), para o "Novo exercício" do personal ser a mesma tela.
       // Cálculos do painel, para a Visão geral do personal usar as mesmas regras (período, aderência, recordes).
       calc: { periodo: () => periodo, dentro, diaDeCheckin, diasEntre, somarDias, planejadasNoPeriodo, aderenciaDe, recordesDe, delta,
