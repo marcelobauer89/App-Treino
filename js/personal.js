@@ -219,9 +219,9 @@
   }
   // ---------- Semana dos alunos e Gerenciar semana ----------
   // O card mostra a semana (segunda a domingo) de cada aluno: planejado (semana do app) × feito (check-ins). As setas
-  // trocam a semana (só para trás) e "Ver detalhes" abre o resumo por aluno. "Gerenciar" abre a mesma semana em tela
+  // trocam a semana (só para trás). "Gerenciar" abre a mesma semana em tela
   // cheia, com números da turma, busca, filtros (situação e atividade), ordem, a visão das últimas 4 semanas e CSV.
-  const SEM = { desloc: 0, detalhes: false, lista: [], linhas: [], gs: { busca: '', sit: 'todos', tipo: '', ordem: 'nome', vista: 'semana' } };
+  const SEM = { desloc: 0, lista: [], linhas: [], gs: { busca: '', sit: 'todos', tipo: '', ordem: 'nome', vista: 'semana' } };
   const DESCANSO = '<span class="pf-marca-dia descanso" title="Descanso"></span>';
   const av = (u, cls) => painel().avatar(u, cls);
   const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
@@ -299,49 +299,10 @@
       <thead><tr><th scope="col">Aluno</th>${cabecalhoDias(dias)}</tr></thead>
       <tbody>${linhas.join('')}</tbody>
       <tfoot><tr><th scope="row">Treinaram</th>${dias.map((c, i) => `<td class="${c.ehHoje ? 'hoje' : ''}">${c.dia > painel().hoje() ? '' : resumo.filter((r) => r.dias[i].fez.length).length}</td>`).join('')}</tr></tfoot></table>` : '<p class="vazio">Sem alunos ainda.</p>';
-    $('sem-detalhes').hidden = !lista.length;
     $('sem-gerenciar').hidden = !lista.length;
-    $('sem-detalhes').setAttribute('aria-expanded', String(SEM.detalhes));
-    $('sem-detalhes').firstChild.textContent = SEM.detalhes ? 'Esconder detalhes ' : 'Ver detalhes ';
-    $('semana-detalhes').hidden = !SEM.detalhes || !lista.length;
-    if (SEM.detalhes && lista.length) renderDetalhesSemana(resumo, atual);
     if ($('gs-dialog').open) renderGerenciar();
   }
-  function renderDetalhesSemana(resumo, atual) {
-    const comPlano = resumo.filter((r) => r.plan);
-    const tudo = comPlano.filter((r) => r.feitos >= r.plan).length;
-    const nada = comPlano.filter((r) => !r.feitos).length;
-    const extras = resumo.reduce((x, r) => x + r.extras.length, 0);
-    const chip = (n, rot, cls) => `<li class="pf-sem-chip ${cls}"><strong>${n}</strong>${rot}</li>`;
-    const ordem = resumo.slice().sort((x, y) => (x.pct ?? 2) - (y.pct ?? 2) || x.a.u.nome.localeCompare(y.a.u.nome, 'pt-BR'));
-    $('semana-detalhes').innerHTML = `<ul class="pf-sem-chips">
-        ${chip(tudo, comPlano.length === 1 ? ' cumpriu tudo' : ' cumpriram tudo', 'ok')}
-        ${chip(comPlano.length - tudo - nada, ' em parte', '')}
-        ${chip(nada, ' sem treinar o planejado', nada ? 'alerta' : '')}
-        ${chip(extras, extras === 1 ? ' treino extra' : ' treinos extras', '')}
-      </ul>
-      <p class="nota">Do menor para o maior cumprimento do planejado${atual ? ' até hoje' : ''}.</p>
-      <ol class="pf-sem-det">${ordem.map((r) => itemDetalhe(r, atual)).join('')}</ol>`;
-  }
-  function situacaoTxt(r, atual) {
-    const l = [];
-    if (!r.sem) l.push('Sem semana montada no app');
-    else if (!r.plan) l.push(atual ? 'Nada planejado até hoje' : 'Nada planejado na semana');
-    else if (r.faltas.length) l.push(`Faltou ${r.faltas.join(', ')}`);
-    else if (r.feitos >= r.plan) l.push(atual ? 'Em dia com o planejado' : 'Fez tudo o que estava planejado');
-    if (r.extras.length) l.push(`+${qtd(r.extras.length, 'treino extra', 'treinos extras')} (${[...new Set(r.extras.map(nomeTipo))].join(', ')})`);
-    return l;
-  }
   const corPct = (p) => (p === null ? 'var(--fio)' : p >= 1 ? 'var(--feito-tinta)' : p >= 0.5 ? 'var(--marca)' : 'var(--erro)');
-  function itemDetalhe(r, atual) {
-    const p = r.pct, l = situacaoTxt(r, atual);
-    return `<li class="pf-sem-det-item">
-        ${celulaAluno(r, '')}
-        <span class="pf-sem-det-num">${p === null ? '—' : `${r.feitos}/${r.plan}<small>${Math.round(p * 100)}%</small>`}</span>
-        <span class="rt-trilho" aria-hidden="true"><span class="rt-barra" style="width:${p === null ? 0 : Math.min(1, p) * 100}%;background:${corPct(p)}"></span></span>
-        <span class="pf-sem-det-txt">${l.map(esc).join(' · ')}${l.length ? ' · ' : ''}${esc(ultimoTreinoTxt(r.a))}</span>
-      </li>`;
-  }
 
   // Gerenciar semana (tela cheia).
   const SITUACOES = [['todos', 'Todos os alunos'], ['faltou', 'Faltaram algum treino'], ['nada', 'Não treinaram o planejado'], ['parte', 'Cumpriram em parte'],
@@ -440,12 +401,11 @@
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   }
   document.addEventListener('click', (e) => {
-    const b = e.target.closest('#sem-ant, #sem-prox, #sem-detalhes, #sem-gerenciar, #gs-ant, #gs-prox, #gs-hoje, [data-gs-vista], #gs-limpar, #gs-csv, [data-gs-fechar], [data-gs-cel], #gs-info-fechar');
+    const b = e.target.closest('#sem-ant, #sem-prox, #sem-gerenciar, #gs-ant, #gs-prox, #gs-hoje, [data-gs-vista], #gs-limpar, #gs-csv, [data-gs-fechar], [data-gs-cel], #gs-info-fechar');
     if (!b || !window.Painel || !painel().dados()) return;
     if (b.id === 'sem-ant' || b.id === 'gs-ant') SEM.desloc += 1;
     else if (b.id === 'sem-prox' || b.id === 'gs-prox') SEM.desloc = Math.max(0, SEM.desloc - 1);
     else if (b.id === 'gs-hoje') SEM.desloc = 0;
-    else if (b.id === 'sem-detalhes') SEM.detalhes = !SEM.detalhes;
     else if (b.id === 'sem-gerenciar') return abrirGerenciar();
     else if (b.dataset.gsVista) SEM.gs.vista = b.dataset.gsVista;
     else if (b.id === 'gs-limpar') Object.assign(SEM.gs, { busca: '', sit: 'todos', tipo: '' });
