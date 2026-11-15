@@ -229,6 +229,8 @@ O app registra eventos de uso na tabela `eventos` (telas abertas, exercícios co
 
 Quem lê esses dados é o dashboard de monitoramento, só para administradores: https://marcelobauer89.github.io/App-Treino/admin.html. Ele lê tudo por funções do banco (`admin_usuarios`, `admin_checkins`, `admin_eventos`) que recusam quem não está na tabela `admins`, e nunca mostra pesos, cargas nem observações. Para se tornar administrador, rode uma vez no **SQL Editor**, com o seu e-mail:
 
+**Topo** (monitoramento e área do personal, no mesmo formato): a foto de quem está logado (a do perfil no app ou a do Google; sem foto, as iniciais), o nome da área em cima ("Monitoramento" ou "Área do personal"), o nome da pessoa e uma linha embaixo ("Administrador", ou o CREF/UF do personal). Sem login, só o título.
+
 **Menu das seções** (monitoramento e área do personal): no notebook e no computador (1000 px ou mais), o menu fica sempre visível à esquerda, fixo ao rolar, com as seções (cada uma com ícone) e o **Sair** no fim. No celular e no tablet, o botão **Menu** fica no canto direito do topo (onde ficava o Sair) e abre o mesmo menu como gaveta à direita; fecha com Esc, tocando fora ou ao escolher uma seção. Os selos (erros, pedidos, profissionais, convites) ficam no item; no celular, o botão Menu soma os selos e mostra o ponto verde de quem está on-line. Uma seção nova é um item a mais na lista, sem apertar as outras.
 
 ```sql
