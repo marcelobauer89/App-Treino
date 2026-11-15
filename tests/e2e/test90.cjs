@@ -76,11 +76,13 @@ const base = (extra = {}) => ({
     ok(/Sem treino seu/.test(await p.locator('#fichas-uso-lista').innerText()), `${scheme}: Fichas em uso conta quem está sem treino seu`);
     // Topo: nome profissional, CREF e foto (ou iniciais) de quem está logado.
     ok((await p.locator('#pf-topo-nome').innerText()) === 'Paula Exemplo' && /CREF 000000-G\/SP/.test(await p.locator('#pf-topo-cref').innerText()), `${scheme}: topo com o nome e o CREF do personal`);
-    ok(await p.locator('#pf-topo-avatar').isVisible() && await p.locator('#menu-abrir').isVisible() && await p.locator('#pf-sair').count() === 0, `${scheme}: topo com a foto (ou iniciais) e o botão Menu no lugar do Sair`);
-    await p.click('#menu-abrir'); await p.waitForSelector('#menu.aberto'); await p.waitForTimeout(300);
+    const celular = viewport.width < 1000;
+    ok(await p.locator('#pf-topo-avatar').isVisible() && await p.locator('#menu-abrir').isVisible() === celular && await p.locator('#pf-sair').count() === 0,
+      `${scheme}: topo com a foto (ou iniciais); botão Menu no lugar do Sair só no celular`);
+    if (celular) { await p.click('#menu-abrir'); await p.waitForSelector('#menu.aberto'); await p.waitForTimeout(300); }
     ok(await p.locator('#menu-sair').isVisible() && (await p.locator('.menu-item .menu-nome').allInnerTexts()).join('|') === 'Visão geral|Alunos|Treinos|Exercícios|Convidar|Sair', `${scheme}: menu com as seções e o Sair no fim`);
     await p.screenshot({ path: `${H.SAIDA}/personal-menu-${scheme}.png` });
-    await p.keyboard.press('Escape'); await p.waitForTimeout(300);
+    if (celular) { await p.keyboard.press('Escape'); await p.waitForTimeout(300); }
     await p.waitForTimeout(1200); // a entrada em cascata termina antes da foto
     await p.screenshot({ path: `${H.SAIDA}/personal-geral-${scheme}.png`, fullPage: true });
     await H.aba(p, 'usuarios'); await p.waitForTimeout(100);
@@ -217,7 +219,7 @@ const base = (extra = {}) => ({
     await p.clock.install({ time: T });
     await p.goto(H.PAGINA.replace('index.html', 'admin.html#profissionais')); await p.waitForSelector('#painel:not([hidden])');
     await p.waitForTimeout(300);
-    ok(await p.locator('#alerta-prof').evaluate((e) => !e.hidden) && (await p.locator('#alerta-prof').textContent()) === '1' && (await p.locator('#menu-alerta').innerText()) === '1', 'admin: menu mostra 1 pedido aguardando (e o botão Menu também)');
+    ok(await p.locator('#alerta-prof').evaluate((e) => !e.hidden) && (await p.locator('#alerta-prof').textContent()) === '1' && (await p.locator('#menu-alerta').textContent()) === '1', 'admin: menu mostra 1 pedido aguardando (e o botão Menu também)');
     ok(/999999-G\/MG/.test(await p.locator('#prof-lista').innerText()), 'admin: lista mostra o CREF');
     await p.screenshot({ path: `${H.SAIDA}/admin-profissionais.png`, fullPage: true });
     await p.click('[data-prof-liberar="sim"]'); await p.waitForTimeout(300);

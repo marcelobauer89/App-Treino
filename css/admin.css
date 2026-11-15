@@ -185,6 +185,23 @@
   .menu-topo { display: flex; align-items: center; justify-content: space-between; margin: 0 4px 10px; font-size: 18px; }
   .menu-fechar { width: 44px; height: 44px; display: grid; place-items: center; border: 0; border-radius: 10px; background: transparent; color: var(--tinta-2); }
   @media (prefers-reduced-motion: reduce) { .menu, .menu.aberto { transition: none; } }
+  /* Notebook e computador: o menu fica sempre visível à esquerda (fixo ao rolar), com o Sair no fim; sem o botão Menu.
+     A página fica um pouco mais larga para o conteúdo não encolher. */
+  @media (min-width: 1000px) {
+    .wrap { max-width: 1340px; }
+    .menu-abrir, .menu-abrir[hidden] { display: none; }
+    .menu-fundo { display: none; }
+    #painel:not([hidden]) { display: grid; grid-template-columns: 220px minmax(0, 1fr); column-gap: 28px; align-items: start; }
+    .menu {
+      position: sticky; z-index: auto; top: 16px; bottom: auto; right: auto; width: auto; max-height: calc(100vh - 32px);
+      grid-column: 1; grid-row: 1 / span 20; padding: 8px; border: 1px solid var(--fio); border-radius: 16px;
+      box-shadow: none; transform: none; visibility: visible; transition: none;
+    }
+    .menu-topo { display: none; }
+    .menu-item { min-height: 44px; font-size: 15px; }
+    .menu-rodape { margin-top: 8px; padding-top: 8px; }
+    .aba-painel { grid-column: 2; min-width: 0; }
+  }
   .aba-alerta {
     min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--erro); color: #fff;
     font-size: 12px; font-weight: 800; line-height: 20px; text-align: center;

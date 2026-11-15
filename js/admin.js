@@ -324,7 +324,7 @@
     el.hidden = !n || aba === 'geral';
     el.setAttribute('role', 'img');
     el.setAttribute('aria-label', `${n} ${n === 1 ? 'pessoa' : 'pessoas'} on-line agora`);
-    // O menu fica fechado: o ponto aparece também no botão Menu do topo.
+    // No celular o menu fica fechado: o ponto aparece também no botão Menu do topo.
     const bt = $('menu-online');
     bt.hidden = el.hidden;
     bt.setAttribute('role', 'img');
@@ -1080,8 +1080,10 @@
     fecharInfo();
     renderVisivel();
   }
-  // Menu: o botão Menu do topo (onde ficava o Sair) abre a gaveta à direita, com as seções e o Sair no fim. Fecha com Esc,
-  // no fundo ou ao escolher uma seção. Fechada, a gaveta fica fora da ordem do Tab (visibility no CSS).
+  // Menu: no notebook e no computador fica sempre à esquerda. No celular e no tablet, o botão Menu do topo (onde ficava
+  // o Sair) abre a gaveta à direita, com as seções e o Sair no fim; fecha com Esc, no fundo ou ao escolher uma seção.
+  // Fechada, a gaveta fica fora da ordem do Tab (visibility no CSS).
+  const menuGaveta = () => getComputedStyle($('menu-abrir')).display !== 'none';
   function abrirMenu() {
     $('menu').classList.add('aberto');
     $('menu-fundo').hidden = false;
@@ -1094,7 +1096,7 @@
     $('menu').classList.remove('aberto');
     $('menu-fundo').hidden = true;
     $('menu-abrir').setAttribute('aria-expanded', 'false');
-    if (focar) $('menu-abrir').focus();
+    if (focar && menuGaveta()) $('menu-abrir').focus();
   }
   $('menu-abrir').addEventListener('click', abrirMenu);
   $('menu-fechar').addEventListener('click', () => fecharMenu({ focar: true }));
