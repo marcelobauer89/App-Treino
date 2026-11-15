@@ -65,8 +65,19 @@ const base = (extra = {}) => ({
     const kpis = await p.locator('#kpis').innerText();
     ok(/Alunos ativos/.test(kpis) && !/suári/.test(kpis), `${scheme}: números falam em alunos`, kpis.replace(/\s+/g, ' ').slice(0, 120));
     ok(/2 de 2|1 de 2/.test(kpis), `${scheme}: conta só os alunos com vínculo`);
-    ok(/Aluno Dois/.test(await p.locator('#sumiu-lista').innerText()), `${scheme}: Quem sumiu mostra o aluno parado`);
+    ok(/Treinaram hoje/.test(kpis) && /Precisam de atenção/.test(kpis) && !/Voltaram nesta semana|Sumiram/.test(kpis), `${scheme}: números próprios do personal (não os do administrador)`);
+    const atencao = await p.locator('#atencao-lista').innerText();
+    ok(/Aluno Dois/.test(atencao) && /Sem treinar há 10 dias/.test(atencao) && /sem treino montado por você/i.test(atencao), `${scheme}: Precisam de atenção mostra o aluno parado e quem está sem treino seu`, atencao.replace(/\s+/g, ' ').slice(0, 160));
+    const semana = await p.locator('#semana-tabela').innerText();
+    ok(/Aluna Um/.test(semana) && /Aluno Dois/.test(semana) && /sem semana montada/.test(semana), `${scheme}: Semana dos alunos lista cada aluno`);
+    ok((await p.locator('#semana-tabela .pf-marca-dia.feito').count()) >= 1 && (await p.locator('#semana-tabela .pf-marca-dia.faltou, #semana-tabela .pf-marca-dia.planejado').count()) >= 1, `${scheme}: semana mostra feito e planejado`);
+    ok(await p.locator('#sumiu-lista').count() === 0 && await p.locator('#g2').count() === 0, `${scheme}: sem os blocos do administrador (Quem sumiu, usuários ativos)`);
     ok(/Aluna Um/.test(await p.locator('#evoluiu-lista').innerText()), `${scheme}: Quem mais evoluiu mostra o recorde`);
+    ok(/Sem treino seu/.test(await p.locator('#fichas-uso-lista').innerText()), `${scheme}: Fichas em uso conta quem está sem treino seu`);
+    // Topo: nome profissional, CREF e foto (ou iniciais) de quem está logado.
+    ok((await p.locator('#pf-topo-nome').innerText()) === 'Paula Exemplo' && /CREF 000000-G\/SP/.test(await p.locator('#pf-topo-cref').innerText()), `${scheme}: topo com o nome e o CREF do personal`);
+    ok(await p.locator('#pf-topo-avatar').isVisible() && await p.locator('#pf-sair').isVisible(), `${scheme}: topo com a foto (ou iniciais) e Sair`);
+    await p.waitForTimeout(1200); // a entrada em cascata termina antes da foto
     await p.screenshot({ path: `${H.SAIDA}/personal-geral-${scheme}.png`, fullPage: true });
     await p.click('#tab-usuarios'); await p.waitForTimeout(100);
     const lista = await p.locator('#usuarios-corpo').innerText();

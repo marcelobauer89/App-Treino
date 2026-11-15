@@ -145,6 +145,7 @@
     if (!sb) return mostrarEstado('<p>Não foi possível carregar a biblioteca do Supabase. Confira a internet e recarregue a página.</p>');
     const { data: { session } } = await sb.auth.getSession();
     if (!session) {
+      if (PERSONAL && GANCHOS().conta) GANCHOS().conta(null);
       return mostrarEstado(PERSONAL ? `
         <p>Entre com a sua conta Google para abrir a área do personal.</p>
         <button class="btn" type="button" id="entrar">Entrar com Google</button>` : `
@@ -152,6 +153,8 @@
         <button class="btn" type="button" id="entrar">Entrar com Google</button>`);
     }
     meuId = session.user.id;
+    // Personal: foto, nome e CREF no topo (js/personal.js).
+    if (PERSONAL && GANCHOS().conta) GANCHOS().conta(session);
     mostrarCarregando('Conferindo seu acesso…');
     const { data: admin, error } = await sb.rpc(FN.acesso);
     if (error) return mostrarEstado(`<p>Não foi possível verificar o acesso. Confira se o <code>supabase/schema.sql</code> foi aplicado.</p>${botaoTentar()}`);
@@ -446,7 +449,8 @@
     fecharInfo();
     const j = janela(periodo);
     const ativosMap = diasAtivos();
-    renderKpis(j, ativosMap);
+    // Personal: os números e as listas da Visão geral são os do acompanhamento (js/personal.js → Visão geral do personal).
+    if (PERSONAL && GANCHOS().geral) GANCHOS().geral(j, ativosMap); else renderKpis(j, ativosMap);
     renderGraficos(j, ativosMap);
     renderListasGeral(j, ativosMap);
     renderTreinos(j);
@@ -1045,7 +1049,7 @@
   }
 
   // ---------- Abas ----------
-  const ABAS = PERSONAL ? ['geral', 'usuarios', 'fichas', 'convidar'] : ['geral', 'usuarios', 'saude', 'emails', 'convites', 'exercicios', 'tipos', 'profissionais'];
+  const ABAS = PERSONAL ? ['geral', 'usuarios', 'fichas', 'exercicios', 'convidar'] : ['geral', 'usuarios', 'saude', 'emails', 'convites', 'exercicios', 'tipos', 'profissionais'];
   let aba = ABAS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'geral';
   // Gráficos são desenhados na largura real, então são redesenhados ao aparecer.
   function renderVisivel() {
@@ -1283,7 +1287,7 @@
       await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.origin + location.pathname } });
       return;
     }
-    if (e.target.closest('#sair')) { desligarOnline(); await sb.auth.signOut(); return iniciar(); }
+    if (e.target.closest('#sair, #pf-sair')) { desligarOnline(); await sb.auth.signOut(); return iniciar(); }
     if (e.target.closest('#tentar-online')) { desligarOnline(); return ligarOnline(); }
     if (e.target.closest('#ver-erro-online')) { verErroOnline = !verErroOnline; return atualizarOnline(); }
     if (e.target.closest('[data-mais-atividade]')) {
@@ -2169,6 +2173,9 @@
       dados: () => dados, detalheAberto: () => ($('detalhe').open ? detalheId : null), fecharDetalhe: () => $('detalhe').close(),
       tipos: () => TIPOS, iniciais, fmtData, fmtNum, deYmd, ymd, hoje, relativo, diaDeInstante, mostrarAba: (a) => mostrarAba(a),
       // As regras do cadastro de exercício (catálogo), para o "Novo exercício" do personal ser a mesma tela.
+      // Cálculos do painel, para a Visão geral do personal usar as mesmas regras (período, aderência, recordes).
+      calc: { periodo: () => periodo, dentro, diaDeCheckin, diasEntre, somarDias, planejadasNoPeriodo, aderenciaDe, recordesDe, delta,
+        fabricaDeCards, rotuloDoPeriodo, comparaDoPeriodo, ICON },
       exercicio: { GRUPOS_EX, rotuloGrupoEx, NIVEIS_EX, ROTULO_NIVEL, lerDose, montarDose, traco, padronizarNome, codigoVideo, ICON },
     };
   }

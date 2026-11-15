@@ -370,6 +370,11 @@ do $$ begin
   exception when insufficient_privilege then null; end;
   update public.perfis set semana = '[[], [], ["jiu"], [], [], [], []]' where id = auth.uid();
   perform public.encerrar_vinculo();
+  -- Encerrado, os treinos que o personal montou saem (voltam os de antes) e a versão anterior não traz a ficha de volta.
+  if (select coalesce(treinos->'1'->'exercicios'->0->>'dose', '') from public.perfis where id = auth.uid()) = '5×5'
+    or (select treinos_anterior from public.perfis where id = auth.uid()) is not null
+    or (select ficha_id from public.perfis where id = auth.uid()) is not null
+    then raise exception 'FALHOU: ao encerrar, os treinos do personal saem do app do aluno'; end if;
   update public.perfis set treinos = null where id = auth.uid();
   if (select (meus_dados_extras()->'acompanhamento'->0->>'personal')) <> 'Paula Exemplo' then raise exception 'FALHOU: Baixar meus dados traz o acompanhamento'; end if;
 end $$;
