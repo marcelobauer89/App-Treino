@@ -75,9 +75,9 @@ const base = (extra = {}) => ({
     ok(/Aluna Um/.test(await p.locator('#evoluiu-lista').innerText()), `${scheme}: Quem mais evoluiu mostra o recorde`);
     ok(/Sem treino seu/.test(await p.locator('#fichas-uso-lista').innerText()), `${scheme}: Fichas em uso conta quem está sem treino seu`);
     // Topo: nome profissional, CREF e foto (ou iniciais) de quem está logado.
-    ok((await p.locator('#pf-topo-nome').innerText()) === 'Paula Exemplo' && /CREF 000000-G\/SP/.test(await p.locator('#pf-topo-cref').innerText()), `${scheme}: topo com o nome e o CREF do personal`);
+    ok((await p.locator('#topo-nome').innerText()) === 'Paula Exemplo' && /CREF 000000-G\/SP/.test(await p.locator('#topo-sub').innerText()), `${scheme}: topo com o nome e o CREF do personal`);
     const celular = viewport.width < 1000;
-    ok(await p.locator('#pf-topo-avatar').isVisible() && await p.locator('#menu-abrir').isVisible() === celular && await p.locator('#pf-sair').count() === 0,
+    ok(await p.locator('#topo-avatar').isVisible() && await p.locator('#menu-abrir').isVisible() === celular && await p.locator('#pf-sair').count() === 0,
       `${scheme}: topo com a foto (ou iniciais); botão Menu no lugar do Sair só no celular`);
     if (celular) { await p.click('#menu-abrir'); await p.waitForSelector('#menu.aberto'); await p.waitForTimeout(300); }
     ok(await p.locator('#menu-sair').isVisible() && (await p.locator('.menu-item .menu-nome').allInnerTexts()).join('|') === 'Visão geral|Alunos|Treinos|Exercícios|Convidar|Sair', `${scheme}: menu com as seções e o Sair no fim`);

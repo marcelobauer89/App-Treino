@@ -147,7 +147,7 @@
     if (!sb) return mostrarEstado('<p>Não foi possível carregar a biblioteca do Supabase. Confira a internet e recarregue a página.</p>');
     const { data: { session } } = await sb.auth.getSession();
     if (!session) {
-      if (PERSONAL && GANCHOS().conta) GANCHOS().conta(null);
+      contaNoTopo(null);
       return mostrarEstado(PERSONAL ? `
         <p>Entre com a sua conta Google para abrir a área do personal.</p>
         <button class="btn" type="button" id="entrar">Entrar com Google</button>` : `
@@ -155,8 +155,8 @@
         <button class="btn" type="button" id="entrar">Entrar com Google</button>`);
     }
     meuId = session.user.id;
-    // Personal: foto, nome e CREF no topo (js/personal.js).
-    if (PERSONAL && GANCHOS().conta) GANCHOS().conta(session);
+    // Personal: o topo aparece já no cadastro; administrador, só depois de confirmado o acesso.
+    if (PERSONAL) contaNoTopo(session);
     mostrarCarregando('Conferindo seu acesso…');
     const { data: admin, error } = await sb.rpc(FN.acesso);
     if (error) return mostrarEstado(`<p>Não foi possível verificar o acesso. Confira se o <code>supabase/schema.sql</code> foi aplicado.</p>${botaoTentar()}`);
@@ -167,8 +167,49 @@
         <p><b>Acesso restrito.</b> A conta ${esc(session.user.email)} não é administradora.</p>
         <button class="btn-sec" type="button" id="sair">Entrar com outra conta</button>`);
     }
+    if (!PERSONAL) contaNoTopo(session);
     aplicarEstiloDaConta();
     await carregar();
+  }
+  // ---------- Conta no topo ----------
+  // Foto (a do perfil no app ou a do Google; sem foto, as iniciais), o nome de quem está logado e uma linha embaixo:
+  // "Administrador" no monitoramento; no personal, o nome profissional e o CREF (js/personal.js → registroDaConta).
+  const TITULO = PERSONAL ? 'Área do personal' : 'Monitoramento';
+  const iniciaisTopo = (nome) => String(nome || '?').trim().split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0].toUpperCase()).join('') || '?';
+  async function contaNoTopo(session) {
+    const av = $('topo-avatar'), nomeEl = $('topo-nome'), sub = $('topo-sub');
+    if (!session) {
+      av.hidden = true; sub.hidden = true; $('topo-olho').hidden = true;
+      nomeEl.textContent = TITULO;
+      return;
+    }
+    const meta = session.user.user_metadata || {};
+    const desenhar = (nome, foto, linha) => {
+      nomeEl.textContent = nome || TITULO;
+      $('topo-olho').hidden = !nome;
+      sub.textContent = linha || '';
+      sub.hidden = !linha;
+      av.hidden = false;
+      av.textContent = iniciaisTopo(nome || session.user.email);
+      if (foto) {
+        const img = new Image();
+        img.alt = '';
+        img.referrerPolicy = 'no-referrer';
+        img.onload = () => { av.textContent = ''; av.appendChild(img); };
+        img.src = foto;
+      }
+    };
+    const fotoGoogle = /^https:/.test(meta.avatar_url || meta.picture || '') ? meta.avatar_url || meta.picture : '';
+    const nomeGoogle = String(meta.full_name || meta.name || '').slice(0, 80);
+    desenhar(nomeGoogle, fotoGoogle, '');
+    const [p, reg] = await Promise.all([
+      sb.from('perfis').select('nome, foto').eq('id', session.user.id).maybeSingle().then((r) => r, () => ({ error: true })),
+      PERSONAL && GANCHOS().registroDaConta ? GANCHOS().registroDaConta() : Promise.resolve(null),
+    ]);
+    const perfil = !p.error ? p.data || {} : {};
+    const foto = /^https:/.test(perfil.foto || '') ? perfil.foto : fotoGoogle;
+    const nome = (reg && reg.nome) || String(perfil.nome || '').trim().slice(0, 80) || nomeGoogle;
+    desenhar(nome, foto, PERSONAL ? (reg ? reg.sub : '') : 'Administrador');
   }
   // O estilo das cores da conta (escolhido no app). A cópia do navegador já foi aplicada no início;
   // aqui vale o que está salvo na conta, para o monitoramento abrir igual em outro aparelho.

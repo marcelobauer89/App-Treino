@@ -120,22 +120,6 @@
   .usuarios .quem b { white-space: normal; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 }
 
-/* Topo: foto, nome profissional e CREF de quem está logado (sem login, só o título). */
-.pf-perfil { flex: 1 1 100%; display: flex; align-items: center; gap: 14px; min-width: 0; }
-.pf-perfil-txt { flex: 1 1 auto; min-width: 0; }
-.pf-perfil-txt h1 { overflow-wrap: anywhere; }
-.pf-topo-olho { margin: 0 0 2px; color: var(--marca-tinta); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
-.pf-topo-cref { margin: 4px 0 0; color: var(--tinta-2); font-size: 14px; font-variant-numeric: tabular-nums; }
-.pf-topo-avatar { flex: none; width: 64px; height: 64px; display: grid; place-items: center; overflow: hidden; border-radius: 50%;
-  border: 2px solid var(--marca); background: var(--marca-suave); color: var(--marca-tinta); font-size: 22px; font-weight: 800; }
-.pf-topo-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.pf-perfil .menu-abrir { align-self: flex-start; }
-@media (max-width: 560px) {
-  .pf-perfil { gap: 12px; }
-  .pf-topo-avatar { width: 52px; height: 52px; font-size: 18px; }
-  .pf-perfil-txt h1 { font-size: 30px; }
-}
-
 /* Visão geral do personal: motivos de atenção (chips) e a semana dos alunos (planejado × feito). */
 .pf-motivos { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; }
 .pf-motivo { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px; background: var(--gi); color: var(--tinta-2); font-size: 13px; font-weight: 600; }

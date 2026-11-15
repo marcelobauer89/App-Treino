@@ -82,42 +82,11 @@
   });
 
   // ---------- Conta no topo ----------
-  // Foto (a do perfil no app ou a do Google), nome profissional e CREF de quem está logado. Sem foto, as iniciais.
-  const iniciaisDe = (nome) => String(nome || '?').trim().split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0].toUpperCase()).join('') || '?';
-  async function conta(session) {
-    const av = $('pf-topo-avatar'), titulo = $('pf-topo-nome'), cref = $('pf-topo-cref');
-    if (!session) {
-      av.hidden = true; cref.hidden = true; $('pf-topo-olho').hidden = true;
-      titulo.textContent = 'Área do personal';
-      return;
-    }
-    const meta = session.user.user_metadata || {};
-    const desenhar = (nome, foto, registro) => {
-      titulo.textContent = nome || 'Área do personal';
-      $('pf-topo-olho').hidden = !nome;
-      cref.textContent = registro || '';
-      cref.hidden = !registro;
-      av.hidden = false;
-      av.textContent = iniciaisDe(nome || session.user.email);
-      if (foto) {
-        const img = new Image();
-        img.alt = '';
-        img.referrerPolicy = 'no-referrer';
-        img.onload = () => { av.textContent = ''; av.appendChild(img); };
-        img.src = foto;
-      }
-    };
-    const fotoGoogle = /^https:/.test(meta.avatar_url || meta.picture || '') ? meta.avatar_url || meta.picture : '';
-    desenhar(String(meta.full_name || meta.name || '').slice(0, 80), fotoGoogle, '');
-    const [c, p] = await Promise.all([
-      sb().rpc('meu_cadastro_profissional').then((r) => r, () => ({ error: true })),
-      sb().from('perfis').select('nome, foto').eq('id', session.user.id).maybeSingle().then((r) => r, () => ({ error: true })),
-    ]);
-    const cad = !c.error && Array.isArray(c.data) ? c.data[0] : null;
-    const perfil = !p.error ? p.data || {} : {};
-    const foto = /^https:/.test(perfil.foto || '') ? perfil.foto : fotoGoogle;
-    desenhar(cad ? cad.nome : String(perfil.nome || meta.full_name || '').slice(0, 80), foto,
-      cad && cad.cref ? `CREF ${cad.cref}${cad.uf ? `/${cad.uf}` : ''}` : '');
+  // O topo (foto e nome) é desenhado pelo painel (js/admin.js → Conta no topo); aqui vêm o nome profissional e o CREF.
+  async function registroDaConta() {
+    const r = await sb().rpc('meu_cadastro_profissional').then((x) => x, () => ({ error: true }));
+    const c = !r.error && Array.isArray(r.data) ? r.data[0] : null;
+    return c ? { nome: c.nome, sub: c.cref ? `CREF ${c.cref}${c.uf ? `/${c.uf}` : ''}` : '' } : null;
   }
 
   // ---------- Dados da área (carregados junto com o painel) ----------
@@ -982,5 +951,5 @@
     if (!r.error) { P.convites = r.data || []; renderConvites(); }
   });
 
-  window.PersonalHooks = { semAcesso, conta, carregar, aplicar, render, detalhe, geral };
+  window.PersonalHooks = { semAcesso, registroDaConta, carregar, aplicar, render, detalhe, geral };
 })();

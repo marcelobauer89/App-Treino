@@ -49,6 +49,9 @@ const ADM = {
     // menu das seções (lateral no computador, gaveta no celular)
     const nomes = (await p.locator('.menu-item .menu-nome').allTextContents()).map((t) => t.trim());
     ok(nomes.join('|') === 'Visão geral|Usuários|Saúde do app|E-mails|Convites|Exercícios|Tipos de check-in|Profissionais|Sair', `${tag}: menu com as 8 seções e o Sair`, nomes.join('|'));
+    // Topo igual ao da área do personal: foto (ou iniciais), "Monitoramento" em cima, o nome e "Administrador".
+    ok(await p.locator('#topo-avatar').isVisible() && (await txt(p, '#topo-sub')) === 'Administrador' && /monitoramento/i.test(await txt(p, '#topo-olho'))
+      && (await txt(p, '#topo-nome')).length > 0 && (await txt(p, '#topo-nome')) !== 'Monitoramento', `${tag}: topo com foto, nome e Administrador`, await txt(p, '#topo-nome'));
     if (viewport.width < 1000) {
       // Celular e tablet: o botão Menu fica no canto direito do topo; o menu abre como gaveta, com as seções e o Sair no fim.
       const [bx, h1] = await Promise.all(['#menu-abrir', 'h1'].map((q) => p.locator(q).boundingBox()));
