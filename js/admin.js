@@ -130,6 +130,7 @@
     el.hidden = false;
     $('painel').hidden = true;
     $('controles').hidden = true;
+    $('menu-abrir').hidden = true;
   }
   function mostrarEstado(html) {
     $('estado').classList.remove('carregando');
@@ -138,6 +139,7 @@
     $('estado').hidden = false;
     $('painel').hidden = true;
     $('controles').hidden = true;
+    $('menu-abrir').hidden = true;
   }
 
   // ---------- Acesso ----------
@@ -249,6 +251,7 @@
     $('estado').removeAttribute('aria-busy');
     $('painel').hidden = false;
     $('controles').hidden = false;
+    $('menu-abrir').hidden = false;
     if (PERSONAL && GANCHOS().aplicar) GANCHOS().aplicar(extra);
     render();
     if (primeira) entrarEmCascata();
@@ -263,7 +266,7 @@
   function entrarEmCascata() {
     const painel = $('painel');
     const aba = painel.querySelector('.aba-painel:not([hidden])');
-    const blocos = [painel.querySelector('.menu-abrir'), painel.querySelector('.menu'), ...(aba ? aba.querySelectorAll(':scope > section, .kpi, .graficos > section') : [])].filter(Boolean);
+    const blocos = [ ...(aba ? aba.querySelectorAll(':scope > section, .kpi, .graficos > section') : [])].filter(Boolean);
     blocos.forEach((el, i) => { el.classList.add('entra-item'); el.style.setProperty('--i', String(i)); });
     painel.classList.add('entra');
     setTimeout(() => {
@@ -321,7 +324,7 @@
     el.hidden = !n || aba === 'geral';
     el.setAttribute('role', 'img');
     el.setAttribute('aria-label', `${n} ${n === 1 ? 'pessoa' : 'pessoas'} on-line agora`);
-    // No celular o menu fica fechado: o ponto aparece também no botão Menu.
+    // O menu fica fechado: o ponto aparece também no botão Menu do topo.
     const bt = $('menu-online');
     bt.hidden = el.hidden;
     bt.setAttribute('role', 'img');
@@ -1077,9 +1080,8 @@
     fecharInfo();
     renderVisivel();
   }
-  // Menu: no computador fica sempre à esquerda; no celular (botão "Menu") abre como gaveta, fecha com Esc, no fundo
-  // ou ao escolher uma seção. Fechado, a gaveta fica fora da ordem do Tab (visibility no CSS).
-  const menuGaveta = () => getComputedStyle($('menu-abrir')).display !== 'none';
+  // Menu: o botão Menu do topo (onde ficava o Sair) abre a gaveta à direita, com as seções e o Sair no fim. Fecha com Esc,
+  // no fundo ou ao escolher uma seção. Fechada, a gaveta fica fora da ordem do Tab (visibility no CSS).
   function abrirMenu() {
     $('menu').classList.add('aberto');
     $('menu-fundo').hidden = false;
@@ -1092,13 +1094,13 @@
     $('menu').classList.remove('aberto');
     $('menu-fundo').hidden = true;
     $('menu-abrir').setAttribute('aria-expanded', 'false');
-    if (focar && menuGaveta()) $('menu-abrir').focus();
+    if (focar) $('menu-abrir').focus();
   }
   $('menu-abrir').addEventListener('click', abrirMenu);
   $('menu-fechar').addEventListener('click', () => fecharMenu({ focar: true }));
   $('menu-fundo').addEventListener('click', () => fecharMenu({ focar: true }));
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && $('menu').classList.contains('aberto')) fecharMenu({ focar: true }); });
-  // O botão do celular soma os selos dos itens (pedidos, erros), para o alerta não ficar escondido no menu fechado.
+  // O botão Menu soma os selos dos itens (pedidos, erros), para o alerta não ficar escondido no menu fechado.
   function atualizarMenuAlerta() {
     const n = [...document.querySelectorAll('#menu .aba-alerta')].filter((x) => !x.hidden)
       .reduce((t, x) => t + (Number(x.textContent) || 1), 0);
@@ -1316,7 +1318,7 @@
       await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.origin + location.pathname } });
       return;
     }
-    if (e.target.closest('#sair, #pf-sair')) { desligarOnline(); await sb.auth.signOut(); return iniciar(); }
+    if (e.target.closest('#sair, #menu-sair')) { fecharMenu(); desligarOnline(); await sb.auth.signOut(); return iniciar(); }
     if (e.target.closest('#tentar-online')) { desligarOnline(); return ligarOnline(); }
     if (e.target.closest('#ver-erro-online')) { verErroOnline = !verErroOnline; return atualizarOnline(); }
     if (e.target.closest('[data-mais-atividade]')) {

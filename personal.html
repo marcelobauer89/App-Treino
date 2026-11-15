@@ -26,7 +26,12 @@
       <h1 id="pf-topo-nome">Área do personal</h1>
       <p class="pf-topo-cref" id="pf-topo-cref" hidden></p>
     </div>
-    <button class="btn-sec pf-sair" type="button" id="pf-sair" hidden>Sair</button>
+    <button type="button" class="menu-abrir" id="menu-abrir" aria-expanded="false" aria-controls="menu" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        <span>Menu<span class="sr">: <span id="menu-atual">Visão geral</span></span></span>
+        <span class="aba-alerta" id="menu-alerta" hidden></span>
+        <span class="ponto on aba-online" id="menu-online" hidden></span>
+      </button>
   </div>
   <div class="controles" id="controles" hidden>
     <div class="periodo" role="group" aria-label="Período">
@@ -54,13 +59,7 @@
   </section>
 
   <div id="painel" hidden>
-    <!-- Menu das seções: lateral no computador; no celular, o botão abre o menu como uma gaveta (js/admin.js → Abas). -->
-    <button type="button" class="menu-abrir" id="menu-abrir" aria-expanded="false" aria-controls="menu">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
-      <span class="menu-abrir-txt"><small>Menu</small><b id="menu-atual">Visão geral</b></span>
-      <span class="aba-alerta" id="menu-alerta" hidden></span>
-      <span class="ponto on aba-online" id="menu-online" hidden></span>
-    </button>
+    <!-- Menu das seções: abre como gaveta pelo botão Menu do topo (js/admin.js → Abas); o Sair fica no fim dele. -->
     <div class="menu-fundo" id="menu-fundo" hidden></div>
     <nav class="menu" id="menu" aria-label="Seções da área do personal">
       <div class="menu-topo"><b>Menu</b><button type="button" class="menu-fechar" id="menu-fechar" aria-label="Fechar menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
@@ -71,6 +70,9 @@
         <li><button type="button" class="menu-item" id="tab-exercicios" data-aba="exercicios" aria-controls="aba-exercicios"><svg class="menu-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"/></svg><span class="menu-nome">Exercícios</span></button></li>
         <li><button type="button" class="menu-item" id="tab-convidar" data-aba="convidar" aria-controls="aba-convidar"><svg class="menu-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M19 8v6M16 11h6"/></svg><span class="menu-nome">Convidar</span><span class="aba-alerta" id="alerta-convidar" hidden></span></button></li>
       </ul>
+      <div class="menu-rodape">
+        <button type="button" class="menu-item" id="menu-sair"><svg class="menu-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg><span class="menu-nome">Sair</span></button>
+      </div>
     </nav>
 
     <div class="aba-painel" role="region" id="aba-geral" aria-labelledby="tab-geral">

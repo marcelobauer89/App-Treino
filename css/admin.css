@@ -150,21 +150,21 @@
     }
   }
 
-  /* Menu das seções: no computador, lateral e fixo ao rolar; no celular, o botão "Menu" abre uma gaveta à esquerda.
-     Cabe quantas seções vierem (lista vertical), sem rolagem para o lado nem quebra de linha. */
+  /* Menu das seções: o botão Menu fica no canto direito do topo (onde ficava o Sair) e abre uma gaveta à direita com as
+     seções e o Sair no fim. Cabe quantas seções vierem (lista vertical), sem apertar as outras. */
+  .topo-linha { flex: 1 1 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   .menu-abrir {
-    display: none; width: 100%; min-height: 52px; margin: 0 0 16px; padding: 6px 14px; align-items: center; gap: 12px;
-    border: 1px solid var(--fio); border-radius: 14px; background: var(--papel); color: var(--tinta); text-align: left;
+    flex: none; position: relative; min-height: 44px; padding: 0 14px; display: inline-flex; align-items: center; gap: 8px;
+    border: 1.5px solid var(--marca); border-radius: 12px; background: var(--papel); color: var(--marca-tinta); font-size: 15px; font-weight: 700;
   }
-  .menu-abrir > svg { width: 22px; height: 22px; flex: none; color: var(--marca-tinta); }
-  .menu-abrir-txt { flex: 1 1 auto; display: grid; line-height: 1.2; }
-  .menu-abrir-txt small { color: var(--tinta-2); font-size: 12px; font-weight: 600; }
-  .menu-abrir-txt b { font-size: 16px; }
+  .menu-abrir[hidden] { display: none; }
+  .menu-abrir:hover { background: var(--marca-suave); }
+  .menu-abrir > svg { width: 20px; height: 20px; flex: none; }
+  .menu-abrir .aba-online { position: absolute; top: -4px; right: -4px; }
   .menu ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 2px; }
-  .menu-topo { display: none; }
   .menu-item {
-    width: 100%; min-height: 44px; display: flex; align-items: center; gap: 10px; padding: 0 12px; border: 0; border-radius: 10px;
-    background: transparent; color: var(--tinta-2); font-size: 15px; font-weight: 700; text-align: left;
+    width: 100%; min-height: 48px; display: flex; align-items: center; gap: 10px; padding: 0 12px; border: 0; border-radius: 10px;
+    background: transparent; color: var(--tinta-2); font-size: 16px; font-weight: 700; text-align: left;
   }
   .menu-item:hover { background: var(--gi); color: var(--tinta); }
   .menu-item[aria-current="page"] { background: var(--marca-suave); color: var(--marca-tinta); box-shadow: inset 3px 0 0 var(--marca); }
@@ -172,29 +172,18 @@
   .menu-nome { flex: 1 1 auto; min-width: 0; }
   .menu-item .aba-alerta, .menu-item .aba-online { margin-left: auto; }
   .aba-online { width: 9px; height: 9px; }
+  .menu-rodape { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--fio); }
   .menu-fundo { position: fixed; inset: 0; z-index: 44; background: rgba(0, 0, 0, .45); }
-  /* Computador: menu à esquerda, conteúdo à direita (a página fica um pouco mais larga para o conteúdo não encolher). */
-  @media (min-width: 1000px) {
-    .wrap { max-width: 1340px; }
-    #painel:not([hidden]) { display: grid; grid-template-columns: 210px minmax(0, 1fr); column-gap: 28px; align-items: start; }
-    .menu { grid-column: 1; grid-row: 1 / span 20; position: sticky; top: 16px; padding: 8px; border: 1px solid var(--fio); border-radius: 16px; background: var(--papel); }
-    .aba-painel { grid-column: 2; min-width: 0; }
-    .menu-fundo { display: none; }
+  /* Gaveta: fechada, fica fora da tela e fora da ordem do Tab (visibility). */
+  .menu {
+    position: fixed; z-index: 45; top: 0; bottom: 0; right: 0; width: min(320px, 86vw); overflow-y: auto;
+    padding: max(14px, env(safe-area-inset-top, 0px)) 12px 20px; background: var(--papel); border-left: 1px solid var(--fio);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, .25); transform: translateX(105%); visibility: hidden;
+    transition: transform .22s cubic-bezier(.2, .7, .2, 1), visibility 0s linear .22s;
   }
-  /* Celular e tablet: gaveta. Fechada, fica fora da tela e fora da ordem do Tab (visibility). */
-  @media (max-width: 999px) {
-    .menu-abrir { display: flex; }
-    .menu {
-      position: fixed; z-index: 45; top: 0; bottom: 0; left: 0; width: min(300px, 86vw); overflow-y: auto;
-      padding: max(14px, env(safe-area-inset-top, 0px)) 12px 20px; background: var(--papel); border-right: 1px solid var(--fio);
-      box-shadow: 0 10px 40px rgba(0, 0, 0, .25); transform: translateX(-105%); visibility: hidden;
-      transition: transform .22s cubic-bezier(.2, .7, .2, 1), visibility 0s linear .22s;
-    }
-    .menu.aberto { transform: none; visibility: visible; transition: transform .22s cubic-bezier(.2, .7, .2, 1); }
-    .menu-topo { display: flex; align-items: center; justify-content: space-between; margin: 0 4px 10px; font-size: 18px; }
-    .menu-fechar { width: 44px; height: 44px; display: grid; place-items: center; border: 0; border-radius: 10px; background: transparent; color: var(--tinta-2); }
-    .menu-item { min-height: 48px; font-size: 16px; }
-  }
+  .menu.aberto { transform: none; visibility: visible; transition: transform .22s cubic-bezier(.2, .7, .2, 1); }
+  .menu-topo { display: flex; align-items: center; justify-content: space-between; margin: 0 4px 10px; font-size: 18px; }
+  .menu-fechar { width: 44px; height: 44px; display: grid; place-items: center; border: 0; border-radius: 10px; background: transparent; color: var(--tinta-2); }
   @media (prefers-reduced-motion: reduce) { .menu, .menu.aberto { transition: none; } }
   .aba-alerta {
     min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--erro); color: #fff;

@@ -168,8 +168,8 @@ const presenca = (p, topico, meta) => p.evaluate(([t, m]) => {
       await p.click('[data-fechar]');
       ok((await txt(p, '#on-titulo')).includes('· 1') && await p.locator('#on-corpo li').count() === 1, 'faixa cai para 1 sem recarregar');
       // ponto pulsando na aba Visão geral quando outra aba está aberta
-      // No computador o ponto fica no item Visão geral do menu; no celular, no botão Menu (o menu fica fechado).
-      const ponto = viewport.width < 1000 ? '#menu-online' : '#aba-online';
+      // Com o menu fechado, o ponto aparece no botão Menu do topo.
+      const ponto = '#menu-online';
       ok(await p.locator(ponto).isHidden(), 'na visão geral, sem ponto no menu');
       await H.aba(p, 'usuarios');
       ok(await p.locator(ponto).isVisible() && await p.locator(ponto).evaluate((e) => getComputedStyle(e).animationName) === 'pulso'

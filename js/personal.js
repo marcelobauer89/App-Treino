@@ -87,7 +87,7 @@
   async function conta(session) {
     const av = $('pf-topo-avatar'), titulo = $('pf-topo-nome'), cref = $('pf-topo-cref');
     if (!session) {
-      av.hidden = true; cref.hidden = true; $('pf-topo-olho').hidden = true; $('pf-sair').hidden = true;
+      av.hidden = true; cref.hidden = true; $('pf-topo-olho').hidden = true;
       titulo.textContent = 'Área do personal';
       return;
     }
@@ -97,7 +97,6 @@
       $('pf-topo-olho').hidden = !nome;
       cref.textContent = registro || '';
       cref.hidden = !registro;
-      $('pf-sair').hidden = false;
       av.hidden = false;
       av.textContent = iniciaisDe(nome || session.user.email);
       if (foto) {

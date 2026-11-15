@@ -48,27 +48,25 @@ const ADM = {
     await p.goto(ADMIN); await p.waitForSelector('#painel:not([hidden])');
     // menu das seções (lateral no computador, gaveta no celular)
     const nomes = (await p.locator('.menu-item .menu-nome').allTextContents()).map((t) => t.trim());
-    ok(nomes.join('|') === 'Visão geral|Usuários|Saúde do app|E-mails|Convites|Exercícios|Tipos de check-in|Profissionais', `${tag}: menu com as 8 seções`, nomes.join('|'));
-    if (viewport.width < 1000) {
-      ok(await p.locator('#menu-abrir').isVisible() && (await txt(p, '#menu-atual')) === 'Visão geral' && await p.locator('#tab-usuarios').isHidden(), `${tag}: no celular, o botão Menu mostra a seção e o menu fica fechado`);
-      ok(await txt(p, '#menu-alerta') === '3', `${tag}: o botão Menu soma os alertas`, await txt(p, '#menu-alerta'));
-      await p.click('#menu-abrir'); await p.waitForSelector('#menu.aberto'); await p.waitForTimeout(300);
-      const vis = await p.locator('.menu-item').evaluateAll((ts) => ts.map((t) => { const r = t.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth && r.height >= 44; }));
-      ok(vis.every(Boolean) && (await p.locator('#menu-abrir').getAttribute('aria-expanded')) === 'true', `${tag}: a gaveta abre com as 8 seções na tela`);
-      await p.screenshot({ path: `${H.SAIDA}/admin-menu-${tag}.png` });
-      await p.keyboard.press('Escape'); await p.waitForTimeout(300);
-      ok(!(await p.locator('#menu.aberto').count()) && await p.evaluate(() => document.activeElement.id) === 'menu-abrir', `${tag}: Esc fecha o menu e volta ao botão`);
-    } else {
-      ok(await p.locator('#menu-abrir').isHidden() && await p.locator('#tab-profissionais').isVisible(), `${tag}: no computador, o menu fica sempre à esquerda`);
-      const [m, c] = await Promise.all(['#menu', '#aba-geral'].map((q) => p.locator(q).evaluate((e) => e.getBoundingClientRect().left)));
-      ok(m < c, `${tag}: menu à esquerda do conteúdo`);
-    }
+    ok(nomes.join('|') === 'Visão geral|Usuários|Saúde do app|E-mails|Convites|Exercícios|Tipos de check-in|Profissionais|Sair', `${tag}: menu com as 8 seções e o Sair`, nomes.join('|'));
+    // O botão Menu fica no canto direito do topo; o menu abre como gaveta, com as seções e o Sair no fim.
+    const [bx, h1] = await Promise.all(['#menu-abrir', 'h1'].map((q) => p.locator(q).boundingBox()));
+    ok(await p.locator('#menu-abrir').isVisible() && bx.x > h1.x && bx.x + bx.width <= viewport.width && bx.y < h1.y + h1.height, `${tag}: botão Menu no canto direito do topo`);
+    ok(await p.locator('#tab-usuarios').isHidden() && (await p.locator('#menu-atual').textContent()) === 'Visão geral', `${tag}: menu fechado e o botão diz a seção atual (leitor de tela)`);
+    ok(await txt(p, '#menu-alerta') === '3', `${tag}: o botão Menu soma os alertas`, await txt(p, '#menu-alerta'));
+    await p.click('#menu-abrir'); await p.waitForSelector('#menu.aberto'); await p.waitForTimeout(300);
+    const vis = await p.locator('.menu-item').evaluateAll((ts) => ts.map((t) => { const r = t.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth && r.height >= 44; }));
+    ok(vis.length === 9 && vis.every(Boolean) && (await p.locator('#menu-abrir').getAttribute('aria-expanded')) === 'true', `${tag}: a gaveta abre com as 8 seções e o Sair na tela`);
+    ok((await p.locator('.menu-rodape #menu-sair').innerText()).trim() === 'Sair', `${tag}: Sair no fim do menu`);
+    await p.screenshot({ path: `${H.SAIDA}/admin-menu-${tag}.png` });
+    await p.keyboard.press('Escape'); await p.waitForTimeout(300);
+    ok(!(await p.locator('#menu.aberto').count()) && await p.evaluate(() => document.activeElement.id) === 'menu-abrir', `${tag}: Esc fecha o menu e volta ao botão`);
     ok(await p.locator('#aba-geral').isVisible() && await p.locator('#aba-usuarios').isHidden() && await p.locator('#tab-geral').getAttribute('aria-current') === 'page', `${tag}: começa na visão geral`);
     ok((await p.locator('#alerta-saude').textContent()) === '3' && (await p.locator('#alerta-saude').getAttribute('aria-label')) === '3 erros críticos nas últimas 24 horas', `${tag}: bolinha com 3 erros em 24 h`, await p.locator('#alerta-saude').textContent());
     await H.aba(p, 'usuarios');
     ok(await p.locator('#aba-usuarios').isVisible() && await p.locator('#aba-geral').isHidden() && (await p.evaluate(() => location.hash)) === '#usuarios', `${tag}: aba usuários e endereço`);
-    ok((await txt(p, '#menu-atual')) === 'Usuários' && await p.locator('#tab-usuarios').getAttribute('aria-current') === 'page', `${tag}: o menu marca a seção atual`);
-    if (viewport.width < 1000) ok(!(await p.locator('#menu.aberto').count()), `${tag}: escolher uma seção fecha a gaveta`);
+    ok((await p.locator('#menu-atual').textContent()) === 'Usuários' && await p.locator('#tab-usuarios').getAttribute('aria-current') === 'page', `${tag}: o menu marca a seção atual`);
+    ok(!(await p.locator('#menu.aberto').count()), `${tag}: escolher uma seção fecha a gaveta`);
     // Saúde, 7 dias
     await p.click('[data-periodo="7"]');
     await H.aba(p, 'saude');

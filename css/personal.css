@@ -129,7 +129,7 @@
 .pf-topo-avatar { flex: none; width: 64px; height: 64px; display: grid; place-items: center; overflow: hidden; border-radius: 50%;
   border: 2px solid var(--marca); background: var(--marca-suave); color: var(--marca-tinta); font-size: 22px; font-weight: 800; }
 .pf-topo-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.pf-sair { flex: none; align-self: flex-start; min-height: 40px; }
+.pf-perfil .menu-abrir { align-self: flex-start; }
 @media (max-width: 560px) {
   .pf-perfil { gap: 12px; }
   .pf-topo-avatar { width: 52px; height: 52px; font-size: 18px; }
