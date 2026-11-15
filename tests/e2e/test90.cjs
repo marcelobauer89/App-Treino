@@ -71,6 +71,14 @@ const base = (extra = {}) => ({
     const semana = await p.locator('#semana-tabela').innerText();
     ok(/Aluna Um/.test(semana) && /Aluno Dois/.test(semana) && /sem semana montada/.test(semana), `${scheme}: Semana dos alunos lista cada aluno`);
     ok((await p.locator('#semana-tabela .pf-marca-dia.feito').count()) >= 1 && (await p.locator('#semana-tabela .pf-marca-dia.faltou, #semana-tabela .pf-marca-dia.planejado').count()) >= 1, `${scheme}: semana mostra feito e planejado`);
+    ok(await p.locator('#semana-tabela .pf-marca-dia.feito svg').count() >= 1 && /Treinaram/.test(semana) && /Esta semana/.test(await p.locator('#semana-intervalo').innerText()) && await p.locator('#sem-prox').isDisabled(), `${scheme}: semana com check no feito, linha Treinaram e só setas para trás`);
+    await p.click('#sem-detalhes');
+    const detSem = await p.locator('#semana-detalhes').innerText();
+    ok(await p.locator('#semana-detalhes').isVisible() && /cumpri/.test(detSem) && /Aluna Um/.test(detSem) && /Aluno Dois/.test(detSem) && /(Treinou|treinou|último treino|check-in)/.test(detSem), `${scheme}: Ver detalhes mostra o resumo por aluno`, detSem.replace(/\s+/g, ' ').slice(0, 200));
+    await p.screenshot({ path: `${H.SAIDA}/personal-semana-${scheme}.png`, fullPage: true });
+    await p.click('#sem-ant');
+    ok(/Semana passada/.test(await p.locator('#semana-intervalo').innerText()) && await p.locator('#sem-prox').isEnabled() && await p.locator('#semana-detalhes').isVisible(), `${scheme}: seta volta para a semana passada`);
+    await p.click('#sem-prox'); await p.click('#sem-detalhes');
     ok(await p.locator('#sumiu-lista').count() === 0 && await p.locator('#g2').count() === 0, `${scheme}: sem os blocos do administrador (Quem sumiu, usuários ativos)`);
     ok(/Aluna Um/.test(await p.locator('#evoluiu-lista').innerText()), `${scheme}: Quem mais evoluiu mostra o recorde`);
     ok(/Sem treino seu/.test(await p.locator('#fichas-uso-lista').innerText()), `${scheme}: Fichas em uso conta quem está sem treino seu`);

@@ -98,15 +98,23 @@
             <h2 id="semana-titulo">Semana dos alunos</h2>
             <button class="info" type="button" data-info="info-semana" aria-expanded="false" aria-controls="info-semana" aria-label="Como funciona: semana dos alunos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button>
           </div>
-          <span class="nota" id="semana-resumo"></span>
+          <div class="pf-sem-nav">
+            <button class="pf-sem-seta" type="button" id="sem-ant" aria-label="Semana anterior"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg></button>
+            <span id="semana-intervalo" aria-live="polite"></span>
+            <button class="pf-sem-seta" type="button" id="sem-prox" aria-label="Próxima semana"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>
+          </div>
         </div>
-        <p class="info-txt" id="info-semana" role="note" hidden>A semana atual, de segunda a domingo: o que cada aluno tem planejado (pela semana montada no app ou pela que você sugeriu na ficha) e o que ele fez (check-ins). Não muda com o período escolhido.</p>
+        <p class="info-txt" id="info-semana" role="note" hidden>De segunda a domingo: o que cada aluno tem planejado (pela semana montada no app ou pela que você sugeriu na ficha) e o que ele fez (check-ins). Use as setas para ver as semanas anteriores (o planejado é sempre a semana montada hoje). A linha "Treinaram" conta quantos alunos fizeram check-in em cada dia. Em "Ver detalhes", cada aluno com o quanto cumpriu, os dias em que faltou, os treinos extras e o último treino. Não muda com o período escolhido.</p>
+        <p class="nota pf-sem-resumo" id="semana-resumo"></p>
         <ul class="legenda pf-sem-grade-legenda" aria-label="Legenda da semana">
-          <li><span class="pf-marca-dia feito" aria-hidden="true">1</span>Feito</li>
-          <li><span class="pf-marca-dia faltou" aria-hidden="true">1</span>Planejado e não feito</li>
-          <li><span class="pf-marca-dia planejado" aria-hidden="true">1</span>Planejado (por vir)</li>
+          <li><span class="pf-marca-dia feito" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>Feito</li>
+          <li><span class="pf-marca-dia faltou" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span>Faltou</li>
+          <li><span class="pf-marca-dia planejado" aria-hidden="true">A</span>A fazer (letra do treino)</li>
+          <li><span class="pf-marca-dia descanso" aria-hidden="true"></span>Descanso</li>
         </ul>
         <div class="tabela-rolagem" id="semana-tabela"></div>
+        <button class="btn-sec pf-sem-detalhes-btn" type="button" id="sem-detalhes" aria-expanded="false" aria-controls="semana-detalhes">Ver detalhes <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+        <div class="pf-sem-detalhes" id="semana-detalhes" hidden></div>
       </section>
     </div>
     <div class="graficos">

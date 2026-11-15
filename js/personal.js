@@ -217,34 +217,117 @@
         ${semMim ? linha('Sem treino seu', semMim, 'com o plano pronto do app ou os treinos de antes', 'var(--erro)') : ''}</ol>
         ${!usos.length && !soDoAluno ? '<p class="vazio">Nenhum aluno está com uma ficha sua ainda. Monte na aba Treinos e aplique.</p>' : ''}`;
   }
-  // A semana atual (segunda a domingo) de cada aluno: planejado (semana do app) × feito (check-ins).
+  // A semana (segunda a domingo) de cada aluno: planejado (semana do app) × feito (check-ins). As setas trocam a semana
+  // (só para trás) e "Ver detalhes" abre o resumo por aluno (feito ÷ planejado, faltas, extras e último treino).
+  const SEM = { desloc: 0, detalhes: false, lista: [] };
+  const DESCANSO = '<span class="pf-marca-dia descanso" title="Descanso"></span>';
+  function intervaloDaSemana(seg, dom) {
+    const a = painel().deYmd(seg), b = painel().deYmd(dom);
+    const mes = (x) => x.toLocaleDateString('pt-BR', { month: 'short' }).replace(/\./g, '');
+    return a.getMonth() === b.getMonth() ? `${a.getDate()} a ${b.getDate()} de ${mes(b)}` : `${a.getDate()} de ${mes(a)} a ${b.getDate()} de ${mes(b)}`;
+  }
   function renderSemana(lista) {
+    if (lista) SEM.lista = lista;
+    lista = SEM.lista;
     const C = painel().calc, d = painel().dados(), hoje = painel().hoje(), T = painel().tipos();
     const dow = painel().deYmd(hoje).getDay();
-    const seg = C.somarDias(hoje, -((dow + 6) % 7));
+    const seg = C.somarDias(hoje, -((dow + 6) % 7) - 7 * SEM.desloc);
     const dias = ORDEM_DIAS.map((_, i) => C.somarDias(seg, i));
+    const nome = (t) => (T[t] ? T[t].nome : t);
+    const treinou = dias.map(() => new Set());
     let feitos = 0, planejadosAteHoje = 0;
+    const resumo = [];
     const linhas = lista.slice().sort((a, b) => a.u.nome.localeCompare(b.u.nome, 'pt-BR')).map((a) => {
       const sem = Array.isArray(a.u.semana) && a.u.semana.length === 7 ? a.u.semana : null;
-      const cels = dias.map((dia) => {
+      const r = { a, sem: !!sem, feitos: 0, plan: 0, extras: [], faltas: [] };
+      const cels = dias.map((dia, i) => {
         const wd = painel().deYmd(dia).getDay();
         const plan = sem ? (sem[wd] || []).filter((t) => T[t]) : [];
         const fez = d.checkins.filter((c) => c.usuario_id === a.u.id && C.diaDeCheckin(c) === dia).map((c) => c.tipo);
         const passado = dia < hoje, ehHoje = dia === hoje;
-        if (dia <= hoje) { planejadosAteHoje += plan.length; feitos += Math.min(fez.length, plan.length); }
-        const nome = (t) => (T[t] ? T[t].nome : t);
-        const itens = [...fez.map((t) => `<span class="pf-marca-dia feito" style="background:var(--${T[t] ? T[t].grupo : 'musc'})" title="${esc(nome(t))}: feito">${esc(T[t] ? T[t].selo : '?')}</span>`),
-          ...plan.filter((t) => !fez.includes(t)).map((t) => `<span class="pf-marca-dia ${passado ? 'faltou' : 'planejado'}" title="${esc(nome(t))}: ${passado ? 'planejado e não feito' : 'planejado'}">${esc(T[t].selo)}</span>`)];
-        const desc = [fez.length ? `feito: ${fez.map(nome).join(', ')}` : '', plan.filter((t) => !fez.includes(t)).length ? `${passado ? 'não feito' : 'planejado'}: ${plan.filter((t) => !fez.includes(t)).map(nome).join(', ')}` : ''].filter(Boolean).join('; ') || 'descanso';
-        return `<td class="${ehHoje ? 'hoje' : ''}"><span class="sr">${esc(desc)}</span><span class="pf-dias" aria-hidden="true">${itens.join('')}</span></td>`;
+        // Cada treino planejado é cumprido pelo mesmo tipo ou, se não, por outro do mesmo grupo (ex.: Treino B no dia do A).
+        const sobra = fez.slice(), falta = [];
+        plan.forEach((t) => {
+          let k = sobra.indexOf(t);
+          if (k < 0) k = sobra.findIndex((f) => T[f] && T[f].grupo === T[t].grupo);
+          if (k >= 0) sobra.splice(k, 1); else falta.push(t);
+        });
+        if (fez.length) treinou[i].add(a.u.id);
+        if (dia <= hoje) { r.plan += plan.length; r.feitos += plan.length - falta.length; r.extras.push(...sobra); }
+        if (passado && falta.length) r.faltas.push(CURTO[wd].toLowerCase());
+        const itens = [...fez.map((t) => `<span class="pf-marca-dia feito" style="background:var(--${T[t] ? T[t].grupo : 'musc'})" title="${esc(nome(t))}: feito">${CHECK}</span>`),
+          ...falta.map((t) => `<span class="pf-marca-dia ${passado ? 'faltou' : 'planejado'}" title="${esc(nome(t))}: ${passado ? 'faltou' : 'a fazer'}">${passado ? XIS : esc(T[t].selo)}</span>`)];
+        const desc = [fez.length ? `feito: ${fez.map(nome).join(', ')}` : '', falta.length ? `${passado ? 'faltou' : 'a fazer'}: ${falta.map(nome).join(', ')}` : ''].filter(Boolean).join('; ') || 'descanso';
+        return `<td class="${ehHoje ? 'hoje' : ''}"><span class="sr">${esc(desc)}</span><span class="pf-dias" aria-hidden="true">${itens.join('') || (sem ? DESCANSO : '')}</span></td>`;
       }).join('');
-      return `<tr><th scope="row"><button class="link-btn pf-sem-grade-nome" type="button" data-abrir-usuario="${a.u.id}">${esc(a.u.nome)}</button>${sem ? '' : '<small class="pf-sub">sem semana montada</small>'}</th>${cels}</tr>`;
+      feitos += r.feitos; planejadosAteHoje += r.plan;
+      resumo.push(r);
+      const sub = !sem ? 'sem semana montada' : r.plan ? `${r.feitos} de ${r.plan} feitos` : 'nada planejado até hoje';
+      return `<tr><th scope="row"><button class="link-btn pf-sem-grade-nome" type="button" data-abrir-usuario="${a.u.id}">${esc(a.u.nome)}</button><small class="pf-sub${sem && r.plan && r.feitos >= r.plan ? ' ok' : ''}">${sub}</small></th>${cels}</tr>`;
     });
-    $('semana-resumo').textContent = planejadosAteHoje ? `${feitos} de ${qtd(planejadosAteHoje, 'treino planejado', 'treinos planejados')} até hoje` : '';
+    const atual = SEM.desloc === 0;
+    $('semana-intervalo').textContent = atual ? `Esta semana · ${intervaloDaSemana(dias[0], dias[6])}` : SEM.desloc === 1 ? `Semana passada · ${intervaloDaSemana(dias[0], dias[6])}` : intervaloDaSemana(dias[0], dias[6]);
+    $('sem-prox').disabled = atual;
+    $('semana-resumo').textContent = planejadosAteHoje
+      ? `${feitos} de ${qtd(planejadosAteHoje, 'treino planejado feito', 'treinos planejados feitos')}${atual ? ' até hoje' : ''} (${Math.round(feitos / planejadosAteHoje * 100)}%)` : '';
     $('semana-tabela').innerHTML = lista.length ? `<table class="pf-sem-grade">
       <thead><tr><th scope="col">Aluno</th>${dias.map((dia) => { const x = painel().deYmd(dia); return `<th scope="col" class="${dia === hoje ? 'hoje' : ''}">${CURTO[x.getDay()]}<small>${x.getDate()}</small></th>`; }).join('')}</tr></thead>
-      <tbody>${linhas.join('')}</tbody></table>` : '<p class="vazio">Sem alunos ainda.</p>';
+      <tbody>${linhas.join('')}</tbody>
+      <tfoot><tr><th scope="row">Treinaram</th>${dias.map((dia, i) => `<td class="${dia === hoje ? 'hoje' : ''}">${dia > hoje ? '' : treinou[i].size}</td>`).join('')}</tr></tfoot></table>` : '<p class="vazio">Sem alunos ainda.</p>';
+    $('sem-detalhes').hidden = !lista.length;
+    $('sem-detalhes').setAttribute('aria-expanded', String(SEM.detalhes));
+    $('sem-detalhes').firstChild.textContent = SEM.detalhes ? 'Esconder detalhes ' : 'Ver detalhes ';
+    $('semana-detalhes').hidden = !SEM.detalhes || !lista.length;
+    if (SEM.detalhes && lista.length) renderDetalhesSemana(resumo, atual);
   }
+  function renderDetalhesSemana(resumo, atual) {
+    const C = painel().calc, hoje = painel().hoje(), T = painel().tipos();
+    const pct = (r) => (r.plan ? r.feitos / r.plan : null);
+    const comPlano = resumo.filter((r) => r.plan);
+    const tudo = comPlano.filter((r) => r.feitos >= r.plan).length;
+    const nada = comPlano.filter((r) => !r.feitos).length;
+    const extras = resumo.reduce((x, r) => x + r.extras.length, 0);
+    const chip = (n, rot, cls) => `<li class="pf-sem-chip ${cls}"><strong>${n}</strong>${rot}</li>`;
+    const ultimo = (r) => {
+      const u = r.a.ultimoTreino;
+      if (!u) return 'ainda não fez check-in';
+      const n = C.diasEntre(u, hoje);
+      return n === 0 ? 'treinou hoje' : n === 1 ? 'treinou ontem' : `último treino há ${n} dias`;
+    };
+    const ordem = resumo.slice().sort((x, y) => (pct(x) ?? 2) - (pct(y) ?? 2) || x.a.u.nome.localeCompare(y.a.u.nome, 'pt-BR'));
+    const item = (r) => {
+      const p = pct(r);
+      const linhas = [];
+      if (!r.sem) linhas.push('Sem semana montada no app');
+      else if (!r.plan) linhas.push(atual ? 'Nada planejado até hoje' : 'Nada planejado na semana');
+      else if (r.faltas.length) linhas.push(`Faltou ${r.faltas.join(', ')}`);
+      else if (r.feitos >= r.plan) linhas.push(atual ? 'Em dia com o planejado' : 'Fez tudo o que estava planejado');
+      if (r.extras.length) linhas.push(`+${qtd(r.extras.length, 'treino extra', 'treinos extras')} (${[...new Set(r.extras.map((t) => (T[t] ? T[t].nome : t)))].join(', ')})`);
+      const cor = p === null ? 'var(--fio)' : p >= 1 ? 'var(--feito-tinta)' : p >= 0.5 ? 'var(--marca)' : 'var(--erro)';
+      return `<li class="pf-sem-det-item">
+        <button class="link-btn pf-sem-grade-nome" type="button" data-abrir-usuario="${r.a.u.id}">${esc(r.a.u.nome)}</button>
+        <span class="pf-sem-det-num">${p === null ? '—' : `${r.feitos}/${r.plan}<small>${Math.round(p * 100)}%</small>`}</span>
+        <span class="rt-trilho" aria-hidden="true"><span class="rt-barra" style="width:${p === null ? 0 : Math.min(1, p) * 100}%;background:${cor}"></span></span>
+        <span class="pf-sem-det-txt">${linhas.map(esc).join(' · ')}${linhas.length ? ' · ' : ''}${esc(ultimo(r))}</span>
+      </li>`;
+    };
+    $('semana-detalhes').innerHTML = `<ul class="pf-sem-chips">
+        ${chip(tudo, comPlano.length === 1 ? ' cumpriu tudo' : ' cumpriram tudo', 'ok')}
+        ${chip(comPlano.length - tudo - nada, ' em parte', '')}
+        ${chip(nada, ' sem treinar o planejado', nada ? 'alerta' : '')}
+        ${chip(extras, extras === 1 ? ' treino extra' : ' treinos extras', '')}
+      </ul>
+      <p class="nota">Do menor para o maior cumprimento do planejado${atual ? ' até hoje' : ''}.</p>
+      <ol class="pf-sem-det">${ordem.map(item).join('')}</ol>`;
+  }
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('#sem-ant, #sem-prox, #sem-detalhes');
+    if (!b || !window.Painel || !painel().dados()) return;
+    if (b.id === 'sem-ant') SEM.desloc += 1;
+    else if (b.id === 'sem-prox') SEM.desloc = Math.max(0, SEM.desloc - 1);
+    else SEM.detalhes = !SEM.detalhes;
+    renderSemana();
+  });
 
   // ---------- Fichas ----------
   function renderFichas() {
