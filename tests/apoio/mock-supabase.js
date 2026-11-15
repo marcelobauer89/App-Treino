@@ -118,7 +118,7 @@
 
   // ---------- Área do personal (as mesmas regras das funções do banco, em versão simples) ----------
   function rpcPersonal(db, nome, a) {
-    db.profissionais = db.profissionais || []; db.vinculos = db.vinculos || []; db.fichas = db.fichas || [];
+    db.profissionais = db.profissionais || []; db.vinculos = db.vinculos || []; db.fichas = db.fichas || []; db.exercicios_personal = db.exercicios_personal || [];
     const eu = db.sessao && db.sessao.user.id;
     const agora = new Date().toISOString();
     const ok = (data) => ({ data, error: null });
@@ -128,6 +128,15 @@
     const ativos = (pid) => db.vinculos.filter((v) => v.personal_id === pid && v.aceito_em && !v.encerrado_em);
     const meuAluno = (id) => ehProf(eu) && ativos(eu).some((v) => v.aluno_id === id);
     const perfil = (id) => db.perfis.find((p) => p.id === id);
+    // Igual à função tirar_treinos_do_personal do banco: os treinos daquele personal saem e voltam os de antes dele.
+    const tirarTreinosDoPersonal = (aluno, personal) => {
+      const p = perfil(aluno); if (!p) return;
+      if (p.treinos_por === personal) {
+        const antes = p.treinos_antes_personal || {};
+        Object.assign(p, { treinos: antes.treinos || null, jornada: antes.jornada || null, treinos_anterior: null, ficha_id: null, treinos_por: null, treinos_em: null });
+      }
+      p.acompanhado_por = null; p.treinos_antes_personal = null;
+    };
     const codigo = (c) => String(c || '').replace(/\s/g, '').toUpperCase();
     const restrito = () => erro('acesso restrito', '42501');
     const ehAdmin = !!(eu && ((db.admin || {}).ids || []).includes(eu));
@@ -185,14 +194,22 @@
         const outro = db.vinculos.find((x) => x.aluno_id === eu && x.aceito_em && !x.encerrado_em && x.personal_id !== r.v.personal_id);
         return ok([{ situacao: r.s, nome: r.p.nome, cref: r.p.cref, uf: r.p.uf, atual: outro ? (prof(outro.personal_id) || {}).nome || '' : '' }]);
       }
+      // Fim do acompanhamento: os treinos que o personal montou saem; voltam os de antes do primeiro personal.
       case 'aceitar_vinculo': {
         const r = situacao(a.p_codigo);
         if (r.s !== 'ok') return ok(r.s);
         if (r.v.aluno_id === eu && r.v.aceito_em) return ok('ok');
-        db.vinculos.filter((x) => x.aluno_id === eu && x.aceito_em && !x.encerrado_em).forEach((x) => { x.encerrado_em = agora; x.encerrado_por = 'troca'; });
+        db.vinculos.filter((x) => x.aluno_id === eu && x.aceito_em && !x.encerrado_em).forEach((x) => {
+          x.encerrado_em = agora; x.encerrado_por = 'troca';
+          const antes = (perfil(eu) || {}).treinos_antes_personal; tirarTreinosDoPersonal(eu, x.personal_id); if (perfil(eu)) perfil(eu).treinos_antes_personal = antes;
+        });
         Object.assign(r.v, { aluno_id: eu, aceito_em: agora });
         const p = perfil(eu);
-        if (p) { if (!p.liberado) { p.liberado_como = 'personal'; p.liberado_em = agora; } Object.assign(p, { acompanhado_por: r.v.personal_id, liberado: true, acesso_pedido_em: null }); }
+        if (p) {
+          if (!p.liberado) { p.liberado_como = 'personal'; p.liberado_em = agora; }
+          if (!p.treinos_antes_personal) p.treinos_antes_personal = { treinos: p.treinos || null, jornada: p.jornada || null, em: agora };
+          Object.assign(p, { acompanhado_por: r.v.personal_id, liberado: true, acesso_pedido_em: null });
+        }
         return ok('ok');
       }
       case 'meu_personal': {
@@ -204,7 +221,10 @@
       case 'personal_encerrar_vinculo': {
         const aluno = nome === 'encerrar_vinculo' ? eu : a.p_aluno;
         if (nome === 'personal_encerrar_vinculo' && !meuAluno(aluno)) return erro('Este aluno não está com você.');
-        db.vinculos.filter((x) => x.aluno_id === aluno && x.aceito_em && !x.encerrado_em).forEach((x) => { x.encerrado_em = agora; x.encerrado_por = nome === 'encerrar_vinculo' ? 'aluno' : 'personal'; });
+        db.vinculos.filter((x) => x.aluno_id === aluno && x.aceito_em && !x.encerrado_em).forEach((x) => {
+          x.encerrado_em = agora; x.encerrado_por = nome === 'encerrar_vinculo' ? 'aluno' : 'personal';
+          tirarTreinosDoPersonal(aluno, x.personal_id);
+        });
         const p = perfil(aluno); if (p) p.acompanhado_por = null;
         return ok(null);
       }
@@ -213,7 +233,7 @@
         return ok(ativos(eu).map((v) => { const p = perfil(v.aluno_id) || {}; return {
           id: v.aluno_id, nome: p.nome || 'Aluno sem nome', email: '', cadastro: v.aceito_em, ultimo_acesso: p.ultimo_acesso || null, acessos: p.acessos || 0,
           semana: p.semana || null, dias_jiu: p.dias_jiu || [], sem_peso: p.sem_peso || [], treinos: p.treinos || null, treinos_por_mim: p.treinos_por === eu,
-          treinos_em: p.treinos_em || null, ficha_id: p.ficha_id || null, vinculado_em: v.aceito_em, foto: '' }; }));
+          treinos_em: p.treinos_em || null, ficha_id: p.ficha_id || null, vinculado_em: v.aceito_em, foto: /^(https:\/\/|data:image\/)/.test(p.foto || '') ? p.foto : '' }; }));
       case 'personal_checkins':
       case 'personal_eventos':
       case 'personal_cargas': {
@@ -240,6 +260,34 @@
         db.fichas.push({ id, personal_id: eu, nome: p.nome, descricao: p.descricao || '', treinos: t, semana: p.semana || null, criado_em: agora, atualizado_em: agora });
         return ok(id);
       }
+      case 'personal_exercicios':
+        if (!ehProf(eu)) return restrito();
+        return ok(db.exercicios_personal.filter((e) => e.personal_id === eu).map(({ personal_id, ...e }) => e)
+          .sort((x, y) => x.nome.localeCompare(y.nome, 'pt-BR')));
+      case 'personal_salvar_exercicio': {
+        if (!ehProf(eu)) return erro('Área restrita a profissionais liberados.');
+        const p = a.p || {};
+        const nomeEx = String(p.nome || '').trim().replace(/\s+/g, ' ');
+        const k = nomeEx.toLowerCase();
+        if (nomeEx.length < 2 || nomeEx.length > 80) return erro('Dê um nome ao exercício (de 2 a 80 letras).');
+        if ((db.exercicios || []).some((x) => String(x.nome).toLowerCase() === k)) return erro('Esse exercício já está na biblioteca do app.');
+        if (db.exercicios_personal.some((x) => x.personal_id === eu && x.nome.toLowerCase() === k && x.id !== p.id)) return erro('Você já tem um exercício com esse nome.');
+        if (p.video_id && !/^[\w-]{11}$/.test(p.video_id)) return erro('Vídeo inválido: use o link do YouTube ou o código de 11 letras.');
+        const nv = (v) => (['baixa', 'media', 'alta'].includes(v) ? v : 'baixa');
+        const dados = { nome: nomeEx, grupo: p.grupo || '', dose: p.dose || '3×10', pse: Number(p.pse) || 8, hipertrofia: nv(p.hipertrofia), forca: nv(p.forca),
+          explosao: nv(p.explosao), mobilidade: nv(p.mobilidade), explicacao: p.explicacao || '', variacoes: p.variacoes || [], video_id: p.video_id || '' };
+        if (p.id) {
+          const e = db.exercicios_personal.find((x) => x.id === p.id && x.personal_id === eu);
+          if (!e) return erro('Exercício não encontrado.');
+          Object.assign(e, dados); return ok(e.id);
+        }
+        const id = `e${db.exercicios_personal.length + 1}`;
+        db.exercicios_personal.push({ id, personal_id: eu, ...dados, criado_em: agora });
+        return ok(id);
+      }
+      case 'personal_excluir_exercicio':
+        db.exercicios_personal = db.exercicios_personal.filter((e) => !(e.id === a.p_id && e.personal_id === eu));
+        return ok(null);
       case 'personal_excluir_ficha':
         db.fichas = db.fichas.filter((f) => !(f.id === a.p_id && f.personal_id === eu));
         db.perfis.forEach((p) => { if (p.ficha_id === a.p_id) p.ficha_id = null; });
@@ -414,7 +462,8 @@
             const FN_PERSONAL = ['eh_profissional', 'meu_cadastro_profissional', 'pedir_acesso_profissional', 'admin_profissionais', 'admin_liberar_profissional',
               'personal_criar_convite', 'personal_convites', 'personal_cancelar_convite', 'ver_convite_personal', 'aceitar_vinculo', 'meu_personal',
               'encerrar_vinculo', 'personal_encerrar_vinculo', 'personal_alunos', 'personal_checkins', 'personal_eventos', 'personal_cargas',
-              'personal_fichas', 'personal_salvar_ficha', 'personal_excluir_ficha', 'personal_aplicar_ficha', 'personal_salvar_treinos'];
+              'personal_fichas', 'personal_salvar_ficha', 'personal_excluir_ficha', 'personal_aplicar_ficha', 'personal_salvar_treinos',
+              'personal_exercicios', 'personal_salvar_exercicio', 'personal_excluir_exercicio'];
             if (FN_PERSONAL.includes(nome)) {
               if (db.semPersonal) { gravar(db); return { data: null, error: { message: `Could not find the function public.${nome} in the schema cache` } }; }
               const r = rpcPersonal(db, nome, args || {});

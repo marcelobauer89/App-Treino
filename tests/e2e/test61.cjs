@@ -52,7 +52,7 @@ const ADM = (atraso) => ({ ids: ['u1'], atraso, usuarios: [usuario('u1', 'Marcel
     const brilho = await p.locator('.esq-b').first().evaluate((e) => getComputedStyle(e, '::after').animationName);
     ok(a === 'none' && brilho === 'none', 'movimento reduzido: esqueleto parado', `${a}/${brilho}`);
     await p.waitForSelector('#painel:not([hidden])');
-    const k = await p.locator('#painel .abas').evaluate((e) => getComputedStyle(e).animationName);
+    const k = await p.locator('#painel .menu').evaluate((e) => getComputedStyle(e).animationName);
     ok(k === 'none', 'movimento reduzido: sem cascata', k);
     await p.context().close();
   }

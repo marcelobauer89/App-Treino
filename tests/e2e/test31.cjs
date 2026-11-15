@@ -53,11 +53,11 @@ const ADM = {
     ok(t2[7] === '07h–08h 2' && t2[12] === '12h–13h 1' && t2[13] === '13h–14h 1' && t2[8] === '08h–09h 0', `${tag}: ativos por hora`, `${t2[7]} | ${t2[12]} | ${t2[13]}`);
     await p.click('[data-alternar="g2"]');
     // usuários: descanso aparece como —
-    await p.click('#tab-usuarios');
+    await H.aba(p, 'usuarios');
     await p.fill('#busca', 'bruno');
     ok((await txt(p, '#usuarios-corpo')).includes('—'), `${tag}: aderência — em dia de descanso`, await txt(p, '#usuarios-corpo'));
     await p.fill('#busca', '');
-    await p.click('#tab-geral');
+    await H.aba(p, 'geral');
     // ícones dos gráficos
     const ig = p.locator('.graficos:not(.listas-geral) .info');
     ok(await ig.count() === 4, `${tag}: 4 ícones nos gráficos (check-ins, ativos, treinos mais feitos, jornadas)`);
@@ -76,11 +76,11 @@ const ADM = {
     await p.mouse.click(3, 3);
     ok(await p.locator('.info-txt:not([hidden])').count() === 0, `${tag}: tocar fora fecha`);
     // CSV
-    await p.click('#tab-usuarios');
+    await H.aba(p, 'usuarios');
     const [dl] = await Promise.all([p.waitForEvent('download'), p.click('#csv')]);
     ok(dl.suggestedFilename() === 'usuarios-2026-10-21-hoje.csv', `${tag}: CSV hoje`, dl.suggestedFilename());
     await p.screenshot({ path: `hoje-${tag}.png`, fullPage: true });
-    await p.click('#tab-geral');
+    await H.aba(p, 'geral');
     // outras unidades
     await p.click('[data-periodo="30"]');
     ok((await txt(p, '#info-g1')).includes('cada dia do período') && (await txt(p, '#g2-nota')).endsWith('no dia.') && (await txt(p, '#g1-titulo')) === 'Check-ins por dia', `${tag}: 30 dias por dia`);

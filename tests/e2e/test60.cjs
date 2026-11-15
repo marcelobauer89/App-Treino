@@ -26,7 +26,7 @@ const ADM = {
     const p = await H.novaPagina(b, { scheme, viewport: { width: 390, height: 844 }, extra: { admin: ADM } });
     await p.clock.install({ time: new Date(AGORA) });
     await p.goto(ADMIN); await p.waitForSelector('#painel:not([hidden])');
-    await p.click('#tab-emails'); await p.waitForTimeout(300);
+    await H.aba(p, 'emails'); await p.waitForTimeout(300);
     const prox = await txt(p, '#proximo-envio');
     ok(/vai para 2 pessoas: Marcelo, Ana\./.test(prox), `${scheme}: próximo resumo conta só quem vai receber`, prox);
     const fora = await txt(p, '#aba-emails');

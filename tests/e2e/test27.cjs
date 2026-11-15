@@ -82,7 +82,7 @@ const ADM = {
       const kpisAlt = await p.locator('#kpis').evaluate((e) => e.getBoundingClientRect().height);
       ok(kpisAlt < 680, `${tag}: 7 números ocupam menos de 680 px`, String(Math.round(kpisAlt)));
       // Cartão compacto
-      await p.click('#tab-usuarios'); 
+      await H.aba(p, 'usuarios'); 
       const alts = await p.locator('#usuarios-corpo tr').evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().height)));
       ok(alts.every((h) => h < 100), `${tag}: cartões abaixo de 100 px`, alts.join(','));
       const resumo = await txt(p, '#usuarios-corpo tr:first-child .resumo-cel');
@@ -96,10 +96,10 @@ const ADM = {
       ok(caixas.length === 7 && mesma(caixas[0].y, caixas[1].y) && new Set(caixas.map((c) => Math.round(c.y))).size <= 2 && caixas[0].w > caixas[2].w * 1.5,
         `${tag}: 7 números em 2 linhas no computador, os 2 primeiros maiores`, JSON.stringify(caixas.map((c) => Math.round(c.y))));
       ok(/nos últimos 30 dias/.test(ctxs[1]) && /semana montada/.test(ctxs[0]), `${tag}: textos longos no computador`);
-      await p.click('#tab-usuarios'); 
+      await H.aba(p, 'usuarios'); 
       ok(await p.locator('#usuarios th').count() === 7 && await p.locator('#usuarios thead').isVisible() && await p.locator('#usuarios-corpo .resumo-cel').first().isHidden(), `${tag}: tabela intacta`);
     }
-    await p.click('#tab-geral'); 
+    await H.aba(p, 'geral'); 
     // "Tudo": sem período anterior, sem variação e sem "null"
     await p.click('[data-periodo="tudo"]');
     const kTudo = await p.locator('#kpis .kpi').allInnerTexts();
@@ -126,7 +126,7 @@ const ADM = {
       ok(/1\s+0\s+0\s+0\s+0\s+0\s+0\s+1/.test(linha20.replace(/\t/g, ' ')), 'tabela: 20/out 1 musc', linha20);
       await p.click('[data-alternar="g1"]');
       // situações
-      await p.click('#tab-usuarios'); 
+      await H.aba(p, 'usuarios'); 
       const sit = await p.locator('#usuarios-corpo .situacao').allInnerTexts();
       ok(sit.join('|') === 'Ativo|Em risco|Inativo|Nunca usou', 'situações ordenadas por último uso', sit.join('|'));
       // busca
@@ -155,13 +155,14 @@ const ADM = {
       await p.click('[data-fechar]');
       ok(!(await p.locator('#detalhe').evaluate((d) => d.open)), 'fecha detalhe');
     }
-    await p.click('#tab-geral'); 
+    await H.aba(p, 'geral'); 
     await p.screenshot({ path: `adm-${tag}.png`, fullPage: true });
     if (viewport.width === 1280) {
-      await p.locator('#g1 svg').hover({ position: { x: 500, y: 100 } });
+      const caixa = await p.locator('#g1 svg').boundingBox();
+      await p.locator('#g1 svg').hover({ position: { x: Math.round(caixa.width * 0.7), y: 100 } });
       ok(await p.locator('#g1 .dica').isVisible(), `${tag}: dica no hover`);
       await p.screenshot({ path: `adm-${tag}-dica.png` });
-      await p.click('#tab-usuarios'); 
+      await H.aba(p, 'usuarios'); 
       await p.locator('#usuarios th[data-col="acessos"] button').click();
       ok((await p.locator('#usuarios-corpo .quem b').first().innerText()) === 'Marcelo Bauer', 'ordenar por acessos (desc)');
       ok(await p.locator('#usuarios th[data-col="acessos"]').getAttribute('aria-sort') === 'descending', 'aria-sort');

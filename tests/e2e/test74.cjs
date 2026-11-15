@@ -14,7 +14,7 @@ async function abrir(b, { scheme = 'light', viewport = { width: 390, height: 844
   if (!semCatalogo) Object.assign(extra, { exercicios: c.exercicios, jornadas: c.jornadas });
   const p = await H.novaPagina(b, { scheme, viewport, extra });
   await p.goto(ADMIN); await p.waitForSelector('#painel:not([hidden])'); await p.waitForTimeout(300);
-  await p.click('#tab-exercicios'); await p.waitForTimeout(150);
+  await H.aba(p, 'exercicios'); await p.waitForTimeout(150);
   return p;
 }
 const linhas = (p) => p.locator('#ex-lista .ex-item b').allInnerTexts();

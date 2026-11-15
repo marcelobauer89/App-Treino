@@ -10,9 +10,11 @@ const dia = (n, h = '07:00') => { const d = new Date(T); d.setDate(d.getDate() -
 const ISO = (n) => new Date(T.getTime() - n * 864e5).toISOString();
 
 // u1 (a conta logada nos testes) é o personal. a1 e a2 são alunos; a3 usa o app, mas não é aluno.
+// Foto de exemplo (1 pixel) enviada pelo app: o personal vê a foto da aluna; o aluno sem foto aparece com as iniciais.
+const FOTO = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
 const perfis = () => [
   { id: 'u1', nome: 'Paula Exemplo', email: 'paula@exemplo.com', tema: 'auto' },
-  { id: 'a1', nome: 'Aluna Um', email: 'a1@exemplo.com', acompanhado_por: 'u1', ultimo_acesso: ISO(0), acessos: 9, semana: [[], ['t1'], ['jiu'], ['t2'], [], ['t3'], []], treinos: null },
+  { id: 'a1', nome: 'Aluna Um', email: 'a1@exemplo.com', foto: FOTO, acompanhado_por: 'u1', ultimo_acesso: ISO(0), acessos: 9, semana: [[], ['t1'], ['jiu'], ['t2'], [], ['t3'], []], treinos: null },
   { id: 'a2', nome: 'Aluno Dois', email: 'a2@exemplo.com', acompanhado_por: 'u1', ultimo_acesso: ISO(10), acessos: 4, semana: null, treinos: null },
   { id: 'a3', nome: 'Pessoa Fora', email: 'a3@exemplo.com', ultimo_acesso: ISO(0), acessos: 20 },
 ];
@@ -63,25 +65,74 @@ const base = (extra = {}) => ({
     await p.goto(PERSONAL); await p.waitForSelector('#painel:not([hidden])');
     await p.waitForTimeout(300);
     const kpis = await p.locator('#kpis').innerText();
+    ok(await p.locator('#painel .painel-barra #controles').isVisible() && await p.locator('header #controles').count() === 0
+      && (await p.locator('#controles').boundingBox()).y < (await p.locator('#kpis').boundingBox()).y, `${scheme}: período e Atualizar logo acima dos indicadores`);
     ok(/Alunos ativos/.test(kpis) && !/suári/.test(kpis), `${scheme}: números falam em alunos`, kpis.replace(/\s+/g, ' ').slice(0, 120));
     ok(/2 de 2|1 de 2/.test(kpis), `${scheme}: conta só os alunos com vínculo`);
-    ok(/Aluno Dois/.test(await p.locator('#sumiu-lista').innerText()), `${scheme}: Quem sumiu mostra o aluno parado`);
+    ok(/Treinaram hoje/.test(kpis) && /Precisam de atenção/.test(kpis) && !/Voltaram nesta semana|Sumiram/.test(kpis), `${scheme}: números próprios do personal (não os do administrador)`);
+    const atencao = await p.locator('#atencao-lista').innerText();
+    ok(/Aluno Dois/.test(atencao) && /Sem treinar há 10 dias/.test(atencao) && /sem treino montado por você/i.test(atencao), `${scheme}: Precisam de atenção mostra o aluno parado e quem está sem treino seu`, atencao.replace(/\s+/g, ' ').slice(0, 160));
+    const semana = await p.locator('#semana-tabela').innerText();
+    ok(/Aluna Um/.test(semana) && /Aluno Dois/.test(semana) && /sem semana montada/.test(semana), `${scheme}: Semana dos alunos lista cada aluno`);
+    ok((await p.locator('#semana-tabela .pf-marca-dia.feito').count()) >= 1 && (await p.locator('#semana-tabela .pf-marca-dia.faltou, #semana-tabela .pf-marca-dia.planejado').count()) >= 1, `${scheme}: semana mostra feito e planejado`);
+    ok(await p.locator('#semana-tabela .pf-marca-dia.feito svg').count() >= 1 && /Treinaram/.test(semana) && /Esta semana/.test(await p.locator('#semana-intervalo').innerText()) && await p.locator('#sem-prox').isDisabled(), `${scheme}: semana com check no feito, linha Treinaram e só setas para trás`);
+    ok(await p.locator('#sem-detalhes, #semana-detalhes').count() === 0, `${scheme}: card sem o Ver detalhes (o resumo fica no Gerenciar)`);
+    await p.screenshot({ path: `${H.SAIDA}/personal-semana-${scheme}.png`, fullPage: true });
+    await p.click('#sem-ant');
+    ok(/Semana passada/.test(await p.locator('#semana-intervalo').innerText()) && await p.locator('#sem-prox').isEnabled(), `${scheme}: seta volta para a semana passada`);
+    await p.click('#sem-prox');
+    // Foto do aluno ao lado do nome (a enviada pelo app; sem foto, as iniciais).
+    ok(await p.locator('#semana-tabela .avatar.tem-foto img').count() === 1 && /AD/.test(await p.locator('#semana-tabela .avatar:not(.tem-foto)').first().innerText())
+      && await p.locator('#atencao-lista .avatar').count() === 2, `${scheme}: foto (ou iniciais) do aluno na semana e em Precisam de atenção`);
+    // Gerenciar: a semana em tela cheia, com números, filtros, 4 semanas e o detalhe do dia.
+    await p.click('#sem-gerenciar');
+    await p.waitForSelector('#gs-dialog[open]');
+    ok(/Cumprimento da turma/.test(await p.locator('#gs-kpis').innerText()) && await p.locator('#gs-tabela tbody tr').count() === 2 && /2 alunos/.test(await p.locator('#gs-conta').innerText()), `${scheme}: Gerenciar abre em tela cheia com os números e os dois alunos`);
+    await p.selectOption('#gs-sit', 'semsemana');
+    ok(await p.locator('#gs-tabela tbody tr').count() === 1 && /Aluno Dois/.test(await p.locator('#gs-tabela').innerText()) && await p.locator('#gs-limpar').isVisible(), `${scheme}: filtro de situação (sem semana montada)`);
+    await p.click('#gs-limpar');
+    await p.fill('#gs-busca', 'aluna');
+    ok(await p.locator('#gs-tabela tbody tr').count() === 1 && /Aluna Um/.test(await p.locator('#gs-tabela').innerText()), `${scheme}: busca pelo nome`);
+    await p.locator('#gs-tabela [data-gs-cel]').nth(1).click();
+    ok(await p.locator('#gs-info').isVisible() && /Aluna Um · Ter/.test(await p.locator('#gs-info').innerText()), `${scheme}: tocar no dia mostra o planejado e o feito`, await p.locator('#gs-info').innerText());
+    await p.click('[data-gs-vista="mes"]');
+    ok(await p.locator('#gs-tabela thead th').count() === 8 && /4 semanas/.test(await p.locator('#gs-intervalo').innerText()) && await p.locator('#gs-legenda').isHidden(), `${scheme}: visão das últimas 4 semanas`);
+    await p.screenshot({ path: `${H.SAIDA}/personal-gerenciar-${scheme}.png`, fullPage: false });
+    await p.click('[data-gs-vista="semana"]'); await p.fill('#gs-busca', '');
+    await p.click('[data-gs-fechar]');
+    ok(await p.locator('#gs-dialog[open]').count() === 0, `${scheme}: Gerenciar fecha`);
+    ok(await p.locator('#sumiu-lista').count() === 0 && await p.locator('#g2').count() === 0, `${scheme}: sem os blocos do administrador (Quem sumiu, usuários ativos)`);
     ok(/Aluna Um/.test(await p.locator('#evoluiu-lista').innerText()), `${scheme}: Quem mais evoluiu mostra o recorde`);
+    ok(/Sem treino seu/.test(await p.locator('#fichas-uso-lista').innerText()), `${scheme}: Fichas em uso conta quem está sem treino seu`);
+    // Topo: nome profissional, CREF e foto (ou iniciais) de quem está logado.
+    ok((await p.locator('#topo-nome').innerText()) === 'Paula Exemplo' && /CREF 000000-G\/SP/.test(await p.locator('#topo-sub').innerText()), `${scheme}: topo com o nome e o CREF do personal`);
+    const celular = viewport.width < 1000;
+    ok(await p.locator('#topo-avatar').isVisible() && await p.locator('#menu-abrir').isVisible() === celular && await p.locator('#pf-sair').count() === 0,
+      `${scheme}: topo com a foto (ou iniciais); botão Menu no lugar do Sair só no celular`);
+    if (celular) { await p.click('#menu-abrir'); await p.waitForSelector('#menu.aberto'); await p.waitForTimeout(300); }
+    ok(await p.locator('#menu-sair').isVisible() && (await p.locator('.menu-item .menu-nome').allInnerTexts()).join('|') === 'Visão geral|Alunos|Treinos|Exercícios|Convidar|Sair', `${scheme}: menu com as seções e o Sair no fim`);
+    await p.screenshot({ path: `${H.SAIDA}/personal-menu-${scheme}.png` });
+    if (celular) { await p.keyboard.press('Escape'); await p.waitForTimeout(300); }
+    await p.waitForTimeout(1200); // a entrada em cascata termina antes da foto
     await p.screenshot({ path: `${H.SAIDA}/personal-geral-${scheme}.png`, fullPage: true });
-    await p.click('#tab-usuarios'); await p.waitForTimeout(100);
+    await H.aba(p, 'usuarios'); await p.waitForTimeout(100);
     const lista = await p.locator('#usuarios-corpo').innerText();
     ok(/Aluna Um/.test(lista) && /Aluno Dois/.test(lista) && !/Pessoa Fora/.test(lista), `${scheme}: Alunos só com quem tem vínculo`);
     ok(!/suári/.test(await p.locator('#aba-usuarios').innerText()), `${scheme}: aba Alunos sem "usuário"`);
 
     // Fichas: a primeira, a partir do plano pronto.
-    await p.click('#tab-fichas'); await p.waitForTimeout(80);
+    await H.aba(p, 'fichas'); await p.waitForTimeout(80);
     ok(/ainda não tem fichas/.test(await p.locator('#fichas-lista').innerText()), `${scheme}: fichas vazias explicam o que fazer`);
     await p.click('#ficha-nova'); await p.waitForSelector('#ficha-dialog[open]');
-    await p.click('#ficha-salvar'); await p.waitForTimeout(80);
-    ok(/nome à ficha/.test(await p.locator('#ficha-erro').innerText()), `${scheme}: ficha sem nome é recusada`);
+    ok((await p.locator('.pf-passos li').count()) === 4 && /Início/.test(await p.locator('.pf-passos .atual').innerText()), `${scheme}: ficha nova é um passo a passo (4 passos, começa no Início)`);
+    ok(await p.locator('.pf-passo[data-passo="1"]').isHidden(), `${scheme}: os treinos ficam para o passo 2`);
+    await p.click('#ficha-proximo'); await p.waitForTimeout(80);
+    ok(/nome à ficha/.test(await p.locator('#ficha-erro').innerText()) && /Início/.test(await p.locator('.pf-passos .atual').innerText()), `${scheme}: sem nome, não passa do Início`);
     await p.selectOption('#pf-modelo', 'plano'); await p.waitForTimeout(80);
     ok((await p.locator('.pf-treino').count()) === 3, `${scheme}: começar do plano pronto traz os 3 treinos`);
     await p.fill('#pf-ficha-nome', 'Base iniciante');
+    await p.click('#ficha-proximo'); await p.waitForTimeout(80);
+    ok(/Treinos/.test(await p.locator('.pf-passos .atual').innerText()) && await p.locator('.pf-treino').first().isVisible(), `${scheme}: Próximo leva aos treinos`);
     // Troca a dose do 1º exercício, sobe o 2º e acrescenta um exercício que não está na biblioteca (recusado) e depois um que está.
     await p.locator('.pf-treino[data-t="0"] li[data-x="0"] [data-campo="ex-dose"]').fill('4×12');
     const segundo = await p.locator('.pf-treino[data-t="0"] li[data-x="1"] [data-campo="ex-nome"]').inputValue();
@@ -89,12 +140,37 @@ const base = (extra = {}) => ({
     ok((await p.locator('.pf-treino[data-t="0"] li[data-x="0"] [data-campo="ex-nome"]').inputValue()) === segundo, `${scheme}: subir exercício muda a ordem`);
     await p.locator('.pf-treino[data-t="2"] [data-pf-ex-mais]').click(); await p.waitForTimeout(60);
     const novo = p.locator('.pf-treino[data-t="2"] li').last().locator('[data-campo="ex-nome"]');
-    await novo.fill('Exercício inventado'); await p.click('#ficha-salvar'); await p.waitForTimeout(80);
-    ok(/não está na biblioteca/.test(await p.locator('#ficha-erro').innerText()), `${scheme}: exercício fora da biblioteca é recusado`);
+    await novo.fill('Exercício inventado'); await p.click('#ficha-proximo'); await p.waitForTimeout(80);
+    ok(/não está na biblioteca/.test(await p.locator('#ficha-erro').innerText()) && /Treinos/.test(await p.locator('.pf-passos .atual').innerText()), `${scheme}: exercício fora da biblioteca segura no passo Treinos`);
     await novo.fill('supino reto'); await novo.dispatchEvent('change'); await p.waitForTimeout(60);
     ok((await novo.inputValue()) === 'Supino reto', `${scheme}: o nome vira o da biblioteca`);
     ok((await p.locator('.pf-treino[data-t="2"] li').last().locator('[data-campo="ex-dose"]').inputValue()) !== '', `${scheme}: séries vêm da biblioteca`);
+    // Exercício próprio criado de dentro da ficha: entra no treino e na lista "Meus exercícios".
+    await p.locator('.pf-treino[data-t="1"] [data-pf-ex-criar]').click(); await p.waitForSelector('#mx-dialog[open]');
+    const form = await p.locator('#mx-form').innerText();
+    ok(/Séries sugeridas/.test(form) && /Níveis/.test(form) && /Explicação/.test(form) && /Outros nomes/.test(form) && /Vídeo do YouTube/.test(form),
+      `${scheme}: Novo exercício do personal é a mesma tela do administrador (séries, níveis, explicação, outros nomes e vídeo)`);
+    await p.fill('#mx-nome', 'Supino reto'); await p.click('#mx-salvar'); await p.waitForTimeout(80);
+    ok(/biblioteca do app/.test(await p.locator('#mx-erro').innerText()), `${scheme}: exercício próprio com nome da biblioteca é recusado`);
+    await p.fill('#mx-nome', 'remada no TRX da Paula'); await p.click('#mx-salvar'); await p.waitForTimeout(80);
+    ok(/grupo/.test(await p.locator('#mx-erro').innerText()), `${scheme}: sem grupo, pede o grupo (como no administrador)`);
+    await p.selectOption('#mx-grupo', 'Costas'); await p.fill('#mx-valor', '12');
+    await p.check('[name="mx-hipertrofia"][value="alta"]', { force: true }); await p.fill('#mx-why', 'Costas e pegada no TRX');
+    await p.fill('#mx-video', 'https://youtu.be/abcdefghij1');
+    await p.locator('#mx-dialog').screenshot({ path: `${H.SAIDA}/personal-exercicio-${scheme}.png` });
+    await p.click('#mx-salvar'); await p.waitForFunction(() => !document.querySelector('#mx-dialog').open); await p.waitForTimeout(80);
+    ok((await p.locator('.pf-treino[data-t="1"] li').last().locator('[data-campo="ex-nome"]').inputValue()) === 'Remada no TRX da Paula', `${scheme}: exercício criado entra no treino`);
+    ok(/seu/.test(await p.locator('.pf-treino[data-t="1"] li').last().innerText()), `${scheme}: exercício próprio marcado como "seu" no editor`);
     await p.locator('#ficha-dialog').screenshot({ path: `${H.SAIDA}/personal-editor-${scheme}.png` });
+    await p.click('#ficha-proximo'); await p.waitForTimeout(80);
+    ok(/Semana/.test(await p.locator('.pf-passos .atual').innerText()) && await p.locator('.pf-semana').isVisible(), `${scheme}: passo 3 é a semana sugerida`);
+    await p.click('#ficha-proximo'); await p.waitForTimeout(80);
+    const rev = await p.locator('.pf-revisao').innerText();
+    ok(/Base iniciante/.test(rev) && /3 treinos/.test(rev) && /Remada no TRX da Paula/.test(rev), `${scheme}: revisão mostra nome, treinos e exercícios`, rev.slice(0, 80));
+    await p.locator('#ficha-dialog').screenshot({ path: `${H.SAIDA}/personal-revisao-${scheme}.png` });
+    await p.click('.pf-revisao [data-pf-passo="0"]'); await p.waitForTimeout(60);
+    ok(/Início/.test(await p.locator('.pf-passos .atual').innerText()), `${scheme}: "Mudar" na revisão volta ao passo`);
+    await p.click('.pf-passos [data-pf-passo="3"]'); await p.waitForTimeout(60);
     await p.click('#ficha-salvar'); await p.waitForFunction(() => !document.querySelector('#ficha-dialog').open);
     await p.waitForTimeout(250);
     let db = await H.banco(p);
@@ -102,6 +178,13 @@ const base = (extra = {}) => ({
     ok(db.fichas[0].treinos['1'].exercicios.some((x) => x.dose === '4×12'), `${scheme}: dose alterada salva`);
     ok(Array.isArray(db.fichas[0].semana) && db.fichas[0].semana[1].includes('t2'), `${scheme}: semana sugerida do plano pronto vai junto`);
     ok(/Base iniciante/.test(await p.locator('#fichas-lista').innerText()), `${scheme}: ficha aparece na lista`);
+    ok(db.fichas[0].treinos['2'].exercicios.some((x) => x.nome === 'Remada no TRX da Paula'), `${scheme}: exercício próprio vai na ficha`);
+    const mx = db.exercicios_personal[0];
+    ok(db.exercicios_personal.length === 1 && mx.personal_id === 'u1' && mx.grupo === 'Costas' && mx.nome === 'Remada no TRX da Paula', `${scheme}: exercício próprio gravado só para o personal, com o nome no padrão`);
+    ok(mx.hipertrofia === 'alta' && mx.explicacao === 'Costas e pegada no TRX' && mx.video_id === 'abcdefghij1' && mx.dose === '3×12', `${scheme}: níveis, explicação, vídeo e séries gravados`);
+    const naFicha = db.fichas[0].treinos['2'].exercicios.find((x) => x.nome === 'Remada no TRX da Paula');
+    ok(naFicha && naFicha.extra && naFicha.extra.why === 'Costas e pegada no TRX' && naFicha.extra.video === 'abcdefghij1' && naFicha.extra.H === 'alta', `${scheme}: o cadastro do exercício vai junto na ficha (o aluno vê explicação, níveis e vídeo)`);
+    ok(/Remada no TRX da Paula/.test(await p.locator('#meus-ex-lista').innerText()) && /Costas · 3×12/.test(await p.locator('#meus-ex-lista').innerText()), `${scheme}: Meus exercícios lista o exercício`);
 
     // Aplicar a um aluno, com a semana.
     await p.click('[data-ficha-aplicar]'); await p.waitForSelector('#pc-dialog[open]');
@@ -109,7 +192,11 @@ const base = (extra = {}) => ({
     await p.check('[name="pc-aluno"][value="a1"]'); await p.check('#pc-semana');
     ok(/1 aluno/.test(await p.locator('#pc-aplicar').innerText()), `${scheme}: botão diz quantos alunos`);
     await p.locator('#pc-dialog').screenshot({ path: `${H.SAIDA}/personal-aplicar-${scheme}.png` });
-    await p.click('#pc-aplicar'); await p.waitForFunction(() => !document.querySelector('#pc-dialog').open); await p.waitForTimeout(250);
+    await p.click('#pc-aplicar'); await p.waitForSelector('.pf-envio');
+    ok(/Ficha enviada/.test(await p.locator('.pf-envio').innerText()) && (await p.locator('.pf-envio-av').count()) === 1, `${scheme}: aplicar mostra a animação da ficha indo ao aluno`);
+    await p.waitForTimeout(1900);
+    await p.locator('#pc-dialog').screenshot({ path: `${H.SAIDA}/personal-enviada-${scheme}.png` });
+    await p.click('#pc-pronto'); await p.waitForFunction(() => !document.querySelector('#pc-dialog').open); await p.waitForTimeout(250);
     db = await H.banco(p);
     const a1 = db.perfis.find((x) => x.id === 'a1');
     ok(a1.ficha_id === db.fichas[0].id && a1.treinos['1'].exercicios[1].dose === '4×12' && a1.treinos_por === 'u1', `${scheme}: aluna recebe a ficha`);
@@ -117,10 +204,11 @@ const base = (extra = {}) => ({
     ok(db.perfis.find((x) => x.id === 'a2').treinos === null, `${scheme}: quem não foi marcado não muda`);
 
     // Ficha do aluno: treinos atuais, pesos e ajuste só para ela.
-    await p.click('#tab-usuarios'); await p.waitForTimeout(80);
+    await H.aba(p, 'usuarios'); await p.waitForTimeout(80);
     await p.locator('#usuarios-corpo tr[data-usuario="a1"]').click(); await p.waitForSelector('#detalhe[open]');
     const det = await p.locator('#det-corpo').innerText();
     ok(/Base iniciante/.test(det) && /Treinos atuais/.test(det), `${scheme}: detalhe mostra a ficha atual`, det.slice(0, 80));
+    ok(!/Atividade recente|Abriu o app/.test(det) && await p.locator('#det-atividade').count() === 0, `${scheme}: ficha do aluno sem a atividade recente (só do administrador)`);
     ok(/Remada inversa/.test(det) && /Recorde 24 kg/.test(det) && /subiu 4 kg/.test(det), `${scheme}: detalhe mostra o recorde e quanto subiu`);
     ok(/Aluno desde/.test(det) && !/Excluir conta/.test(det) && !/Liberar/.test(det), `${scheme}: detalhe sem as ações do administrador`);
     await p.locator('#detalhe').screenshot({ path: `${H.SAIDA}/personal-aluno-${scheme}.png` });
@@ -136,7 +224,7 @@ const base = (extra = {}) => ({
     await p.click('#detalhe [data-fechar]');
 
     // Convidar: link do app com ?personal= e o convite aguardando.
-    await p.click('#tab-convidar'); await p.waitForTimeout(80);
+    await H.aba(p, 'convidar'); await p.waitForTimeout(80);
     await p.fill('#pc-nome', 'Novo aluno'); await p.click('#pc-gerar'); await p.waitForTimeout(200);
     const link = await p.locator('#pc-link').inputValue();
     ok(/\/\?personal=PQR234$/.test(link), `${scheme}: link do convite abre o app com o código`, link);
@@ -145,7 +233,7 @@ const base = (extra = {}) => ({
     await p.screenshot({ path: `${H.SAIDA}/personal-convidar-${scheme}.png`, fullPage: true });
 
     // Encerrar o acompanhamento do aluno 2.
-    await p.click('#tab-usuarios'); await p.locator('#usuarios-corpo tr[data-usuario="a2"]').click(); await p.waitForSelector('#detalhe[open]');
+    await H.aba(p, 'usuarios'); await p.locator('#usuarios-corpo tr[data-usuario="a2"]').click(); await p.waitForSelector('#detalhe[open]');
     await p.click('[data-pf-encerrar="a2"]'); await p.waitForSelector('#pc-dialog[open]');
     await p.click('[data-confirmar]'); await p.waitForTimeout(300);
     db = await H.banco(p);
@@ -157,11 +245,11 @@ const base = (extra = {}) => ({
 
   // 3. Monitoramento do administrador: aba Profissionais com o pedido e o botão Liberar.
   {
-    const p = await H.novaPagina(b, { extra: base({ admin: { ids: ['u1'] }, profissionais: [{ usuario_id: 'a3', nome: 'Pessoa Fora', cref: '999999-G', uf: 'MG', pedido_em: ISO(1), liberado_em: null, bloqueado_em: null, limite_alunos: 30 }] }) });
+    const p = await H.novaPagina(b, { viewport: { width: 1280, height: 900 }, extra: base({ admin: { ids: ['u1'] }, profissionais: [{ usuario_id: 'a3', nome: 'Pessoa Fora', cref: '999999-G', uf: 'MG', pedido_em: ISO(1), liberado_em: null, bloqueado_em: null, limite_alunos: 30 }] }) });
     await p.clock.install({ time: T });
     await p.goto(H.PAGINA.replace('index.html', 'admin.html#profissionais')); await p.waitForSelector('#painel:not([hidden])');
     await p.waitForTimeout(300);
-    ok(await p.locator('#alerta-prof').isVisible() && (await p.locator('#alerta-prof').innerText()) === '1', 'admin: aba mostra 1 pedido aguardando');
+    ok(await p.locator('#alerta-prof').evaluate((e) => !e.hidden) && (await p.locator('#alerta-prof').textContent()) === '1' && (await p.locator('#menu-alerta').textContent()) === '1', 'admin: menu mostra 1 pedido aguardando (e o botão Menu também)');
     ok(/999999-G\/MG/.test(await p.locator('#prof-lista').innerText()), 'admin: lista mostra o CREF');
     await p.screenshot({ path: `${H.SAIDA}/admin-profissionais.png`, fullPage: true });
     await p.click('[data-prof-liberar="sim"]'); await p.waitForTimeout(300);

@@ -275,6 +275,42 @@ do $$ declare f uuid; begin
   exception when check_violation then null; end;
 end $$;
 
+-- Meus exercícios: Paula cria um exercício só dela; nome da biblioteca e nome repetido são recusados.
+do $$ declare e uuid; begin
+  e := public.personal_salvar_exercicio('{"nome":"Remada no TRX da Paula","grupo":"Costas","dose":"3×12","pse":7}');
+  if (select count(*) from public.personal_exercicios()) <> 1 then raise exception 'FALHOU: o personal vê o exercício que criou'; end if;
+  begin perform public.personal_salvar_exercicio('{"nome":"  remada no trx da paula "}'); raise exception 'FALHOU: nome repetido é recusado';
+  exception when raise_exception then if sqlerrm like 'FALHOU%' then raise; end if; end;
+  begin perform public.personal_salvar_exercicio(jsonb_build_object('nome', (select nome from public.exercicios limit 1))); raise exception 'FALHOU: nome da biblioteca é recusado';
+  exception when raise_exception then if sqlerrm like 'FALHOU%' then raise; end if; end;
+  if (select count(*) from public.exercicios_personal) <> 0 then raise exception 'FALHOU: a tabela não é lida direto pela API'; end if;
+  perform public.personal_salvar_exercicio(jsonb_build_object('id', e, 'nome', 'Remada no TRX', 'pse', 8, 'hipertrofia', 'alta', 'forca', 'zzz',
+    'explicacao', 'Costas e pegada', 'variacoes', jsonb_build_array('TRX row', ' '), 'video_id', 'abcdefghijk'));
+  if (select nome from public.personal_exercicios()) <> 'Remada no TRX' then raise exception 'FALHOU: o personal renomeia o exercício'; end if;
+  if (select hipertrofia || forca || explicacao || array_to_string(variacoes, '|') || video_id from public.personal_exercicios())
+    <> 'altabaixaCostas e pegadaTRX rowabcdefghijk' then raise exception 'FALHOU: níveis, explicação, outros nomes e vídeo são gravados (nível inválido vira baixa)'; end if;
+  begin perform public.personal_salvar_exercicio(jsonb_build_object('id', e, 'nome', 'Remada no TRX', 'video_id', 'javascript:x')); raise exception 'FALHOU: vídeo inválido é recusado';
+  exception when raise_exception then if sqlerrm like 'FALHOU%' then raise; end if; end;
+end $$;
+
+-- O próprio convite: bloqueado por padrão; liberado só com o ajuste 'convite_proprio' (projeto de testes).
+do $$ begin
+  if (select situacao from public.ver_convite_personal((select codigo from conv where quem = 'bruno'))) <> 'proprio' then
+    raise exception 'FALHOU: o personal não aceita o próprio convite'; end if;
+  begin insert into public.ajustes_banco values ('convite_proprio', 'sim'); raise exception 'FALHOU: a API não grava em ajustes_banco';
+  exception when insufficient_privilege then null; end;
+end $$;
+reset role;
+insert into public.ajustes_banco values ('convite_proprio', 'sim');
+set local role authenticated;
+do $$ begin perform set_config('request.jwt.claim.sub', '44444444-4444-4444-4444-444444444444', true); end $$;
+do $$ begin
+  if (select situacao from public.ver_convite_personal((select codigo from conv where quem = 'bruno'))) <> 'ok' then
+    raise exception 'FALHOU: com o ajuste ligado, o personal pode abrir o próprio convite'; end if;
+end $$;
+reset role;
+delete from public.ajustes_banco;
+
 -- Bruno vê o convite e aceita; Caio é aluno de outro jeito? Não: Caio aceita e depois encerra.
 reset role;
 set local role authenticated;
@@ -285,6 +321,8 @@ do $$ declare c text := (select codigo from conv where quem = 'bruno'); begin
   if public.aceitar_vinculo(c) <> 'ok' then raise exception 'FALHOU: o aluno aceita o convite'; end if;
   if (select nome from public.meu_personal()) <> 'Paula Exemplo' then raise exception 'FALHOU: o aluno vê quem o acompanha'; end if;
   if public.aceitar_vinculo('ZZZZZZ') <> 'invalido' then raise exception 'FALHOU: código inexistente é inválido'; end if;
+  begin perform 1 from public.personal_exercicios(); raise exception 'FALHOU: quem não é personal não vê exercícios de personal';
+  exception when insufficient_privilege then null; end;
 end $$;
 reset role;
 set local role authenticated;
@@ -332,6 +370,11 @@ do $$ begin
   exception when insufficient_privilege then null; end;
   update public.perfis set semana = '[[], [], ["jiu"], [], [], [], []]' where id = auth.uid();
   perform public.encerrar_vinculo();
+  -- Encerrado, os treinos que o personal montou saem (voltam os de antes) e a versão anterior não traz a ficha de volta.
+  if (select coalesce(treinos->'1'->'exercicios'->0->>'dose', '') from public.perfis where id = auth.uid()) = '5×5'
+    or (select treinos_anterior from public.perfis where id = auth.uid()) is not null
+    or (select ficha_id from public.perfis where id = auth.uid()) is not null
+    then raise exception 'FALHOU: ao encerrar, os treinos do personal saem do app do aluno'; end if;
   update public.perfis set treinos = null where id = auth.uid();
   if (select (meus_dados_extras()->'acompanhamento'->0->>'personal')) <> 'Paula Exemplo' then raise exception 'FALHOU: Baixar meus dados traz o acompanhamento'; end if;
 end $$;
@@ -342,6 +385,18 @@ do $$ begin
   if (select count(*) from public.personal_alunos()) <> 0 or (select count(*) from public.personal_cargas()) <> 0
     then raise exception 'FALHOU: depois de encerrado, o personal não vê mais o aluno'; end if;
 end $$;
+-- Com o ajuste 'convite_proprio' (banco de testes), o personal vira aluno de si mesmo e aplica a ficha em si.
+reset role;
+insert into public.ajustes_banco values ('convite_proprio', 'sim');
+set local role authenticated;
+do $$ begin perform set_config('request.jwt.claim.sub', '44444444-4444-4444-4444-444444444444', true); end $$;
+do $$ declare c text := public.personal_criar_convite('Eu'); f uuid := (select id from public.personal_fichas() limit 1); begin
+  if public.aceitar_vinculo(c) <> 'ok' then raise exception 'FALHOU: com o ajuste, o personal aceita o próprio convite'; end if;
+  if public.personal_aplicar_ficha(f, array[auth.uid()], false) <> 1 then raise exception 'FALHOU: o personal aplica a ficha em si mesmo'; end if;
+  perform public.encerrar_vinculo();
+end $$;
+reset role;
+delete from public.ajustes_banco;
 -- Bloqueada pelo administrador, a área fecha.
 reset role;
 update public.profissionais set bloqueado_em = now();

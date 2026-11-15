@@ -1238,6 +1238,15 @@ create table if not exists public.profissionais (
 );
 alter table public.profissionais enable row level security;
 
+-- Ajustes de cada projeto do Supabase (chave → valor). Sem acesso pela API: só as funções leem.
+-- 'convite_proprio' = 'sim' deixa o personal aceitar o próprio convite e virar aluno de si mesmo, para testar o
+-- app do aluno com uma conta só. Ligar só no projeto de TESTES (ver a migração 004); em produção fica sem a linha.
+create table if not exists public.ajustes_banco (
+  chave text primary key,
+  valor text not null default ''
+);
+alter table public.ajustes_banco enable row level security;
+
 -- Vínculo personal → aluno. Nasce como convite (código de 6 letras, vale 7 dias) e vira acompanhamento quando o
 -- aluno aceita. Um aluno tem um personal por vez; aceitar outro encerra o anterior. Encerrar (aluno ou personal)
 -- corta o acesso na hora; a ficha continua com o aluno.
@@ -1272,24 +1281,51 @@ create table if not exists public.fichas_personal (
 create index if not exists fichas_personal_dono on public.fichas_personal (personal_id);
 alter table public.fichas_personal enable row level security;
 
+-- Exercícios do personal: criados por ele, só aparecem para ele (no editor de fichas, junto da biblioteca do app).
+-- Nos treinos vão como os da biblioteca (nome, séries e PSE). Sem acesso direto pela API: só pelas funções.
+create table if not exists public.exercicios_personal (
+  id uuid primary key default gen_random_uuid(),
+  personal_id uuid not null references auth.users (id) on delete cascade,
+  nome text not null check (char_length(nome) between 2 and 80),
+  grupo text not null default '' check (char_length(grupo) <= 30),
+  dose text not null default '3×10' check (char_length(dose) between 1 and 30),
+  pse smallint not null default 8 check (pse between 1 and 10),
+  criado_em timestamptz not null default now()
+);
+create unique index if not exists exercicios_personal_nome on public.exercicios_personal (personal_id, lower(nome));
+-- O mesmo cadastro do catálogo do administrador: níveis, explicação, outros nomes e vídeo do YouTube (código de 11 letras).
+alter table public.exercicios_personal add column if not exists hipertrofia text not null default 'baixa' check (hipertrofia in ('baixa', 'media', 'alta'));
+alter table public.exercicios_personal add column if not exists forca text not null default 'baixa' check (forca in ('baixa', 'media', 'alta'));
+alter table public.exercicios_personal add column if not exists explosao text not null default 'baixa' check (explosao in ('baixa', 'media', 'alta'));
+alter table public.exercicios_personal add column if not exists mobilidade text not null default 'baixa' check (mobilidade in ('baixa', 'media', 'alta'));
+alter table public.exercicios_personal add column if not exists explicacao text not null default '' check (char_length(explicacao) <= 400);
+alter table public.exercicios_personal add column if not exists variacoes text[] not null default '{}' check (cardinality(variacoes) <= 20);
+alter table public.exercicios_personal add column if not exists video_id text not null default '' check (video_id = '' or video_id ~ '^[A-Za-z0-9_-]{11}$');
+alter table public.exercicios_personal enable row level security;
+
 -- No perfil do aluno: quem acompanha (enquanto houver vínculo), quem montou os treinos, quando e de qual ficha.
 -- Só as funções gravam (fora do grant update).
 alter table public.perfis add column if not exists acompanhado_por uuid references auth.users (id) on delete set null;
 alter table public.perfis add column if not exists treinos_por uuid references auth.users (id) on delete set null;
 alter table public.perfis add column if not exists treinos_em timestamptz;
 alter table public.perfis add column if not exists ficha_id uuid references public.fichas_personal (id) on delete set null;
+-- Os treinos que o aluno tinha antes do primeiro personal ({ treinos, jornada, em }): voltam quando o acompanhamento acaba.
+alter table public.perfis add column if not exists treinos_antes_personal jsonb
+  check (treinos_antes_personal is null or (jsonb_typeof(treinos_antes_personal) = 'object' and pg_column_size(treinos_antes_personal) <= 40000));
 -- Conta liberada pelo convite de um personal.
 alter table public.perfis drop constraint if exists perfis_liberado_como_check;
 alter table public.perfis add constraint perfis_liberado_como_check check (liberado_como is null or liberado_como in ('convite', 'pedido', 'admin', 'personal'));
 
 -- Enquanto houver personal, os treinos do aluno são os que o personal monta: o próprio aluno não os muda.
+-- Exceção: o personal que é aluno de si mesmo (só no banco de testes, com o ajuste 'convite_proprio') monta os seus.
 create or replace function public.treinos_do_personal()
 returns trigger
 language plpgsql
 set search_path = ''
 as $$
 begin
-  if new.acompanhado_por is not null and (select auth.uid()) = new.id and new.treinos is distinct from old.treinos then
+  if new.acompanhado_por is not null and new.acompanhado_por <> new.id and (select auth.uid()) = new.id
+    and new.treinos is distinct from old.treinos then
     raise exception 'Seus treinos são montados pelo seu personal.' using errcode = '42501';
   end if;
   return new;
@@ -1476,7 +1512,8 @@ begin
   if v.cancelado_em is not null then s := 'cancelado';
   elsif v.aceito_em is not null then s := case when v.aluno_id = eu and v.encerrado_em is null then 'ok' else 'usado' end;
   elsif v.expira_em < now() then s := 'expirado';
-  elsif v.personal_id = eu then s := 'proprio';
+  elsif v.personal_id = eu and not exists (select 1 from public.ajustes_banco a where a.chave = 'convite_proprio' and a.valor = 'sim')
+    then s := 'proprio';
   elsif (select count(*) from public.vinculos x where x.personal_id = v.personal_id and x.aceito_em is not null and x.encerrado_em is null) >= p.limite_alunos then s := 'lotado';
   end if;
   return query select s, p.nome, p.cref, p.uf,
@@ -1484,6 +1521,27 @@ begin
       where x.aluno_id = eu and x.aceito_em is not null and x.encerrado_em is null and x.personal_id <> v.personal_id limit 1), '')::text;
 end;
 $$;
+
+-- Fim do acompanhamento (aluno encerrou, personal encerrou ou o aluno trocou de personal): os treinos que aquele
+-- personal montou saem do app do aluno. Voltam os que o aluno tinha antes do primeiro personal (ou o plano pronto do app),
+-- e a versão anterior guardada é apagada, para "Restaurar versão anterior" não trazer a ficha de volta.
+create or replace function public.tirar_treinos_do_personal(p_aluno uuid, p_personal uuid)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  update public.perfis p set
+    treinos = nullif(p.treinos_antes_personal -> 'treinos', 'null'::jsonb),
+    jornada = p.treinos_antes_personal ->> 'jornada',
+    treinos_anterior = null, ficha_id = null, treinos_por = null, treinos_em = null,
+    acompanhado_por = null -- na mesma linha: o gatilho treinos_do_personal só barra a troca com personal ativo
+  where p.id = p_aluno and p.treinos_por = p_personal;
+  update public.perfis set acompanhado_por = null, treinos_antes_personal = null where id = p_aluno;
+end;
+$$;
+revoke execute on function public.tirar_treinos_do_personal(uuid, uuid) from public, anon, authenticated;
 
 -- Aceitar: vira aluno do personal (encerra o vínculo anterior, se houver) e a conta fica liberada no app.
 -- Devolve a situação do convite ('ok' quando deu certo).
@@ -1497,16 +1555,26 @@ declare
   eu uuid := (select auth.uid());
   v public.vinculos;
   s text;
+  antigo uuid;
+  antes jsonb;
 begin
   if eu is null then raise exception 'Entre com o Google para aceitar o convite.'; end if;
   select c.situacao into s from public.ver_convite_personal(p_codigo) c;
   if s <> 'ok' then return s; end if;
   select * into v from public.vinculos where codigo = upper(regexp_replace(coalesce(p_codigo, ''), '\s', '', 'g')) for update;
   if v.aluno_id = eu and v.aceito_em is not null then return 'ok'; end if;
+  -- Troca de personal: os treinos do anterior saem (voltam os de antes do primeiro personal).
+  select x.personal_id into antigo from public.vinculos x where x.aluno_id = eu and x.aceito_em is not null and x.encerrado_em is null;
   update public.vinculos set encerrado_em = now(), encerrado_por = 'troca'
     where aluno_id = eu and aceito_em is not null and encerrado_em is null;
+  if antigo is not null then
+    antes := (select p.treinos_antes_personal from public.perfis p where p.id = eu);
+    perform public.tirar_treinos_do_personal(eu, antigo);
+    update public.perfis set treinos_antes_personal = antes where id = eu;
+  end if;
   update public.vinculos set aluno_id = eu, aceito_em = now() where id = v.id;
   update public.perfis set acompanhado_por = v.personal_id, liberado = true, acesso_pedido_em = null,
+    treinos_antes_personal = coalesce(treinos_antes_personal, jsonb_build_object('treinos', treinos, 'jornada', jornada, 'em', now())),
     liberado_como = case when liberado then liberado_como else 'personal' end,
     liberado_em = case when liberado then liberado_em else now() end
     where id = eu;
@@ -1525,17 +1593,23 @@ as $$
   from public.vinculos v join public.profissionais p on p.usuario_id = v.personal_id
   where v.aluno_id = (select auth.uid()) and v.aceito_em is not null and v.encerrado_em is null;
 $$;
--- Encerrar pelo aluno (Você → Meu personal) ou pelo personal (ficha do aluno). Os treinos ficam com o aluno.
+-- Encerrar pelo aluno (Você → Meu personal) ou pelo personal (ficha do aluno). Os treinos que o personal montou
+-- saem do app do aluno (tirar_treinos_do_personal).
 create or replace function public.encerrar_vinculo()
 returns void
 language plpgsql
 security definer
 set search_path = ''
 as $$
+declare
+  eu uuid := (select auth.uid());
+  quem uuid;
 begin
+  select personal_id into quem from public.vinculos where aluno_id = eu and aceito_em is not null and encerrado_em is null;
   update public.vinculos set encerrado_em = now(), encerrado_por = 'aluno'
-    where aluno_id = (select auth.uid()) and aceito_em is not null and encerrado_em is null;
-  update public.perfis set acompanhado_por = null where id = (select auth.uid());
+    where aluno_id = eu and aceito_em is not null and encerrado_em is null;
+  if quem is not null then perform public.tirar_treinos_do_personal(eu, quem);
+  else update public.perfis set acompanhado_por = null where id = eu; end if;
 end;
 $$;
 create or replace function public.personal_encerrar_vinculo(p_aluno uuid)
@@ -1548,7 +1622,7 @@ begin
   if not public.eh_meu_aluno(p_aluno) then raise exception 'Este aluno não está com você.'; end if;
   update public.vinculos set encerrado_em = now(), encerrado_por = 'personal'
     where aluno_id = p_aluno and personal_id = (select auth.uid()) and aceito_em is not null and encerrado_em is null;
-  update public.perfis set acompanhado_por = null where id = p_aluno;
+  perform public.tirar_treinos_do_personal(p_aluno, (select auth.uid()));
 end;
 $$;
 revoke execute on function public.personal_criar_convite(text), public.personal_convites(), public.personal_cancelar_convite(text),
@@ -1577,7 +1651,7 @@ begin
   return query
     select p.id, coalesce(nullif(trim(p.nome), ''), 'Aluno sem nome')::text, ''::text, v.aceito_em, p.ultimo_acesso, p.acessos,
       p.semana, p.dias_jiu, p.sem_peso, p.treinos, p.treinos_por = (select auth.uid()), p.treinos_em, p.ficha_id, v.aceito_em,
-      case when p.foto like 'http%' then p.foto else '' end
+      case when p.foto like 'https://%' or p.foto like 'data:image/%' then p.foto else '' end
     from public.vinculos v join public.perfis p on p.id = v.aluno_id
     where v.personal_id = (select auth.uid()) and v.aceito_em is not null and v.encerrado_em is null
     order by 2;
@@ -1741,6 +1815,81 @@ revoke execute on function public.personal_fichas(), public.personal_salvar_fich
 grant execute on function public.personal_fichas(), public.personal_salvar_ficha(jsonb), public.personal_excluir_ficha(uuid),
   public.personal_aplicar_ficha(uuid, uuid[], boolean), public.personal_salvar_treinos(uuid, jsonb, jsonb) to authenticated;
 
+-- Meus exercícios (área do personal → Fichas): listar, criar ou renomear e excluir. Excluir não mexe nas fichas nem nos
+-- treinos dos alunos, que guardam o nome. Um nome que já está na biblioteca do app é recusado (use o da biblioteca).
+drop function if exists public.personal_exercicios();
+create or replace function public.personal_exercicios()
+returns table (id uuid, nome text, grupo text, dose text, pse smallint, hipertrofia text, forca text, explosao text, mobilidade text,
+  explicacao text, variacoes text[], video_id text)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  if not public.eh_profissional() then raise exception 'acesso restrito' using errcode = '42501'; end if;
+  return query select e.id, e.nome, e.grupo, e.dose, e.pse, e.hipertrofia, e.forca, e.explosao, e.mobilidade,
+      e.explicacao, e.variacoes, e.video_id from public.exercicios_personal e
+    where e.personal_id = (select auth.uid()) order by lower(e.nome);
+end;
+$$;
+create or replace function public.personal_salvar_exercicio(p jsonb)
+returns uuid
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  eu uuid := (select auth.uid());
+  v_id uuid := nullif(p ->> 'id', '')::uuid;
+  v_nome text := regexp_replace(trim(coalesce(p ->> 'nome', '')), '\s+', ' ', 'g');
+  v_grupo text := left(trim(coalesce(p ->> 'grupo', '')), 30);
+  v_dose text := left(coalesce(nullif(trim(coalesce(p ->> 'dose', '')), ''), '3×10'), 30);
+  v_pse smallint := least(10, greatest(1, coalesce(nullif(p ->> 'pse', '')::smallint, 8)));
+  v_why text := left(trim(coalesce(p ->> 'explicacao', '')), 400);
+  v_var text[] := array(select left(trim(x), 80) from jsonb_array_elements_text(case when jsonb_typeof(p -> 'variacoes') = 'array' then p -> 'variacoes' else '[]'::jsonb end) x
+    where trim(x) <> '' limit 20);
+  v_video text := coalesce(p ->> 'video_id', '');
+  nivel text[] := array['baixa', 'media', 'alta'];
+  v_h text := case when p ->> 'hipertrofia' = any(nivel) then p ->> 'hipertrofia' else 'baixa' end;
+  v_f text := case when p ->> 'forca' = any(nivel) then p ->> 'forca' else 'baixa' end;
+  v_e text := case when p ->> 'explosao' = any(nivel) then p ->> 'explosao' else 'baixa' end;
+  v_m text := case when p ->> 'mobilidade' = any(nivel) then p ->> 'mobilidade' else 'baixa' end;
+begin
+  if not public.eh_profissional() then raise exception 'Área restrita a profissionais liberados.'; end if;
+  if char_length(v_nome) not between 2 and 80 then raise exception 'Dê um nome ao exercício (de 2 a 80 letras).'; end if;
+  if v_video <> '' and v_video !~ '^[A-Za-z0-9_-]{11}$' then raise exception 'Vídeo inválido: use o link do YouTube ou o código de 11 letras.'; end if;
+  if exists (select 1 from public.exercicios x where lower(x.nome) = lower(v_nome)) then
+    raise exception 'Esse exercício já está na biblioteca do app.';
+  end if;
+  if exists (select 1 from public.exercicios_personal x where x.personal_id = eu and lower(x.nome) = lower(v_nome) and x.id is distinct from v_id) then
+    raise exception 'Você já tem um exercício com esse nome.';
+  end if;
+  if v_id is null then
+    if (select count(*) from public.exercicios_personal where personal_id = eu) >= 300 then raise exception 'Limite de 300 exercícios.'; end if;
+    insert into public.exercicios_personal (personal_id, nome, grupo, dose, pse, hipertrofia, forca, explosao, mobilidade, explicacao, variacoes, video_id)
+    values (eu, v_nome, v_grupo, v_dose, v_pse, v_h, v_f, v_e, v_m, v_why, v_var, v_video)
+    returning exercicios_personal.id into v_id;
+  else
+    update public.exercicios_personal set nome = v_nome, grupo = v_grupo, dose = v_dose, pse = v_pse, hipertrofia = v_h, forca = v_f,
+      explosao = v_e, mobilidade = v_m, explicacao = v_why, variacoes = v_var, video_id = v_video
+      where exercicios_personal.id = v_id and personal_id = eu;
+    if not found then raise exception 'Exercício não encontrado.'; end if;
+  end if;
+  return v_id;
+end;
+$$;
+create or replace function public.personal_excluir_exercicio(p_id uuid)
+returns void
+language sql
+security definer
+set search_path = ''
+as $$
+  delete from public.exercicios_personal where id = p_id and personal_id = (select auth.uid());
+$$;
+revoke execute on function public.personal_exercicios(), public.personal_salvar_exercicio(jsonb), public.personal_excluir_exercicio(uuid) from public, anon;
+grant execute on function public.personal_exercicios(), public.personal_salvar_exercicio(jsonb), public.personal_excluir_exercicio(uuid) to authenticated;
+
 -- Baixar meus dados: inclui o acompanhamento (como aluno) e o cadastro, os convites e as fichas (como personal).
 create or replace function public.meus_dados_extras()
 returns jsonb
@@ -1760,15 +1909,17 @@ as $$
       where v.aluno_id = (select auth.uid()) and v.aceito_em is not null), '[]'::jsonb),
     'profissional', (select to_jsonb(p) - 'usuario_id' from public.profissionais p where p.usuario_id = (select auth.uid())),
     'fichas', coalesce((select jsonb_agg(to_jsonb(f) - 'personal_id' order by f.criado_em)
-      from public.fichas_personal f where f.personal_id = (select auth.uid())), '[]'::jsonb)
+      from public.fichas_personal f where f.personal_id = (select auth.uid())), '[]'::jsonb),
+    'exercicios_personal', coalesce((select jsonb_agg(to_jsonb(e) - 'personal_id' order by e.criado_em)
+      from public.exercicios_personal e where e.personal_id = (select auth.uid())), '[]'::jsonb)
   );
 $$;
 revoke execute on function public.meus_dados_extras() from public, anon;
 grant execute on function public.meus_dados_extras() to authenticated;
 
-revoke all on public.profissionais, public.vinculos, public.fichas_personal from anon;
+revoke all on public.profissionais, public.vinculos, public.fichas_personal, public.exercicios_personal from anon;
 
 -- ---------- Visitantes sem login ----------
 -- As regras de acesso (RLS) já bloqueiam tudo para quem não entrou; isto tira também as permissões
 -- padrão do Supabase nas tabelas, como reforço.
-revoke all on public.perfis, public.checkins, public.cargas, public.eventos, public.admins, public.convites, public.emails_enviados, public.exercicios, public.jornadas, public.profissionais, public.vinculos, public.fichas_personal from anon;
+revoke all on public.perfis, public.checkins, public.cargas, public.eventos, public.admins, public.convites, public.emails_enviados, public.exercicios, public.jornadas, public.profissionais, public.vinculos, public.fichas_personal, public.exercicios_personal from anon;

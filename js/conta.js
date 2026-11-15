@@ -297,7 +297,7 @@
     usado: 'Esse convite já foi usado. Peça um novo ao seu personal.',
     expirado: 'Esse convite expirou (ele vale 7 dias). Peça um novo ao seu personal.',
     cancelado: 'Esse convite foi cancelado. Peça um novo ao seu personal.',
-    proprio: 'Esse é um convite seu, para os seus alunos. Mande o link para o aluno abrir no celular dele.',
+    proprio: 'Você abriu o convite na sua própria conta de personal. Ele continua valendo: mande o link para o aluno abrir no celular dele, logado na conta dele.',
     lotado: 'O seu personal chegou ao limite de alunos. Avise ele para liberar uma vaga.',
   };
   const itensPersonal = () => `
@@ -305,7 +305,7 @@
       <li>${ICON_CHECK}<span><b>Vai ver:</b> seus treinos, sua semana, quando você treinou (todas as atividades) e os pesos que você registra.</span></li>
       <li>${ICON_CHECK}<span><b>Vai montar:</b> os seus treinos. Eles chegam aqui sozinhos, e você não precisa montar nada.</span></li>
       <li>${ICON_CHECK}<span><b>Nunca vê:</b> suas observações e as fotos dos check-ins.</span></li>
-      <li>${ICON_CHECK}<span>Você encerra quando quiser em Você → Meu personal, e os treinos continuam com você.</span></li>
+      <li>${ICON_CHECK}<span>Você encerra quando quiser em Você → Meu personal, e aí os treinos dele saem e voltam os seus.</span></li>
     </ul>`;
   // Mostra o convite e espera a resposta: 'ok' (aceitou), 'nao' ou o motivo de o convite não valer.
   async function oferecerPersonal(codigo) {
@@ -317,7 +317,7 @@
       const fim = (r) => { personalDialog.close(); resolver(r); };
       if (situacao !== 'ok') {
         $('personal-body').innerHTML = `
-          <div class="modal-head"><div><span class="novidade-selo">Convite do personal</span><h3 id="personal-title">Não deu certo</h3></div></div>
+          <div class="modal-head"><div><span class="novidade-selo">Convite do personal</span><h3 id="personal-title">${situacao === 'proprio' ? 'Esse convite é seu' : 'Não deu certo'}</h3></div></div>
           <p class="resumo-enc">${situacao === 'erro' ? 'Não foi possível conferir o convite. Confira a internet e abra o link de novo.' : MOTIVOS_PERSONAL[situacao] || MOTIVOS_PERSONAL.invalido}</p>
           <div class="novidade-acoes"><button class="modal-done" type="button" data-personal="nao">Entendi</button></div>`;
       } else {
@@ -387,7 +387,7 @@
       <p class="mp-nome"><b>${p ? esc(p.nome) : 'Seu personal'}</b>${p ? `<small>CREF ${esc(p.cref)}/${esc(p.uf)}${p.desde ? ` · acompanha você desde ${fmtData(isoLocal(new Date(p.desde)).slice(0, 10), { day: 'numeric', month: 'short' })}` : ''}</small>` : ''}</p>
       ${itensPersonal()}
       ${encerrandoPersonal ? `<div class="aviso mp-confirmar" role="alert">
-          <p>Encerrar o acompanhamento? ${p ? esc(p.nome) : 'O personal'} deixa de ver os seus dados na hora. Os treinos atuais continuam com você, e você volta a poder mudá-los.</p>
+          <p>Encerrar o acompanhamento? ${p ? esc(p.nome) : 'O personal'} deixa de ver os seus dados na hora. Os treinos que ${p ? esc(p.nome) : 'o personal'} montou saem do app, e voltam os treinos que você tinha antes (ou o plano pronto do app).</p>
           <div class="novidade-acoes"><button class="btn perigo" type="button" id="mp-encerrar-sim">Encerrar acompanhamento</button>
           <button class="btn-sec" type="button" id="mp-encerrar-nao">Continuar com o personal</button></div></div>`
     : '<button class="btn-sec perigo-sec" type="button" id="mp-encerrar">Encerrar acompanhamento</button>'}`;
@@ -405,7 +405,7 @@
     meuPersonal = null;
     guardarMeuPersonal();
     if (perfilLinha) perfilLinha.acompanhado_por = null;
-    toast('Acompanhamento encerrado. Seus treinos continuam aqui, e agora você pode mudá-los.');
-    renderConfig();
-    renderMeuPersonal();
+    toast('Acompanhamento encerrado. Os treinos do personal saíram, e agora você pode mudar os seus.');
+    // Os treinos mudaram no banco (voltam os de antes do personal): busca de novo para a tela mostrar os certos.
+    try { await carregarDados(); renderizarApp(); } catch (_) { renderConfig(); renderMeuPersonal(); }
   });

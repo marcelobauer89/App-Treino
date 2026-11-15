@@ -8,7 +8,11 @@ const T = new Date('2026-11-14T15:00:00');
 const ISO = (n) => new Date(T.getTime() - n * 864e5).toISOString();
 const PROF = { usuario_id: 'p1', nome: 'Paula Exemplo', cref: '000000-G', uf: 'SP', pedido_em: ISO(9), liberado_em: ISO(8), bloqueado_em: null, limite_alunos: 30 };
 const convite = (extra = {}) => ({ codigo: 'PQR234', personal_id: 'p1', nome: '', criado_em: ISO(1), expira_em: ISO(-6), cancelado_em: null, aluno_id: null, aceito_em: null, encerrado_em: null, encerrado_por: null, ...extra });
-const TREINOS = { 1: { nome: 'Treino A', subtitulo: 'Peito', recado: 'Suba a carga do supino quando fizer as 10', exercicios: [{ nome: 'Supino reto', dose: '4×10', pse: 8 }] } };
+const TREINOS = { 1: { nome: 'Treino A', subtitulo: 'Peito', recado: 'Suba a carga do supino quando fizer as 10', exercicios: [{ nome: 'Supino reto', dose: '4×10', pse: 8 },
+  { nome: 'Remada no TRX da Paula', dose: '3×12', pse: 7, extra: { grupo: 'Costas', H: 'alta', M: 'baixa', F: 'media', E: 'baixa', why: 'Costas e pegada no TRX', video: 'abcdefghij1' } }] } };
+
+// Os treinos que a aluna tinha antes do personal (voltam quando ela encerra o acompanhamento).
+const ANTES = { 1: { nome: 'Treino de antes', subtitulo: 'Corpo todo', exercicios: [{ nome: 'Agachamento livre', dose: '3×10', pse: 7 }] } };
 
 (async () => {
   const srv = await H.servidor(); const b = await chromium.launch();
@@ -39,12 +43,18 @@ const TREINOS = { 1: { nome: 'Treino A', subtitulo: 'Peito', recado: 'Suba a car
   // 2. Já é aluno: treinos do personal com recado, aviso de treinos novos, Meus treinos só de leitura e encerrar.
   {
     const p = await H.novaPagina(b, { viewport: { width: 390, height: 844 },
-      extra: { perfis: [{ id: 'u1', nome: 'Aluna', email: 'aluna@exemplo.com', acompanhado_por: 'p1', treinos_por: 'p1', treinos_em: ISO(0), treinos: TREINOS }],
+      extra: { perfis: [{ id: 'u1', nome: 'Aluna', email: 'aluna@exemplo.com', acompanhado_por: 'p1', treinos_por: 'p1', treinos_em: ISO(0), treinos: TREINOS,
+        treinos_anterior: { treinos: TREINOS, em: ISO(1) }, treinos_antes_personal: { treinos: ANTES, jornada: null, em: ISO(3) } }],
         profissionais: [PROF], vinculos: [convite({ aluno_id: 'u1', aceito_em: ISO(3) })] } });
     await p.clock.install({ time: T });
     await p.goto(H.PAGINA); await H.prontos(p); await p.waitForTimeout(300);
     ok(/Paula Exemplo atualizou seus treinos|Seu personal atualizou seus treinos/.test(await p.locator('#toast').innerText()), 'aviso de treinos novos do personal');
     ok(/Recado do seu personal: Suba a carga do supino/.test(await p.locator('#sobre').innerText()), 'recado do personal na tela Treino');
+    // Exercício criado pelo personal: explicação, níveis e vídeo vêm do cadastro dele (no treino).
+    const cartao = p.locator('li.ex', { hasText: 'Remada no TRX da Paula' }).first();
+    const tc = await cartao.innerText().catch(() => '');
+    ok(/Costas e pegada no TRX/.test(tc), 'exercício do personal mostra a explicação dele', tc.slice(0, 120));
+    ok((await cartao.locator('[data-video="abcdefghij1"]').count()) === 1, 'exercício do personal tem o vídeo dele');
     await H.voce(p); await p.waitForTimeout(100);
     ok(/Do seu personal/.test(await p.locator('#valor-treinos').innerText()) && /Paula Exemplo/.test(await p.locator('#valor-personal').innerText()), 'lista de Você mostra o personal');
     await H.voce(p, 'treinos'); await p.waitForTimeout(100);
@@ -60,7 +70,11 @@ const TREINOS = { 1: { nome: 'Treino A', subtitulo: 'Peito', recado: 'Suba a car
     const db = await H.banco(p);
     ok(db.perfis[0].acompanhado_por === null && !!db.vinculos[0].encerrado_em && db.vinculos[0].encerrado_por === 'aluno', 'encerrar tira o vínculo');
     ok(/não tem personal/.test(await p.locator('#meu-personal').innerText()), 'Meu personal fica vazio');
-    ok(JSON.stringify(db.perfis[0].treinos) === JSON.stringify(TREINOS), 'os treinos continuam com a aluna');
+    ok(JSON.stringify(db.perfis[0].treinos) === JSON.stringify(ANTES) && db.perfis[0].treinos_por === null && db.perfis[0].treinos_anterior === null,
+      'encerrar tira os treinos do personal e volta os de antes (sem versão anterior com a ficha)');
+    await p.click('[data-tela="treino"]'); await p.waitForTimeout(150);
+    const tela = await p.locator('main').first().innerText();
+    ok(/Agachamento livre/.test(tela) && !/Remada no TRX da Paula|Recado do seu personal/.test(tela), 'o app mostra os treinos de antes, não os do personal', tela.replace(/\s+/g, ' ').slice(0, 400));
     await H.voce(p, 'treinos'); await p.waitForTimeout(100);
     ok(await p.locator('#editar-treinos').isVisible(), 'depois de encerrar, volta a editar os treinos');
     ok(!p.errs.length, 'sem erros na página', p.errs.join(' | '));

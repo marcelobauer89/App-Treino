@@ -138,6 +138,7 @@
   // Vídeo da execução: pelo nome salvo no treino, pelo nome de hoje no catálogo ou por um nome antigo dele.
   function videoDe(nome) {
     if (VIDEOS[nome]) return VIDEOS[nome];
+    if (videosDoPersonal[nome]) return videosDoPersonal[nome];
     const ex = exDaBiblioteca(nome);
     return (ex && [ex.nome, ...(ex.nomesAntigos || [])].map((n) => VIDEOS[n]).find(Boolean)) || '';
   }
@@ -163,12 +164,20 @@
   let treinosDoPersonalEm = null; // perfis.treinos_em quando foi o personal que montou (aviso "ficha nova")
   let meuPersonal = null; // { nome, cref, uf, desde } (função meu_personal), com cópia no aparelho
   const limpar = (t, max) => String(t ?? '').replace(/[<>"&]/g, '').trim().slice(0, max);
+  // Exercício criado pelo personal (fora do catálogo): grupo, níveis, explicação e vídeo vêm junto no treino (e.extra).
+  const videosDoPersonal = {};
   function exercicioCompleto(e) {
-    const base = exDaBiblioteca(e.nome) || { nome: limpar(e.nome, 80), grupo: '', H: 'baixa', M: 'baixa', F: 'baixa', E: 'baixa', why: '' };
+    const doCatalogo = exDaBiblioteca(e.nome);
+    const x = !doCatalogo && e.extra && typeof e.extra === 'object' && !Array.isArray(e.extra) ? e.extra : null;
+    const nv = (v) => (NIVEIS.includes(v) ? v : 'baixa');
+    const base = doCatalogo || { nome: limpar(e.nome, 80), grupo: x && GRUPOS_EX.includes(x.grupo) ? x.grupo : '', H: nv(x && x.H), M: nv(x && x.M), F: nv(x && x.F), E: nv(x && x.E),
+      why: x ? String(x.why ?? '').trim().slice(0, 400) : '' };
+    const extra = x ? { grupo: base.grupo, H: base.H, M: base.M, F: base.F, E: base.E, ...(base.why ? { why: base.why } : {}), ...(/^[\w-]{11}$/.test(x.video || '') ? { video: x.video } : {}) } : null;
+    if (extra && extra.video) videosDoPersonal[base.nome] = extra.video;
     const pse = Number(e.pse);
     // O nome fica o salvo no treino (as cargas e o histórico usam ele, como chave); na tela aparece o rotulo,
     // o nome de hoje no catálogo (um exercício renomeado no painel aparece com o nome novo).
-    return { ...base, nome: base.nome === e.nome ? base.nome : limpar(e.nome, 80), rotulo: base.nome || limpar(e.nome, 80), dose: limpar(e.dose, 30) || base.dose || '3×10', pse: pse >= 1 && pse <= 10 ? Math.round(pse) : base.pse || 8 };
+    return { ...base, nome: base.nome === e.nome ? base.nome : limpar(e.nome, 80), rotulo: base.nome || limpar(e.nome, 80), dose: limpar(e.dose, 30) || base.dose || '3×10', pse: pse >= 1 && pse <= 10 ? Math.round(pse) : base.pse || 8, ...(extra ? { extra } : {}) };
   }
   const qtdExercicios = (n) => `${n} ${n === 1 ? 'exercício' : 'exercícios'}`;
   const nomesDos = (exs) => exs.map((e) => e.nome).join('|');
@@ -194,7 +203,7 @@
   }
   // Formato gravado em perfis.treinos.
   const treinosParaSalvar = (treinos) => Object.fromEntries(Object.entries(treinos).map(([id, t]) => [id, {
-    nome: t.nome, subtitulo: t.subtitulo, ...(t.recado ? { recado: t.recado } : {}), exercicios: t.exercicios.map(({ nome, dose, pse }) => ({ nome, dose, pse })),
+    nome: t.nome, subtitulo: t.subtitulo, ...(t.recado ? { recado: t.recado } : {}), exercicios: t.exercicios.map(({ nome, dose, pse, extra }) => ({ nome, dose, pse, ...(extra ? { extra } : {}) })),
   }]));
   // Plano pronto (contas sem treinos próprios): a lista de exercícios é sempre a do app, e não muda quando o objetivo
   // Jiu Jitsu é editado no banco; os detalhes de cada exercício vêm do catálogo.

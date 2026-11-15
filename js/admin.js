@@ -130,6 +130,7 @@
     el.hidden = false;
     $('painel').hidden = true;
     $('controles').hidden = true;
+    $('menu-abrir').hidden = true;
   }
   function mostrarEstado(html) {
     $('estado').classList.remove('carregando');
@@ -138,6 +139,7 @@
     $('estado').hidden = false;
     $('painel').hidden = true;
     $('controles').hidden = true;
+    $('menu-abrir').hidden = true;
   }
 
   // ---------- Acesso ----------
@@ -145,6 +147,7 @@
     if (!sb) return mostrarEstado('<p>Não foi possível carregar a biblioteca do Supabase. Confira a internet e recarregue a página.</p>');
     const { data: { session } } = await sb.auth.getSession();
     if (!session) {
+      contaNoTopo(null);
       return mostrarEstado(PERSONAL ? `
         <p>Entre com a sua conta Google para abrir a área do personal.</p>
         <button class="btn" type="button" id="entrar">Entrar com Google</button>` : `
@@ -152,6 +155,8 @@
         <button class="btn" type="button" id="entrar">Entrar com Google</button>`);
     }
     meuId = session.user.id;
+    // Personal: o topo aparece já no cadastro; administrador, só depois de confirmado o acesso.
+    if (PERSONAL) contaNoTopo(session);
     mostrarCarregando('Conferindo seu acesso…');
     const { data: admin, error } = await sb.rpc(FN.acesso);
     if (error) return mostrarEstado(`<p>Não foi possível verificar o acesso. Confira se o <code>supabase/schema.sql</code> foi aplicado.</p>${botaoTentar()}`);
@@ -162,8 +167,49 @@
         <p><b>Acesso restrito.</b> A conta ${esc(session.user.email)} não é administradora.</p>
         <button class="btn-sec" type="button" id="sair">Entrar com outra conta</button>`);
     }
+    if (!PERSONAL) contaNoTopo(session);
     aplicarEstiloDaConta();
     await carregar();
+  }
+  // ---------- Conta no topo ----------
+  // Foto (a do perfil no app ou a do Google; sem foto, as iniciais), o nome de quem está logado e uma linha embaixo:
+  // "Administrador" no monitoramento; no personal, o nome profissional e o CREF (js/personal.js → registroDaConta).
+  const TITULO = PERSONAL ? 'Área do personal' : 'Monitoramento';
+  const iniciaisTopo = (nome) => String(nome || '?').trim().split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0].toUpperCase()).join('') || '?';
+  async function contaNoTopo(session) {
+    const av = $('topo-avatar'), nomeEl = $('topo-nome'), sub = $('topo-sub');
+    if (!session) {
+      av.hidden = true; sub.hidden = true; $('topo-olho').hidden = true;
+      nomeEl.textContent = TITULO;
+      return;
+    }
+    const meta = session.user.user_metadata || {};
+    const desenhar = (nome, foto, linha) => {
+      nomeEl.textContent = nome || TITULO;
+      $('topo-olho').hidden = !nome;
+      sub.textContent = linha || '';
+      sub.hidden = !linha;
+      av.hidden = false;
+      av.textContent = iniciaisTopo(nome || session.user.email);
+      if (foto) {
+        const img = new Image();
+        img.alt = '';
+        img.referrerPolicy = 'no-referrer';
+        img.onload = () => { av.textContent = ''; av.appendChild(img); };
+        img.src = foto;
+      }
+    };
+    const fotoGoogle = /^https:/.test(meta.avatar_url || meta.picture || '') ? meta.avatar_url || meta.picture : '';
+    const nomeGoogle = String(meta.full_name || meta.name || '').slice(0, 80);
+    desenhar(nomeGoogle, fotoGoogle, '');
+    const [p, reg] = await Promise.all([
+      sb.from('perfis').select('nome, foto').eq('id', session.user.id).maybeSingle().then((r) => r, () => ({ error: true })),
+      PERSONAL && GANCHOS().registroDaConta ? GANCHOS().registroDaConta() : Promise.resolve(null),
+    ]);
+    const perfil = !p.error ? p.data || {} : {};
+    const foto = /^https:/.test(perfil.foto || '') ? perfil.foto : fotoGoogle;
+    const nome = (reg && reg.nome) || String(perfil.nome || '').trim().slice(0, 80) || nomeGoogle;
+    desenhar(nome, foto, PERSONAL ? (reg ? reg.sub : '') : 'Administrador');
   }
   // O estilo das cores da conta (escolhido no app). A cópia do navegador já foi aplicada no início;
   // aqui vale o que está salvo na conta, para o monitoramento abrir igual em outro aparelho.
@@ -246,6 +292,7 @@
     $('estado').removeAttribute('aria-busy');
     $('painel').hidden = false;
     $('controles').hidden = false;
+    $('menu-abrir').hidden = false;
     if (PERSONAL && GANCHOS().aplicar) GANCHOS().aplicar(extra);
     render();
     if (primeira) entrarEmCascata();
@@ -259,8 +306,8 @@
   // Primeira abertura: os blocos da aba visível entram um depois do outro (sem movimento, se o sistema pedir).
   function entrarEmCascata() {
     const painel = $('painel');
-    const aba = painel.querySelector('[role="tabpanel"]:not([hidden])');
-    const blocos = [painel.querySelector('.abas'), ...(aba ? aba.querySelectorAll(':scope > section, .kpi, .graficos > section') : [])].filter(Boolean);
+    const aba = painel.querySelector('.aba-painel:not([hidden])');
+    const blocos = [ ...(aba ? aba.querySelectorAll(':scope > section, .kpi, .graficos > section') : [])].filter(Boolean);
     blocos.forEach((el, i) => { el.classList.add('entra-item'); el.style.setProperty('--i', String(i)); });
     painel.classList.add('entra');
     setTimeout(() => {
@@ -318,6 +365,11 @@
     el.hidden = !n || aba === 'geral';
     el.setAttribute('role', 'img');
     el.setAttribute('aria-label', `${n} ${n === 1 ? 'pessoa' : 'pessoas'} on-line agora`);
+    // No celular o menu fica fechado: o ponto aparece também no botão Menu do topo.
+    const bt = $('menu-online');
+    bt.hidden = el.hidden;
+    bt.setAttribute('role', 'img');
+    bt.setAttribute('aria-label', el.getAttribute('aria-label'));
   }
   function atualizarOnline() {
     if (!dados) return;
@@ -343,7 +395,7 @@
     $('on-corpo').innerHTML = (estado === 'erro'
       ? `<p class="on-vazio">Ao vivo indisponível. <button class="link-btn" type="button" id="tentar-online">Tentar de novo</button></p>${detalheErro}`
       : estado === 'parcial' ? detalheErro : '') + (estado === 'erro' ? '' : lista.length ? `<ul class="on-lista">${lista.map((u) => `<li><button type="button" data-abrir="${u.id}">
-          <span class="avatar on" aria-hidden="true">${esc(iniciais(u.nome, u.email))}</span>
+          ${avatar(u, 'on')}
           <span><b>${esc(u.nome || u.email)}</b><small>${esc(descricaoOnline(online.get(u.id)))}</small></span></button></li>`).join('')}</ul>`
         : `<p class="on-vazio">${estado === 'conectando' ? 'Conectando ao vivo…' : 'Ninguém on-line agora.'}</p>`);
     document.querySelectorAll('#usuarios-corpo tr[data-usuario]').forEach((tr) => {
@@ -446,7 +498,8 @@
     fecharInfo();
     const j = janela(periodo);
     const ativosMap = diasAtivos();
-    renderKpis(j, ativosMap);
+    // Personal: os números e as listas da Visão geral são os do acompanhamento (js/personal.js → Visão geral do personal).
+    if (PERSONAL && GANCHOS().geral) GANCHOS().geral(j, ativosMap); else renderKpis(j, ativosMap);
     renderGraficos(j, ativosMap);
     renderListasGeral(j, ativosMap);
     renderTreinos(j);
@@ -556,7 +609,7 @@
       const u = dados.usuarios.find((x) => x.id === g.id);
       return `<div class="item-lista">
         <button class="item-topo" type="button"${u ? ` data-abrir-usuario="${g.id}"` : ''}>
-          <span class="item-titulo">${esc(u ? u.nome || u.email : 'Usuário removido')}</span>
+          <span class="item-titulo${PERSONAL ? ' com-avatar' : ''}">${PERSONAL ? avatar(u || {}, 'av-p') : ''}${esc(u ? u.nome || u.email : 'Usuário removido')}</span>
           <span class="item-num"><span class="trofeu-num">${i === 0 ? ICON.trofeu : ''}${g.n}</span><small>${g.n === 1 ? 'recorde' : 'recordes'}</small></span>
           <span class="item-sub">${exs(g)}</span>
         </button></div>`;
@@ -770,6 +823,18 @@
     const p = String(nome || email || '?').trim().split(/\s+/);
     return ((p[0] || '')[0] + (p.length > 1 ? p[p.length - 1][0] : '')).toUpperCase();
   };
+  // Foto da pessoa (a do Google ou a enviada no app) ou, sem foto, as iniciais. Se a imagem não carregar, voltam as iniciais.
+  const fotoValida = (f) => (/^https:\/\//.test(f || '') || /^data:image\/(jpeg|png|webp);base64,/.test(f || '') ? f : '');
+  const avatar = (u, cls = '') => {
+    const f = fotoValida(u && u.foto), ini = esc(iniciais(u && u.nome, u && u.email));
+    return `<span class="avatar${cls ? ` ${cls}` : ''}${f ? ' tem-foto' : ''}" aria-hidden="true">${f ? `<img src="${esc(f)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-ini="${ini}">` : ini}</span>`;
+  };
+  document.addEventListener('error', (e) => {
+    const img = e.target;
+    if (img && img.tagName === 'IMG' && img.dataset && img.dataset.ini !== undefined && img.parentNode) {
+      const av = img.parentNode; av.classList.remove('tem-foto'); av.textContent = img.dataset.ini;
+    }
+  }, true);
   const pctAder = (v) => (v === null ? '—' : `${fmtNum(v * 100)}%`);
   function linhasUsuarios(j, ativosMap) {
     return dados.usuarios.map((u) => {
@@ -809,7 +874,7 @@
     $('ordenar-cel').value = ordem.col;
     $('usuarios-corpo').innerHTML = linhas.length ? linhas.map((l) => `
       <tr data-usuario="${l.u.id}">
-        <td><div class="quem"><span class="avatar${online.has(l.u.id) ? ' on' : ''}" aria-hidden="true">${esc(iniciais(l.u.nome, l.u.email))}</span>
+        <td><div class="quem">${avatar(l.u, online.has(l.u.id) ? 'on' : '')}
           <button type="button" data-abrir="${l.u.id}"><b>${esc(l.u.nome || 'Sem nome')}${l.u.videos_liberados ? ' <span class="tag-videos">Vídeos</span>' : ''}</b><span class="sr on-sr"${online.has(l.u.id) ? '' : ' hidden'}>, on-line agora</span><small>${esc(l.u.email)}</small>
             <span class="resumo-cel">${l.ultimo ? relativo(l.ultimo) : 'sem uso'} · ${fmtNum(l.checkins)} check-in${l.checkins === 1 ? '' : 's'} · ${pctAder(l.aderencia)} do plano</span></button>
           <span class="chev" aria-hidden="true">${ICON.chev}</span></div></td>
@@ -1045,7 +1110,7 @@
   }
 
   // ---------- Abas ----------
-  const ABAS = PERSONAL ? ['geral', 'usuarios', 'fichas', 'convidar'] : ['geral', 'usuarios', 'saude', 'emails', 'convites', 'exercicios', 'tipos', 'profissionais'];
+  const ABAS = PERSONAL ? ['geral', 'usuarios', 'fichas', 'exercicios', 'convidar'] : ['geral', 'usuarios', 'saude', 'emails', 'convites', 'exercicios', 'tipos', 'profissionais'];
   let aba = ABAS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'geral';
   // Gráficos são desenhados na largura real, então são redesenhados ao aparecer.
   function renderVisivel() {
@@ -1056,25 +1121,49 @@
   }
   function mostrarAba(nova, { focar = false, url = true } = {}) {
     aba = ABAS.includes(nova) ? nova : 'geral';
-    document.querySelectorAll('[role="tab"]').forEach((b) => {
+    document.querySelectorAll('.menu-item').forEach((b) => {
       const sel = b.dataset.aba === aba;
-      b.setAttribute('aria-selected', String(sel));
-      b.tabIndex = sel ? 0 : -1;
-      if (sel && focar) b.focus();
+      if (sel) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+      if (sel) $('menu-atual').textContent = b.querySelector('.menu-nome').textContent;
     });
     ABAS.forEach((a) => { $(`aba-${a}`).hidden = a !== aba; });
+    fecharMenu({ focar });
     atualizarAbaOnline();
     if (url) history.replaceState(null, '', location.pathname + location.search + (aba === 'geral' ? '' : `#${aba}`));
     fecharInfo();
     renderVisivel();
   }
-  document.querySelector('[role="tablist"]').addEventListener('keydown', (e) => {
-    const i = ABAS.indexOf(aba);
-    const prox = { ArrowRight: (i + 1) % ABAS.length, ArrowLeft: (i + ABAS.length - 1) % ABAS.length, Home: 0, End: ABAS.length - 1 }[e.key];
-    if (prox === undefined) return;
-    e.preventDefault();
-    mostrarAba(ABAS[prox], { focar: true });
-  });
+  // Menu: no notebook e no computador fica sempre à esquerda. No celular e no tablet, o botão Menu do topo (onde ficava
+  // o Sair) abre a gaveta à direita, com as seções e o Sair no fim; fecha com Esc, no fundo ou ao escolher uma seção.
+  // Fechada, a gaveta fica fora da ordem do Tab (visibility no CSS).
+  const menuGaveta = () => getComputedStyle($('menu-abrir')).display !== 'none';
+  function abrirMenu() {
+    $('menu').classList.add('aberto');
+    $('menu-fundo').hidden = false;
+    $('menu-abrir').setAttribute('aria-expanded', 'true');
+    const atual = document.querySelector('.menu-item[aria-current="page"]');
+    setTimeout(() => (atual || $('menu-fechar')).focus(), 30);
+  }
+  function fecharMenu({ focar = false } = {}) {
+    if (!$('menu').classList.contains('aberto')) return;
+    $('menu').classList.remove('aberto');
+    $('menu-fundo').hidden = true;
+    $('menu-abrir').setAttribute('aria-expanded', 'false');
+    if (focar && menuGaveta()) $('menu-abrir').focus();
+  }
+  $('menu-abrir').addEventListener('click', abrirMenu);
+  $('menu-fechar').addEventListener('click', () => fecharMenu({ focar: true }));
+  $('menu-fundo').addEventListener('click', () => fecharMenu({ focar: true }));
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && $('menu').classList.contains('aberto')) fecharMenu({ focar: true }); });
+  // O botão Menu soma os selos dos itens (pedidos, erros), para o alerta não ficar escondido no menu fechado.
+  function atualizarMenuAlerta() {
+    const n = [...document.querySelectorAll('#menu .aba-alerta')].filter((x) => !x.hidden)
+      .reduce((t, x) => t + (Number(x.textContent) || 1), 0);
+    $('menu-alerta').hidden = !n;
+    $('menu-alerta').textContent = n ? String(n) : '';
+    $('menu-alerta').setAttribute('aria-label', n ? `${n} ${n === 1 ? 'alerta' : 'alertas'} no menu` : '');
+  }
+  new MutationObserver(atualizarMenuAlerta).observe($('menu'), { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['hidden'] });
   addEventListener('hashchange', () => mostrarAba(location.hash.slice(1), { url: false }));
   mostrarAba(aba, { url: false });
 
@@ -1181,7 +1270,7 @@
     atividade = { itens, mostrados: POR_VEZ };
     $('det-corpo').innerHTML = `
       <div class="det-topo">
-        <span class="avatar" aria-hidden="true">${esc(iniciais(u.nome, u.email))}</span>
+        ${avatar(u)}
         <div><h2 id="det-nome">${esc(u.nome || 'Sem nome')}</h2><p>${esc(u.email)}</p></div>
         <button class="fechar" type="button" data-fechar aria-label="Fechar">${ICON.x}</button>
       </div>
@@ -1227,10 +1316,10 @@
         </div>
         <p class="excluir-erro" id="det-videos-erro" role="alert" hidden></p>
       </section>` : ''}
-      <section class="det-sec" aria-labelledby="det-tempo">
+      ${PERSONAL ? '' : `<section class="det-sec" aria-labelledby="det-tempo">
         <h3 id="det-tempo">Atividade recente</h3>
         <div id="det-atividade"></div>
-      </section>
+      </section>`}
       ${PERSONAL ? (GANCHOS().detalhe ? GANCHOS().detalhe(u) : '') : `
       <!-- Excluir conta fica aqui, no fim da ficha, e não a um toque em cada linha da tabela (Fitts). -->
       <section class="det-sec" aria-labelledby="det-excluir-t">
@@ -1240,7 +1329,8 @@
           : `<div class="det-acesso"><span class="nota" style="flex:1 1 200px">Apaga para sempre os check-ins, pesos, treinos e preferências de ${esc(u.nome || u.email)}.</span>
           <button class="btn-peq perigo" type="button" data-excluir="${u.id}">Excluir conta</button></div>`}
       </section>`}`;
-    renderAtividade();
+    // Atividade recente (uso do app, evento a evento) é só do monitoramento do administrador, não da área do personal.
+    if (!PERSONAL) renderAtividade();
     trocarPalavras($('det-corpo'));
     const dlg = $('detalhe');
     if (!dlg.open) dlg.showModal();
@@ -1283,7 +1373,7 @@
       await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.origin + location.pathname } });
       return;
     }
-    if (e.target.closest('#sair')) { desligarOnline(); await sb.auth.signOut(); return iniciar(); }
+    if (e.target.closest('#sair, #menu-sair')) { fecharMenu(); desligarOnline(); await sb.auth.signOut(); return iniciar(); }
     if (e.target.closest('#tentar-online')) { desligarOnline(); return ligarOnline(); }
     if (e.target.closest('#ver-erro-online')) { verErroOnline = !verErroOnline; return atualizarOnline(); }
     if (e.target.closest('[data-mais-atividade]')) {
@@ -1291,8 +1381,8 @@
       atividade.mostrados += POR_VEZ;
       return renderAtividade(primeiroNovo);
     }
-    const tab = e.target.closest('[role="tab"]');
-    if (tab) return mostrarAba(tab.dataset.aba);
+    const tab = e.target.closest('.menu-item');
+    if (tab) return mostrarAba(tab.dataset.aba, { focar: true });
     const grupoErro = e.target.closest('[data-erro]');
     if (grupoErro) {
       const k = grupoErro.dataset.erro;
@@ -2167,7 +2257,12 @@
     window.Painel = {
       sb, $, esc, toast: (m) => toast(m), recarregar: () => carregar(), abrirDetalhe: (id) => abrirDetalhe(id),
       dados: () => dados, detalheAberto: () => ($('detalhe').open ? detalheId : null), fecharDetalhe: () => $('detalhe').close(),
-      tipos: () => TIPOS, iniciais, fmtData, fmtNum, deYmd, ymd, hoje, relativo, diaDeInstante, mostrarAba: (a) => mostrarAba(a),
+      tipos: () => TIPOS, iniciais, avatar, fmtData, fmtNum, deYmd, ymd, hoje, relativo, diaDeInstante, mostrarAba: (a) => mostrarAba(a),
+      // As regras do cadastro de exercício (catálogo), para o "Novo exercício" do personal ser a mesma tela.
+      // Cálculos do painel, para a Visão geral do personal usar as mesmas regras (período, aderência, recordes).
+      calc: { periodo: () => periodo, dentro, diaDeCheckin, diasEntre, somarDias, planejadasNoPeriodo, aderenciaDe, recordesDe, delta,
+        fabricaDeCards, rotuloDoPeriodo, comparaDoPeriodo, ICON },
+      exercicio: { GRUPOS_EX, rotuloGrupoEx, NIVEIS_EX, ROTULO_NIVEL, lerDose, montarDose, traco, padronizarNome, codigoVideo, ICON },
     };
   }
   iniciar();

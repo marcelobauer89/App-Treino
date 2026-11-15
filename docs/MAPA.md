@@ -84,19 +84,19 @@ Na ordem de carga. Cada linha é uma seção (comentário `// ---------- Nome --
 
 ## `js/admin.js` (monitoramento): seções
 
-Conexão · Estado · Acesso · On-line agora (Presence) · Cálculos (números da Visão geral) · Render (Visão geral e gráficos) · Usuários · Saúde do app · E-mails · Abas · Detalhe do usuário · Eventos de interface · Excluir conta de um usuário · Convites · Exercícios (catálogo) · Profissionais (área do personal) · Tipos de check-in (tabela tipos_checkin).
+Conexão · Estado · Acesso · Conta no topo (foto, nome e Administrador ou CREF, nas duas páginas) · On-line agora (Presence) · Cálculos (números da Visão geral) · Render (Visão geral e gráficos) · Usuários · Saúde do app · E-mails · Abas (o menu das seções: à esquerda no computador; no celular, botão Menu no topo e gaveta; Sair no fim) · Detalhe do usuário · Eventos de interface · Excluir conta de um usuário · Convites · Exercícios (catálogo) · Profissionais (área do personal) · Tipos de check-in (tabela tipos_checkin).
 
 No modo personal (`personal.html`, `<html data-painel="personal">`), o começo do arquivo troca as funções do banco (`FN`), devolve um elemento "fantasma" para o que só existe no `admin.html` e troca "usuário" por "aluno" (`trocarPalavras`); o resto da área fica nos ganchos `window.PersonalHooks`.
 
 ## `js/personal.js` (área do personal): seções
 
-Cadastro do profissional · Dados da área (carregados junto com o painel) · Fichas (editor, que serve também aos treinos de um aluno) · Aplicar ficha e confirmações · Ficha do aluno (dentro do detalhe do painel) · Convites do personal.
+Cadastro do profissional · Conta no topo (nome profissional e CREF para o topo do painel) · Dados da área (carregados junto com o painel) · Visão geral do personal (números, Precisam de atenção, Fichas em uso) · Semana dos alunos e Gerenciar semana (card e a tela cheia com filtros, 4 semanas e CSV) · Fichas (editor em passo a passo, que serve também aos treinos de um aluno em página única) · Meus exercícios (a mesma tela do catálogo do admin, com as regras de `Painel.exercicio`) · Aplicar ficha e confirmações (com a animação "Ficha enviada") · Ficha do aluno (dentro do detalhe do painel) · Convites do personal.
 
 Os eventos vêm só do período escolhido (`eventosNecessarios`, em Acesso). Os dados vêm de `todas()` (páginas de 1.000) nas funções `admin_usuarios`, `admin_checkins`, `admin_eventos`, `admin_emails` e `admin_convites`.
 
 ## `supabase/schema.sql`: ordem das partes
 
-Tabelas `perfis`, `checkins`, `cargas` e RLS → `criar_perfil`, `registrar_acesso`, `treinos_validos` → `admins`, `eh_admin`, `eventos`, funções `admin_*` de leitura → Presence (`realtime.messages`) → `emails_enviados` → excluir conta → `convites` e funções de acesso → `videos_exercicios` → Storage `fotos-checkin` → catálogo (`exercicios`, `jornadas`, `admin_salvar_exercicio`, `admin_excluir_exercicio`) → `tipos_checkin` → área do personal (`profissionais`, `vinculos`, `fichas_personal`, funções `personal_*` e `meus_dados_extras`). Procure a parte por `create table if not exists public.<nome>` ou `function public.<nome>`.
+Tabelas `perfis`, `checkins`, `cargas` e RLS → `criar_perfil`, `registrar_acesso`, `treinos_validos` → `admins`, `eh_admin`, `eventos`, funções `admin_*` de leitura → Presence (`realtime.messages`) → `emails_enviados` → excluir conta → `convites` e funções de acesso → `videos_exercicios` → Storage `fotos-checkin` → catálogo (`exercicios`, `jornadas`, `admin_salvar_exercicio`, `admin_excluir_exercicio`) → `tipos_checkin` → área do personal (`profissionais`, `vinculos`, `fichas_personal`, `exercicios_personal`, `ajustes_banco`, funções `personal_*` e `meus_dados_extras`). Procure a parte por `create table if not exists public.<nome>` ou `function public.<nome>`.
 
 ## Testes por área
 

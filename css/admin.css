@@ -58,7 +58,9 @@
   .btn-sec svg { width: 16px; height: 16px; }
 
   /* Topo: título, período e atualização */
-  .topo { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 4px 16px; padding-top: 28px; padding-bottom: 20px; }
+  .topo { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 4px 16px; padding-top: 28px; padding-bottom: 16px; }
+  /* Período, Atualizar e a descrição ficam dentro do painel, logo acima dos indicadores (ao lado do menu no computador). */
+  .painel-barra { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin: 0 0 16px; }
   .sub-linha { flex: 1 1 100%; display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; }
   .sub-linha .atualizado { margin-left: auto; white-space: nowrap; }
   /* No celular, a descrição fica logo abaixo do título, antes dos controles. */
@@ -150,31 +152,73 @@
     }
   }
 
-  /* Abas */
-  .abas {
-    display: flex; gap: 4px; margin: 0 0 20px; border-bottom: 1px solid var(--fio); overflow-x: auto; scrollbar-width: none;
+  /* Menu das seções: o botão Menu fica no canto direito do topo (onde ficava o Sair) e abre uma gaveta à direita com as
+     seções e o Sair no fim. Cabe quantas seções vierem (lista vertical), sem apertar as outras. */
+  /* Topo (monitoramento e área do personal): foto (ou iniciais), o nome da área em cima, o nome de quem está logado e uma
+     linha (Administrador, ou o CREF do personal), com o botão Menu à direita no celular. Sem login, só o título. */
+  .topo-perfil { flex: 1 1 100%; display: flex; align-items: center; gap: 14px; min-width: 0; }
+  .topo-perfil-txt { flex: 1 1 auto; min-width: 0; }
+  .topo-perfil-txt h1 { overflow-wrap: anywhere; }
+  .topo-olho { margin: 0 0 2px; color: var(--marca-tinta); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+  .topo-sub { margin: 4px 0 0; color: var(--tinta-2); font-size: 14px; font-variant-numeric: tabular-nums; }
+  .topo-avatar { flex: none; width: 64px; height: 64px; display: grid; place-items: center; overflow: hidden; border-radius: 50%;
+    border: 2px solid var(--marca); background: var(--marca-suave); color: var(--marca-tinta); font-size: 22px; font-weight: 800; }
+  .topo-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .topo-perfil .menu-abrir { align-self: flex-start; }
+  @media (max-width: 560px) {
+    .topo-perfil { gap: 12px; }
+    .topo-avatar { width: 52px; height: 52px; font-size: 18px; }
+    .topo-perfil-txt h1 { font-size: 30px; }
   }
-  .abas::-webkit-scrollbar { display: none; }
-  .abas [role="tab"] {
-    flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px; margin-bottom: -1px;
-    border: 0; border-bottom: 3px solid transparent; background: transparent; color: var(--tinta-2); font-size: 15px; font-weight: 700; white-space: nowrap;
+  .menu-abrir {
+    flex: none; position: relative; min-height: 44px; padding: 0 14px; display: inline-flex; align-items: center; gap: 8px;
+    border: 1.5px solid var(--marca); border-radius: 12px; background: var(--papel); color: var(--marca-tinta); font-size: 15px; font-weight: 700;
   }
-  .abas [role="tab"]:hover { color: var(--tinta); }
-  .aba-curto { display: none; }
+  .menu-abrir[hidden] { display: none; }
+  .menu-abrir:hover { background: var(--marca-suave); }
+  .menu-abrir > svg { width: 20px; height: 20px; flex: none; }
+  .menu-abrir .aba-online { position: absolute; top: -4px; right: -4px; }
+  .menu ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 2px; }
+  .menu-item {
+    width: 100%; min-height: 48px; display: flex; align-items: center; gap: 10px; padding: 0 12px; border: 0; border-radius: 10px;
+    background: transparent; color: var(--tinta-2); font-size: 16px; font-weight: 700; text-align: left;
+  }
+  .menu-item:hover { background: var(--gi); color: var(--tinta); }
+  .menu-item[aria-current="page"] { background: var(--marca-suave); color: var(--marca-tinta); box-shadow: inset 3px 0 0 var(--marca); }
+  .menu-ic { width: 20px; height: 20px; flex: none; }
+  .menu-nome { flex: 1 1 auto; min-width: 0; }
+  .menu-item .aba-alerta, .menu-item .aba-online { margin-left: auto; }
   .aba-online { width: 9px; height: 9px; }
-  /* No celular as 4 abas dividem a largura, com rótulos curtos (o leitor de tela continua lendo o nome completo). */
-  @media (max-width: 720px) {
-    .abas { gap: 0; }
-    .abas [role="tab"] { flex: 1 1 auto; justify-content: center; padding: 0 6px; font-size: 14px; }
-    .aba-longo { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-    .aba-curto { display: inline; }
+  .menu-rodape { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--fio); }
+  .menu-fundo { position: fixed; inset: 0; z-index: 44; background: rgba(0, 0, 0, .45); }
+  /* Gaveta: fechada, fica fora da tela e fora da ordem do Tab (visibility). */
+  .menu {
+    position: fixed; z-index: 45; top: 0; bottom: 0; right: 0; width: min(320px, 86vw); overflow-y: auto;
+    padding: max(14px, env(safe-area-inset-top, 0px)) 12px 20px; background: var(--papel); border-left: 1px solid var(--fio);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, .25); transform: translateX(105%); visibility: hidden;
+    transition: transform .22s cubic-bezier(.2, .7, .2, 1), visibility 0s linear .22s;
   }
-  /* Celular estreito: as abas quebram em linhas de 4 (o monitoramento tem 8), sem rolagem para o lado. */
-  @media (max-width: 400px) {
-    .abas { flex-wrap: wrap; }
-    .abas [role="tab"] { flex: 1 1 22%; padding: 0 2px; font-size: 13px; gap: 4px; }
+  .menu.aberto { transform: none; visibility: visible; transition: transform .22s cubic-bezier(.2, .7, .2, 1); }
+  .menu-topo { display: flex; align-items: center; justify-content: space-between; margin: 0 4px 10px; font-size: 18px; }
+  .menu-fechar { width: 44px; height: 44px; display: grid; place-items: center; border: 0; border-radius: 10px; background: transparent; color: var(--tinta-2); }
+  @media (prefers-reduced-motion: reduce) { .menu, .menu.aberto { transition: none; } }
+  /* Notebook e computador: o menu fica sempre visível à esquerda (fixo ao rolar), com o Sair no fim; sem o botão Menu.
+     A página fica um pouco mais larga para o conteúdo não encolher. */
+  @media (min-width: 1000px) {
+    .wrap { max-width: 1340px; }
+    .menu-abrir, .menu-abrir[hidden] { display: none; }
+    .menu-fundo { display: none; }
+    #painel:not([hidden]) { display: grid; grid-template-columns: 220px minmax(0, 1fr); column-gap: 28px; align-items: start; }
+    .menu {
+      position: sticky; z-index: auto; top: 16px; bottom: auto; right: auto; width: auto; max-height: calc(100vh - 32px);
+      grid-column: 1; grid-row: 1 / span 20; padding: 8px; border: 1px solid var(--fio); border-radius: 16px;
+      box-shadow: none; transform: none; visibility: visible; transition: none;
+    }
+    .menu-topo { display: none; }
+    .menu-item { min-height: 44px; font-size: 15px; }
+    .menu-rodape { margin-top: 8px; padding-top: 8px; }
+    .aba-painel, .painel-barra { grid-column: 2; min-width: 0; }
   }
-  .abas [role="tab"][aria-selected="true"] { color: var(--marca-tinta); border-bottom-color: var(--marca); }
   .aba-alerta {
     min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--erro); color: #fff;
     font-size: 12px; font-weight: 800; line-height: 20px; text-align: center;
@@ -353,6 +397,10 @@
     flex: 0 0 auto; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center;
     background: var(--marca-suave); color: var(--marca-tinta); font-family: var(--display); font-stretch: 80%; font-weight: 800; font-size: 15px;
   }
+  .avatar.tem-foto { background: var(--gi); }
+  .avatar img { display: block; width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+  .avatar.av-p { width: 28px; height: 28px; font-size: 12px; }
+  .item-titulo.com-avatar { display: flex; align-items: center; gap: 10px; min-width: 0; }
   .situacao { display: inline-flex; align-items: center; gap: 5px; padding: 2px 10px 2px 8px; border-radius: 999px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
   .situacao svg { width: 14px; height: 14px; }
   .situacao.ativo { background: var(--feito-suave); color: var(--feito-tinta); }
@@ -380,9 +428,10 @@
     .usuarios td.cel-situacao { display: block; position: absolute; top: 12px; right: 0; }
     .quem { align-items: flex-start; }
     .quem button { flex: 1 1 auto; }
-    .quem b { padding-right: 116px; }
-    .resumo-cel { display: block; margin-top: 2px; font-size: 13px; color: var(--tinta-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .chev { display: grid; align-self: flex-end; color: var(--tinta-2); }
+    /* A situação fica no alto à direita e a seta embaixo, alinhadas (na área do personal, o nome vai em até 2 linhas). */
+    .quem b { padding-right: 104px; }
+    .resumo-cel { display: block; margin-top: 2px; padding-right: 26px; font-size: 13px; color: var(--tinta-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .chev { display: grid; position: absolute; right: 2px; bottom: 14px; color: var(--tinta-2); }
     .chev svg { width: 18px; height: 18px; }
     .nenhum { display: block; }
     .ordenar-cel { display: flex; }
@@ -727,7 +776,7 @@
   html[data-estilo] h1 { text-shadow: 0 0 22px var(--brilho), 0 0 2px rgba(255, 255, 255, .5); }
   html[data-estilo] :is(.btn, .periodo button[aria-pressed="true"]) { box-shadow: 0 0 0 1px var(--marca-tinta), 0 0 14px var(--brilho); }
   html[data-estilo] .btn-sec { box-shadow: 0 0 10px var(--brilho), inset 0 0 8px var(--brilho); }
-  html[data-estilo] .abas [role="tab"][aria-selected="true"] { text-shadow: 0 0 10px var(--brilho); }
+  html[data-estilo] .menu-item[aria-current="page"] { text-shadow: 0 0 10px var(--brilho); }
   html[data-estilo] .kpi .valor { color: var(--numero); text-shadow: 0 0 14px var(--brilho); }
   html:root[data-estilo="gelo"] :is(.cartao, .kpi, .periodo) { -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
   html:root[data-estilo="ultra"] :is(.btn, .periodo button[aria-pressed="true"]) { background: linear-gradient(90deg, #d946ef, #9333ea); }

@@ -138,4 +138,9 @@ function fonte() {
   const arqs = [...html.matchAll(/(?:href|src)="((?:css|js)\/[^"?]+)/g)].map((m) => m[1]);
   return [html, ...arqs.map((a) => fs.readFileSync(path.join(RAIZ, a), 'utf8'))].join('\n');
 }
-module.exports = { fonte, catalogo, RAIZ, APOIO, SAIDA, servidor, novaPagina, banco, store, prontos, gravacoes, voce, escolherBV, salvarEditor, PAGINA };
+// Painel (admin.html e personal.html): escolhe uma seção do menu. No celular, abre a gaveta do menu antes.
+async function aba(p, nome) {
+  if (await p.locator('#menu-abrir').isVisible()) { await p.click('#menu-abrir'); await p.waitForSelector('#menu.aberto'); }
+  await p.click(`#tab-${nome}`);
+}
+module.exports = { aba, fonte, catalogo, RAIZ, APOIO, SAIDA, servidor, novaPagina, banco, store, prontos, gravacoes, voce, escolherBV, salvarEditor, PAGINA };
