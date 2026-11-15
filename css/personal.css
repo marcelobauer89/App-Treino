@@ -176,3 +176,83 @@
 }
 .pf-sem-det-item .rt-trilho { display: block; height: 8px; border-radius: 4px; background: var(--gi); overflow: hidden; }
 .pf-sem-det-item .rt-barra { display: block; height: 100%; border-radius: 4px; }
+/* Foto do aluno ao lado do nome (Semana dos alunos, Ver detalhes, Gerenciar e o envio da ficha). */
+.pf-aluno-cel { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.pf-aluno-cel > div { min-width: 0; }
+.pf-envio-av { overflow: hidden; }
+.avatar.cheio { width: 100%; height: 100%; font-size: inherit; background: transparent; color: inherit; }
+.excluir-entendi .avatar { margin-top: -3px; }
+.pf-sem-topo { flex-wrap: nowrap; align-items: center; }
+.pf-sem-topo .titulo-info { min-width: 0; }
+.bloco-topo .pf-sem-gerenciar { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px; align-self: center; }
+.pf-sem-nav { margin: 0 0 6px; }
+.pf-sem-det-item .pf-aluno-cel { min-width: 0; }
+
+/* Gerenciar semana: tela cheia. */
+dialog.pf-gs { width: 100vw; height: 100dvh; max-width: none; max-height: none; margin: 0; padding: 0; border: 0; background: var(--gi); color: var(--tinta); overflow: auto; overscroll-behavior: contain; }
+dialog.pf-gs::backdrop { background: var(--gi); }
+.pf-gs-topo { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; padding: 10px 16px; background: var(--papel); border-bottom: 1px solid var(--fio); }
+.pf-gs-topo h2 { margin: 0; font-size: 22px; }
+.pf-gs-topo .fechar { margin: 0; order: -1; align-self: center; }
+.pf-gs-topo .pf-sem-nav { margin: 0 0 0 auto; }
+.pf-gs-corpo { width: min(1240px, 100%); margin: 0 auto; padding: 16px 16px 96px; }
+.pf-gs-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin: 0 0 16px; }
+.pf-gs-kpi { padding: 12px 14px; border: 1px solid var(--fio); border-radius: 14px; background: var(--papel); }
+.pf-gs-kpi dt { font-size: 13px; font-weight: 700; color: var(--tinta-2); }
+.pf-gs-kpi dd { margin: 4px 0 2px; font-family: var(--display); font-stretch: 75%; font-weight: 800; font-size: 32px; line-height: 1; font-variant-numeric: tabular-nums; }
+.pf-gs-kpi dd small { font-family: var(--texto); font-stretch: 100%; font-size: 14px; font-weight: 500; color: var(--tinta-2); }
+.pf-gs-kpi > small { font-size: 12.5px; color: var(--tinta-2); }
+.pf-gs-kpi.destaque { border-color: var(--marca); background: var(--marca-suave); }
+.pf-gs-kpi.alerta dd { color: var(--erro); }
+.pf-gs-filtros { display: grid; grid-template-columns: auto minmax(180px, 1.4fr) repeat(3, minmax(150px, 1fr)); align-items: end; gap: 10px 12px; margin: 0 0 10px; }
+.pf-gs-filtros .periodo { align-self: end; }
+.pf-gs-filtros .periodo button { white-space: nowrap; }
+.pf-gs-filtros input, .pf-gs-filtros select { width: 100%; min-height: 44px; padding: 0 12px; border: 1px solid var(--fio); border-radius: 10px; background: var(--papel); color: var(--tinta); font: inherit; font-size: 16px; font-weight: 400; }
+.pf-gs-filtros select { appearance: none; padding-right: 34px; cursor: pointer;
+  background-image: linear-gradient(45deg, transparent 50%, var(--tinta-2) 50%), linear-gradient(135deg, var(--tinta-2) 50%, transparent 50%);
+  background-position: calc(100% - 18px) 19px, calc(100% - 13px) 19px; background-size: 5px 5px; background-repeat: no-repeat; }
+.pf-gs-filtros input:focus-visible, .pf-gs-filtros select:focus-visible { outline: 2px solid var(--marca-tinta); outline-offset: 1px; }
+.pf-gs-barra { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin: 0 0 10px; }
+.pf-gs-barra .nota { margin: 0; font-weight: 600; }
+.pf-gs-barra .btn-sec { margin-left: auto; min-height: 40px; }
+.pf-gs-cartao { padding: 4px 0; margin: 0 0 10px; }
+.pf-gs-cartao .tabela-rolagem { max-height: none; overflow-x: auto; }
+.pf-gs-grade { min-width: 760px; table-layout: auto; }
+.pf-gs-grade.mes { min-width: 640px; }
+.pf-gs-grade th:first-child { position: sticky; left: 0; z-index: 1; width: 240px; min-width: 200px; max-width: 260px; padding-left: 14px; background: var(--papel); }
+.pf-gs-grade td:last-child, .pf-gs-grade th:last-child { padding-right: 14px; }
+.pf-gs-cel { display: grid; place-items: center; width: 100%; min-height: 40px; padding: 2px; border: 0; border-radius: 8px; background: transparent; cursor: pointer; }
+.pf-gs-cel:hover { background: var(--gi); }
+.pf-gs-cel:focus-visible { outline: 2px solid var(--marca-tinta); }
+.pf-gs-pct { display: inline-grid; justify-items: center; line-height: 1.15; }
+.pf-gs-pct b { font-family: var(--display); font-weight: 800; color: var(--cor, var(--tinta)); font-variant-numeric: tabular-nums; }
+.pf-gs-pct small { font-size: 12px; color: var(--tinta-2); }
+.pf-gs-grade .num { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--tinta-2); }
+.pf-gs-grade .num.ruim { color: var(--erro); }
+.pf-gs-sem { display: inline-flex; align-items: center; justify-content: center; gap: 3px; min-width: 56px; padding: 4px 8px; border-radius: 999px; font-weight: 700; font-size: 13px; font-variant-numeric: tabular-nums;
+  background: color-mix(in srgb, var(--marca) calc(var(--p, 0) * 30%), var(--gi)); }
+.pf-gs-sem svg { width: 14px; height: 14px; }
+.pf-gs-sem.cheia { background: var(--feito-suave); color: var(--feito-tinta); }
+.pf-gs-sem.vazia { color: var(--tinta-2); font-weight: 500; }
+.pf-gs-info { position: fixed; left: 50%; bottom: 16px; z-index: 6; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; width: min(560px, calc(100vw - 32px)); margin: 0; padding: 6px 6px 6px 16px;
+  border-radius: 14px; background: var(--tinta); color: var(--gi); font-size: 14px; box-shadow: 0 10px 30px rgba(0, 0, 0, .25); }
+.pf-gs-info span { flex: 1; }
+.pf-gs-info .fechar { margin: 0; width: 40px; height: 40px; color: inherit; }
+.pf-gs-info .fechar:hover { background: transparent; opacity: .8; }
+@media (max-width: 900px) {
+  .pf-gs-filtros { grid-template-columns: 1fr 1fr; }
+  .pf-gs-filtros .periodo, .pf-gs-busca { grid-column: 1 / -1; }
+  .pf-gs-filtros .periodo { display: flex; }
+  .pf-gs-filtros .periodo button { flex: 1; }
+}
+@media (max-width: 560px) {
+  .pf-gs-topo h2 { font-size: 19px; }
+  .pf-gs-topo .pf-sem-nav { width: 100%; margin: 0; justify-content: space-between; }
+  .pf-gs-kpis { grid-template-columns: 1fr 1fr; }
+  .pf-gs-kpi dd { font-size: 28px; }
+  .pf-gs-kpi:first-child { grid-column: 1 / -1; }
+  .pf-gs-grade th:first-child { width: 150px; min-width: 150px; max-width: 150px; padding-left: 10px; }
+  .pf-gs-grade { min-width: 640px; }
+  .pf-sem-grade:not(.pf-gs-grade) .pf-aluno-cel { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .pf-sem-grade:not(.pf-gs-grade) .pf-aluno-cel > div { width: 100%; }
+}

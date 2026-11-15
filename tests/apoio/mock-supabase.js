@@ -233,7 +233,7 @@
         return ok(ativos(eu).map((v) => { const p = perfil(v.aluno_id) || {}; return {
           id: v.aluno_id, nome: p.nome || 'Aluno sem nome', email: '', cadastro: v.aceito_em, ultimo_acesso: p.ultimo_acesso || null, acessos: p.acessos || 0,
           semana: p.semana || null, dias_jiu: p.dias_jiu || [], sem_peso: p.sem_peso || [], treinos: p.treinos || null, treinos_por_mim: p.treinos_por === eu,
-          treinos_em: p.treinos_em || null, ficha_id: p.ficha_id || null, vinculado_em: v.aceito_em, foto: '' }; }));
+          treinos_em: p.treinos_em || null, ficha_id: p.ficha_id || null, vinculado_em: v.aceito_em, foto: /^(https:\/\/|data:image\/)/.test(p.foto || '') ? p.foto : '' }; }));
       case 'personal_checkins':
       case 'personal_eventos':
       case 'personal_cargas': {

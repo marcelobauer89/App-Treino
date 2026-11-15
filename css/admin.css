@@ -395,6 +395,10 @@
     flex: 0 0 auto; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center;
     background: var(--marca-suave); color: var(--marca-tinta); font-family: var(--display); font-stretch: 80%; font-weight: 800; font-size: 15px;
   }
+  .avatar.tem-foto { background: var(--gi); }
+  .avatar img { display: block; width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+  .avatar.av-p { width: 28px; height: 28px; font-size: 12px; }
+  .item-titulo.com-avatar { display: flex; align-items: center; gap: 10px; min-width: 0; }
   .situacao { display: inline-flex; align-items: center; gap: 5px; padding: 2px 10px 2px 8px; border-radius: 999px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
   .situacao svg { width: 14px; height: 14px; }
   .situacao.ativo { background: var(--feito-suave); color: var(--feito-tinta); }
