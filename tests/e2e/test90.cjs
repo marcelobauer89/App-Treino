@@ -65,6 +65,8 @@ const base = (extra = {}) => ({
     await p.goto(PERSONAL); await p.waitForSelector('#painel:not([hidden])');
     await p.waitForTimeout(300);
     const kpis = await p.locator('#kpis').innerText();
+    ok(await p.locator('#painel .painel-barra #controles').isVisible() && await p.locator('header #controles').count() === 0
+      && (await p.locator('#controles').boundingBox()).y < (await p.locator('#kpis').boundingBox()).y, `${scheme}: período e Atualizar logo acima dos indicadores`);
     ok(/Alunos ativos/.test(kpis) && !/suári/.test(kpis), `${scheme}: números falam em alunos`, kpis.replace(/\s+/g, ' ').slice(0, 120));
     ok(/2 de 2|1 de 2/.test(kpis), `${scheme}: conta só os alunos com vínculo`);
     ok(/Treinaram hoje/.test(kpis) && /Precisam de atenção/.test(kpis) && !/Voltaram nesta semana|Sumiram/.test(kpis), `${scheme}: números próprios do personal (não os do administrador)`);
@@ -74,13 +76,11 @@ const base = (extra = {}) => ({
     ok(/Aluna Um/.test(semana) && /Aluno Dois/.test(semana) && /sem semana montada/.test(semana), `${scheme}: Semana dos alunos lista cada aluno`);
     ok((await p.locator('#semana-tabela .pf-marca-dia.feito').count()) >= 1 && (await p.locator('#semana-tabela .pf-marca-dia.faltou, #semana-tabela .pf-marca-dia.planejado').count()) >= 1, `${scheme}: semana mostra feito e planejado`);
     ok(await p.locator('#semana-tabela .pf-marca-dia.feito svg').count() >= 1 && /Treinaram/.test(semana) && /Esta semana/.test(await p.locator('#semana-intervalo').innerText()) && await p.locator('#sem-prox').isDisabled(), `${scheme}: semana com check no feito, linha Treinaram e só setas para trás`);
-    await p.click('#sem-detalhes');
-    const detSem = await p.locator('#semana-detalhes').innerText();
-    ok(await p.locator('#semana-detalhes').isVisible() && /cumpri/.test(detSem) && /Aluna Um/.test(detSem) && /Aluno Dois/.test(detSem) && /(Treinou|treinou|último treino|check-in)/.test(detSem), `${scheme}: Ver detalhes mostra o resumo por aluno`, detSem.replace(/\s+/g, ' ').slice(0, 200));
+    ok(await p.locator('#sem-detalhes, #semana-detalhes').count() === 0, `${scheme}: card sem o Ver detalhes (o resumo fica no Gerenciar)`);
     await p.screenshot({ path: `${H.SAIDA}/personal-semana-${scheme}.png`, fullPage: true });
     await p.click('#sem-ant');
-    ok(/Semana passada/.test(await p.locator('#semana-intervalo').innerText()) && await p.locator('#sem-prox').isEnabled() && await p.locator('#semana-detalhes').isVisible(), `${scheme}: seta volta para a semana passada`);
-    await p.click('#sem-prox'); await p.click('#sem-detalhes');
+    ok(/Semana passada/.test(await p.locator('#semana-intervalo').innerText()) && await p.locator('#sem-prox').isEnabled(), `${scheme}: seta volta para a semana passada`);
+    await p.click('#sem-prox');
     // Foto do aluno ao lado do nome (a enviada pelo app; sem foto, as iniciais).
     ok(await p.locator('#semana-tabela .avatar.tem-foto img').count() === 1 && /AD/.test(await p.locator('#semana-tabela .avatar:not(.tem-foto)').first().innerText())
       && await p.locator('#atencao-lista .avatar').count() === 2, `${scheme}: foto (ou iniciais) do aluno na semana e em Precisam de atenção`);

@@ -58,7 +58,9 @@
   .btn-sec svg { width: 16px; height: 16px; }
 
   /* Topo: título, período e atualização */
-  .topo { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 4px 16px; padding-top: 28px; padding-bottom: 20px; }
+  .topo { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 4px 16px; padding-top: 28px; padding-bottom: 16px; }
+  /* Período, Atualizar e a descrição ficam dentro do painel, logo acima dos indicadores (ao lado do menu no computador). */
+  .painel-barra { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin: 0 0 16px; }
   .sub-linha { flex: 1 1 100%; display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; }
   .sub-linha .atualizado { margin-left: auto; white-space: nowrap; }
   /* No celular, a descrição fica logo abaixo do título, antes dos controles. */
@@ -215,7 +217,7 @@
     .menu-topo { display: none; }
     .menu-item { min-height: 44px; font-size: 15px; }
     .menu-rodape { margin-top: 8px; padding-top: 8px; }
-    .aba-painel { grid-column: 2; min-width: 0; }
+    .aba-painel, .painel-barra { grid-column: 2; min-width: 0; }
   }
   .aba-alerta {
     min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--erro); color: #fff;
