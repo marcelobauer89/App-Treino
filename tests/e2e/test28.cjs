@@ -168,13 +168,14 @@ const presenca = (p, topico, meta) => p.evaluate(([t, m]) => {
       await p.click('[data-fechar]');
       ok((await txt(p, '#on-titulo')).includes('· 1') && await p.locator('#on-corpo li').count() === 1, 'faixa cai para 1 sem recarregar');
       // ponto pulsando na aba Visão geral quando outra aba está aberta
-      ok(await p.locator('#aba-online').isHidden(), 'na visão geral, sem ponto na aba');
+      // No computador o ponto fica no item Visão geral do menu; no celular, no botão Menu (o menu fica fechado).
+      const ponto = viewport.width < 1000 ? '#menu-online' : '#aba-online';
+      ok(await p.locator(ponto).isHidden(), 'na visão geral, sem ponto no menu');
       await H.aba(p, 'usuarios');
-      ok(await p.locator('#aba-online').isVisible() && await p.locator('#aba-online').evaluate((e) => getComputedStyle(e).animationName) === 'pulso'
-        && (await p.locator('#aba-online').getAttribute('aria-label')) === '1 pessoa on-line agora', 'outra aba: ponto pulsando na Visão geral');
-      await p.locator('#tab-geral').screenshot({ path: 'aba-online.png' });
+      ok(await p.locator(ponto).isVisible() && await p.locator(ponto).evaluate((e) => getComputedStyle(e).animationName) === 'pulso'
+        && (await p.locator(ponto).getAttribute('aria-label')) === '1 pessoa on-line agora', 'outra seção: ponto pulsando no menu');
       await H.aba(p, 'saude');
-      ok(await p.locator('#aba-online').isVisible(), 'ponto continua em outra aba');
+      ok(await p.locator(ponto).isVisible(), 'ponto continua em outra seção');
       await H.aba(p, 'geral');
       // tempos atualizam
       await p.clock.runFor(60000); await p.waitForTimeout(100);

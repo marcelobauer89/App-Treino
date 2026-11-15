@@ -321,6 +321,11 @@
     el.hidden = !n || aba === 'geral';
     el.setAttribute('role', 'img');
     el.setAttribute('aria-label', `${n} ${n === 1 ? 'pessoa' : 'pessoas'} on-line agora`);
+    // No celular o menu fica fechado: o ponto aparece também no botão Menu.
+    const bt = $('menu-online');
+    bt.hidden = el.hidden;
+    bt.setAttribute('role', 'img');
+    bt.setAttribute('aria-label', el.getAttribute('aria-label'));
   }
   function atualizarOnline() {
     if (!dados) return;

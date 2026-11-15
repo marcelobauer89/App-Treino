@@ -90,7 +90,8 @@ async function abrirApp(b, { url = H.PAGINA, perfil = NOVO, local = {}, scheme =
   for (const [scheme, vp] of [['light', { width: 1280, height: 900 }], ['dark', { width: 390, height: 844 }]]) {
     const a = await H.novaPagina(b, { scheme, viewport: vp, extra: { admin: ADM() } });
     await a.goto(ADMIN); await a.waitForSelector('#painel:not([hidden])'); await a.waitForTimeout(300);
-    ok((await txt(a, '#alerta-convites')) === '1' && await a.locator('#alerta-convites').isVisible(), `${scheme}: selo com 1 pedido na aba Convites`);
+    // No celular o selo fica no item do menu fechado (e somado no botão Menu): confere o texto e o hidden.
+    ok((await a.locator('#alerta-convites').textContent()) === '1' && await a.locator('#alerta-convites').evaluate((e) => !e.hidden), `${scheme}: selo com 1 pedido no item Convites do menu`);
     await H.aba(a, 'convites'); await a.waitForTimeout(200);
     ok(/Bruno Lima/.test(await txt(a, '#pedidos-lista')) && !/Caio/.test(await txt(a, '#pedidos-lista')), `${scheme}: pedidos de acesso listados`);
     ok(/Ana Souza/.test(await txt(a, '#utilizados-lista')), `${scheme}: convite usado mostra quem usou`);

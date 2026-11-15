@@ -47,7 +47,7 @@ const ADM = {
     await p.clock.install({ time: new Date(AGORA) });
     await p.goto(ADMIN); await p.waitForSelector('#painel:not([hidden])');
     // menu das seções (lateral no computador, gaveta no celular)
-    const nomes = (await p.locator('.menu-item .menu-nome').allInnerTexts()).map((t) => t.trim());
+    const nomes = (await p.locator('.menu-item .menu-nome').allTextContents()).map((t) => t.trim());
     ok(nomes.join('|') === 'Visão geral|Usuários|Saúde do app|E-mails|Convites|Exercícios|Tipos de check-in|Profissionais', `${tag}: menu com as 8 seções`, nomes.join('|'));
     if (viewport.width < 1000) {
       ok(await p.locator('#menu-abrir').isVisible() && (await txt(p, '#menu-atual')) === 'Visão geral' && await p.locator('#tab-usuarios').isHidden(), `${tag}: no celular, o botão Menu mostra a seção e o menu fica fechado`);
@@ -64,7 +64,7 @@ const ADM = {
       ok(m < c, `${tag}: menu à esquerda do conteúdo`);
     }
     ok(await p.locator('#aba-geral').isVisible() && await p.locator('#aba-usuarios').isHidden() && await p.locator('#tab-geral').getAttribute('aria-current') === 'page', `${tag}: começa na visão geral`);
-    ok(await txt(p, '#alerta-saude') === '3' && (await p.locator('#alerta-saude').getAttribute('aria-label')) === '3 erros críticos nas últimas 24 horas', `${tag}: bolinha com 3 erros em 24 h`, await txt(p, '#alerta-saude'));
+    ok((await p.locator('#alerta-saude').textContent()) === '3' && (await p.locator('#alerta-saude').getAttribute('aria-label')) === '3 erros críticos nas últimas 24 horas', `${tag}: bolinha com 3 erros em 24 h`, await p.locator('#alerta-saude').textContent());
     await H.aba(p, 'usuarios');
     ok(await p.locator('#aba-usuarios').isVisible() && await p.locator('#aba-geral').isHidden() && (await p.evaluate(() => location.hash)) === '#usuarios', `${tag}: aba usuários e endereço`);
     ok((await txt(p, '#menu-atual')) === 'Usuários' && await p.locator('#tab-usuarios').getAttribute('aria-current') === 'page', `${tag}: o menu marca a seção atual`);

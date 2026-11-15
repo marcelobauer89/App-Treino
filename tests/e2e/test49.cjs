@@ -33,7 +33,7 @@ const ADM = {
     const p = await H.novaPagina(b, { scheme, viewport: vp, extra: { admin: ADM } });
     await p.clock.install({ time: new Date(AGORA) });
     await p.goto(ADMIN + '#saude'); await p.waitForSelector('#painel:not([hidden])'); await p.waitForTimeout(300);
-    ok(await txt(p, '#alerta-saude') === '2', `${tag}: bolinha conta só os 2 críticos`, await txt(p, '#alerta-saude'));
+    ok((await p.locator('#alerta-saude').textContent()) === '2', `${tag}: bolinha conta só os 2 críticos`, await p.locator('#alerta-saude').textContent());
     const ks = (await p.locator('#kpis-saude .kpi').allInnerTexts()).map((t) => t.replace(/\s+/g, ' ').trim());
     ok(ks.length === 2 && /^Erros críticos 2/.test(ks[0]) && /^Usuários afetados 2 de 2/.test(ks[1]), `${tag}: cartões`, ks.join(' | '));
     const lista = await txt(p, '#erros-lista');

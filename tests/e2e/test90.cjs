@@ -209,11 +209,11 @@ const base = (extra = {}) => ({
 
   // 3. Monitoramento do administrador: aba Profissionais com o pedido e o botão Liberar.
   {
-    const p = await H.novaPagina(b, { extra: base({ admin: { ids: ['u1'] }, profissionais: [{ usuario_id: 'a3', nome: 'Pessoa Fora', cref: '999999-G', uf: 'MG', pedido_em: ISO(1), liberado_em: null, bloqueado_em: null, limite_alunos: 30 }] }) });
+    const p = await H.novaPagina(b, { viewport: { width: 1280, height: 900 }, extra: base({ admin: { ids: ['u1'] }, profissionais: [{ usuario_id: 'a3', nome: 'Pessoa Fora', cref: '999999-G', uf: 'MG', pedido_em: ISO(1), liberado_em: null, bloqueado_em: null, limite_alunos: 30 }] }) });
     await p.clock.install({ time: T });
     await p.goto(H.PAGINA.replace('index.html', 'admin.html#profissionais')); await p.waitForSelector('#painel:not([hidden])');
     await p.waitForTimeout(300);
-    ok(await p.locator('#alerta-prof').isVisible() && (await p.locator('#alerta-prof').innerText()) === '1', 'admin: aba mostra 1 pedido aguardando');
+    ok(await p.locator('#alerta-prof').isVisible() && (await p.locator('#alerta-prof').innerText()) === '1', 'admin: menu mostra 1 pedido aguardando');
     ok(/999999-G\/MG/.test(await p.locator('#prof-lista').innerText()), 'admin: lista mostra o CREF');
     await p.screenshot({ path: `${H.SAIDA}/admin-profissionais.png`, fullPage: true });
     await p.click('[data-prof-liberar="sim"]'); await p.waitForTimeout(300);

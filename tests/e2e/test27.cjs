@@ -158,7 +158,8 @@ const ADM = {
     await H.aba(p, 'geral'); 
     await p.screenshot({ path: `adm-${tag}.png`, fullPage: true });
     if (viewport.width === 1280) {
-      await p.locator('#g1 svg').hover({ position: { x: 500, y: 100 } });
+      const caixa = await p.locator('#g1 svg').boundingBox();
+      await p.locator('#g1 svg').hover({ position: { x: Math.round(caixa.width * 0.7), y: 100 } });
       ok(await p.locator('#g1 .dica').isVisible(), `${tag}: dica no hover`);
       await p.screenshot({ path: `adm-${tag}-dica.png` });
       await H.aba(p, 'usuarios'); 
