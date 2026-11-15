@@ -128,6 +128,15 @@
     const ativos = (pid) => db.vinculos.filter((v) => v.personal_id === pid && v.aceito_em && !v.encerrado_em);
     const meuAluno = (id) => ehProf(eu) && ativos(eu).some((v) => v.aluno_id === id);
     const perfil = (id) => db.perfis.find((p) => p.id === id);
+    // Igual à função tirar_treinos_do_personal do banco: os treinos daquele personal saem e voltam os de antes dele.
+    const tirarTreinosDoPersonal = (aluno, personal) => {
+      const p = perfil(aluno); if (!p) return;
+      if (p.treinos_por === personal) {
+        const antes = p.treinos_antes_personal || {};
+        Object.assign(p, { treinos: antes.treinos || null, jornada: antes.jornada || null, treinos_anterior: null, ficha_id: null, treinos_por: null, treinos_em: null });
+      }
+      p.acompanhado_por = null; p.treinos_antes_personal = null;
+    };
     const codigo = (c) => String(c || '').replace(/\s/g, '').toUpperCase();
     const restrito = () => erro('acesso restrito', '42501');
     const ehAdmin = !!(eu && ((db.admin || {}).ids || []).includes(eu));
@@ -185,14 +194,22 @@
         const outro = db.vinculos.find((x) => x.aluno_id === eu && x.aceito_em && !x.encerrado_em && x.personal_id !== r.v.personal_id);
         return ok([{ situacao: r.s, nome: r.p.nome, cref: r.p.cref, uf: r.p.uf, atual: outro ? (prof(outro.personal_id) || {}).nome || '' : '' }]);
       }
+      // Fim do acompanhamento: os treinos que o personal montou saem; voltam os de antes do primeiro personal.
       case 'aceitar_vinculo': {
         const r = situacao(a.p_codigo);
         if (r.s !== 'ok') return ok(r.s);
         if (r.v.aluno_id === eu && r.v.aceito_em) return ok('ok');
-        db.vinculos.filter((x) => x.aluno_id === eu && x.aceito_em && !x.encerrado_em).forEach((x) => { x.encerrado_em = agora; x.encerrado_por = 'troca'; });
+        db.vinculos.filter((x) => x.aluno_id === eu && x.aceito_em && !x.encerrado_em).forEach((x) => {
+          x.encerrado_em = agora; x.encerrado_por = 'troca';
+          const antes = (perfil(eu) || {}).treinos_antes_personal; tirarTreinosDoPersonal(eu, x.personal_id); if (perfil(eu)) perfil(eu).treinos_antes_personal = antes;
+        });
         Object.assign(r.v, { aluno_id: eu, aceito_em: agora });
         const p = perfil(eu);
-        if (p) { if (!p.liberado) { p.liberado_como = 'personal'; p.liberado_em = agora; } Object.assign(p, { acompanhado_por: r.v.personal_id, liberado: true, acesso_pedido_em: null }); }
+        if (p) {
+          if (!p.liberado) { p.liberado_como = 'personal'; p.liberado_em = agora; }
+          if (!p.treinos_antes_personal) p.treinos_antes_personal = { treinos: p.treinos || null, jornada: p.jornada || null, em: agora };
+          Object.assign(p, { acompanhado_por: r.v.personal_id, liberado: true, acesso_pedido_em: null });
+        }
         return ok('ok');
       }
       case 'meu_personal': {
@@ -204,7 +221,10 @@
       case 'personal_encerrar_vinculo': {
         const aluno = nome === 'encerrar_vinculo' ? eu : a.p_aluno;
         if (nome === 'personal_encerrar_vinculo' && !meuAluno(aluno)) return erro('Este aluno não está com você.');
-        db.vinculos.filter((x) => x.aluno_id === aluno && x.aceito_em && !x.encerrado_em).forEach((x) => { x.encerrado_em = agora; x.encerrado_por = nome === 'encerrar_vinculo' ? 'aluno' : 'personal'; });
+        db.vinculos.filter((x) => x.aluno_id === aluno && x.aceito_em && !x.encerrado_em).forEach((x) => {
+          x.encerrado_em = agora; x.encerrado_por = nome === 'encerrar_vinculo' ? 'aluno' : 'personal';
+          tirarTreinosDoPersonal(aluno, x.personal_id);
+        });
         const p = perfil(aluno); if (p) p.acompanhado_por = null;
         return ok(null);
       }

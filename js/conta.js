@@ -305,7 +305,7 @@
       <li>${ICON_CHECK}<span><b>Vai ver:</b> seus treinos, sua semana, quando você treinou (todas as atividades) e os pesos que você registra.</span></li>
       <li>${ICON_CHECK}<span><b>Vai montar:</b> os seus treinos. Eles chegam aqui sozinhos, e você não precisa montar nada.</span></li>
       <li>${ICON_CHECK}<span><b>Nunca vê:</b> suas observações e as fotos dos check-ins.</span></li>
-      <li>${ICON_CHECK}<span>Você encerra quando quiser em Você → Meu personal, e os treinos continuam com você.</span></li>
+      <li>${ICON_CHECK}<span>Você encerra quando quiser em Você → Meu personal, e aí os treinos dele saem e voltam os seus.</span></li>
     </ul>`;
   // Mostra o convite e espera a resposta: 'ok' (aceitou), 'nao' ou o motivo de o convite não valer.
   async function oferecerPersonal(codigo) {
@@ -387,7 +387,7 @@
       <p class="mp-nome"><b>${p ? esc(p.nome) : 'Seu personal'}</b>${p ? `<small>CREF ${esc(p.cref)}/${esc(p.uf)}${p.desde ? ` · acompanha você desde ${fmtData(isoLocal(new Date(p.desde)).slice(0, 10), { day: 'numeric', month: 'short' })}` : ''}</small>` : ''}</p>
       ${itensPersonal()}
       ${encerrandoPersonal ? `<div class="aviso mp-confirmar" role="alert">
-          <p>Encerrar o acompanhamento? ${p ? esc(p.nome) : 'O personal'} deixa de ver os seus dados na hora. Os treinos atuais continuam com você, e você volta a poder mudá-los.</p>
+          <p>Encerrar o acompanhamento? ${p ? esc(p.nome) : 'O personal'} deixa de ver os seus dados na hora. Os treinos que ${p ? esc(p.nome) : 'o personal'} montou saem do app, e voltam os treinos que você tinha antes (ou o plano pronto do app).</p>
           <div class="novidade-acoes"><button class="btn perigo" type="button" id="mp-encerrar-sim">Encerrar acompanhamento</button>
           <button class="btn-sec" type="button" id="mp-encerrar-nao">Continuar com o personal</button></div></div>`
     : '<button class="btn-sec perigo-sec" type="button" id="mp-encerrar">Encerrar acompanhamento</button>'}`;
@@ -405,7 +405,7 @@
     meuPersonal = null;
     guardarMeuPersonal();
     if (perfilLinha) perfilLinha.acompanhado_por = null;
-    toast('Acompanhamento encerrado. Seus treinos continuam aqui, e agora você pode mudá-los.');
-    renderConfig();
-    renderMeuPersonal();
+    toast('Acompanhamento encerrado. Os treinos do personal saíram, e agora você pode mudar os seus.');
+    // Os treinos mudaram no banco (voltam os de antes do personal): busca de novo para a tela mostrar os certos.
+    try { await carregarDados(); renderizarApp(); } catch (_) { renderConfig(); renderMeuPersonal(); }
   });

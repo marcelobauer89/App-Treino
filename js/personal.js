@@ -81,6 +81,46 @@
     formCadastro((r.data || [])[0], semAcessoCtx.session);
   });
 
+  // ---------- Conta no topo ----------
+  // Foto (a do perfil no app ou a do Google), nome profissional e CREF de quem está logado. Sem foto, as iniciais.
+  const iniciaisDe = (nome) => String(nome || '?').trim().split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0].toUpperCase()).join('') || '?';
+  async function conta(session) {
+    const av = $('pf-topo-avatar'), titulo = $('pf-topo-nome'), cref = $('pf-topo-cref');
+    if (!session) {
+      av.hidden = true; cref.hidden = true; $('pf-topo-olho').hidden = true; $('pf-sair').hidden = true;
+      titulo.textContent = 'Área do personal';
+      return;
+    }
+    const meta = session.user.user_metadata || {};
+    const desenhar = (nome, foto, registro) => {
+      titulo.textContent = nome || 'Área do personal';
+      $('pf-topo-olho').hidden = !nome;
+      cref.textContent = registro || '';
+      cref.hidden = !registro;
+      $('pf-sair').hidden = false;
+      av.hidden = false;
+      av.textContent = iniciaisDe(nome || session.user.email);
+      if (foto) {
+        const img = new Image();
+        img.alt = '';
+        img.referrerPolicy = 'no-referrer';
+        img.onload = () => { av.textContent = ''; av.appendChild(img); };
+        img.src = foto;
+      }
+    };
+    const fotoGoogle = /^https:/.test(meta.avatar_url || meta.picture || '') ? meta.avatar_url || meta.picture : '';
+    desenhar(String(meta.full_name || meta.name || '').slice(0, 80), fotoGoogle, '');
+    const [c, p] = await Promise.all([
+      sb().rpc('meu_cadastro_profissional').then((r) => r, () => ({ error: true })),
+      sb().from('perfis').select('nome, foto').eq('id', session.user.id).maybeSingle().then((r) => r, () => ({ error: true })),
+    ]);
+    const cad = !c.error && Array.isArray(c.data) ? c.data[0] : null;
+    const perfil = !p.error ? p.data || {} : {};
+    const foto = /^https:/.test(perfil.foto || '') ? perfil.foto : fotoGoogle;
+    desenhar(cad ? cad.nome : String(perfil.nome || meta.full_name || '').slice(0, 80), foto,
+      cad && cad.cref ? `CREF ${cad.cref}${cad.uf ? `/${cad.uf}` : ''}` : '');
+  }
+
   // ---------- Dados da área (carregados junto com o painel) ----------
   async function carregar(todas) {
     const [k, f, c, ex, m] = await Promise.all([
@@ -122,6 +162,121 @@
   const extraDoMeu = (e) => ({ grupo: e.grupo || '', H: e.hipertrofia || 'baixa', F: e.forca || 'baixa', E: e.explosao || 'baixa', M: e.mobilidade || 'baixa',
     ...(e.explicacao ? { why: e.explicacao } : {}), ...(e.video_id ? { video: e.video_id } : {}) });
   const iguais = (a, b) => JSON.stringify(a || null) === JSON.stringify(b || null);
+
+  // ---------- Visão geral do personal ----------
+  // Em vez dos números do administrador (uso do app por todos), o que ajuda a gerenciar os alunos: quem precisa de
+  // atenção, a semana de cada um (planejado × feito), a aderência, os recordes e as fichas em uso.
+  const ORDEM_DIAS = [1, 2, 3, 4, 5, 6, 0];
+  const CURTO = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+  function porAluno(j, ativosMap) {
+    const C = painel().calc, d = painel().dados(), hoje = painel().hoje();
+    return alunos().map((u) => {
+      const meus = d.checkins.filter((c) => c.usuario_id === u.id);
+      const dias = meus.map(C.diaDeCheckin).sort();
+      const ultimoTreino = dias[dias.length - 1] || null;
+      const n = meus.filter((c) => C.dentro(C.diaDeCheckin(c), j)).length;
+      const plan = C.planejadasNoPeriodo(u, j);
+      const desde = u.vinculado_em ? C.diasEntre(painel().diaDeInstante(u.vinculado_em), hoje) : 0;
+      const usou = [...(ativosMap.get(u.id) || [])].some((x) => x >= C.somarDias(hoje, -6));
+      return { u, n, plan, ader: C.aderenciaDe(n, plan), ultimoTreino, desde, usou,
+        semTreinar: ultimoTreino ? C.diasEntre(ultimoTreino, hoje) : null,
+        montadoHa: u.treinos_por_mim && u.treinos_em ? C.diasEntre(painel().diaDeInstante(u.treinos_em), hoje) : null,
+        parados: pesosDo(u.id).filter((p) => p.parado).length };
+    });
+  }
+  // Motivos de atenção de um aluno, do mais urgente para o menos (peso maior = mais urgente).
+  function motivos(a) {
+    const m = [];
+    if (!a.u.treinos_por_mim) m.push([5, 'Ainda sem treino montado por você']);
+    if (a.semTreinar === null ? a.desde >= 7 : a.semTreinar >= 7) m.push([4, a.semTreinar === null ? 'Ainda não fez check-in' : `Sem treinar há ${a.semTreinar} dias`]);
+    if (a.ader !== null && a.ader < 0.5 && a.plan >= 1) m.push([3, `Fez ${Math.round(a.ader * 100)}% do planejado no período`]);
+    if (a.montadoHa !== null && a.montadoHa >= 42) m.push([2, `Treino montado há ${Math.floor(a.montadoHa / 7)} semanas: hora de renovar?`]);
+    if (a.parados) m.push([1, `Carga parada em ${qtd(a.parados, 'exercício', 'exercícios')}`]);
+    return m.sort((x, y) => y[0] - x[0]);
+  }
+  function geral(j, ativosMap) {
+    const C = painel().calc, d = painel().dados(), fmt = painel().fmtNum;
+    const lista = porAluno(j, ativosMap);
+    const ant = j.anterior ? porAluno(j.anterior, ativosMap) : null;
+    const total = lista.length;
+    const media = (l) => { const v = l.map((a) => a.ader).filter((x) => x !== null); return v.length ? v.reduce((x, y) => x + y, 0) / v.length : null; };
+    const ader = media(lista), aderAnt = ant ? media(ant) : null;
+    const cks = lista.reduce((x, a) => x + a.n, 0), cksAnt = ant ? ant.reduce((x, a) => x + a.n, 0) : null;
+    const hoje = painel().hoje();
+    const hojeN = new Set(d.checkins.filter((c) => C.diaDeCheckin(c) === hoje).map((c) => c.usuario_id)).size;
+    const semana = lista.filter((a) => a.ultimoTreino && a.ultimoTreino >= C.somarDias(hoje, -6)).length;
+    const atencao = lista.map((a) => ({ a, m: motivos(a) })).filter((x) => x.m.length)
+      .sort((x, y) => y.m[0][0] - x.m[0][0] || y.m.length - x.m.length || (x.a.u.nome < y.a.u.nome ? -1 : 1));
+    const rec = C.recordesDe(j), recAnt = j.anterior ? C.recordesDe(j.anterior) : null;
+    const rotulo = C.rotuloDoPeriodo(), compara = C.comparaDoPeriodo();
+    const tile = C.fabricaDeCards('k');
+    $('kpis').innerHTML = [
+      tile('Alunos ativos', `${semana}<small> de ${total}</small>`, { longo: 'treinaram nos últimos 7 dias', curto: 'treinaram em 7 dias', destaque: true,
+        info: 'Quantos dos seus alunos fizeram pelo menos um check-in nos últimos 7 dias. O número menor é o total de alunos que você acompanha. Não muda com o período escolhido.' }),
+      tile('Aderência ao plano', ader === null ? '—' : `${fmt(ader * 100)}<small>%</small>`, { longo: 'feito ÷ planejado, média dos alunos', curto: 'do planejado', destaque: true,
+        d: ant && ader !== null && aderAnt !== null && C.delta(ader, aderAnt, { pct: true }),
+        info: `Quanto do planejado os seus alunos cumpriram ${rotulo}, em média. Para cada aluno: check-ins ÷ treinos planejados na semana dele, com limite de 100%. Quem não tinha nada planejado não entra na média. ${compara}` }),
+      tile('Treinaram hoje', `${hojeN}<small> de ${total}</small>`, { longo: 'alunos com check-in hoje', curto: 'com check-in hoje',
+        info: 'Quantos alunos já fizeram check-in hoje. Não muda com o período escolhido.' }),
+      tile('Precisam de atenção', `${atencao.length}<small> de ${total}</small>`, { longo: atencao.length ? 'a lista está logo abaixo' : 'todo mundo em dia', curto: atencao.length ? 'veja abaixo' : 'em dia',
+        info: 'Alunos sem treino montado por você, sem treinar há 7 dias ou mais, abaixo de 50% do planejado, com o treino montado há 6 semanas ou mais ou com a carga parada. A lista "Precisam de atenção" mostra o motivo de cada um.' }),
+      tile('Check-ins', fmt(cks), { longo: rotulo, curto: '', d: cksAnt !== null && C.delta(cks, cksAnt),
+        info: `Treinos feitos pelos seus alunos ${rotulo}, somando todos os tipos (musculação, lutas, cardio e esportes). ${compara}` }),
+      tile('Recordes', fmt(rec.length), { longo: `de ${qtd(new Set(rec.map((e) => e.usuario_id)).size, 'aluno', 'alunos')}`, curto: '', d: recAnt && C.delta(rec.length, recAnt.length),
+        info: `Vezes em que um aluno superou o próprio peso máximo num exercício ${rotulo} (o primeiro peso registrado não conta). ${compara}` }),
+    ].join('');
+
+    $('atencao-lista').innerHTML = !total ? '<p class="vazio">Você ainda não tem alunos. Convide na aba Convidar.</p>'
+      : atencao.length ? atencao.map(({ a, m }) => `<div class="item-lista">
+        <button class="item-topo" type="button" data-abrir-usuario="${a.u.id}">
+          <span class="item-titulo">${esc(a.u.nome)}</span>
+          <span class="pf-motivos">${m.map(([peso, t]) => `<span class="pf-motivo${peso >= 4 ? ' forte' : ''}">${esc(t)}</span>`).join('')}</span>
+        </button></div>`).join('')
+        : '<p class="vazio">Ninguém precisa de atenção agora: todos têm treino seu, estão treinando e seguindo o plano.</p>';
+
+    renderSemana(lista);
+
+    const usos = (P.fichas || []).filter((f) => f.alunos).sort((x, y) => y.alunos - x.alunos || x.nome.localeCompare(y.nome, 'pt-BR'));
+    const semMim = lista.filter((a) => !a.u.treinos_por_mim).length;
+    const soDoAluno = lista.filter((a) => a.u.treinos_por_mim && !a.u.ficha_id).length;
+    const maior = Math.max(1, ...usos.map((f) => f.alunos), soDoAluno, semMim);
+    const linha = (nome, n, sub, cor) => `<li><span class="rt-nome">${esc(nome)}</span>
+        <span class="rt-trilho" aria-hidden="true"><span class="rt-barra" style="width:${n / maior * 100}%;background:${cor}"></span></span>
+        <span class="rt-num">${fmt(n)}<small>${n === 1 ? 'aluno' : 'alunos'}</small></span>${sub ? `<span class="rt-sub">${sub}</span>` : ''}</li>`;
+    $('fichas-uso-lista').innerHTML = !total ? '<p class="vazio">Sem alunos ainda.</p>'
+      : `<ol class="ranking-treinos">${usos.map((f) => linha(f.nome, f.alunos, '', 'var(--marca)')).join('')}
+        ${soDoAluno ? linha('Treino montado só para o aluno', soDoAluno, '', 'var(--marca)') : ''}
+        ${semMim ? linha('Sem treino seu', semMim, 'com o plano pronto do app ou os treinos de antes', 'var(--erro)') : ''}</ol>
+        ${!usos.length && !soDoAluno ? '<p class="vazio">Nenhum aluno está com uma ficha sua ainda. Monte na aba Treinos e aplique.</p>' : ''}`;
+  }
+  // A semana atual (segunda a domingo) de cada aluno: planejado (semana do app) × feito (check-ins).
+  function renderSemana(lista) {
+    const C = painel().calc, d = painel().dados(), hoje = painel().hoje(), T = painel().tipos();
+    const dow = painel().deYmd(hoje).getDay();
+    const seg = C.somarDias(hoje, -((dow + 6) % 7));
+    const dias = ORDEM_DIAS.map((_, i) => C.somarDias(seg, i));
+    let feitos = 0, planejadosAteHoje = 0;
+    const linhas = lista.slice().sort((a, b) => a.u.nome.localeCompare(b.u.nome, 'pt-BR')).map((a) => {
+      const sem = Array.isArray(a.u.semana) && a.u.semana.length === 7 ? a.u.semana : null;
+      const cels = dias.map((dia) => {
+        const wd = painel().deYmd(dia).getDay();
+        const plan = sem ? (sem[wd] || []).filter((t) => T[t]) : [];
+        const fez = d.checkins.filter((c) => c.usuario_id === a.u.id && C.diaDeCheckin(c) === dia).map((c) => c.tipo);
+        const passado = dia < hoje, ehHoje = dia === hoje;
+        if (dia <= hoje) { planejadosAteHoje += plan.length; feitos += Math.min(fez.length, plan.length); }
+        const nome = (t) => (T[t] ? T[t].nome : t);
+        const itens = [...fez.map((t) => `<span class="pf-marca-dia feito" style="background:var(--${T[t] ? T[t].grupo : 'musc'})" title="${esc(nome(t))}: feito">${esc(T[t] ? T[t].selo : '?')}</span>`),
+          ...plan.filter((t) => !fez.includes(t)).map((t) => `<span class="pf-marca-dia ${passado ? 'faltou' : 'planejado'}" title="${esc(nome(t))}: ${passado ? 'planejado e não feito' : 'planejado'}">${esc(T[t].selo)}</span>`)];
+        const desc = [fez.length ? `feito: ${fez.map(nome).join(', ')}` : '', plan.filter((t) => !fez.includes(t)).length ? `${passado ? 'não feito' : 'planejado'}: ${plan.filter((t) => !fez.includes(t)).map(nome).join(', ')}` : ''].filter(Boolean).join('; ') || 'descanso';
+        return `<td class="${ehHoje ? 'hoje' : ''}"><span class="sr">${esc(desc)}</span><span class="pf-dias" aria-hidden="true">${itens.join('')}</span></td>`;
+      }).join('');
+      return `<tr><th scope="row"><button class="link-btn pf-sem-grade-nome" type="button" data-abrir-usuario="${a.u.id}">${esc(a.u.nome)}</button>${sem ? '' : '<small class="pf-sub">sem semana montada</small>'}</th>${cels}</tr>`;
+    });
+    $('semana-resumo').textContent = planejadosAteHoje ? `${feitos} de ${qtd(planejadosAteHoje, 'treino planejado', 'treinos planejados')} até hoje` : '';
+    $('semana-tabela').innerHTML = lista.length ? `<table class="pf-sem-grade">
+      <thead><tr><th scope="col">Aluno</th>${dias.map((dia) => { const x = painel().deYmd(dia); return `<th scope="col" class="${dia === hoje ? 'hoje' : ''}">${CURTO[x.getDay()]}<small>${x.getDate()}</small></th>`; }).join('')}</tr></thead>
+      <tbody>${linhas.join('')}</tbody></table>` : '<p class="vazio">Sem alunos ainda.</p>';
+  }
 
   // ---------- Fichas ----------
   function renderFichas() {
@@ -598,8 +753,8 @@
   function abrirAplicar({ fichaId = null, alunoId = null }) {
     acao = { tipo: 'aplicar', fichaId, alunoId };
     const lista = alunos();
-    if (!(P.fichas || []).length) return abrirJanela(`${topoJanela('Aplicar uma ficha')}<p>Você ainda não tem fichas. Monte uma na aba Fichas.</p>
-      <div class="excluir-acoes"><button class="btn" type="button" data-ir-fichas>Ir para Fichas</button></div>`);
+    if (!(P.fichas || []).length) return abrirJanela(`${topoJanela('Aplicar uma ficha')}<p>Você ainda não tem fichas. Monte uma na aba Treinos.</p>
+      <div class="excluir-acoes"><button class="btn" type="button" data-ir-fichas>Ir para Treinos</button></div>`);
     if (!lista.length) return abrirJanela(`${topoJanela('Aplicar a alunos')}<p>Você ainda não tem alunos. Convide na aba Convidar; quando o aluno aceitar, ele aparece aqui.</p>
       <div class="excluir-acoes"><button class="btn" type="button" data-ir-convidar>Convidar aluno</button></div>`);
     const fichaSel = fichaId || (P.fichas[0] && P.fichas[0].id);
@@ -680,7 +835,7 @@
     $('pc-dialog').close();
     if (acao.tipo === 'encerrar') painel().fecharDetalhe();
     if (acao.tipo === 'excluirEx' && $('mx-dialog').open) $('mx-dialog').close();
-    painel().toast({ excluirEx: 'Exercício excluído. As fichas e os alunos que já têm ele continuam com ele.', excluir: 'Ficha excluída. Os alunos continuam com os treinos que já receberam.', encerrar: 'Acompanhamento encerrado. O aluno continua com a ficha.', cancelar: 'Convite cancelado: o link parou de funcionar.' }[acao.tipo]);
+    painel().toast({ excluirEx: 'Exercício excluído. As fichas e os alunos que já têm ele continuam com ele.', excluir: 'Ficha excluída. Os alunos continuam com os treinos que já receberam.', encerrar: 'Acompanhamento encerrado. Os treinos que você montou saíram do app do aluno.', cancelar: 'Convite cancelado: o link parou de funcionar.' }[acao.tipo]);
     await painel().recarregar();
   });
 
@@ -707,7 +862,7 @@
     if (d.pfAplicarAluno) return abrirAplicar({ alunoId: d.pfAplicarAluno });
     if (d.pfEncerrar) {
       const u = alunos().find((x) => x.id === d.pfEncerrar);
-      return confirmar('encerrar', 'Encerrar acompanhamento?', `Você deixa de ver os treinos, a semana, os check-ins e os pesos de <b>${esc(u ? u.nome : 'este aluno')}</b>. Ele continua com a ficha atual e volta a poder mudá-la. Para acompanhar de novo, mande outro convite.`, 'Encerrar acompanhamento', { alunoId: d.pfEncerrar });
+      return confirmar('encerrar', 'Encerrar acompanhamento?', `Você deixa de ver os treinos, a semana, os check-ins e os pesos de <b>${esc(u ? u.nome : 'este aluno')}</b>. Os treinos que você montou saem do app dele, que volta aos treinos de antes (ou ao plano pronto do app). Para acompanhar de novo, mande outro convite.`, 'Encerrar acompanhamento', { alunoId: d.pfEncerrar });
     }
     if (d.pfPesosTodos) { pesosTodos = !pesosTodos; return painel().abrirDetalhe(d.pfPesosTodos); }
     if (d.pcCopiar) return copiar(linkDe(d.pcCopiar));
@@ -772,7 +927,7 @@
       </section>
       <section class="det-sec" aria-labelledby="pf-det-acomp">
         <h3 id="pf-det-acomp">Acompanhamento</h3>
-        <div class="det-acesso"><span class="nota" style="flex:1 1 200px">Aluno desde ${esc(dataCurta(u.vinculado_em))}. Encerrar corta o seu acesso aos dados dele; a ficha continua com ele.</span>
+        <div class="det-acesso"><span class="nota" style="flex:1 1 200px">Aluno desde ${esc(dataCurta(u.vinculado_em))}. Encerrar corta o seu acesso aos dados dele e tira do app dele os treinos que você montou.</span>
           <button class="btn-peq perigo" type="button" data-pf-encerrar="${u.id}">Encerrar acompanhamento</button></div>
       </section>`;
   }
@@ -828,5 +983,5 @@
     if (!r.error) { P.convites = r.data || []; renderConvites(); }
   });
 
-  window.PersonalHooks = { semAcesso, carregar, aplicar, render, detalhe };
+  window.PersonalHooks = { semAcesso, conta, carregar, aplicar, render, detalhe, geral };
 })();
