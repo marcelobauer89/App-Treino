@@ -84,7 +84,7 @@ Na ordem de carga. Cada linha é uma seção (comentário `// ---------- Nome --
 
 ## `js/admin.js` (monitoramento): seções
 
-Conexão · Estado · Acesso · On-line agora (Presence) · Cálculos (números da Visão geral) · Render (Visão geral e gráficos) · Usuários · Saúde do app · E-mails · Abas · Detalhe do usuário · Eventos de interface · Excluir conta de um usuário · Convites · Exercícios (catálogo) · Profissionais (área do personal) · Tipos de check-in (tabela tipos_checkin).
+Conexão · Estado · Acesso · On-line agora (Presence) · Cálculos (números da Visão geral) · Render (Visão geral e gráficos) · Usuários · Saúde do app · E-mails · Abas (o menu das seções: à esquerda no computador; no celular, botão Menu no topo e gaveta; Sair no fim) · Detalhe do usuário · Eventos de interface · Excluir conta de um usuário · Convites · Exercícios (catálogo) · Profissionais (área do personal) · Tipos de check-in (tabela tipos_checkin).
 
 No modo personal (`personal.html`, `<html data-painel="personal">`), o começo do arquivo troca as funções do banco (`FN`), devolve um elemento "fantasma" para o que só existe no `admin.html` e troca "usuário" por "aluno" (`trocarPalavras`); o resto da área fica nos ganchos `window.PersonalHooks`.
 

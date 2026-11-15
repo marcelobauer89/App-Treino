@@ -26,7 +26,12 @@
       <h1 id="pf-topo-nome">Área do personal</h1>
       <p class="pf-topo-cref" id="pf-topo-cref" hidden></p>
     </div>
-    <button class="btn-sec pf-sair" type="button" id="pf-sair" hidden>Sair</button>
+    <button type="button" class="menu-abrir" id="menu-abrir" aria-expanded="false" aria-controls="menu" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        <span>Menu<span class="sr">: <span id="menu-atual">Visão geral</span></span></span>
+        <span class="aba-alerta" id="menu-alerta" hidden></span>
+        <span class="ponto on aba-online" id="menu-online" hidden></span>
+      </button>
   </div>
   <div class="controles" id="controles" hidden>
     <div class="periodo" role="group" aria-label="Período">
@@ -54,15 +59,23 @@
   </section>
 
   <div id="painel" hidden>
-    <div class="abas" role="tablist" aria-label="Seções da área do personal">
-      <button type="button" role="tab" id="tab-geral" data-aba="geral" aria-controls="aba-geral" aria-selected="true"><span class="aba-longo">Visão geral</span><span class="aba-curto" aria-hidden="true">Geral</span><span class="ponto on aba-online" id="aba-online" hidden></span></button>
-      <button type="button" role="tab" id="tab-usuarios" data-aba="usuarios" aria-controls="aba-usuarios" aria-selected="false" tabindex="-1">Alunos</button>
-      <button type="button" role="tab" id="tab-fichas" data-aba="fichas" aria-controls="aba-fichas" aria-selected="false" tabindex="-1">Treinos</button>
-      <button type="button" role="tab" id="tab-exercicios" data-aba="exercicios" aria-controls="aba-exercicios" aria-selected="false" tabindex="-1">Exercícios</button>
-      <button type="button" role="tab" id="tab-convidar" data-aba="convidar" aria-controls="aba-convidar" aria-selected="false" tabindex="-1">Convidar<span class="aba-alerta" id="alerta-convidar" hidden></span></button>
-    </div>
+    <!-- Menu das seções: abre como gaveta pelo botão Menu do topo (js/admin.js → Abas); o Sair fica no fim dele. -->
+    <div class="menu-fundo" id="menu-fundo" hidden></div>
+    <nav class="menu" id="menu" aria-label="Seções da área do personal">
+      <div class="menu-topo"><b>Menu</b><button type="button" class="menu-fechar" id="menu-fechar" aria-label="Fechar menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+      <ul>
+        <li><button type="button" class="menu-item" id="tab-geral" data-aba="geral" aria-controls="aba-geral" aria-current="page"><svg class="menu-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg><span class="menu-nome">Visão geral</span><span class="ponto on aba-online" id="aba-online" hidden></span></button></li>
+        <li><button type="button" class="menu-item" id="tab-usuarios" data-aba="usuarios" aria-controls="aba-usuarios"><svg class="menu-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/></svg><span class="menu-nome">Alunos</span></button></li>
+        <li><button type="button" class="menu-item" id="tab-fichas" data-aba="fichas" aria-controls="aba-fichas"><svg class="menu-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/></svg><span class="menu-nome">Treinos</span></button></li>
+        <li><button type="button" class="menu-item" id="tab-exercicios" data-aba="exercicios" aria-controls="aba-exercicios"><svg class="menu-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"/></svg><span class="menu-nome">Exercícios</span></button></li>
+        <li><button type="button" class="menu-item" id="tab-convidar" data-aba="convidar" aria-controls="aba-convidar"><svg class="menu-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M19 8v6M16 11h6"/></svg><span class="menu-nome">Convidar</span><span class="aba-alerta" id="alerta-convidar" hidden></span></button></li>
+      </ul>
+      <div class="menu-rodape">
+        <button type="button" class="menu-item" id="menu-sair"><svg class="menu-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg><span class="menu-nome">Sair</span></button>
+      </div>
+    </nav>
 
-    <div role="tabpanel" id="aba-geral" aria-labelledby="tab-geral">
+    <div class="aba-painel" role="region" id="aba-geral" aria-labelledby="tab-geral">
     <!-- Visão geral do personal: números e listas do acompanhamento (js/personal.js → Visão geral do personal). -->
     <dl class="kpis" id="kpis"></dl>
 
@@ -143,7 +156,7 @@
     </div>
     </div>
 
-    <div role="tabpanel" id="aba-usuarios" aria-labelledby="tab-usuarios" hidden>
+    <div class="aba-painel" role="region" id="aba-usuarios" aria-labelledby="tab-usuarios" hidden>
     <section class="bloco" aria-labelledby="u-titulo">
       <div class="bloco-topo">
         <h2 id="u-titulo">Alunos</h2>
@@ -186,7 +199,7 @@
     </section>
     </div>
 
-    <div role="tabpanel" id="aba-fichas" aria-labelledby="tab-fichas" hidden>
+    <div class="aba-painel" role="region" id="aba-fichas" aria-labelledby="tab-fichas" hidden>
       <section class="bloco" aria-labelledby="fichas-titulo">
         <div class="bloco-topo">
           <h2 id="fichas-titulo">Fichas de treino</h2>
@@ -197,7 +210,7 @@
       </section>
     </div>
 
-    <div role="tabpanel" id="aba-exercicios" aria-labelledby="tab-exercicios" hidden>
+    <div class="aba-painel" role="region" id="aba-exercicios" aria-labelledby="tab-exercicios" hidden>
       <section class="bloco" aria-labelledby="meus-ex-titulo">
         <div class="bloco-topo">
           <h2 id="meus-ex-titulo">Meus exercícios</h2>
@@ -208,7 +221,7 @@
       </section>
     </div>
 
-    <div role="tabpanel" id="aba-convidar" aria-labelledby="tab-convidar" hidden>
+    <div class="aba-painel" role="region" id="aba-convidar" aria-labelledby="tab-convidar" hidden>
       <section class="bloco cartao conv-novo" aria-labelledby="pc-titulo">
         <h2 id="pc-titulo">Convidar aluno</h2>
         <p class="nota" style="margin:4px 0 12px">Cada link vale para um aluno e por 7 dias. O aluno entra com o Google, vê o que você vai acompanhar e aceita. Quem ainda não usa o app entra por ele.</p>

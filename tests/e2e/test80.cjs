@@ -123,7 +123,7 @@ const CHECKINS = [...semana('2026-10-19'), ...semana('2026-10-26'), ...semana('2
     const zerados = await txt(p, '.rt-zerados');
     ok(/Sem check-in no período: .*Muay Thai/.test(zerados) && !/nenhum check-in/.test(await txt(p, '#treinos-lista')), 'painel: tipos sem check-in numa linha só', zerados);
     // Usuários: sem lixeira na tabela; Excluir conta dentro da ficha.
-    await p.click('[data-aba="usuarios"]'); await p.waitForTimeout(200);
+    await H.aba(p, 'usuarios'); await p.waitForTimeout(200);
     ok(await p.locator('#usuarios-corpo .excluir-btn').count() === 0, 'painel: sem lixeira nas linhas da tabela');
     await p.click('#usuarios-corpo tr[data-usuario="u2"] [data-abrir]'); await p.waitForTimeout(200);
     ok(await p.locator('#detalhe [data-excluir="u2"]').isVisible(), 'painel: Excluir conta dentro da ficha do usuário');

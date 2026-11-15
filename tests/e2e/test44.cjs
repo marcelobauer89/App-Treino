@@ -117,7 +117,7 @@ async function abrir(b, perfil, op = {}) {
     const a = await H.novaPagina(b, { viewport: { width: 1280, height: 900 }, extra: { admin: ADM } });
     a.reqs = []; a.on('request', (r) => a.reqs.push(r.url()));
     await a.goto(ADMIN); await a.waitForSelector('#painel:not([hidden])'); await a.waitForTimeout(300);
-    await a.click('#tab-usuarios'); await a.click('#usuarios-corpo tr[data-usuario="u1"] [data-abrir]'); await a.waitForTimeout(300);
+    await H.aba(a, 'usuarios'); await a.click('#usuarios-corpo tr[data-usuario="u1"] [data-abrir]'); await a.waitForTimeout(300);
     ok(/Check-in de Jiu Jitsu/.test(await txt(a, '#det-atividade')) && !/recupera/i.test(await txt(a, '#det-atividade')), 'painel: atividade sem a recuperação');
     ok(!a.reqs.some((u) => /fonts\.g/.test(u)), 'painel: sem fonte do Google');
     ok(!a.errs.length, 'painel: sem erros', a.errs.join(' | '));

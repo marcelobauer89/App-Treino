@@ -33,7 +33,7 @@ const ADM = {
     const p = await H.novaPagina(b, { scheme, viewport: vp, extra: { admin: ADM } });
     await p.clock.install({ time: new Date(AGORA) });
     await p.goto(ADMIN + '#saude'); await p.waitForSelector('#painel:not([hidden])'); await p.waitForTimeout(300);
-    ok(await txt(p, '#alerta-saude') === '2', `${tag}: bolinha conta só os 2 críticos`, await txt(p, '#alerta-saude'));
+    ok((await p.locator('#alerta-saude').textContent()) === '2', `${tag}: bolinha conta só os 2 críticos`, await p.locator('#alerta-saude').textContent());
     const ks = (await p.locator('#kpis-saude .kpi').allInnerTexts()).map((t) => t.replace(/\s+/g, ' ').trim());
     ok(ks.length === 2 && /^Erros críticos 2/.test(ks[0]) && /^Usuários afetados 2 de 2/.test(ks[1]), `${tag}: cartões`, ks.join(' | '));
     const lista = await txt(p, '#erros-lista');
@@ -46,7 +46,7 @@ const ADM = {
     ok(sw, `${tag}: sem rolagem horizontal`);
     await p.screenshot({ path: `${H.SAIDA}/saude-critica-${tag}.png`, fullPage: true });
     // Detalhe do usuário: sessão perdida sem alerta, erros comuns fora
-    await p.click('#tab-usuarios'); await p.waitForTimeout(150);
+    await H.aba(p, 'usuarios'); await p.waitForTimeout(150);
     await p.click('#usuarios-corpo tr[data-usuario="u2"]'); await p.waitForSelector('#detalhe[open]');
     const det = await txt(p, '#detalhe');
     ok(!/Load failed|Script error|network connection/.test(det), `${tag}: detalhe sem erros comuns`);

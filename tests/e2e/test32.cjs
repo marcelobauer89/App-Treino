@@ -30,7 +30,7 @@ const ADM = {
     const p = await H.novaPagina(b, { scheme, viewport, extra: { admin: ADM } });
     await p.clock.install({ time: new Date('2026-10-23T15:00:00') });
     await p.goto(ADMIN); await p.waitForSelector('#painel:not([hidden])');
-    const abrir = async (nome) => { if (await p.locator('#aba-usuarios').isHidden()) await p.click('#tab-usuarios'); await p.locator('#usuarios-corpo tr', { hasText: nome }).click(); await p.waitForSelector('#detalhe[open]'); };
+    const abrir = async (nome) => { if (await p.locator('#aba-usuarios').isHidden()) await H.aba(p, 'usuarios'); await p.locator('#usuarios-corpo tr', { hasText: nome }).click(); await p.waitForSelector('#detalhe[open]'); };
     await abrir('Marcelo');
     const li = p.locator('#det-atividade li');
     let dias = await p.locator('#det-atividade .atv-dia').allInnerTexts();

@@ -130,6 +130,7 @@
     el.hidden = false;
     $('painel').hidden = true;
     $('controles').hidden = true;
+    $('menu-abrir').hidden = true;
   }
   function mostrarEstado(html) {
     $('estado').classList.remove('carregando');
@@ -138,6 +139,7 @@
     $('estado').hidden = false;
     $('painel').hidden = true;
     $('controles').hidden = true;
+    $('menu-abrir').hidden = true;
   }
 
   // ---------- Acesso ----------
@@ -249,6 +251,7 @@
     $('estado').removeAttribute('aria-busy');
     $('painel').hidden = false;
     $('controles').hidden = false;
+    $('menu-abrir').hidden = false;
     if (PERSONAL && GANCHOS().aplicar) GANCHOS().aplicar(extra);
     render();
     if (primeira) entrarEmCascata();
@@ -262,8 +265,8 @@
   // Primeira abertura: os blocos da aba visível entram um depois do outro (sem movimento, se o sistema pedir).
   function entrarEmCascata() {
     const painel = $('painel');
-    const aba = painel.querySelector('[role="tabpanel"]:not([hidden])');
-    const blocos = [painel.querySelector('.abas'), ...(aba ? aba.querySelectorAll(':scope > section, .kpi, .graficos > section') : [])].filter(Boolean);
+    const aba = painel.querySelector('.aba-painel:not([hidden])');
+    const blocos = [ ...(aba ? aba.querySelectorAll(':scope > section, .kpi, .graficos > section') : [])].filter(Boolean);
     blocos.forEach((el, i) => { el.classList.add('entra-item'); el.style.setProperty('--i', String(i)); });
     painel.classList.add('entra');
     setTimeout(() => {
@@ -321,6 +324,11 @@
     el.hidden = !n || aba === 'geral';
     el.setAttribute('role', 'img');
     el.setAttribute('aria-label', `${n} ${n === 1 ? 'pessoa' : 'pessoas'} on-line agora`);
+    // No celular o menu fica fechado: o ponto aparece também no botão Menu do topo.
+    const bt = $('menu-online');
+    bt.hidden = el.hidden;
+    bt.setAttribute('role', 'img');
+    bt.setAttribute('aria-label', el.getAttribute('aria-label'));
   }
   function atualizarOnline() {
     if (!dados) return;
@@ -1060,25 +1068,49 @@
   }
   function mostrarAba(nova, { focar = false, url = true } = {}) {
     aba = ABAS.includes(nova) ? nova : 'geral';
-    document.querySelectorAll('[role="tab"]').forEach((b) => {
+    document.querySelectorAll('.menu-item').forEach((b) => {
       const sel = b.dataset.aba === aba;
-      b.setAttribute('aria-selected', String(sel));
-      b.tabIndex = sel ? 0 : -1;
-      if (sel && focar) b.focus();
+      if (sel) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+      if (sel) $('menu-atual').textContent = b.querySelector('.menu-nome').textContent;
     });
     ABAS.forEach((a) => { $(`aba-${a}`).hidden = a !== aba; });
+    fecharMenu({ focar });
     atualizarAbaOnline();
     if (url) history.replaceState(null, '', location.pathname + location.search + (aba === 'geral' ? '' : `#${aba}`));
     fecharInfo();
     renderVisivel();
   }
-  document.querySelector('[role="tablist"]').addEventListener('keydown', (e) => {
-    const i = ABAS.indexOf(aba);
-    const prox = { ArrowRight: (i + 1) % ABAS.length, ArrowLeft: (i + ABAS.length - 1) % ABAS.length, Home: 0, End: ABAS.length - 1 }[e.key];
-    if (prox === undefined) return;
-    e.preventDefault();
-    mostrarAba(ABAS[prox], { focar: true });
-  });
+  // Menu: no notebook e no computador fica sempre à esquerda. No celular e no tablet, o botão Menu do topo (onde ficava
+  // o Sair) abre a gaveta à direita, com as seções e o Sair no fim; fecha com Esc, no fundo ou ao escolher uma seção.
+  // Fechada, a gaveta fica fora da ordem do Tab (visibility no CSS).
+  const menuGaveta = () => getComputedStyle($('menu-abrir')).display !== 'none';
+  function abrirMenu() {
+    $('menu').classList.add('aberto');
+    $('menu-fundo').hidden = false;
+    $('menu-abrir').setAttribute('aria-expanded', 'true');
+    const atual = document.querySelector('.menu-item[aria-current="page"]');
+    setTimeout(() => (atual || $('menu-fechar')).focus(), 30);
+  }
+  function fecharMenu({ focar = false } = {}) {
+    if (!$('menu').classList.contains('aberto')) return;
+    $('menu').classList.remove('aberto');
+    $('menu-fundo').hidden = true;
+    $('menu-abrir').setAttribute('aria-expanded', 'false');
+    if (focar && menuGaveta()) $('menu-abrir').focus();
+  }
+  $('menu-abrir').addEventListener('click', abrirMenu);
+  $('menu-fechar').addEventListener('click', () => fecharMenu({ focar: true }));
+  $('menu-fundo').addEventListener('click', () => fecharMenu({ focar: true }));
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && $('menu').classList.contains('aberto')) fecharMenu({ focar: true }); });
+  // O botão Menu soma os selos dos itens (pedidos, erros), para o alerta não ficar escondido no menu fechado.
+  function atualizarMenuAlerta() {
+    const n = [...document.querySelectorAll('#menu .aba-alerta')].filter((x) => !x.hidden)
+      .reduce((t, x) => t + (Number(x.textContent) || 1), 0);
+    $('menu-alerta').hidden = !n;
+    $('menu-alerta').textContent = n ? String(n) : '';
+    $('menu-alerta').setAttribute('aria-label', n ? `${n} ${n === 1 ? 'alerta' : 'alertas'} no menu` : '');
+  }
+  new MutationObserver(atualizarMenuAlerta).observe($('menu'), { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['hidden'] });
   addEventListener('hashchange', () => mostrarAba(location.hash.slice(1), { url: false }));
   mostrarAba(aba, { url: false });
 
@@ -1231,10 +1263,10 @@
         </div>
         <p class="excluir-erro" id="det-videos-erro" role="alert" hidden></p>
       </section>` : ''}
-      <section class="det-sec" aria-labelledby="det-tempo">
+      ${PERSONAL ? '' : `<section class="det-sec" aria-labelledby="det-tempo">
         <h3 id="det-tempo">Atividade recente</h3>
         <div id="det-atividade"></div>
-      </section>
+      </section>`}
       ${PERSONAL ? (GANCHOS().detalhe ? GANCHOS().detalhe(u) : '') : `
       <!-- Excluir conta fica aqui, no fim da ficha, e não a um toque em cada linha da tabela (Fitts). -->
       <section class="det-sec" aria-labelledby="det-excluir-t">
@@ -1244,7 +1276,8 @@
           : `<div class="det-acesso"><span class="nota" style="flex:1 1 200px">Apaga para sempre os check-ins, pesos, treinos e preferências de ${esc(u.nome || u.email)}.</span>
           <button class="btn-peq perigo" type="button" data-excluir="${u.id}">Excluir conta</button></div>`}
       </section>`}`;
-    renderAtividade();
+    // Atividade recente (uso do app, evento a evento) é só do monitoramento do administrador, não da área do personal.
+    if (!PERSONAL) renderAtividade();
     trocarPalavras($('det-corpo'));
     const dlg = $('detalhe');
     if (!dlg.open) dlg.showModal();
@@ -1287,7 +1320,7 @@
       await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.origin + location.pathname } });
       return;
     }
-    if (e.target.closest('#sair, #pf-sair')) { desligarOnline(); await sb.auth.signOut(); return iniciar(); }
+    if (e.target.closest('#sair, #menu-sair')) { fecharMenu(); desligarOnline(); await sb.auth.signOut(); return iniciar(); }
     if (e.target.closest('#tentar-online')) { desligarOnline(); return ligarOnline(); }
     if (e.target.closest('#ver-erro-online')) { verErroOnline = !verErroOnline; return atualizarOnline(); }
     if (e.target.closest('[data-mais-atividade]')) {
@@ -1295,8 +1328,8 @@
       atividade.mostrados += POR_VEZ;
       return renderAtividade(primeiroNovo);
     }
-    const tab = e.target.closest('[role="tab"]');
-    if (tab) return mostrarAba(tab.dataset.aba);
+    const tab = e.target.closest('.menu-item');
+    if (tab) return mostrarAba(tab.dataset.aba, { focar: true });
     const grupoErro = e.target.closest('[data-erro]');
     if (grupoErro) {
       const k = grupoErro.dataset.erro;

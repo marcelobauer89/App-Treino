@@ -46,7 +46,7 @@ const usuario = (id, nome, videos) => ({ id, nome, email: `${id}@x.com`, cadastr
     p = await H.novaPagina(b, { scheme, viewport, extra: { admin: ADM } });
     await p.emulateMedia({ reducedMotion: 'reduce' });
     await p.goto(ADMIN); await p.waitForSelector('#painel:not([hidden])'); await p.waitForTimeout(200);
-    await p.click('#tab-usuarios').catch(() => {});
+    await H.aba(p, 'usuarios').catch(() => {});
     await p.waitForTimeout(150);
     ok((await p.locator('[data-usuario="u3"] .tag-videos').count()) === 1 && (await p.locator('[data-usuario="u2"] .tag-videos').count()) === 0, `${tag}: etiqueta Vídeos só em quem está liberado`);
     await p.click('[data-abrir="u2"]'); await p.waitForTimeout(200);
@@ -69,7 +69,7 @@ const usuario = (id, nome, videos) => ({ id, nome, email: `${id}@x.com`, cadastr
   const ADM2 = { ids: ['u1'], usuarios: [usuario('u1', 'Marcelo', false), usuario('u2', 'Ana', false)], checkins: [], eventos: [], emails: [], convites: [] };
   p = await H.novaPagina(b, { extra: { admin: ADM2 } });
   await p.goto(ADMIN); await p.waitForSelector('#painel:not([hidden])'); await p.waitForTimeout(200);
-  await p.click('#tab-usuarios').catch(() => {});
+  await H.aba(p, 'usuarios').catch(() => {});
   await p.click('[data-abrir="u2"]'); await p.waitForTimeout(150);
   await p.evaluate(() => { const d = JSON.parse(localStorage.getItem('mock-supabase')); d.admin.usuarios = d.admin.usuarios.filter((u) => u.id !== 'u2'); localStorage.setItem('mock-supabase', JSON.stringify(d)); });
   await p.click('[data-liberar-videos="sim"]'); await p.waitForTimeout(300);
@@ -80,7 +80,7 @@ const usuario = (id, nome, videos) => ({ id, nome, email: `${id}@x.com`, cadastr
   const velho = usuario('u2', 'Ana', false); delete velho.videos_liberados;
   p = await H.novaPagina(b, { extra: { admin: { ...ADM2, usuarios: [usuario('u1', 'Marcelo', false), velho] } } });
   await p.goto(ADMIN); await p.waitForSelector('#painel:not([hidden])'); await p.waitForTimeout(200);
-  await p.click('#tab-usuarios').catch(() => {});
+  await H.aba(p, 'usuarios').catch(() => {});
   await p.click('[data-abrir="u2"]'); await p.waitForTimeout(150);
   ok(!(await p.locator('#det-videos-t').count()), 'sem a coluna: seção de vídeos não aparece');
   await p.context().close();

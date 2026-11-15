@@ -51,7 +51,7 @@ const CK = [{ id: 'c1', usuario_id: 'u1', tipo: 'jiu', inicio: '2026-10-20T19:00
   for (const [scheme, vp] of [['light', { width: 1280, height: 900 }], ['dark', { width: 390, height: 844 }]]) {
     const a = await H.novaPagina(b, { scheme, viewport: vp, extra: { admin: JSON.parse(JSON.stringify(ADM)) } });
     await a.goto(ADMIN); await a.waitForSelector('#painel:not([hidden])'); await a.waitForTimeout(300);
-    await a.click('#tab-usuarios').catch(() => {}); await a.waitForTimeout(200);
+    await H.aba(a, 'usuarios').catch(() => {}); await a.waitForTimeout(200);
     ok((await a.locator('#usuarios-corpo [data-excluir], #usuarios-corpo .excluir-btn').count()) === 0, `${scheme}: sem lixeira nas linhas da tabela`);
     // A própria conta: a ficha explica que se exclui pelo app.
     await a.click('#usuarios-corpo tr[data-usuario="u1"] [data-abrir]'); await a.waitForTimeout(200);

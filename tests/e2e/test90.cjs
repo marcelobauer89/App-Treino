@@ -76,16 +76,22 @@ const base = (extra = {}) => ({
     ok(/Sem treino seu/.test(await p.locator('#fichas-uso-lista').innerText()), `${scheme}: Fichas em uso conta quem está sem treino seu`);
     // Topo: nome profissional, CREF e foto (ou iniciais) de quem está logado.
     ok((await p.locator('#pf-topo-nome').innerText()) === 'Paula Exemplo' && /CREF 000000-G\/SP/.test(await p.locator('#pf-topo-cref').innerText()), `${scheme}: topo com o nome e o CREF do personal`);
-    ok(await p.locator('#pf-topo-avatar').isVisible() && await p.locator('#pf-sair').isVisible(), `${scheme}: topo com a foto (ou iniciais) e Sair`);
+    const celular = viewport.width < 1000;
+    ok(await p.locator('#pf-topo-avatar').isVisible() && await p.locator('#menu-abrir').isVisible() === celular && await p.locator('#pf-sair').count() === 0,
+      `${scheme}: topo com a foto (ou iniciais); botão Menu no lugar do Sair só no celular`);
+    if (celular) { await p.click('#menu-abrir'); await p.waitForSelector('#menu.aberto'); await p.waitForTimeout(300); }
+    ok(await p.locator('#menu-sair').isVisible() && (await p.locator('.menu-item .menu-nome').allInnerTexts()).join('|') === 'Visão geral|Alunos|Treinos|Exercícios|Convidar|Sair', `${scheme}: menu com as seções e o Sair no fim`);
+    await p.screenshot({ path: `${H.SAIDA}/personal-menu-${scheme}.png` });
+    if (celular) { await p.keyboard.press('Escape'); await p.waitForTimeout(300); }
     await p.waitForTimeout(1200); // a entrada em cascata termina antes da foto
     await p.screenshot({ path: `${H.SAIDA}/personal-geral-${scheme}.png`, fullPage: true });
-    await p.click('#tab-usuarios'); await p.waitForTimeout(100);
+    await H.aba(p, 'usuarios'); await p.waitForTimeout(100);
     const lista = await p.locator('#usuarios-corpo').innerText();
     ok(/Aluna Um/.test(lista) && /Aluno Dois/.test(lista) && !/Pessoa Fora/.test(lista), `${scheme}: Alunos só com quem tem vínculo`);
     ok(!/suári/.test(await p.locator('#aba-usuarios').innerText()), `${scheme}: aba Alunos sem "usuário"`);
 
     // Fichas: a primeira, a partir do plano pronto.
-    await p.click('#tab-fichas'); await p.waitForTimeout(80);
+    await H.aba(p, 'fichas'); await p.waitForTimeout(80);
     ok(/ainda não tem fichas/.test(await p.locator('#fichas-lista').innerText()), `${scheme}: fichas vazias explicam o que fazer`);
     await p.click('#ficha-nova'); await p.waitForSelector('#ficha-dialog[open]');
     ok((await p.locator('.pf-passos li').count()) === 4 && /Início/.test(await p.locator('.pf-passos .atual').innerText()), `${scheme}: ficha nova é um passo a passo (4 passos, começa no Início)`);
@@ -168,10 +174,11 @@ const base = (extra = {}) => ({
     ok(db.perfis.find((x) => x.id === 'a2').treinos === null, `${scheme}: quem não foi marcado não muda`);
 
     // Ficha do aluno: treinos atuais, pesos e ajuste só para ela.
-    await p.click('#tab-usuarios'); await p.waitForTimeout(80);
+    await H.aba(p, 'usuarios'); await p.waitForTimeout(80);
     await p.locator('#usuarios-corpo tr[data-usuario="a1"]').click(); await p.waitForSelector('#detalhe[open]');
     const det = await p.locator('#det-corpo').innerText();
     ok(/Base iniciante/.test(det) && /Treinos atuais/.test(det), `${scheme}: detalhe mostra a ficha atual`, det.slice(0, 80));
+    ok(!/Atividade recente|Abriu o app/.test(det) && await p.locator('#det-atividade').count() === 0, `${scheme}: ficha do aluno sem a atividade recente (só do administrador)`);
     ok(/Remada inversa/.test(det) && /Recorde 24 kg/.test(det) && /subiu 4 kg/.test(det), `${scheme}: detalhe mostra o recorde e quanto subiu`);
     ok(/Aluno desde/.test(det) && !/Excluir conta/.test(det) && !/Liberar/.test(det), `${scheme}: detalhe sem as ações do administrador`);
     await p.locator('#detalhe').screenshot({ path: `${H.SAIDA}/personal-aluno-${scheme}.png` });
@@ -187,7 +194,7 @@ const base = (extra = {}) => ({
     await p.click('#detalhe [data-fechar]');
 
     // Convidar: link do app com ?personal= e o convite aguardando.
-    await p.click('#tab-convidar'); await p.waitForTimeout(80);
+    await H.aba(p, 'convidar'); await p.waitForTimeout(80);
     await p.fill('#pc-nome', 'Novo aluno'); await p.click('#pc-gerar'); await p.waitForTimeout(200);
     const link = await p.locator('#pc-link').inputValue();
     ok(/\/\?personal=PQR234$/.test(link), `${scheme}: link do convite abre o app com o código`, link);
@@ -196,7 +203,7 @@ const base = (extra = {}) => ({
     await p.screenshot({ path: `${H.SAIDA}/personal-convidar-${scheme}.png`, fullPage: true });
 
     // Encerrar o acompanhamento do aluno 2.
-    await p.click('#tab-usuarios'); await p.locator('#usuarios-corpo tr[data-usuario="a2"]').click(); await p.waitForSelector('#detalhe[open]');
+    await H.aba(p, 'usuarios'); await p.locator('#usuarios-corpo tr[data-usuario="a2"]').click(); await p.waitForSelector('#detalhe[open]');
     await p.click('[data-pf-encerrar="a2"]'); await p.waitForSelector('#pc-dialog[open]');
     await p.click('[data-confirmar]'); await p.waitForTimeout(300);
     db = await H.banco(p);
@@ -208,11 +215,11 @@ const base = (extra = {}) => ({
 
   // 3. Monitoramento do administrador: aba Profissionais com o pedido e o botão Liberar.
   {
-    const p = await H.novaPagina(b, { extra: base({ admin: { ids: ['u1'] }, profissionais: [{ usuario_id: 'a3', nome: 'Pessoa Fora', cref: '999999-G', uf: 'MG', pedido_em: ISO(1), liberado_em: null, bloqueado_em: null, limite_alunos: 30 }] }) });
+    const p = await H.novaPagina(b, { viewport: { width: 1280, height: 900 }, extra: base({ admin: { ids: ['u1'] }, profissionais: [{ usuario_id: 'a3', nome: 'Pessoa Fora', cref: '999999-G', uf: 'MG', pedido_em: ISO(1), liberado_em: null, bloqueado_em: null, limite_alunos: 30 }] }) });
     await p.clock.install({ time: T });
     await p.goto(H.PAGINA.replace('index.html', 'admin.html#profissionais')); await p.waitForSelector('#painel:not([hidden])');
     await p.waitForTimeout(300);
-    ok(await p.locator('#alerta-prof').isVisible() && (await p.locator('#alerta-prof').innerText()) === '1', 'admin: aba mostra 1 pedido aguardando');
+    ok(await p.locator('#alerta-prof').evaluate((e) => !e.hidden) && (await p.locator('#alerta-prof').textContent()) === '1' && (await p.locator('#menu-alerta').textContent()) === '1', 'admin: menu mostra 1 pedido aguardando (e o botão Menu também)');
     ok(/999999-G\/MG/.test(await p.locator('#prof-lista').innerText()), 'admin: lista mostra o CREF');
     await p.screenshot({ path: `${H.SAIDA}/admin-profissionais.png`, fullPage: true });
     await p.click('[data-prof-liberar="sim"]'); await p.waitForTimeout(300);
