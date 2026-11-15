@@ -1231,10 +1231,10 @@
         </div>
         <p class="excluir-erro" id="det-videos-erro" role="alert" hidden></p>
       </section>` : ''}
-      <section class="det-sec" aria-labelledby="det-tempo">
+      ${PERSONAL ? '' : `<section class="det-sec" aria-labelledby="det-tempo">
         <h3 id="det-tempo">Atividade recente</h3>
         <div id="det-atividade"></div>
-      </section>
+      </section>`}
       ${PERSONAL ? (GANCHOS().detalhe ? GANCHOS().detalhe(u) : '') : `
       <!-- Excluir conta fica aqui, no fim da ficha, e não a um toque em cada linha da tabela (Fitts). -->
       <section class="det-sec" aria-labelledby="det-excluir-t">
@@ -1244,7 +1244,8 @@
           : `<div class="det-acesso"><span class="nota" style="flex:1 1 200px">Apaga para sempre os check-ins, pesos, treinos e preferências de ${esc(u.nome || u.email)}.</span>
           <button class="btn-peq perigo" type="button" data-excluir="${u.id}">Excluir conta</button></div>`}
       </section>`}`;
-    renderAtividade();
+    // Atividade recente (uso do app, evento a evento) é só do monitoramento do administrador, não da área do personal.
+    if (!PERSONAL) renderAtividade();
     trocarPalavras($('det-corpo'));
     const dlg = $('detalhe');
     if (!dlg.open) dlg.showModal();

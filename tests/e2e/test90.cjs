@@ -172,6 +172,7 @@ const base = (extra = {}) => ({
     await p.locator('#usuarios-corpo tr[data-usuario="a1"]').click(); await p.waitForSelector('#detalhe[open]');
     const det = await p.locator('#det-corpo').innerText();
     ok(/Base iniciante/.test(det) && /Treinos atuais/.test(det), `${scheme}: detalhe mostra a ficha atual`, det.slice(0, 80));
+    ok(!/Atividade recente|Abriu o app/.test(det) && await p.locator('#det-atividade').count() === 0, `${scheme}: ficha do aluno sem a atividade recente (só do administrador)`);
     ok(/Remada inversa/.test(det) && /Recorde 24 kg/.test(det) && /subiu 4 kg/.test(det), `${scheme}: detalhe mostra o recorde e quanto subiu`);
     ok(/Aluno desde/.test(det) && !/Excluir conta/.test(det) && !/Liberar/.test(det), `${scheme}: detalhe sem as ações do administrador`);
     await p.locator('#detalhe').screenshot({ path: `${H.SAIDA}/personal-aluno-${scheme}.png` });
