@@ -150,31 +150,52 @@
     }
   }
 
-  /* Abas */
-  .abas {
-    display: flex; gap: 4px; margin: 0 0 20px; border-bottom: 1px solid var(--fio); overflow-x: auto; scrollbar-width: none;
+  /* Menu das seções: no computador, lateral e fixo ao rolar; no celular, o botão "Menu" abre uma gaveta à esquerda.
+     Cabe quantas seções vierem (lista vertical), sem rolagem para o lado nem quebra de linha. */
+  .menu-abrir {
+    display: none; width: 100%; min-height: 52px; margin: 0 0 16px; padding: 6px 14px; align-items: center; gap: 12px;
+    border: 1px solid var(--fio); border-radius: 14px; background: var(--papel); color: var(--tinta); text-align: left;
   }
-  .abas::-webkit-scrollbar { display: none; }
-  .abas [role="tab"] {
-    flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px; margin-bottom: -1px;
-    border: 0; border-bottom: 3px solid transparent; background: transparent; color: var(--tinta-2); font-size: 15px; font-weight: 700; white-space: nowrap;
+  .menu-abrir > svg { width: 22px; height: 22px; flex: none; color: var(--marca-tinta); }
+  .menu-abrir-txt { flex: 1 1 auto; display: grid; line-height: 1.2; }
+  .menu-abrir-txt small { color: var(--tinta-2); font-size: 12px; font-weight: 600; }
+  .menu-abrir-txt b { font-size: 16px; }
+  .menu ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 2px; }
+  .menu-topo { display: none; }
+  .menu-item {
+    width: 100%; min-height: 44px; display: flex; align-items: center; gap: 10px; padding: 0 12px; border: 0; border-radius: 10px;
+    background: transparent; color: var(--tinta-2); font-size: 15px; font-weight: 700; text-align: left;
   }
-  .abas [role="tab"]:hover { color: var(--tinta); }
-  .aba-curto { display: none; }
+  .menu-item:hover { background: var(--gi); color: var(--tinta); }
+  .menu-item[aria-current="page"] { background: var(--marca-suave); color: var(--marca-tinta); box-shadow: inset 3px 0 0 var(--marca); }
+  .menu-ic { width: 20px; height: 20px; flex: none; }
+  .menu-nome { flex: 1 1 auto; min-width: 0; }
+  .menu-item .aba-alerta, .menu-item .aba-online { margin-left: auto; }
   .aba-online { width: 9px; height: 9px; }
-  /* No celular as 4 abas dividem a largura, com rótulos curtos (o leitor de tela continua lendo o nome completo). */
-  @media (max-width: 720px) {
-    .abas { gap: 0; }
-    .abas [role="tab"] { flex: 1 1 auto; justify-content: center; padding: 0 6px; font-size: 14px; }
-    .aba-longo { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-    .aba-curto { display: inline; }
+  .menu-fundo { position: fixed; inset: 0; z-index: 44; background: rgba(0, 0, 0, .45); }
+  /* Computador: menu à esquerda, conteúdo à direita (a página fica um pouco mais larga para o conteúdo não encolher). */
+  @media (min-width: 1000px) {
+    .wrap { max-width: 1340px; }
+    #painel:not([hidden]) { display: grid; grid-template-columns: 210px minmax(0, 1fr); column-gap: 28px; align-items: start; }
+    .menu { grid-column: 1; grid-row: 1 / span 20; position: sticky; top: 16px; padding: 8px; border: 1px solid var(--fio); border-radius: 16px; background: var(--papel); }
+    .aba-painel { grid-column: 2; min-width: 0; }
+    .menu-fundo { display: none; }
   }
-  /* Celular estreito: as abas quebram em linhas de 4 (o monitoramento tem 8), sem rolagem para o lado. */
-  @media (max-width: 400px) {
-    .abas { flex-wrap: wrap; }
-    .abas [role="tab"] { flex: 1 1 22%; padding: 0 2px; font-size: 13px; gap: 4px; }
+  /* Celular e tablet: gaveta. Fechada, fica fora da tela e fora da ordem do Tab (visibility). */
+  @media (max-width: 999px) {
+    .menu-abrir { display: flex; }
+    .menu {
+      position: fixed; z-index: 45; top: 0; bottom: 0; left: 0; width: min(300px, 86vw); overflow-y: auto;
+      padding: max(14px, env(safe-area-inset-top, 0px)) 12px 20px; background: var(--papel); border-right: 1px solid var(--fio);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, .25); transform: translateX(-105%); visibility: hidden;
+      transition: transform .22s cubic-bezier(.2, .7, .2, 1), visibility 0s linear .22s;
+    }
+    .menu.aberto { transform: none; visibility: visible; transition: transform .22s cubic-bezier(.2, .7, .2, 1); }
+    .menu-topo { display: flex; align-items: center; justify-content: space-between; margin: 0 4px 10px; font-size: 18px; }
+    .menu-fechar { width: 44px; height: 44px; display: grid; place-items: center; border: 0; border-radius: 10px; background: transparent; color: var(--tinta-2); }
+    .menu-item { min-height: 48px; font-size: 16px; }
   }
-  .abas [role="tab"][aria-selected="true"] { color: var(--marca-tinta); border-bottom-color: var(--marca); }
+  @media (prefers-reduced-motion: reduce) { .menu, .menu.aberto { transition: none; } }
   .aba-alerta {
     min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--erro); color: #fff;
     font-size: 12px; font-weight: 800; line-height: 20px; text-align: center;
@@ -728,7 +749,7 @@
   html[data-estilo] h1 { text-shadow: 0 0 22px var(--brilho), 0 0 2px rgba(255, 255, 255, .5); }
   html[data-estilo] :is(.btn, .periodo button[aria-pressed="true"]) { box-shadow: 0 0 0 1px var(--marca-tinta), 0 0 14px var(--brilho); }
   html[data-estilo] .btn-sec { box-shadow: 0 0 10px var(--brilho), inset 0 0 8px var(--brilho); }
-  html[data-estilo] .abas [role="tab"][aria-selected="true"] { text-shadow: 0 0 10px var(--brilho); }
+  html[data-estilo] .menu-item[aria-current="page"] { text-shadow: 0 0 10px var(--brilho); }
   html[data-estilo] .kpi .valor { color: var(--numero); text-shadow: 0 0 14px var(--brilho); }
   html:root[data-estilo="gelo"] :is(.cartao, .kpi, .periodo) { -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
   html:root[data-estilo="ultra"] :is(.btn, .periodo button[aria-pressed="true"]) { background: linear-gradient(90deg, #d946ef, #9333ea); }

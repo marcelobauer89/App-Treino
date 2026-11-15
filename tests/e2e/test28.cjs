@@ -169,21 +169,21 @@ const presenca = (p, topico, meta) => p.evaluate(([t, m]) => {
       ok((await txt(p, '#on-titulo')).includes('· 1') && await p.locator('#on-corpo li').count() === 1, 'faixa cai para 1 sem recarregar');
       // ponto pulsando na aba Visão geral quando outra aba está aberta
       ok(await p.locator('#aba-online').isHidden(), 'na visão geral, sem ponto na aba');
-      await p.click('#tab-usuarios');
+      await H.aba(p, 'usuarios');
       ok(await p.locator('#aba-online').isVisible() && await p.locator('#aba-online').evaluate((e) => getComputedStyle(e).animationName) === 'pulso'
         && (await p.locator('#aba-online').getAttribute('aria-label')) === '1 pessoa on-line agora', 'outra aba: ponto pulsando na Visão geral');
       await p.locator('#tab-geral').screenshot({ path: 'aba-online.png' });
-      await p.click('#tab-saude');
+      await H.aba(p, 'saude');
       ok(await p.locator('#aba-online').isVisible(), 'ponto continua em outra aba');
-      await p.click('#tab-geral');
+      await H.aba(p, 'geral');
       // tempos atualizam
       await p.clock.runFor(60000); await p.waitForTimeout(100);
       ok((await txt(p, '#on-corpo li')).includes('há 3 min'), 'tempo atualiza sozinho', await txt(p, '#on-corpo li'));
       await presenca(p, 'online:u2', null); await p.waitForTimeout(400);
       ok((await txt(p, '#online')).includes('Ninguém on-line agora') && await p.locator('#on-titulo .ponto').evaluate((e) => getComputedStyle(e).animationName) === 'none', 'vazio: ponto parado');
-      await p.click('#tab-emails');
+      await H.aba(p, 'emails');
       ok(await p.locator('#aba-online').isHidden(), 'ninguém on-line: sem ponto na aba');
-      await p.click('#tab-geral');
+      await H.aba(p, 'geral');
       // Atualizar não duplica canais
       await p.click('#atualizar'); await p.waitForTimeout(300);
       db = await H.banco(p);

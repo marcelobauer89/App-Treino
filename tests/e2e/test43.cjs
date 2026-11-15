@@ -91,7 +91,7 @@ async function abrirApp(b, { url = H.PAGINA, perfil = NOVO, local = {}, scheme =
     const a = await H.novaPagina(b, { scheme, viewport: vp, extra: { admin: ADM() } });
     await a.goto(ADMIN); await a.waitForSelector('#painel:not([hidden])'); await a.waitForTimeout(300);
     ok((await txt(a, '#alerta-convites')) === '1' && await a.locator('#alerta-convites').isVisible(), `${scheme}: selo com 1 pedido na aba Convites`);
-    await a.click('#tab-convites'); await a.waitForTimeout(200);
+    await H.aba(a, 'convites'); await a.waitForTimeout(200);
     ok(/Bruno Lima/.test(await txt(a, '#pedidos-lista')) && !/Caio/.test(await txt(a, '#pedidos-lista')), `${scheme}: pedidos de acesso listados`);
     ok(/Ana Souza/.test(await txt(a, '#utilizados-lista')), `${scheme}: convite usado mostra quem usou`);
     await a.fill('#conv-nome', 'João'); await a.click('#conv-gerar'); await a.waitForTimeout(300);
@@ -107,7 +107,7 @@ async function abrirApp(b, { url = H.PAGINA, perfil = NOVO, local = {}, scheme =
     let db = await H.banco(a);
     ok(db.admin.usuarios.find((u) => u.id === 'u3').liberado === true && /Nenhum pedido/.test(await txt(a, '#pedidos-lista')) && await a.locator('#alerta-convites').isHidden(), `${scheme}: liberar pedido`);
     // Usuários: situação Bloqueado e bloquear/liberar no detalhe
-    await a.click('#tab-usuarios'); await a.waitForTimeout(200);
+    await H.aba(a, 'usuarios'); await a.waitForTimeout(200);
     ok(/Bloqueado/.test(await txt(a, '#usuarios-corpo tr[data-usuario="u4"]')), `${scheme}: situação Bloqueado na lista`);
     await a.click('#usuarios-corpo tr[data-usuario="u2"] [data-abrir]'); await a.waitForTimeout(300);
     await a.click('[data-bloquear="u2"]'); await a.waitForTimeout(500);

@@ -46,7 +46,7 @@ const ADM = {
     ok(sw, `${tag}: sem rolagem horizontal`);
     await p.screenshot({ path: `${H.SAIDA}/saude-critica-${tag}.png`, fullPage: true });
     // Detalhe do usuário: sessão perdida sem alerta, erros comuns fora
-    await p.click('#tab-usuarios'); await p.waitForTimeout(150);
+    await H.aba(p, 'usuarios'); await p.waitForTimeout(150);
     await p.click('#usuarios-corpo tr[data-usuario="u2"]'); await p.waitForSelector('#detalhe[open]');
     const det = await txt(p, '#detalhe');
     ok(!/Load failed|Script error|network connection/.test(det), `${tag}: detalhe sem erros comuns`);

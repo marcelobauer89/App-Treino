@@ -163,9 +163,3 @@
   .pf-sem-grade th:first-child { width: 28%; }
   .pf-marca-dia { width: 18px; height: 18px; font-size: 10px; border-radius: 5px; }
 }
-
-/* Abas: são 5 na área do personal, e cabem numa linha só no celular (sem a quebra de linhas de 4 do monitoramento). */
-@media (max-width: 400px) {
-  .abas { flex-wrap: nowrap; }
-  .abas [role="tab"] { flex: 1 1 auto; padding: 0 4px; font-size: 13px; }
-}

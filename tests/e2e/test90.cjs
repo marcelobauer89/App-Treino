@@ -79,13 +79,13 @@ const base = (extra = {}) => ({
     ok(await p.locator('#pf-topo-avatar').isVisible() && await p.locator('#pf-sair').isVisible(), `${scheme}: topo com a foto (ou iniciais) e Sair`);
     await p.waitForTimeout(1200); // a entrada em cascata termina antes da foto
     await p.screenshot({ path: `${H.SAIDA}/personal-geral-${scheme}.png`, fullPage: true });
-    await p.click('#tab-usuarios'); await p.waitForTimeout(100);
+    await H.aba(p, 'usuarios'); await p.waitForTimeout(100);
     const lista = await p.locator('#usuarios-corpo').innerText();
     ok(/Aluna Um/.test(lista) && /Aluno Dois/.test(lista) && !/Pessoa Fora/.test(lista), `${scheme}: Alunos só com quem tem vínculo`);
     ok(!/suári/.test(await p.locator('#aba-usuarios').innerText()), `${scheme}: aba Alunos sem "usuário"`);
 
     // Fichas: a primeira, a partir do plano pronto.
-    await p.click('#tab-fichas'); await p.waitForTimeout(80);
+    await H.aba(p, 'fichas'); await p.waitForTimeout(80);
     ok(/ainda não tem fichas/.test(await p.locator('#fichas-lista').innerText()), `${scheme}: fichas vazias explicam o que fazer`);
     await p.click('#ficha-nova'); await p.waitForSelector('#ficha-dialog[open]');
     ok((await p.locator('.pf-passos li').count()) === 4 && /Início/.test(await p.locator('.pf-passos .atual').innerText()), `${scheme}: ficha nova é um passo a passo (4 passos, começa no Início)`);
@@ -168,7 +168,7 @@ const base = (extra = {}) => ({
     ok(db.perfis.find((x) => x.id === 'a2').treinos === null, `${scheme}: quem não foi marcado não muda`);
 
     // Ficha do aluno: treinos atuais, pesos e ajuste só para ela.
-    await p.click('#tab-usuarios'); await p.waitForTimeout(80);
+    await H.aba(p, 'usuarios'); await p.waitForTimeout(80);
     await p.locator('#usuarios-corpo tr[data-usuario="a1"]').click(); await p.waitForSelector('#detalhe[open]');
     const det = await p.locator('#det-corpo').innerText();
     ok(/Base iniciante/.test(det) && /Treinos atuais/.test(det), `${scheme}: detalhe mostra a ficha atual`, det.slice(0, 80));
@@ -188,7 +188,7 @@ const base = (extra = {}) => ({
     await p.click('#detalhe [data-fechar]');
 
     // Convidar: link do app com ?personal= e o convite aguardando.
-    await p.click('#tab-convidar'); await p.waitForTimeout(80);
+    await H.aba(p, 'convidar'); await p.waitForTimeout(80);
     await p.fill('#pc-nome', 'Novo aluno'); await p.click('#pc-gerar'); await p.waitForTimeout(200);
     const link = await p.locator('#pc-link').inputValue();
     ok(/\/\?personal=PQR234$/.test(link), `${scheme}: link do convite abre o app com o código`, link);
@@ -197,7 +197,7 @@ const base = (extra = {}) => ({
     await p.screenshot({ path: `${H.SAIDA}/personal-convidar-${scheme}.png`, fullPage: true });
 
     // Encerrar o acompanhamento do aluno 2.
-    await p.click('#tab-usuarios'); await p.locator('#usuarios-corpo tr[data-usuario="a2"]').click(); await p.waitForSelector('#detalhe[open]');
+    await H.aba(p, 'usuarios'); await p.locator('#usuarios-corpo tr[data-usuario="a2"]').click(); await p.waitForSelector('#detalhe[open]');
     await p.click('[data-pf-encerrar="a2"]'); await p.waitForSelector('#pc-dialog[open]');
     await p.click('[data-confirmar]'); await p.waitForTimeout(300);
     db = await H.banco(p);

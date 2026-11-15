@@ -262,8 +262,8 @@
   // Primeira abertura: os blocos da aba visível entram um depois do outro (sem movimento, se o sistema pedir).
   function entrarEmCascata() {
     const painel = $('painel');
-    const aba = painel.querySelector('[role="tabpanel"]:not([hidden])');
-    const blocos = [painel.querySelector('.abas'), ...(aba ? aba.querySelectorAll(':scope > section, .kpi, .graficos > section') : [])].filter(Boolean);
+    const aba = painel.querySelector('.aba-painel:not([hidden])');
+    const blocos = [painel.querySelector('.menu-abrir'), painel.querySelector('.menu'), ...(aba ? aba.querySelectorAll(':scope > section, .kpi, .graficos > section') : [])].filter(Boolean);
     blocos.forEach((el, i) => { el.classList.add('entra-item'); el.style.setProperty('--i', String(i)); });
     painel.classList.add('entra');
     setTimeout(() => {
@@ -1060,25 +1060,48 @@
   }
   function mostrarAba(nova, { focar = false, url = true } = {}) {
     aba = ABAS.includes(nova) ? nova : 'geral';
-    document.querySelectorAll('[role="tab"]').forEach((b) => {
+    document.querySelectorAll('.menu-item').forEach((b) => {
       const sel = b.dataset.aba === aba;
-      b.setAttribute('aria-selected', String(sel));
-      b.tabIndex = sel ? 0 : -1;
-      if (sel && focar) b.focus();
+      if (sel) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+      if (sel) $('menu-atual').textContent = b.querySelector('.menu-nome').textContent;
     });
     ABAS.forEach((a) => { $(`aba-${a}`).hidden = a !== aba; });
+    fecharMenu({ focar });
     atualizarAbaOnline();
     if (url) history.replaceState(null, '', location.pathname + location.search + (aba === 'geral' ? '' : `#${aba}`));
     fecharInfo();
     renderVisivel();
   }
-  document.querySelector('[role="tablist"]').addEventListener('keydown', (e) => {
-    const i = ABAS.indexOf(aba);
-    const prox = { ArrowRight: (i + 1) % ABAS.length, ArrowLeft: (i + ABAS.length - 1) % ABAS.length, Home: 0, End: ABAS.length - 1 }[e.key];
-    if (prox === undefined) return;
-    e.preventDefault();
-    mostrarAba(ABAS[prox], { focar: true });
-  });
+  // Menu: no computador fica sempre à esquerda; no celular (botão "Menu") abre como gaveta, fecha com Esc, no fundo
+  // ou ao escolher uma seção. Fechado, a gaveta fica fora da ordem do Tab (visibility no CSS).
+  const menuGaveta = () => getComputedStyle($('menu-abrir')).display !== 'none';
+  function abrirMenu() {
+    $('menu').classList.add('aberto');
+    $('menu-fundo').hidden = false;
+    $('menu-abrir').setAttribute('aria-expanded', 'true');
+    const atual = document.querySelector('.menu-item[aria-current="page"]');
+    setTimeout(() => (atual || $('menu-fechar')).focus(), 30);
+  }
+  function fecharMenu({ focar = false } = {}) {
+    if (!$('menu').classList.contains('aberto')) return;
+    $('menu').classList.remove('aberto');
+    $('menu-fundo').hidden = true;
+    $('menu-abrir').setAttribute('aria-expanded', 'false');
+    if (focar && menuGaveta()) $('menu-abrir').focus();
+  }
+  $('menu-abrir').addEventListener('click', abrirMenu);
+  $('menu-fechar').addEventListener('click', () => fecharMenu({ focar: true }));
+  $('menu-fundo').addEventListener('click', () => fecharMenu({ focar: true }));
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && $('menu').classList.contains('aberto')) fecharMenu({ focar: true }); });
+  // O botão do celular soma os selos dos itens (pedidos, erros), para o alerta não ficar escondido no menu fechado.
+  function atualizarMenuAlerta() {
+    const n = [...document.querySelectorAll('#menu .aba-alerta')].filter((x) => !x.hidden)
+      .reduce((t, x) => t + (Number(x.textContent) || 1), 0);
+    $('menu-alerta').hidden = !n;
+    $('menu-alerta').textContent = n ? String(n) : '';
+    $('menu-alerta').setAttribute('aria-label', n ? `${n} ${n === 1 ? 'alerta' : 'alertas'} no menu` : '');
+  }
+  new MutationObserver(atualizarMenuAlerta).observe($('menu'), { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['hidden'] });
   addEventListener('hashchange', () => mostrarAba(location.hash.slice(1), { url: false }));
   mostrarAba(aba, { url: false });
 
@@ -1296,8 +1319,8 @@
       atividade.mostrados += POR_VEZ;
       return renderAtividade(primeiroNovo);
     }
-    const tab = e.target.closest('[role="tab"]');
-    if (tab) return mostrarAba(tab.dataset.aba);
+    const tab = e.target.closest('.menu-item');
+    if (tab) return mostrarAba(tab.dataset.aba, { focar: true });
     const grupoErro = e.target.closest('[data-erro]');
     if (grupoErro) {
       const k = grupoErro.dataset.erro;

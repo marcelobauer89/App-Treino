@@ -81,7 +81,7 @@ const abrirCheckin = async (p) => { await p.click('#fab-checkin'); await p.waitF
   {
     const p = await H.novaPagina(b, { viewport: { width: 390, height: 844 }, extra: { tipos_checkin: tipos(), admin: { ids: ['u1'], usuarios: [{ id: 'u1', nome: 'Pessoa Admin', email: 'admin@exemplo.com', liberado: true, acessos: 3 }] } } });
     await p.goto(ADMIN); await p.waitForSelector('#painel:not([hidden])'); await p.waitForTimeout(300);
-    await p.click('#tab-tipos'); await p.waitForTimeout(150);
+    await H.aba(p, 'tipos'); await p.waitForTimeout(150);
     const lista = await p.locator('#tp-lista').innerText();
     ok(/Natação/.test(lista) && /Desativado/.test(lista) && /Bike \(km\), Corrida \(km\), Elíptico/.test(lista), 'painel: lista os tipos com modalidades e desativado', lista.replace(/\s+/g, ' '));
     await p.screenshot({ path: `${H.SAIDA}/painel-tipos.png`, fullPage: true });

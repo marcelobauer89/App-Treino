@@ -26,7 +26,7 @@ const ADM = { ids: ['u1'], usuarios: [usuario('u1', 'Marcelo'), usuario('u2', 'A
     const lista = await p.locator('#jornadas-lista li').evaluateAll((ls) => ls.map((l) => l.textContent.replace(/\s+/g, ' ').trim()));
     ok(/Hipertrofia ?1 ?100% 1 pessoa · 1 na troca/.test(lista[0] || ''), `${scheme}: Objetivos escolhidos mostra a escolha de hoje`, lista[0]);
     ok(/Surf/.test(await p.locator('#treinos-lista').innerText()), `${scheme}: check-in de hoje (depois dos 1.200) entra em Treinos mais feitos`);
-    await p.click('#tab-usuarios'); await p.waitForTimeout(150);
+    await H.aba(p, 'usuarios'); await p.waitForTimeout(150);
     await p.click('[data-abrir="u1"]'); await p.waitForTimeout(200);
     ok(/Escolheu o objetivo Hipertrofia/.test(await p.locator('#det-atividade').innerText()), `${scheme}: atividade recente mostra a escolha`);
     ok(!p.errs.length, `${scheme}: sem erros`, p.errs.join(' | '));
