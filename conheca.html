@@ -148,7 +148,16 @@
         </div>
         <div class="pilar" style="--cor: var(--jiu)">
           <h3>Tudo junto</h3>
-          <p>Musculação, Jiu Jitsu, muay thai, surf, futebol, futvôlei e cardio no mesmo calendário, sem pular de app em app.</p>
+          <p>Todas as suas atividades no mesmo calendário, sem pular de app em app:</p>
+          <ol class="esportes">
+            <li style="--cor: var(--musc)"><span class="esp-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg></span>Musculação</li>
+            <li style="--cor: var(--jiu)"><span class="esp-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3 4 6v15h16V6l-4-3"/><path d="m8 3 4 6 4-6"/><path d="M4 13h16"/><path d="M10 13v4M14 13v4"/></svg></span>Jiu Jitsu</li>
+            <li style="--cor: var(--muay)"><span class="esp-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 11V7a4 4 0 0 1 4-4h2a5 5 0 0 1 5 5v5a4 4 0 0 1-4 4H9a2 2 0 0 1-2-2v-1"/><path d="M7 11a2 2 0 0 0 0 4"/><path d="M8 17v4h8v-4"/></svg></span>Muay thai</li>
+            <li style="--cor: var(--surf)"><span class="esp-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 16c2 0 2-1.5 4-1.5S8 16 10 16s2-1.5 4-1.5 2 1.5 4 1.5 2-1.5 4-1.5"/><path d="M2 20c2 0 2-1.5 4-1.5S8 20 10 20s2-1.5 4-1.5 2 1.5 4 1.5 2-1.5 4-1.5"/><path d="M14 12c0-5 3-8 7-9-1 4-3 7-7 9Z"/></svg></span>Surf</li>
+            <li style="--cor: var(--futebol)"><span class="esp-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m12 7 4 3-1.5 4.5h-5L8 10Z"/><path d="M12 3v4M16 10l4.5-1.5M14.5 14.5 17 19M9.5 14.5 7 19M8 10 3.5 8.5"/></svg></span>Futebol</li>
+            <li style="--cor: var(--futvolei)"><span class="esp-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="5"/><path d="M8.5 4.5c2 1 3 3.5 3.5 7M15.5 4.5c-2 1-3 3.5-3.5 7"/><path d="M3 21v-6M21 21v-6M3 16h18M3 19h18"/></svg></span>Futvôlei</li>
+            <li style="--cor: var(--bike)"><span class="esp-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l2-5 4 10 2-5h6"/></svg></span>Cardio</li>
+          </ol>
         </div>
       </div>
     </div>
@@ -157,7 +166,7 @@
   <!-- ---------- Como funciona ---------- -->
   <section class="secao" id="como-funciona" aria-labelledby="como-titulo">
     <div class="secao-in">
-      <h2 id="como-titulo">Do primeiro acesso ao primeiro recorde.</h2>
+      <h2 id="como-titulo">Do primeiro acesso a decisões com base nos seus dados.</h2>
       <ol class="passos">
         <li>
           <span class="passo-n" aria-hidden="true">1</span>
@@ -171,13 +180,18 @@
         </li>
         <li>
           <span class="passo-n" aria-hidden="true">3</span>
-          <h3>Treine e faça o check-in</h3>
+          <h3>Treine e faça o check&#8209;in</h3>
           <p>Abra o app na academia e o treino do dia já está lá. Anote as cargas com uma mão só e registre qualquer esporte pelo botão fixo.</p>
         </li>
         <li>
           <span class="passo-n" aria-hidden="true">4</span>
           <h3>Acompanhe a evolução</h3>
           <p>O Dashboard mostra o calendário, as horas treinadas, a semana contra o plano e os recordes de cada exercício.</p>
+        </li>
+        <li>
+          <span class="passo-n" aria-hidden="true">5</span>
+          <h3>Decida com base nos dados</h3>
+          <p>Os números mostram o que ajustar: subir a carga do exercício parado, mudar o dia em que você sempre falta ou aliviar a semana antes do campeonato.</p>
         </li>
       </ol>
     </div>
@@ -220,11 +234,12 @@
         <article class="func func-largo">
           <h3>Dashboard e calendário</h3>
           <p>Check-ins do mês, horas treinadas, a semana comparada ao plano e um calendário com um selo colorido por atividade.</p>
-          <div class="mini-cal" aria-hidden="true">
-            <i></i><i class="c1"></i><i class="c2"></i><i></i><i class="c1"></i><i class="c4"></i><i></i>
-            <i class="c1"></i><i class="c2"></i><i class="c1"></i><i class="c3"></i><i class="c1"></i><i class="c5"></i><i></i>
-            <i class="c1"></i><i class="c2"></i><i></i><i class="c2"></i><i class="c1"></i><i class="c4"></i><i></i>
-          </div>
+          <dl class="mini-ind" aria-label="Exemplo de indicadores do Dashboard">
+            <div><dt>Check-ins no mês</dt><dd>18</dd></div>
+            <div><dt>Horas treinadas</dt><dd>21 h</dd></div>
+            <div><dt>Dias com treino</dt><dd>14</dd></div>
+            <div class="mini-ind-semana"><dt>Semana × plano</dt><dd>4 de 5</dd><span class="barra" aria-hidden="true"><i style="width: 80%"></i></span></div>
+          </dl>
         </article>
         <article class="func">
           <h3>Temporizador de descanso</h3>
@@ -452,8 +467,9 @@
           <p>O app funciona sem internet. O check-in fica salvo no celular e é enviado quando a conexão voltar.</p>
         </details>
         <details>
-          <summary>Só serve para Jiu Jitsu?</summary>
-          <p>Não. O app nasceu de um plano de Jiu Jitsu e hipertrofia, mas hoje recebe musculação, Jiu Jitsu, muay thai, surf, futebol, futvôlei e cardio, com objetivos prontos para hipertrofia, força e mobilidade.</p>
+          <summary>Que treinos e esportes o app acompanha?</summary>
+          <p>Musculação, Jiu Jitsu, muay thai, surf, futebol, futvôlei e cardio. Na musculação, você escolhe treinos prontos para Hipertrofia, Força e potência, Mobilidade e prevenção ou Jiu Jitsu, ou monta os seus com 136 exercícios.</p>
+          <p>Como tudo fica no mesmo calendário, você vê se cumpriu a semana em todas as atividades, evita que um treino atrapalhe o outro e acompanha a evolução das cargas junto com a frequência no esporte, sem planilha e sem pular de app em app.</p>
         </details>
         <details>
           <summary>O meu personal vê os meus dados?</summary>
