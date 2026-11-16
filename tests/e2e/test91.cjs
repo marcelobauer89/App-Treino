@@ -17,7 +17,8 @@ const URL_LANDING = H.PAGINA.replace('index.html', 'conheca.html');
       await p.goto(URL_LANDING); await p.waitForLoadState('load');
 
       ok(/Gestão de Treinos/.test(await p.title()), `${tag}: título com o nome do produto`);
-      ok(await p.isVisible('h1'), `${tag}: hero visível`);
+      ok(await p.isVisible('h1') && /num só lugar\. Decisões guiadas por dados/.test(await p.textContent('h1')), `${tag}: hero com o título de tudo num só lugar e dados`);
+      ok(/cada treino e cada exercício/.test(await p.textContent('.hero-sub')) && /e muito mais\.$/.test((await p.textContent('.hero-sub')).trim()), `${tag}: apoio fala de treino e exercício e deixa os tipos em aberto`);
       for (const id of ['problema', 'como-funciona', 'funcionalidades', 'para-quem', 'personal', 'depoimentos', 'planos', 'duvidas']) ok(await p.locator('#' + id).count() === 1, `${tag}: seção ${id}`);
       ok(await p.getAttribute('#cta-hero', 'href') === './' && /Começar grátis/.test(await p.textContent('#cta-hero')), `${tag}: botão principal leva ao app`);
       ok(await p.locator('a[href="personal.html"]').count() >= 2, `${tag}: links para a área do personal`);
