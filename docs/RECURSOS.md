@@ -20,6 +20,7 @@ Ao mudar um recurso, atualize só a seção dele (ache pelo índice).
 - [Vídeos liberados por usuário](#vídeos-liberados-por-usuário)
 - [Convites (acesso só para convidados)](#convites-acesso-só-para-convidados)
 - [Área do personal](#área-do-personal)
+- [Landing page (conheca.html)](#landing-page-conhecahtml)
 - [Excluir conta](#excluir-conta)
 - [Foto no check-in (opcional)](#foto-no-check-in-opcional)
 - [Privacidade e LGPD](#privacidade-e-lgpd)
@@ -192,6 +193,18 @@ Página própria para personal trainers: `personal.html` (em produção, https:/
 - **Privacidade:** o personal vê treinos, semana, check-ins (tipo e horário), pesos e o uso do app (sem aparelho e navegador), só dos alunos com vínculo ativo; nunca e-mail, observações nem fotos. A política mudou (versão `2026-11-14`, seção 3a), e todos veem o aviso da política nova ao abrir o app. "Baixar meus dados" inclui o acompanhamento e, para o personal, o cadastro, as fichas e os exercícios próprios.
 - **No banco:** tabelas `profissionais`, `vinculos` e `fichas_personal` (sem acesso direto pela API), colunas `perfis.acompanhado_por`, `treinos_por`, `treinos_em` e `ficha_id`, a tabela `exercicios_personal`, o gatilho `perfis_treinos_do_personal` e as funções `eh_profissional`, `pedir_acesso_profissional`, `meu_cadastro_profissional`, `admin_profissionais`, `admin_liberar_profissional`, `personal_*` (convites, alunos, check-ins, eventos, cargas, fichas, meus exercícios, aplicar e salvar treinos, encerrar), `ver_convite_personal`, `aceitar_vinculo`, `meu_personal` e `encerrar_vinculo`; a tabela `ajustes_banco` (ajustes de cada projeto, como o `convite_proprio` dos testes).
 - **Para ligar:** rode `supabase/migracoes/003-area-do-personal.sql` e depois a `005`, a `006`, a `007` e a `008` (aluno de si mesmo nos testes, meus exercícios e encerrar tira os treinos do personal) no SQL Editor (testes ao ir para a `dev`, produção ao ir para a `main`). Para o login do Google voltar à página, `…/App-Treino/**` precisa estar em **Authentication → URL Configuration → Redirect URLs** (já vale para o app e o monitoramento).
+
+## Landing page (conheca.html)
+
+Página de divulgação do produto (RF-86), publicada em `/App-Treino/conheca.html` (e em `/App-Treino/dev/conheca.html` no ambiente de testes). Não usa o Supabase nem guarda nada no navegador: é HTML com `css/landing.css` e `js/conheca.js` (menu do Entrar, abas "Para quem é", borda do topo ao rolar e os dois botões fixos do celular, "Começar grátis" e "Sou personal", que aparecem assim que a página rola e somem na chamada final). Segue o tema do aparelho e, com movimento reduzido, a semana do hero aparece sem animação.
+
+- **Entrar (menu do topo):** abre as opções **Eu treino** (app, `./`) e **Sou personal** (`personal.html`); fecha com Esc ou clicando fora.
+- **Botões:** "Começar grátis" leva ao app (`./`, login e pedido de acesso); "Sou personal trainer" e "Começar como personal" levam ao `personal.html`. A tela de login do app tem o link "Conheça o Gestão de Treinos".
+- **Depoimentos:** de exemplo, com o aviso "Depoimentos ilustrativos". Trocar pelos reais (com autorização) antes de divulgar em larga escala.
+- **Planos:** só a vitrine. Os pagos aparecem como "Em breve" e não há cobrança; a cobrança de verdade é o RF-85.
+- **Prévia no WhatsApp e nas redes:** título, descrição e a imagem `icones/compartilhar.png` (1200×630, com o título e o celular da landing) pelas tags Open Graph no `<head>`. O endereço da imagem é o de produção, então no `/dev/` a prévia só aparece depois que a mudança chegar à `main`. Para refazer a imagem depois de mudar o título, gere um PNG de 1200×630 no mesmo estilo e substitua o arquivo.
+- **Ambiente de testes:** carrega o `ambiente.js`, então no `/dev/` mostra o selo **DEV** e "[DEV]" no título, como as outras páginas.
+- **CSP:** igual à das outras quatro páginas (ver Segurança do site publicado).
 
 ## Excluir conta
 

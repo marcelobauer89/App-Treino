@@ -27,7 +27,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <!-- Segurança (CSP): o navegador só roda scripts do próprio site e só conversa com o Supabase. Ao usar um serviço
-     externo novo (imagem, vídeo, API), acrescente o endereço nas quatro páginas: index, admin, personal e privacidade. -->
+     externo novo (imagem, vídeo, API), acrescente o endereço nas cinco páginas: index, admin, personal, privacidade e conheca. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-src 'self' https://www.youtube-nocookie.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <script src="ambiente.js"></script>
 <script src="js/antes-da-pintura.js?v=dev"></script>
@@ -56,6 +56,7 @@
       <button class="btn-google" type="button" id="entrar-google" hidden></button>
       <button class="btn" type="button" id="entrar-tentar" hidden>Tentar de novo</button>
       <p class="entrar-privacidade" id="entrar-privacidade" hidden>Usamos sua conta Google só para entrar e guardar seus treinos. Ao entrar, você concorda com a <a href="privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a>.</p>
+      <p class="entrar-conheca" id="entrar-conheca" hidden><a href="conheca.html">Conheça o Gestão de Treinos</a></p>
       <form class="convite-form" id="convite-form" novalidate hidden>
         <div class="campo">
           <label for="convite-codigo">Código do convite</label>
