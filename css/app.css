@@ -955,6 +955,11 @@
   }
   .campo input::-webkit-date-and-time-value { text-align: left; margin: 0; }
   .campo input::-webkit-datetime-edit { padding: 0; }
+  /* Modalidade e Distância entram direto no espaçamento do formulário (16 px entre os campos). */
+  #f-mod-area { display: contents; }
+  .campo-km { position: relative; max-width: 180px; }
+  .campo-km input:not([type="radio"]) { padding-right: 44px; font-variant-numeric: tabular-nums; }
+  .campo-km-un { position: absolute; top: 50%; right: 14px; transform: translateY(-50%); color: var(--tinta-2); font-size: 16px; pointer-events: none; }
   .linha2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
   .opcoes { display: flex; flex-wrap: wrap; gap: 8px; }
   .opcao { position: relative; }

@@ -15,7 +15,7 @@ const txt = async (p, s) => ((await p.locator(s).first().innerText()) || '').rep
     ok((await txt(p, '#voce-menu-nome')) === 'Marcelo Bauer' && (await txt(p, '#voce-menu-email')) === 'marcelo@exemplo.com' && (await txt(p, '#voce-menu-avatar')) === 'MB', `${tag}: perfil no topo com foto, nome e e-mail`);
     // "Instalar o app" (#grupo-instalar) só aparece quando o navegador oferece a instalação: fica fora desta conta (test84).
     const rotulos = await p.locator('.voce-grupo:not(#grupo-instalar) .voce-linha .voce-rotulo').allInnerTexts();
-    ok(rotulos.join('|') === 'Meus treinos|Minha semana|Meu personal|Aparência|Temporizador|Notificações|Privacidade|Sair da conta|Excluir conta', `${tag}: opções em grupos`, rotulos.join('|'));
+    ok(rotulos.join('|') === 'Meus treinos|Minha semana|Meu personal|Aparência|Timer|Notificações|Privacidade|Sair da conta|Excluir conta', `${tag}: opções em grupos`, rotulos.join('|'));
     ok((await p.locator('.voce-grupo:not(#grupo-instalar)').count()) === 3, `${tag}: 3 grupos`);
     ok((await txt(p, '#valor-treinos')) === 'Plano pronto' && (await txt(p, '#valor-semana')) === '6 atividades' && (await txt(p, '#valor-aparencia')) === 'Automático' && (await txt(p, '#valor-notificacoes')) === 'Resumo ligado', `${tag}: valor à direita de cada opção`);
     ok((await p.locator('.voce-grupo:not(#grupo-instalar) .voce-linha:not(.perigo) .voce-chev').count()) === 7 && (await p.locator('.voce-grupo:not(#grupo-instalar) .voce-linha .voce-ic').count()) === 9, `${tag}: ícone e seta nas linhas`);
@@ -27,7 +27,7 @@ const txt = async (p, s) => ((await p.locator(s).first().innerText()) || '').rep
     }
     await p.waitForTimeout(200); await p.screenshot({ path: `${H.SAIDA}/voce-menu-${tag}.png`, fullPage: true });
     // Abrir cada opção e voltar
-    for (const [pag, titulo, campo] of [['dados', 'Dados pessoais', '#p-nome'], ['aparencia', 'Aparência', '#opcoes-tema'], ['treinos', 'Meus treinos', '#editar-treinos'], ['semana', 'Minha semana', '#dias-cfg'], ['temporizador', 'Temporizador', '#temp-ativo'], ['notificacoes', 'Notificações', '#resumo-email'], ['privacidade', 'Privacidade', '#conta-email']]) {
+    for (const [pag, titulo, campo] of [['dados', 'Dados pessoais', '#p-nome'], ['aparencia', 'Aparência', '#opcoes-tema'], ['treinos', 'Meus treinos', '#editar-treinos'], ['semana', 'Minha semana', '#dias-cfg'], ['temporizador', 'Timer', '#temp-ativo'], ['notificacoes', 'Notificações', '#resumo-email'], ['privacidade', 'Privacidade', '#conta-email']]) {
       await p.click(`[data-voce="${pag}"]`); await p.waitForTimeout(100);
       ok(await p.evaluate(() => location.hash) === `#voce/${pag}` && (await txt(p, `#pag-${pag}-titulo`)) === titulo && await p.locator(campo).isVisible() && await p.locator('#voce-menu').isHidden(), `${tag}: ${titulo} abre a própria tela`);
       await p.click(`.voce-pagina[data-pagina="${pag}"] [data-voltar]`); await p.waitForTimeout(150);

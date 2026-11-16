@@ -322,8 +322,11 @@
         </div>
       </fieldset>
       <div class="campo" id="f-km-campo"${atual && atual.km ? '' : ' hidden'}>
-        <label for="f-km">Distância (km)</label>
-        <input type="text" inputmode="decimal" id="f-km" placeholder="Ex.: 12,5" value="${km ? String(km).replace('.', ',') : ''}">
+        <label for="f-km">Distância</label>
+        <div class="campo-km">
+          <input type="text" inputmode="decimal" id="f-km" placeholder="0,0" autocomplete="off" aria-describedby="f-km-un" value="${km ? String(km).replace('.', ',') : ''}">
+          <span class="campo-km-un" id="f-km-un">km</span>
+        </div>
       </div>`;
   }
   function renderModalidade(tipo) {
@@ -447,6 +450,18 @@
       return renderFotoForm();
     }
   });
+  // Distância: só números e uma vírgula (o ponto vira vírgula), até 4 dígitos e 2 casas decimais (ex.: 12,5).
+  function formatarKm(txt) {
+    const limpo = txt.replace(/\./g, ',').replace(/[^\d,]/g, '');
+    const [int, ...resto] = limpo.split(',');
+    const inteiro = int.slice(0, 4);
+    return resto.length ? `${inteiro || '0'},${resto.join('').slice(0, 2)}` : inteiro;
+  }
+  formDialog.addEventListener('input', (e) => {
+    if (e.target.id !== 'f-km') return;
+    const el = e.target; const novo = formatarKm(el.value);
+    if (novo !== el.value) el.value = novo;
+  });
   formDialog.addEventListener('change', async (e) => {
     if (e.target.id !== 'f-foto-input') return;
     const arquivo = e.target.files[0];
@@ -518,7 +533,7 @@
     // Modalidade e km (só para os tipos que têm modalidades): os dois são opcionais.
     const modEl = formDialog.querySelector('input[name="f-mod"]:checked');
     const mod = modEl ? (TIPOS[tipo].modalidades || []).find((m) => m.id === modEl.value) : null;
-    const kmTxt = mod && mod.km && $('f-km') ? $('f-km').value.trim().replace(',', '.') : '';
+    const kmTxt = mod && mod.km && $('f-km') ? $('f-km').value.trim().replace(',', '.').replace(/\.$/, '') : '';
     const km = kmTxt ? Number(kmTxt) : null;
     if (kmTxt && (!/^\d+(\.\d{1,2})?$/.test(kmTxt) || km <= 0 || km > 1000)) return erro('Informe a distância em km, entre 0,01 e 1000 (ex.: 12,5).');
     const extraMod = { modalidade: mod ? mod.id : '', km: mod && mod.km ? km : null };

@@ -38,7 +38,13 @@ const abrirCheckin = async (p) => { await p.click('#fab-checkin'); await p.waitF
     ok(await p.locator('#f-km-campo').isHidden(), `${scheme}: Elíptico não pede km`);
     await p.locator('#f-mod-bloco .opcao', { hasText: 'Corrida' }).click(); await p.waitForTimeout(80);
     ok(await p.locator('#f-km-campo').isVisible(), `${scheme}: Corrida pede km`);
-    await p.fill('#f-km', 'abc'); await p.click('[data-salvar-form]'); await p.waitForTimeout(100);
+    // Formatação: letras somem, o ponto vira vírgula e ficam no máximo 2 casas.
+    await p.fill('#f-km', 'abc'); ok((await p.inputValue('#f-km')) === '', `${scheme}: km só aceita números`, await p.inputValue('#f-km'));
+    await p.fill('#f-km', '12.345'); ok((await p.inputValue('#f-km')) === '12,34', `${scheme}: km com vírgula e 2 casas`, await p.inputValue('#f-km'));
+    const gap = await p.evaluate(() => document.querySelector('#f-km-campo').getBoundingClientRect().top - document.querySelector('#f-mod-bloco').getBoundingClientRect().bottom);
+    ok(gap >= 12, `${scheme}: espaço entre Modalidade e Distância`, String(gap));
+    if (scheme === 'dark') await p.locator('#f-km-campo').screenshot({ path: `${H.SAIDA}/checkin-km-${scheme}.png` });
+    await p.fill('#f-km', '0'); await p.click('[data-salvar-form]'); await p.waitForTimeout(100);
     ok(/distância em km/.test(await p.locator('#f-erro').innerText()), `${scheme}: km inválido é recusado`);
     await p.fill('#f-km', '7,5');
     await p.locator('#form-dialog .modal-body, #form-dialog').first().screenshot({ path: `${H.SAIDA}/checkin-cardio-${scheme}.png` }).catch(() => {});
