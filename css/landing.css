@@ -4,7 +4,7 @@
   --marca: #2563eb; --marca-forte: #1d4ed8; --marca-tinta: #1d4ed8; --marca-suave: #e8effd; --sobre-marca: #ffffff;
   --feito: #16a34a; --feito-suave: #e7f8ee; --feito-tinta: #166534;
   --recorde: #f59e0b; --recorde-suave: #fef3c7; --recorde-tinta: #92400e;
-  --musc: #2a78d6; --jiu: #eb6834; --bike: #1baf7a; --muay: #eda100; --surf: #c84aa4; --futebol: #a2bc75; --futvolei: #8494d6; --selo-tinta: #0b0d10;
+  --musc: #3884e0; /* um pouco mais claro que no app: texto escuro por cima com contraste 5,1:1 */ --jiu: #eb6834; --bike: #1baf7a; --muay: #eda100; --surf: #c84aa4; --futebol: #a2bc75; --futvolei: #8494d6; --selo-tinta: #0b0d10;
   --escuro: #0f1115; --escuro-2: #171a20; --escuro-fio: #2a2f38; --escuro-tinta: #f2f4f7; --escuro-tinta-2: #a3abb8;
   --display: "Archivo", "Arial Narrow", system-ui, sans-serif;
   --texto: "Archivo", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -177,7 +177,8 @@ p { margin: 0; }
 
 /* Passos (uma sequência de verdade) */
 .passos { list-style: none; margin: 48px 0 0; padding: 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: 24px; counter-reset: passo; position: relative; }
-.passos::before { content: ""; position: absolute; top: 27px; left: 28px; right: 28px; height: 2px; background: repeating-linear-gradient(90deg, var(--fio) 0 8px, transparent 8px 14px); }
+/* A tracejada liga um círculo ao próximo e termina no último (sem passar da etapa final). */
+.passos li:not(:last-child)::after { content: ""; position: absolute; top: 27px; left: 64px; right: -16px; height: 2px; background: repeating-linear-gradient(90deg, var(--fio) 0 8px, transparent 8px 14px); }
 .passos li { position: relative; }
 .passo-n { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; background: var(--marca); color: var(--sobre-marca); font-family: var(--display); font-weight: 900; font-stretch: 72%; font-size: 28px; box-shadow: 0 0 0 6px var(--gi); }
 .passos h3 { margin-top: 20px; }
@@ -185,7 +186,7 @@ p { margin: 0; }
 .passos p { margin-top: 8px; color: var(--tinta-2); font-size: 16px; }
 @media (max-width: 900px) {
   .passos { grid-template-columns: 1fr; gap: 28px; }
-  .passos::before { top: 28px; bottom: 28px; left: 27px; right: auto; width: 2px; height: auto; background: repeating-linear-gradient(180deg, var(--fio) 0 8px, transparent 8px 14px); }
+  .passos li:not(:last-child)::after { top: 64px; bottom: -20px; left: 27px; right: auto; width: 2px; height: auto; background: repeating-linear-gradient(180deg, var(--fio) 0 8px, transparent 8px 14px); }
   .passos li { padding-left: 76px; min-height: 56px; }
   .passo-n { position: absolute; left: 0; top: 0; }
   .passos h3 { margin-top: 12px; }
@@ -300,7 +301,7 @@ p { margin: 0; }
 .plano-destaque { background: var(--marca); color: var(--sobre-marca); border-color: var(--marca); }
 .plano-destaque .plano-preco span, .plano-destaque .plano-desc { color: rgba(255, 255, 255, .82); }
 .plano-destaque li::before { background: #fff; }
-.plano-destaque .btn-em-breve { background: rgba(255, 255, 255, .16); border-color: rgba(255, 255, 255, .3); color: #fff; }
+.plano-destaque .btn-em-breve { background: rgba(0, 0, 0, .22); border-color: rgba(255, 255, 255, .35); color: #fff; }
 .plano-selo { position: absolute; top: -13px; left: 22px; background: var(--tinta); color: var(--gi); font-size: 13px; font-weight: 800; padding: 4px 12px; border-radius: 999px; }
 .planos-nota { margin-top: 20px; font-size: 14px; color: var(--tinta-2); }
 @media (max-width: 1020px) { .planos { grid-template-columns: repeat(2, 1fr); row-gap: 24px; } }
@@ -326,7 +327,7 @@ p { margin: 0; }
 .rodape { padding: 36px 0 calc(36px + env(safe-area-inset-bottom, 0px)); }
 .rodape-in { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 28px; }
 .rodape nav { display: flex; flex-wrap: wrap; gap: 8px 22px; }
-.rodape nav a { color: var(--tinta-2); font-size: 15px; }
+.rodape nav a { color: var(--tinta-2); font-size: 15px; display: inline-flex; align-items: center; min-height: 44px; }
 .rodape p { margin-left: auto; color: var(--tinta-2); font-size: 14px; }
 @media (max-width: 640px) { .rodape p { margin-left: 0; width: 100%; } .rodape { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); } }
 

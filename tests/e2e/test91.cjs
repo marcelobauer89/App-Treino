@@ -17,6 +17,9 @@ const URL_LANDING = H.PAGINA.replace('index.html', 'conheca.html');
       await p.goto(URL_LANDING); await p.waitForLoadState('load');
 
       ok(/Gestão de Treinos/.test(await p.title()), `${tag}: título com o nome do produto`);
+      const og = await p.evaluate(() => ({ img: document.querySelector('meta[property="og:image"]').content, w: document.querySelector('meta[property="og:image:width"]').content, h: document.querySelector('meta[property="og:image:height"]').content, card: document.querySelector('meta[name="twitter:card"]').content }));
+      const imgOk = (await p.request.get(URL_LANDING.replace('conheca.html', 'icones/compartilhar.png'))).ok();
+      ok(/\/icones\/compartilhar\.png$/.test(og.img) && og.w === '1200' && og.h === '630' && og.card === 'summary_large_image' && imgOk, `${tag}: imagem de compartilhamento 1200×630`, JSON.stringify(og));
       ok(await p.isVisible('h1') && /num só lugar\. Decisões guiadas por dados/.test(await p.textContent('h1')), `${tag}: hero com o título de tudo num só lugar e dados`);
       ok(/cada treino e cada exercício/.test(await p.textContent('.hero-sub')) && /e muito mais\.$/.test((await p.textContent('.hero-sub')).trim()), `${tag}: apoio fala de treino e exercício e deixa os tipos em aberto`);
       for (const id of ['problema', 'como-funciona', 'funcionalidades', 'para-quem', 'personal', 'depoimentos', 'planos', 'duvidas']) ok(await p.locator('#' + id).count() === 1, `${tag}: seção ${id}`);
