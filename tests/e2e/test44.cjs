@@ -46,6 +46,7 @@ async function abrir(b, perfil, op = {}) {
     ok(!/recupera/i.test(await txt(p, '#dia-lista')), `${scheme}: detalhe do dia sem recuperação`);
     // Privacidade: ligar consentimento
     await H.voce(p, 'privacidade'); await p.waitForTimeout(250);
+    ok(/O que o seu personal vê/.test(await txt(p, '.priv-resumo')) && /foto de perfil/.test(await txt(p, '.priv-resumo')), `${scheme}: Privacidade diz o que o personal vê`);
     ok(/O que o administrador vê/.test(await txt(p, '.priv-resumo')) && !/Mundo/i.test(await txt(p, '.voce-pagina[data-pagina="privacidade"]')), `${scheme}: Privacidade explica o monitoramento (sem Mundo ao vivo)`);
     ok(!(await p.locator('#saude-consent').isChecked()) && /Registrar observações nos check-ins/.test(await txt(p, '.voce-pagina[data-pagina="privacidade"]')), `${scheme}: interruptor de observações desligado por padrão`);
     ok(!/recupera/i.test(await txt(p, '.voce-pagina[data-pagina="privacidade"]')), `${scheme}: Privacidade não fala mais de recuperação`);
