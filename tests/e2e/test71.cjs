@@ -24,7 +24,7 @@ const perfil = async (p) => (await H.banco(p)).perfis.find((x) => x.id === 'u1')
     ok(await p.isVisible('#jornada-dialog') && !(await p.isVisible('#politica-dialog')), `${tag}: abre as boas-vindas (sem a janela da política)`);
     ok((await titulo(p)) === 'Bem-vindo ao Gestão de Treinos' && (await passo(p)) === 'Etapa 1 de 3', `${tag}: passo 1 de 3`, `${await titulo(p)} / ${await passo(p)}`);
     const corpo = await p.innerText('#jornada-body');
-    ok(['Treino do dia', 'Check-in', 'Dashboard', 'Temporizador de descanso', 'Você'].every((x) => corpo.includes(x)), `${tag}: explica o app`);
+    ok(['Treino do dia', 'Check-in', 'Dashboard', 'Timer', 'Você'].every((x) => corpo.includes(x)), `${tag}: explica o app`);
     ok(!(await p.locator('#jornada-body [data-fechar]').count()) && !(await p.locator('#novidade-ocultar').count()), `${tag}: sem X e sem "Não mostrar de novo"`);
     ok(!(await p.locator('.bv-passos').count()) && (await p.locator('.bv-etapa').count()) === 1, `${tag}: a etapa aparece num lugar só (sem pontinhos)`);
     await p.locator('#jornada-dialog .modal-body').screenshot({ path: `${H.SAIDA}/boas-vindas-1-${tag}.png` });

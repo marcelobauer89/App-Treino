@@ -92,8 +92,11 @@ Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 a t6 nos check-i
 
 ## Temporizador de descanso
 
-- **Configurar:** Você → Temporizador. Vem ligado (dá para desligar). Escolha o descanso padrão (30 s a 3 min) e se, ao terminar, toca um som e o celular vibra (o iPhone não vibra; o aviso fica na tela).
-- **Usar:** ligado, aparece um botão redondo no canto direito da tela Treino, logo acima do "Fazer check-in". Ele abre a janela para escolher o tempo e iniciar; durante o descanso há −15 s, +15 s e Pular, e o botão mostra o tempo que falta.
+Na tela o recurso se chama **Timer**: serve para o descanso entre as séries e também para cronometrar um exercício.
+
+- **Configurar:** Você → Timer. Vem ligado (dá para desligar). Escolha o tempo padrão (30 s a 3 min) e se, ao terminar, toca um som e o celular vibra (o iPhone não vibra; o aviso fica na tela).
+- **Usar:** ligado, aparece um botão redondo no canto direito da tela Treino, logo acima do "Fazer check-in". Ele abre a janela "Timer" para escolher o tempo e iniciar; com o timer rodando há −15 s, +15 s e Pular, o botão mostra o tempo que falta e, no fim, aparece "Tempo esgotado!".
+- **Som:** três bipes gerados na hora (Web Audio), que tocam por cima da música (Spotify e outros) sem pausá-la; no iPhone o áudio do app é do tipo `ambient`. Por isso, no iPhone com a chave de silencioso ligada o bipe não toca. Não usar `<audio>` nem o tipo `playback`: os dois param a música de outros apps.
 - **Banco:** a escolha fica em `perfis.temporizador`. Rode de novo o `supabase/schema.sql` para criar a coluna e liberar a gravação; sem ela, o temporizador funciona, mas a escolha vale só até recarregar.
 
 ## Jornadas prontas
