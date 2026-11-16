@@ -159,14 +159,19 @@ p { margin: 0; }
 .pilar { border-top: 6px solid var(--cor); padding-top: 22px; }
 .pilar h3 { font-size: clamp(34px, 4vw, 48px); font-weight: 900; font-stretch: 72%; }
 .pilar p { margin-top: 12px; color: var(--tinta-2); }
+.esportes { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 8px; counter-reset: esporte; }
+.esportes li { display: flex; align-items: center; gap: 12px; font-weight: 700; counter-increment: esporte; }
+.esportes li::before { content: counter(esporte); width: 1.4em; color: var(--tinta-2); font-weight: 600; font-size: 14px; text-align: right; }
+.esp-ic { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px; background: var(--cor); color: var(--selo-tinta); flex: none; }
 @media (max-width: 760px) { .pilares { grid-template-columns: 1fr; gap: 32px; } }
 
 /* Passos (uma sequência de verdade) */
-.passos { list-style: none; margin: 48px 0 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; counter-reset: passo; position: relative; }
+.passos { list-style: none; margin: 48px 0 0; padding: 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: 24px; counter-reset: passo; position: relative; }
 .passos::before { content: ""; position: absolute; top: 27px; left: 28px; right: 28px; height: 2px; background: repeating-linear-gradient(90deg, var(--fio) 0 8px, transparent 8px 14px); }
 .passos li { position: relative; }
 .passo-n { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; background: var(--marca); color: var(--sobre-marca); font-family: var(--display); font-weight: 900; font-stretch: 72%; font-size: 28px; box-shadow: 0 0 0 6px var(--gi); }
 .passos h3 { margin-top: 20px; }
+.passos li:last-child .passo-n { background: var(--feito); }
 .passos p { margin-top: 8px; color: var(--tinta-2); font-size: 16px; }
 @media (max-width: 900px) {
   .passos { grid-template-columns: 1fr; gap: 28px; }
@@ -182,7 +187,7 @@ p { margin: 0; }
 .func { background: var(--gi); border-radius: 20px; padding: 22px; display: flex; flex-direction: column; gap: 8px; }
 .func p { color: var(--tinta-2); font-size: 15.5px; }
 .func-largo { grid-column: span 2; }
-.func > div { margin-top: auto; padding-top: 14px; }
+.func > div, .func > dl { margin-top: auto; padding-top: 14px; }
 .mini-ex { display: flex; flex-wrap: wrap; gap: 8px; }
 .mini-ex span { background: var(--papel); border: 1px solid var(--fio); border-radius: 12px; padding: 8px 12px; font-size: 14px; color: var(--tinta-2); }
 .mini-ex b { color: var(--tinta); }
@@ -193,13 +198,14 @@ p { margin: 0; }
 .mini-trofeu .trofeu-gd { width: 64px; height: 64px; padding: 0; }
 .mini-selos { display: flex; flex-wrap: wrap; gap: 6px; }
 .mini-selos i { width: 26px; height: 26px; border-radius: 8px; background: var(--cor); }
-.mini-cal { display: grid; grid-template-columns: repeat(7, 30px); gap: 6px; }
-.mini-cal i { aspect-ratio: 1; border-radius: 7px; background: var(--papel); border: 1px solid var(--fio); }
-.mini-cal .c1 { background: var(--musc); border-color: transparent; }
-.mini-cal .c2 { background: var(--jiu); border-color: transparent; }
-.mini-cal .c3 { background: var(--futebol); border-color: transparent; }
-.mini-cal .c4 { background: var(--surf); border-color: transparent; }
-.mini-cal .c5 { background: var(--muay); border-color: transparent; }
+.mini-ind { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 0; }
+.mini-ind div { background: var(--papel); border: 1px solid var(--fio); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 2px; }
+.mini-ind dd { order: -1; }
+.mini-ind dt { font-size: 13px; color: var(--tinta-2); line-height: 1.25; }
+.mini-ind dd { margin: 0; font-family: var(--display); font-weight: 900; font-stretch: 72%; font-size: 30px; line-height: 1.05; }
+.mini-ind .barra { display: block; height: 6px; border-radius: 3px; background: var(--fio); overflow: hidden; margin-top: 6px; }
+.mini-ind .barra i { display: block; height: 100%; background: var(--feito); border-radius: 3px; }
+@media (max-width: 560px) { .mini-ind { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .mini-aviso { display: grid; gap: 6px; }
 .mini-aviso span { display: flex; align-items: center; gap: 8px; background: var(--papel); border: 1px solid var(--fio); border-radius: 10px; padding: 7px 10px; font-size: 14px; font-weight: 700; }
 .mini-aviso span::before { content: ""; width: 10px; height: 10px; border-radius: 3px; background: var(--cor); }
@@ -297,6 +303,7 @@ p { margin: 0; }
 .faq summary::-webkit-details-marker { display: none; }
 .faq summary::after { content: ""; position: absolute; right: 6px; top: 50%; width: 12px; height: 12px; border-right: 2.5px solid var(--tinta-2); border-bottom: 2.5px solid var(--tinta-2); transform: translateY(-70%) rotate(45deg); transition: transform .2s; }
 .faq details[open] summary::after { transform: translateY(-30%) rotate(-135deg); }
+.faq details p + p { margin-top: -10px; }
 .faq details p { padding: 0 0 22px; color: var(--tinta-2); max-width: 40em; }
 
 /* Chamada final */
