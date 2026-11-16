@@ -196,8 +196,9 @@ Página própria para personal trainers: `personal.html` (em produção, https:/
 
 ## Landing page (conheca.html)
 
-Página de divulgação do produto (RF-86), publicada em `/App-Treino/conheca.html` (e em `/App-Treino/dev/conheca.html` no ambiente de testes). Não usa o Supabase nem guarda nada no navegador: é HTML com `css/landing.css` e `js/conheca.js` (abas "Para quem é", borda do topo ao rolar e botão fixo "Começar grátis" no celular, que aparece depois do hero e some na chamada final). Segue o tema do aparelho e, com movimento reduzido, a semana do hero aparece sem animação.
+Página de divulgação do produto (RF-86), publicada em `/App-Treino/conheca.html` (e em `/App-Treino/dev/conheca.html` no ambiente de testes). Não usa o Supabase nem guarda nada no navegador: é HTML com `css/landing.css` e `js/conheca.js` (menu do Entrar, abas "Para quem é", borda do topo ao rolar e os dois botões fixos do celular, "Começar grátis" e "Sou personal", que aparecem assim que a página rola e somem na chamada final). Segue o tema do aparelho e, com movimento reduzido, a semana do hero aparece sem animação.
 
+- **Entrar (menu do topo):** abre as opções **Sou aluno** (app, `./`) e **Sou personal** (`personal.html`); fecha com Esc ou clicando fora.
 - **Botões:** "Começar grátis" leva ao app (`./`, login e pedido de acesso); "Sou personal trainer" e "Começar como personal" levam ao `personal.html`. A tela de login do app tem o link "Conheça o Gestão de Treinos".
 - **Depoimentos:** de exemplo, com o aviso "Depoimentos ilustrativos". Trocar pelos reais (com autorização) antes de divulgar em larga escala.
 - **Planos:** só a vitrine. Os pagos aparecem como "Em breve" e não há cobrança; a cobrança de verdade é o RF-85.

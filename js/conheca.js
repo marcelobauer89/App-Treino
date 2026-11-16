@@ -1,4 +1,4 @@
-// Landing page do produto (conheca.html): abas "Para quem é", borda do topo ao rolar e botão fixo no celular.
+// Landing page do produto (conheca.html): menu do Entrar (aluno ou personal), abas "Para quem é", borda do topo ao rolar e botões fixos no celular.
 (function () {
   // ---------- Abas ----------
   var abas = Array.prototype.slice.call(document.querySelectorAll('.aba[role="tab"]'));
@@ -23,18 +23,43 @@
     });
   });
 
-  // ---------- Topo e botão fixo ----------
+  // ---------- Entrar: aluno ou personal ----------
+  var entrar = document.getElementById('entrar-btn');
+  var menu = document.getElementById('entrar-menu');
+  function abrirMenu(abrir) {
+    menu.hidden = !abrir;
+    entrar.setAttribute('aria-expanded', String(abrir));
+  }
+  if (entrar && menu) {
+    entrar.addEventListener('click', function () {
+      abrirMenu(menu.hidden);
+      if (!menu.hidden) menu.querySelector('a').focus();
+    });
+    document.addEventListener('click', function (e) { if (!menu.hidden && !e.target.closest('.entrar')) abrirMenu(false); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !menu.hidden) { abrirMenu(false); entrar.focus(); } });
+    menu.addEventListener('keydown', function (e) {
+      if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+      var itens = Array.prototype.slice.call(menu.querySelectorAll('a'));
+      var i = itens.indexOf(document.activeElement);
+      e.preventDefault();
+      itens[(i + (e.key === 'ArrowDown' ? 1 : -1) + itens.length) % itens.length].focus();
+    });
+  }
+
+  // ---------- Topo e botões fixos ----------
+  // No celular, os dois botões (aluno e personal) aparecem assim que a página rola e somem na chamada final.
   var topo = document.querySelector('.topo');
   var fixo = document.getElementById('cta-fixo');
-  var heroCta = document.getElementById('cta-hero');
   var final = document.querySelector('.final');
-  function rolou() { if (topo) topo.classList.toggle('rolou', window.scrollY > 8); }
-  window.addEventListener('scroll', rolou, { passive: true });
-  rolou();
-  if (fixo && heroCta && 'IntersectionObserver' in window) {
-    var heroVisivel = true, finalVisivel = false;
-    var atualizar = function () { fixo.hidden = heroVisivel || finalVisivel; };
-    new IntersectionObserver(function (es) { heroVisivel = es[0].isIntersecting; atualizar(); }).observe(heroCta);
-    if (final) new IntersectionObserver(function (es) { finalVisivel = es[0].isIntersecting; atualizar(); }).observe(final);
+  var finalVisivel = false;
+  function rolou() {
+    var y = window.scrollY;
+    if (topo) topo.classList.toggle('rolou', y > 8);
+    if (fixo) fixo.hidden = y < 40 || finalVisivel;
   }
+  window.addEventListener('scroll', rolou, { passive: true });
+  if (final && 'IntersectionObserver' in window) {
+    new IntersectionObserver(function (es) { finalVisivel = es[0].isIntersecting; rolou(); }).observe(final);
+  }
+  rolou();
 })();

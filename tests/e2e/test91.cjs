@@ -1,4 +1,4 @@
-// Landing page do produto (conheca.html): seções, botões, abas "Para quem é", botão fixo no celular, claro e escuro, sem rolagem lateral e link na tela de login.
+// Landing page do produto (conheca.html): seções, botões, abas "Para quem é", menu do Entrar (aluno ou personal), dois botões fixos no celular, claro e escuro, sem rolagem lateral e link na tela de login.
 const { chromium } = require('playwright');
 const H = require('../apoio/harness.cjs');
 let fails = 0;
@@ -51,13 +51,30 @@ const URL_LANDING = H.PAGINA.replace('index.html', 'conheca.html');
       await p.click('#duvidas summary >> nth=0');
       ok(await p.locator('#duvidas details >> nth=0').evaluate((d) => d.open), `${tag}: dúvida abre`);
 
-      // Botão fixo: só no celular, depois do hero e antes da chamada final.
-      await p.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' })); await p.waitForTimeout(150);
-      ok(await p.isHidden('#cta-fixo'), `${tag}: sem botão fixo no topo`);
-      await p.evaluate(() => document.getElementById('funcionalidades').scrollIntoView({ behavior: 'instant' })); await p.waitForTimeout(250);
-      ok(nome === 'celular' ? await p.isVisible('#cta-fixo') : await p.isHidden('#cta-fixo'), `${tag}: botão fixo ${nome === 'celular' ? 'aparece' : 'não aparece'} ao rolar`);
+      // Entrar no menu: abre as opções aluno e personal; fecha com Esc e ao clicar fora.
+      await p.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' })); await p.waitForTimeout(100);
+      ok(await p.isHidden('#entrar-menu') && await p.getAttribute('#entrar-btn', 'aria-expanded') === 'false', `${tag}: menu do Entrar começa fechado`);
+      await p.click('#entrar-btn');
+      const opcoes = await p.locator('#entrar-menu a').evaluateAll((as) => as.map((a) => a.querySelector('b').textContent + '>' + a.getAttribute('href')));
+      ok(await p.isVisible('#entrar-menu') && opcoes.join('|') === 'Sou aluno>./|Sou personal>personal.html', `${tag}: Entrar mostra Sou aluno e Sou personal`, opcoes.join('|'));
+      ok(await p.evaluate(() => document.activeElement.textContent.includes('Sou aluno')), `${tag}: foco vai para a primeira opção`);
+      await p.keyboard.press('ArrowDown');
+      ok(await p.evaluate(() => document.activeElement.textContent.includes('Sou personal')), `${tag}: seta para baixo vai para Sou personal`);
+      await p.keyboard.press('Escape');
+      ok(await p.isHidden('#entrar-menu') && await p.evaluate(() => document.activeElement.id) === 'entrar-btn', `${tag}: Esc fecha o menu e volta o foco`);
+      await p.click('#entrar-btn'); await p.mouse.click(5, 400);
+      ok(await p.isHidden('#entrar-menu'), `${tag}: clicar fora fecha o menu`);
+
+      // Botões fixos: só no celular, assim que a página rola, e somem na chamada final.
+      ok(await p.isHidden('#cta-fixo'), `${tag}: sem botões fixos no topo`);
+      await p.evaluate(() => window.scrollTo({ top: 120, behavior: 'instant' })); await p.waitForTimeout(250);
+      ok(nome === 'celular' ? await p.isVisible('#cta-fixo') : await p.isHidden('#cta-fixo'), `${tag}: botões fixos ${nome === 'celular' ? 'aparecem' : 'não aparecem'} ao começar a rolar`);
+      if (nome === 'celular') {
+        const fixos = await p.locator('#cta-fixo a').evaluateAll((as) => as.map((a) => a.textContent + '>' + a.getAttribute('href')));
+        ok(fixos.join('|') === 'Começar grátis>./|Sou personal>personal.html', `${tag}: botões fixos de aluno e de personal`, fixos.join('|'));
+      }
       await p.evaluate(() => document.querySelector('.final').scrollIntoView({ behavior: 'instant' })); await p.waitForTimeout(250);
-      ok(await p.isHidden('#cta-fixo'), `${tag}: botão fixo some na chamada final`);
+      ok(await p.isHidden('#cta-fixo'), `${tag}: botões fixos somem na chamada final`);
 
       await p.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
       await p.screenshot({ path: `${H.SAIDA}/test91-${scheme}-${nome}.png` });
