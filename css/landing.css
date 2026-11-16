@@ -177,7 +177,8 @@ p { margin: 0; }
 
 /* Passos (uma sequência de verdade) */
 .passos { list-style: none; margin: 48px 0 0; padding: 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: 24px; counter-reset: passo; position: relative; }
-.passos::before { content: ""; position: absolute; top: 27px; left: 28px; right: 28px; height: 2px; background: repeating-linear-gradient(90deg, var(--fio) 0 8px, transparent 8px 14px); }
+/* A tracejada liga um círculo ao próximo e termina no último (sem passar da etapa final). */
+.passos li:not(:last-child)::after { content: ""; position: absolute; top: 27px; left: 64px; right: -16px; height: 2px; background: repeating-linear-gradient(90deg, var(--fio) 0 8px, transparent 8px 14px); }
 .passos li { position: relative; }
 .passo-n { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; background: var(--marca); color: var(--sobre-marca); font-family: var(--display); font-weight: 900; font-stretch: 72%; font-size: 28px; box-shadow: 0 0 0 6px var(--gi); }
 .passos h3 { margin-top: 20px; }
@@ -185,7 +186,7 @@ p { margin: 0; }
 .passos p { margin-top: 8px; color: var(--tinta-2); font-size: 16px; }
 @media (max-width: 900px) {
   .passos { grid-template-columns: 1fr; gap: 28px; }
-  .passos::before { top: 28px; bottom: 28px; left: 27px; right: auto; width: 2px; height: auto; background: repeating-linear-gradient(180deg, var(--fio) 0 8px, transparent 8px 14px); }
+  .passos li:not(:last-child)::after { top: 64px; bottom: -20px; left: 27px; right: auto; width: 2px; height: auto; background: repeating-linear-gradient(180deg, var(--fio) 0 8px, transparent 8px 14px); }
   .passos li { padding-left: 76px; min-height: 56px; }
   .passo-n { position: absolute; left: 0; top: 0; }
   .passos h3 { margin-top: 12px; }
