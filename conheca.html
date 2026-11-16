@@ -37,7 +37,13 @@
       <a href="#planos">Planos</a>
       <a href="#duvidas">Dúvidas</a>
     </nav>
-    <a class="btn btn-pq" href="./">Entrar</a>
+    <div class="entrar">
+      <button class="btn btn-pq" type="button" id="entrar-btn" aria-expanded="false" aria-controls="entrar-menu" aria-haspopup="true">Entrar</button>
+      <div class="entrar-menu" id="entrar-menu" hidden>
+        <a href="./"><b>Eu treino</b><small>Meus treinos, cargas e evolução</small></a>
+        <a href="personal.html"><b>Sou personal</b><small>Meus alunos, fichas e acompanhamento</small></a>
+      </div>
+    </div>
   </div>
 </header>
 
@@ -501,6 +507,9 @@
   </div>
 </footer>
 
-<a class="cta-fixo" href="./" id="cta-fixo" hidden>Começar grátis</a>
+<div class="cta-fixo" id="cta-fixo" hidden>
+  <a class="cta-aluno" href="./">Começar grátis</a>
+  <a class="cta-personal" href="personal.html">Sou personal</a>
+</div>
 </body>
 </html>
