@@ -203,6 +203,7 @@ Página de divulgação do produto (RF-86), publicada em `/App-Treino/conheca.ht
 - **Depoimentos:** de exemplo, com o aviso "Depoimentos ilustrativos". Trocar pelos reais (com autorização) antes de divulgar em larga escala.
 - **Planos:** só a vitrine. Os pagos aparecem como "Em breve" e não há cobrança; a cobrança de verdade é o RF-85.
 - **Prévia no WhatsApp e nas redes:** título, descrição e a imagem `icones/compartilhar.png` (1200×630, com o título e o celular da landing) pelas tags Open Graph no `<head>`. O endereço da imagem é o de produção, então no `/dev/` a prévia só aparece depois que a mudança chegar à `main`. Para refazer a imagem depois de mudar o título, gere um PNG de 1200×630 no mesmo estilo e substitua o arquivo.
+- **Ambiente de testes:** carrega o `ambiente.js`, então no `/dev/` mostra o selo **DEV** e "[DEV]" no título, como as outras páginas.
 - **CSP:** igual à das outras quatro páginas (ver Segurança do site publicado).
 
 ## Excluir conta
