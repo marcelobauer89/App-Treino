@@ -17,6 +17,8 @@ const URL_LANDING = H.PAGINA.replace('index.html', 'conheca.html');
       await p.goto(URL_LANDING); await p.waitForLoadState('load');
 
       ok(/Gestão de Treinos/.test(await p.title()), `${tag}: título com o nome do produto`);
+      // Os testes rodam em localhost, que conta como dev: a landing mostra o selo DEV, como as outras páginas.
+      ok(/^\[DEV\] /.test(await p.title()) && await p.locator('div[aria-label="Ambiente de desenvolvimento"]').count() === 1, `${tag}: no dev, selo DEV e [DEV] no título`);
       const og = await p.evaluate(() => ({ img: document.querySelector('meta[property="og:image"]').content, w: document.querySelector('meta[property="og:image:width"]').content, h: document.querySelector('meta[property="og:image:height"]').content, card: document.querySelector('meta[name="twitter:card"]').content }));
       const imgOk = (await p.request.get(URL_LANDING.replace('conheca.html', 'icones/compartilhar.png'))).ok();
       ok(/\/icones\/compartilhar\.png$/.test(og.img) && og.w === '1200' && og.h === '630' && og.card === 'summary_large_image' && imgOk, `${tag}: imagem de compartilhamento 1200×630`, JSON.stringify(og));
