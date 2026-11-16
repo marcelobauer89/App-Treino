@@ -26,6 +26,7 @@ const ANTES = { 1: { nome: 'Treino de antes', subtitulo: 'Corpo todo', exercicio
     const txt = await p.locator('#personal-body').innerText();
     ok(/Paula Exemplo quer acompanhar/.test(txt) && /CREF 000000-G\/SP/.test(txt), `${scheme}: convite mostra o personal e o CREF`);
     ok(/Nunca vê/.test(txt) && /observações/.test(txt), `${scheme}: convite diz o que o personal nunca vê`);
+    ok(/foto de perfil/.test(txt) && /e-mail/.test(txt) && await p.locator('#personal-body a[href="privacidade.html#s3b"]').count() === 1, `${scheme}: convite mostra os itens da política (nome e foto de perfil, sem e-mail) com o link da seção 3a`);
     ok(!/personal=/.test(await p.evaluate(() => location.search)), `${scheme}: o código sai do endereço`);
     await p.locator('#personal-dialog').screenshot({ path: `${H.SAIDA}/aluno-convite-${scheme}.png` });
     await p.click('[data-personal="aceitar"]'); await H.prontos(p); await p.waitForTimeout(300);

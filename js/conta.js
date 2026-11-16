@@ -302,11 +302,12 @@
   };
   const itensPersonal = () => `
     <ul class="novidade-lista">
-      <li>${ICON_CHECK}<span><b>Vai ver:</b> seus treinos, sua semana, quando você treinou (todas as atividades) e os pesos que você registra.</span></li>
+      <li>${ICON_CHECK}<span><b>Vai ver:</b> seu nome e sua foto de perfil, seus treinos, sua semana, os check-ins de todas as atividades (tipo, dia, horário e duração), os pesos que você registra e quando você usou o app.</span></li>
       <li>${ICON_CHECK}<span><b>Vai montar:</b> os seus treinos. Eles chegam aqui sozinhos, e você não precisa montar nada.</span></li>
-      <li>${ICON_CHECK}<span><b>Nunca vê:</b> suas observações e as fotos dos check-ins.</span></li>
+      <li>${ICON_CHECK}<span><b>Nunca vê:</b> seu e-mail, suas observações e as fotos dos check-ins, nem o que você fizer depois de encerrar.</span></li>
       <li>${ICON_CHECK}<span>Você encerra quando quiser em Você → Meu personal, e aí os treinos dele saem e voltam os seus.</span></li>
-    </ul>`;
+    </ul>
+    <p class="nota-campo personal-politica">Tudo isso está na <a href="privacidade.html#s3b" target="_blank" rel="noopener">Política de Privacidade, seção 3a</a>.</p>`;
   // Mostra o convite e espera a resposta: 'ok' (aceitou), 'nao' ou o motivo de o convite não valer.
   async function oferecerPersonal(codigo) {
     const { data, error } = await sb.rpc('ver_convite_personal', { p_codigo: codigo });
