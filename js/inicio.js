@@ -12,6 +12,7 @@
     $('entrar-google').hidden = modo !== 'login';
     $('entrar-tentar').hidden = modo !== 'erro';
     $('entrar-privacidade').hidden = modo !== 'login';
+    $('entrar-conheca').hidden = modo !== 'login';
     $('entrar-carga').hidden = modo !== 'carregando';
     $('entrar-erro').textContent = modo === 'login' ? msg : '';
     $('entrar-erro').hidden = !(modo === 'login' && msg);
