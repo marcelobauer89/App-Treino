@@ -1110,7 +1110,7 @@
   }
 
   // ---------- Abas ----------
-  const ABAS = PERSONAL ? ['geral', 'usuarios', 'fichas', 'exercicios', 'convidar'] : ['geral', 'usuarios', 'saude', 'emails', 'convites', 'exercicios', 'tipos', 'profissionais'];
+  const ABAS = PERSONAL ? ['geral', 'usuarios', 'fichas', 'exercicios', 'convidar'] : ['geral', 'usuarios', 'profissionais', 'exercicios', 'tipos', 'convites', 'emails', 'saude'];
   let aba = ABAS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'geral';
   // Gráficos são desenhados na largura real, então são redesenhados ao aparecer.
   function renderVisivel() {
