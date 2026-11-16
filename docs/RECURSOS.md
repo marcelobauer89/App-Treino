@@ -81,7 +81,7 @@ Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 a t6 nos check-i
 
 - **No painel → Tipos de check-in:** o administrador cria e muda as atividades além da musculação: nome, letra do selo, cor no tema claro e no escuro, duração padrão, posição na lista, ativo e **modalidades** (cada uma com "Pede os km"). Vale para todos ao abrir o app, sem publicar nada.
 - **No app:** os tipos ativos aparecem no check-in, na Minha semana, nas metas da semana e na Evolução, na ordem do painel. Desativar tira o tipo do check-in e da semana; os check-ins antigos continuam com o nome. Um tipo novo ganha a cor escolhida; os do app (Jiu Jitsu, Muay Thai, Surf, Futebol, Futvôlei, Cardio) continuam com a cor de cada tema e estilo, a menos que o administrador escolha outra.
-- **Cardio:** vem com as modalidades Bike e Corrida, as duas pedindo os km. No check-in de Cardio a pessoa escolhe a modalidade (opcional) e, se ela pede km, informa a distância (ex.: 12,5). O Dashboard mostra "Corrida · 7,5 km" no check-in.
+- **Cardio:** vem com as modalidades Bike e Corrida, as duas pedindo os km. No check-in de Cardio a pessoa escolhe a modalidade (opcional) e, se ela pede km, informa a distância no campo com "km" ao lado (ex.: 12,5): o campo só aceita números, troca o ponto por vírgula e guarda até 2 casas. O Dashboard mostra "Corrida · 7,5 km" no check-in.
 - **No banco:** tabela `tipos_checkin` (id, nome, selo, cor, cor_escura, duracao, ordem, ativo, modalidades) e colunas `checkins.modalidade` e `checkins.km`. O id do tipo vem do nome (sem acento) e não muda depois; um gatilho só aceita check-in de tipo cadastrado (ou t1 a t6). O app guarda uma cópia dos tipos no aparelho.
 - **E-mail semanal:** os tipos novos entram como os opcionais (só para quem fez ou planejou), com a cor do tema claro.
 - **Para ligar:** rode `supabase/migracoes/002-tipos-de-checkin.sql` no Supabase e publique de novo a função `resumo-semanal`. Sem a migração, o app continua com os tipos de sempre e o check-in não mostra a modalidade.
@@ -92,8 +92,11 @@ Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 a t6 nos check-i
 
 ## Temporizador de descanso
 
-- **Configurar:** Você → Temporizador. Vem ligado (dá para desligar). Escolha o descanso padrão (30 s a 3 min) e se, ao terminar, toca um som e o celular vibra (o iPhone não vibra; o aviso fica na tela).
-- **Usar:** ligado, aparece um botão redondo no canto direito da tela Treino, logo acima do "Fazer check-in". Ele abre a janela para escolher o tempo e iniciar; durante o descanso há −15 s, +15 s e Pular, e o botão mostra o tempo que falta.
+Na tela o recurso se chama **Timer**: serve para o descanso entre as séries e também para cronometrar um exercício.
+
+- **Configurar:** Você → Timer. Vem ligado (dá para desligar). Escolha o tempo padrão (30 s a 3 min) e se, ao terminar, toca um som e o celular vibra (o iPhone não vibra; o aviso fica na tela).
+- **Usar:** ligado, aparece um botão redondo no canto direito da tela Treino, logo acima do "Fazer check-in". Ele abre a janela "Timer" para escolher o tempo e iniciar; com o timer rodando há −15 s, +15 s e Pular, o botão mostra o tempo que falta e, no fim, aparece "Tempo esgotado!".
+- **Som:** três bipes gerados na hora (Web Audio), que tocam por cima da música (Spotify e outros) sem pausá-la; no iPhone o áudio do app é do tipo `ambient`. Por isso, no iPhone com a chave de silencioso ligada o bipe não toca. Não usar `<audio>` nem o tipo `playback`: os dois param a música de outros apps.
 - **Banco:** a escolha fica em `perfis.temporizador`. Rode de novo o `supabase/schema.sql` para criar a coluna e liberar a gravação; sem ela, o temporizador funciona, mas a escolha vale só até recarregar.
 
 ## Jornadas prontas

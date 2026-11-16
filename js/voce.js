@@ -746,7 +746,7 @@
         ${item('<b>Treino do dia</b>: a ficha de hoje, com as cargas de cada série')}
         ${item('<b>Check-in</b> de cada treino: musculação, Jiu Jitsu, muay thai, surf, futebol, futvôlei e cardio')}
         ${item('<b>Dashboard</b> com o calendário e o histórico dos seus treinos')}
-        ${item('<b>Temporizador de descanso</b> entre as séries')}
+        ${item('<b>Timer</b> para o descanso entre as séries ou o tempo de um exercício')}
         ${item('<b>Você</b>: treinos, semana, aparência e privacidade do seu jeito')}
       </ul>
       ${rodapeBV('<button class="modal-done" type="button" data-jd-comecar>Começar</button>')}`;

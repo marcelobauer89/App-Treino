@@ -1,4 +1,4 @@
-// js/temporizador.js: temporizador de descanso entre séries.
+// js/temporizador.js: timer (descanso entre séries ou tempo de um exercício).
 // Parte do app (index.html). Os arquivos de js/ dividem o mesmo escopo global e carregam na ordem do index.html;
 // o mapa das seções está em docs/MAPA.md.
 
@@ -26,7 +26,7 @@
     salvarTemporizador();
     registrarEvento('temporizador', { ativo: config.temporizador.ativo });
     renderTemporizadorConfig(); renderMenuVoce(); renderFabDescanso();
-    toast(config.temporizador.ativo ? 'Temporizador ligado: o botão aparece na tela Treino.' : 'Temporizador desligado.');
+    toast(config.temporizador.ativo ? 'Timer ligado: o botão aparece na tela Treino.' : 'Timer desligado.');
   });
   $('temp-vibrar').addEventListener('change', (e) => { config.temporizador.vibrar = e.target.checked; salvarTemporizador(); });
   $('temp-som').addEventListener('change', (e) => {
@@ -35,79 +35,46 @@
     if (e.target.checked) { liberarSom(); tocarSom(); }
   });
 
-  // Som do fim do descanso: três bipes num áudio WAV gerado pelo app (sem arquivo no site).
-  // Tocado como mídia (<audio>), ele toca mesmo com o iPhone no silencioso, o que o som gerado na hora (Web Audio) não faz.
-  // O navegador só deixa tocar depois de um toque da pessoa: no toque que inicia o descanso, o mesmo elemento toca um
-  // trecho mudo, e assim fica liberado para tocar os bipes sozinho no fim. Web Audio fica de reserva.
-  let audioDescanso = null; // Web Audio (reserva)
-  let audioEl = null;
-  let somBipe = null;
-  let somMudo = null;
-  function wav(duracao, amostra) {
-    const taxa = 8000; const n = Math.round(taxa * duracao);
-    const buf = new ArrayBuffer(44 + n * 2); const v = new DataView(buf);
-    const txt = (o, t) => { for (let i = 0; i < t.length; i++) v.setUint8(o + i, t.charCodeAt(i)); };
-    txt(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); txt(8, 'WAVE'); txt(12, 'fmt ');
-    v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
-    v.setUint32(24, taxa, true); v.setUint32(28, taxa * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
-    txt(36, 'data'); v.setUint32(40, n * 2, true);
-    for (let i = 0; i < n; i++) v.setInt16(44 + i * 2, Math.max(-1, Math.min(1, amostra(i / taxa))) * 32767, true);
-    return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
-  }
+  // Som do fim do timer: três bipes gerados na hora (Web Audio), que tocam por cima da música sem pausá-la.
+  // Não usar <audio> nem audioSession 'playback': os dois tomam o áudio do celular e param o Spotify (e outros apps).
+  // A troca: no iPhone com a chave de silencioso ligada o bipe não toca (fica o aviso na tela).
+  // O navegador só deixa tocar depois de um toque da pessoa: no toque que inicia o timer, o app libera o áudio.
+  let audioTimer = null;
   const BIPES = [[0, 0.2, 880], [0.28, 0.2, 880], [0.56, 0.45, 1320]];
-  function amostraBipe(t) {
-    for (const [ini, dur, freq] of BIPES) {
-      if (t >= ini && t < ini + dur) {
-        const x = t - ini;
-        const env = Math.min(1, x / 0.01) * Math.min(1, (dur - x) / 0.05);
-        return 0.6 * env * Math.sin(2 * Math.PI * freq * x);
-      }
-    }
-    return 0;
-  }
   function liberarSom() {
-    // iOS 17 ou mais: o som do app é "reprodução" (não respeita a chave de silencioso nem é cortado pela música).
-    try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (_) {}
-    try {
-      if (!audioEl) {
-        audioEl = new Audio(); audioEl.preload = 'auto';
-        somBipe = wav(1.05, amostraBipe); somMudo = wav(0.1, () => 0);
-      }
-      audioEl.dataset.som = 'mudo'; audioEl.src = somMudo;
-      const r = audioEl.play(); if (r && r.catch) r.catch(() => {});
-    } catch (_) {}
+    // iOS 17 ou mais: 'ambient' mistura com o som de outros apps (música, podcast) em vez de interromper.
+    try { if (navigator.audioSession) navigator.audioSession.type = 'ambient'; } catch (_) {}
     try {
       const AC = window.AudioContext || window.webkitAudioContext;
       if (!AC) return;
-      if (!audioDescanso) audioDescanso = new AC();
-      if (audioDescanso.state !== 'running') audioDescanso.resume();
+      if (!audioTimer) audioTimer = new AC();
+      if (audioTimer.state !== 'running') audioTimer.resume();
+      // Um trecho mudo dentro do toque destrava o áudio nos iPhones mais antigos.
+      if (audioTimer.createBuffer) {
+        const src = audioTimer.createBufferSource();
+        src.buffer = audioTimer.createBuffer(1, 1, 22050);
+        src.connect(audioTimer.destination); src.start(0);
+      }
     } catch (_) {}
   }
-  function tocarBipesWebAudio() {
-    if (!audioDescanso) return;
+  function tocarSom() {
+    if (!audioTimer) liberarSom();
+    if (!audioTimer) return;
     try {
-      if (audioDescanso.state !== 'running') audioDescanso.resume();
-      const t0 = audioDescanso.currentTime + 0.05;
+      if (audioTimer.state !== 'running') audioTimer.resume();
+      const t0 = audioTimer.currentTime + 0.05;
       BIPES.forEach(([d, dur, freq]) => {
-        const osc = audioDescanso.createOscillator();
-        const vol = audioDescanso.createGain();
+        const osc = audioTimer.createOscillator();
+        const vol = audioTimer.createGain();
         osc.type = 'sine';
         osc.frequency.value = freq;
         vol.gain.setValueAtTime(0.0001, t0 + d);
         vol.gain.exponentialRampToValueAtTime(0.5, t0 + d + 0.02);
         vol.gain.exponentialRampToValueAtTime(0.0001, t0 + d + dur);
-        osc.connect(vol).connect(audioDescanso.destination);
+        osc.connect(vol).connect(audioTimer.destination);
         osc.start(t0 + d); osc.stop(t0 + d + dur + 0.05);
       });
     } catch (_) {}
-  }
-  function tocarSom() {
-    if (!audioEl) return tocarBipesWebAudio();
-    try {
-      audioEl.dataset.som = 'bipe'; audioEl.src = somBipe; audioEl.currentTime = 0;
-      const r = audioEl.play();
-      if (r && r.catch) r.catch(() => tocarBipesWebAudio());
-    } catch (_) { tocarBipesWebAudio(); }
   }
   $('temp-tempos').addEventListener('click', (e) => {
     const b = e.target.closest('[data-temp-padrao]');
@@ -128,10 +95,10 @@
       const r = restante();
       $('fab-descanso-tempo').textContent = fmtRelogio(r);
       fab.style.setProperty('--p', String(desc.total ? (desc.total - r) / desc.total : 0));
-      fab.setAttribute('aria-label', `Temporizador de descanso: faltam ${fmtRelogio(r)}`);
+      fab.setAttribute('aria-label', `Timer: faltam ${fmtRelogio(r)}`);
     } else {
       fab.style.removeProperty('--p');
-      fab.setAttribute('aria-label', 'Temporizador de descanso');
+      fab.setAttribute('aria-label', 'Timer');
     }
   }
 
@@ -142,7 +109,7 @@
     if (desc.fim) {
       corpo = `
         <p class="desc-contador" id="desc-contador" role="timer" aria-live="off">${fmtRelogio(restante())}</p>
-        <p class="desc-status">Descansando: ${fmtSegundos(desc.total)}</p>
+        <p class="desc-status">Timer de ${fmtSegundos(desc.total)}</p>
         <div class="desc-acoes">
           <button class="btn-sec" type="button" data-desc-ajuste="-15">−15 s</button>
           <button class="btn-sec" type="button" data-desc-ajuste="15">+15 s</button>
@@ -151,15 +118,15 @@
         <button class="modal-done" type="button" data-fechar>Fechar (continua contando)</button>`;
     } else {
       corpo = `
-        ${desc.acabou ? '<p class="desc-contador acabou">0:00</p><p class="desc-status acabou">Bora para a próxima série!</p>' : ''}
-        <p class="temp-rotulo" id="desc-tempo-rotulo">Tempo de descanso</p>
+        ${desc.acabou ? '<p class="desc-contador acabou">0:00</p><p class="desc-status acabou">Tempo esgotado!</p>' : ''}
+        <p class="temp-rotulo" id="desc-tempo-rotulo">Tempo</p>
         <div class="chips temp-tempos" role="group" aria-labelledby="desc-tempo-rotulo">
           ${TEMPOS_DESCANSO.map((seg) => `<button class="chip" type="button" data-desc-tempo="${seg}" aria-pressed="${seg === escolhido}">${fmtSegundos(seg)}</button>`).join('')}
         </div>
-        <button class="modal-done" type="button" data-desc-iniciar>${desc.acabou ? 'Novo descanso' : 'Iniciar descanso'}</button>`;
+        <button class="modal-done" type="button" data-desc-iniciar>${desc.acabou ? 'Novo timer' : 'Iniciar timer'}</button>`;
     }
     $('descanso-body').innerHTML = `
-      <div class="modal-head"><div><h3 id="descanso-title">Descanso</h3></div>${BOTAO_FECHAR}</div>
+      <div class="modal-head"><div><h3 id="descanso-title">Timer</h3></div>${BOTAO_FECHAR}</div>
       ${corpo}
       <p class="sr-only" id="desc-anuncio" aria-live="assertive"></p>`;
   }
@@ -203,12 +170,12 @@
     renderFabDescanso();
     if (descansoDialog.open) renderDescanso();
     const anuncio = $('desc-anuncio');
-    if (anuncio) anuncio.textContent = 'Descanso terminado. Bora para a próxima série!';
-    else toast('Descanso terminado. Bora para a próxima série!');
+    if (anuncio) anuncio.textContent = 'Tempo esgotado!';
+    else toast('Tempo esgotado!');
   }
   $('fab-descanso').addEventListener('click', () => {
     if (config.temporizador.som) liberarSom();
-    // Parado: começa no padrão; depois de um descanso, "Novo descanso" repete o mesmo tempo.
+    // Parado: começa no padrão; depois de um descanso, "Novo timer" repete o mesmo tempo.
     if (!desc.fim && !desc.acabou) desc.escolhido = null;
     renderDescanso();
     if (!descansoDialog.open) descansoDialog.showModal();
