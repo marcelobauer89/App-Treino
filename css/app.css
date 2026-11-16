@@ -353,6 +353,7 @@
   .botao-arquivo input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
   .botao-arquivo:focus-within { outline: 2px solid var(--marca-tinta); outline-offset: 2px; }
   .nota-campo { margin: 0; font-size: 13px; color: var(--tinta-2); }
+  .personal-politica { margin: 10px 0 14px; }
   .campo input[aria-invalid="true"] { border-color: var(--erro); }
   .opcao input:disabled { cursor: not-allowed; }
   .opcao input:disabled + span { opacity: .45; }
