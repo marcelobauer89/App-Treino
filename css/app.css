@@ -478,6 +478,8 @@
   .convite-sair { justify-self: center; }
   #tela-entrar .entrar-privacidade { margin: 0; font-size: 13px; color: #fff; opacity: .88; text-align: center; }
   #tela-entrar .entrar-privacidade a { color: #fff; text-decoration: underline; text-underline-offset: 2px; }
+  #tela-entrar .entrar-conheca { margin: 0; font-size: 14px; text-align: center; }
+  #tela-entrar .entrar-conheca a { color: #fff; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
   /* Enquanto a sessão carrega, uma barra fina corre no lugar do botão. */
   #tela-entrar .entrar-carga { position: relative; height: 3px; border-radius: 2px; overflow: hidden; background: rgba(255, 255, 255, .35); }
   #tela-entrar .entrar-carga::after {

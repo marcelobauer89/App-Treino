@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f3f4f6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1115" media="(prefers-color-scheme: dark)">
+<title>Gestão de Treinos • Academia, tatame, campo e mar numa semana só</title>
+<meta name="description" content="O Gestão de Treinos junta a musculação e todos os seus esportes num app só: mostra o treino de hoje, lembra a carga da última vez e avisa quando uma atividade atrapalha a outra. Grátis.">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:title" content="Gestão de Treinos: academia, tatame, campo e mar numa semana só">
+<meta property="og:description" content="Treino do dia, cargas que se lembram, check-in de qualquer esporte e a sua evolução num lugar só. Grátis, no navegador do celular.">
+<meta property="og:image" content="https://marcelobauer89.github.io/App-Treino/icones/icone-512.png">
+<!-- Segurança (CSP): o navegador só roda scripts do próprio site e só conversa com o Supabase. Ao usar um serviço
+     externo novo (imagem, vídeo, API), acrescente o endereço nas cinco páginas: index, admin, personal, privacidade e conheca. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-src 'self' https://www.youtube-nocookie.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<link rel="icon" href="icones/icone-192.png">
+<link rel="apple-touch-icon" href="icones/apple-touch-icon.png">
+<link rel="stylesheet" href="fonts/archivo.css">
+<link rel="stylesheet" href="css/landing.css?v=dev">
+<script src="js/conheca.js?v=dev" defer></script>
+</head>
+<body>
+<a class="pular" href="#conteudo">Pular para o conteúdo</a>
+
+<header class="topo">
+  <div class="topo-in">
+    <a class="marca" href="#topo" aria-label="Gestão de Treinos, início da página">
+      <img src="icones/icone-192.png" alt="" width="32" height="32">
+      <span>Gestão de Treinos</span>
+    </a>
+    <nav class="topo-nav" aria-label="Seções">
+      <a href="#funcionalidades">Funcionalidades</a>
+      <a href="#para-quem">Para quem é</a>
+      <a href="#personal">Personal</a>
+      <a href="#planos">Planos</a>
+      <a href="#duvidas">Dúvidas</a>
+    </nav>
+    <a class="btn btn-pq" href="./">Entrar</a>
+  </div>
+</header>
+
+<main id="conteudo">
+
+  <!-- ---------- Hero ---------- -->
+  <section class="hero" id="topo" aria-labelledby="hero-titulo">
+    <div class="hero-in">
+      <div class="hero-texto">
+        <h1 id="hero-titulo">Academia, tatame, campo e mar. Uma semana só.</h1>
+        <p class="hero-sub">O Gestão de Treinos junta a musculação e todos os seus esportes num app só. Ele mostra o treino de hoje, lembra a carga da última vez e avisa quando uma atividade atrapalha a outra.</p>
+        <div class="hero-acoes">
+          <a class="btn btn-gd" href="./" id="cta-hero">Começar grátis</a>
+          <a class="btn btn-sec btn-gd" href="personal.html">Sou personal trainer</a>
+        </div>
+        <p class="hero-nota">Funciona no navegador do celular, sem instalar nada. Você entra com a conta Google.</p>
+      </div>
+
+      <figure class="celular" aria-label="Tela Treino do app: o treino de hoje com as cargas da última vez">
+        <div class="cel-tela" aria-hidden="true">
+          <div class="cel-topo">
+            <span class="cel-dia">Terça, 17 de novembro</span>
+            <strong class="cel-titulo">Treino A</strong>
+            <span class="cel-foco">Superiores · 6 exercícios</span>
+          </div>
+          <div class="cel-ex">
+            <div><b>Supino reto</b><small>4 × 8 · PSE 8</small></div>
+            <span class="cel-carga">42,5 kg<small>última: 40 kg</small></span>
+          </div>
+          <div class="cel-ex cel-ex-recorde">
+            <div><b>Remada curvada</b><small>4 × 10 · PSE 8</small></div>
+            <span class="cel-carga"><i class="trofeu"></i>50 kg<small>recorde</small></span>
+          </div>
+          <div class="cel-ex cel-ex-feito">
+            <div><b>Desenvolvimento</b><small>3 × 10 · PSE 7</small></div>
+            <span class="cel-feito">Feito</span>
+          </div>
+          <div class="cel-ex">
+            <div><b>Barra fixa</b><small>3 × máx. · sem peso</small></div>
+            <span class="cel-carga">3 séries</span>
+          </div>
+          <div class="cel-ex">
+            <div><b>Rosca direta</b><small>3 × 12 · PSE 8</small></div>
+            <span class="cel-carga">14 kg<small>última: 14 kg</small></span>
+          </div>
+          <div class="cel-aviso">Amanhã tem jiu: hoje o treino poupa as pernas.</div>
+          <span class="cel-checkin">Fazer check-in</span>
+          <nav class="cel-barra"><span class="ativo">Treino</span><span>Dashboard</span><span>Você</span></nav>
+        </div>
+      </figure>
+    </div>
+
+    <div class="semana" aria-label="Exemplo de semana montada no app">
+      <ol class="semana-dias">
+        <li class="dia" style="--cor: var(--musc)"><span class="dia-nome">Seg</span><span class="dia-ativ">Musculação A</span></li>
+        <li class="dia" style="--cor: var(--jiu)"><span class="dia-nome">Ter</span><span class="dia-ativ">Jiu Jitsu</span></li>
+        <li class="dia" style="--cor: var(--musc)"><span class="dia-nome">Qua</span><span class="dia-ativ">Musculação B</span></li>
+        <li class="dia" style="--cor: var(--futebol)"><span class="dia-nome">Qui</span><span class="dia-ativ">Futebol</span></li>
+        <li class="dia" style="--cor: var(--muay)"><span class="dia-nome">Sex</span><span class="dia-ativ">Muay thai</span></li>
+        <li class="dia" style="--cor: var(--surf)"><span class="dia-nome">Sáb</span><span class="dia-ativ">Surf</span></li>
+        <li class="dia dia-folga"><span class="dia-nome">Dom</span><span class="dia-ativ">Descanso</span></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ---------- Problema ---------- -->
+  <section class="secao" id="problema" aria-labelledby="problema-titulo">
+    <div class="secao-in">
+      <h2 id="problema-titulo">Sua rotina não cabe numa ficha de academia.</h2>
+      <p class="secao-sub">Quem treina e pratica esporte espalha tudo por aí: a ficha em PDF, as anotações do tatame, o grupo do futebol, a memória. Nenhum desses lugares mostra a semana inteira.</p>
+      <div class="antes-depois">
+        <div class="ad ad-antes">
+          <h3>Antes</h3>
+          <ul>
+            <li>Ficha em PDF ou no papel, que some na hora do treino</li>
+            <li>A carga da semana passada? Ninguém lembra.</li>
+            <li>Jiu num grupo, futebol em outro, academia no caderno</li>
+            <li>Treino de pernas na véspera do jogo, sem perceber</li>
+            <li>O progresso fica numa tabela em branco</li>
+          </ul>
+        </div>
+        <div class="ad ad-depois">
+          <h3>Com o Gestão de Treinos</h3>
+          <ul>
+            <li>A semana inteira numa tela, com o treino de hoje no topo</li>
+            <li>Cada série já vem com a carga da última vez</li>
+            <li>Check-in de qualquer atividade em um toque</li>
+            <li>Aviso quando uma atividade atrapalha a outra</li>
+            <li>Calendário, recordes e a semana comparada ao plano</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------- Valor ---------- -->
+  <section class="secao secao-valor" aria-labelledby="valor-titulo">
+    <div class="secao-in">
+      <h2 id="valor-titulo">Feito para três coisas.</h2>
+      <div class="pilares">
+        <div class="pilar" style="--cor: var(--feito)">
+          <h3>Constância</h3>
+          <p>Você monta a semana e o app mostra se está cumprindo, dia a dia, em todas as atividades. Ver a sequência crescer dá vontade de não quebrar.</p>
+        </div>
+        <div class="pilar" style="--cor: var(--musc)">
+          <h3>Evolução</h3>
+          <p>Cada carga fica registrada. O app traz a da última vez, comemora os recordes e mostra a curva subindo.</p>
+        </div>
+        <div class="pilar" style="--cor: var(--jiu)">
+          <h3>Tudo junto</h3>
+          <p>Musculação, Jiu Jitsu, muay thai, surf, futebol, futvôlei e cardio no mesmo calendário, sem pular de app em app.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------- Como funciona ---------- -->
+  <section class="secao" id="como-funciona" aria-labelledby="como-titulo">
+    <div class="secao-in">
+      <h2 id="como-titulo">Do primeiro acesso ao primeiro recorde.</h2>
+      <ol class="passos">
+        <li>
+          <span class="passo-n" aria-hidden="true">1</span>
+          <h3>Escolha seu objetivo</h3>
+          <p>Treinos prontos para Jiu Jitsu, Hipertrofia, Força e potência ou Mobilidade e prevenção. Se preferir, monte os seus do zero.</p>
+        </li>
+        <li>
+          <span class="passo-n" aria-hidden="true">2</span>
+          <h3>Monte sua semana</h3>
+          <p>Arraste as atividades para os dias. O app avisa quando uma atrapalha a outra, como pernas na véspera do tatame.</p>
+        </li>
+        <li>
+          <span class="passo-n" aria-hidden="true">3</span>
+          <h3>Treine e faça o check-in</h3>
+          <p>Abra o app na academia e o treino do dia já está lá. Anote as cargas com uma mão só e registre qualquer esporte pelo botão fixo.</p>
+        </li>
+        <li>
+          <span class="passo-n" aria-hidden="true">4</span>
+          <h3>Acompanhe a evolução</h3>
+          <p>O Dashboard mostra o calendário, as horas treinadas, a semana contra o plano e os recordes de cada exercício.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ---------- Funcionalidades ---------- -->
+  <section class="secao secao-func" id="funcionalidades" aria-labelledby="func-titulo">
+    <div class="secao-in">
+      <h2 id="func-titulo">Tudo o que você usa entre uma série e outra.</h2>
+      <div class="func-grade">
+        <article class="func func-largo">
+          <h3>Treino do dia</h3>
+          <p>Abriu, está lá: o treino de hoje, com dose, PSE-alvo e o que esperar de cada exercício.</p>
+          <div class="mini-ex" aria-hidden="true">
+            <span><b>Agachamento</b> 4 × 6</span><span><b>Stiff</b> 3 × 10</span><span><b>Afundo</b> 3 × 12</span>
+          </div>
+        </article>
+        <article class="func">
+          <h3>Cargas que se lembram</h3>
+          <p>Cada série vem preenchida com a carga da última vez. É só confirmar ou subir.</p>
+          <div class="mini-carga" aria-hidden="true"><span>40</span><span>40</span><span class="sobe">42,5</span></div>
+        </article>
+        <article class="func">
+          <h3>Recordes com troféu</h3>
+          <p>Bateu a maior carga num exercício? O troféu aparece na hora.</p>
+          <div class="mini-trofeu" aria-hidden="true"><i class="trofeu trofeu-gd"></i></div>
+        </article>
+        <article class="func">
+          <h3>Check-in de qualquer esporte</h3>
+          <p>Musculação, jiu, muay thai, surf, futebol, futvôlei e cardio, quantas vezes quiser no dia, com foto se quiser.</p>
+          <div class="mini-selos" aria-hidden="true">
+            <i style="--cor: var(--musc)"></i><i style="--cor: var(--jiu)"></i><i style="--cor: var(--muay)"></i><i style="--cor: var(--surf)"></i><i style="--cor: var(--futebol)"></i><i style="--cor: var(--futvolei)"></i><i style="--cor: var(--bike)"></i>
+          </div>
+        </article>
+        <article class="func">
+          <h3>Avisos de conflito</h3>
+          <p>Pernas na véspera do jogo ou do tatame? O app avisa enquanto você monta a semana.</p>
+          <div class="mini-aviso" aria-hidden="true"><span style="--cor: var(--musc)">Qua · Pernas</span><span style="--cor: var(--futebol)">Qui · Futebol</span><em>Pernas na véspera do jogo</em></div>
+        </article>
+        <article class="func func-largo">
+          <h3>Dashboard e calendário</h3>
+          <p>Check-ins do mês, horas treinadas, a semana comparada ao plano e um calendário com um selo colorido por atividade.</p>
+          <div class="mini-cal" aria-hidden="true">
+            <i></i><i class="c1"></i><i class="c2"></i><i></i><i class="c1"></i><i class="c4"></i><i></i>
+            <i class="c1"></i><i class="c2"></i><i class="c1"></i><i class="c3"></i><i class="c1"></i><i class="c5"></i><i></i>
+            <i class="c1"></i><i class="c2"></i><i></i><i class="c2"></i><i class="c1"></i><i class="c4"></i><i></i>
+          </div>
+        </article>
+        <article class="func">
+          <h3>Temporizador de descanso</h3>
+          <p>Começa sozinho ao terminar a série e avisa com som e vibração.</p>
+        </article>
+        <article class="func">
+          <h3>136 exercícios</h3>
+          <p>Biblioteca com busca para montar até 6 treinos do seu jeito.</p>
+        </article>
+        <article class="func">
+          <h3>Funciona sem internet</h3>
+          <p>Academia sem sinal não é problema: o check-in é salvo e sobe quando a conexão voltar.</p>
+        </article>
+        <article class="func">
+          <h3>Resumo da semana</h3>
+          <p>Um e-mail com o que você fez e o que ficou faltando. Dá para desligar.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------- Para quem é ---------- -->
+  <section class="secao" id="para-quem" aria-labelledby="quem-titulo">
+    <div class="secao-in">
+      <h2 id="quem-titulo">Para quem é.</h2>
+      <div class="abas" role="tablist" aria-label="Perfis">
+        <button class="aba" role="tab" type="button" id="aba-atleta" aria-controls="painel-atleta" aria-selected="true">Atleta híbrido</button>
+        <button class="aba" role="tab" type="button" id="aba-personal" aria-controls="painel-personal" aria-selected="false" tabindex="-1">Personal trainer</button>
+        <button class="aba" role="tab" type="button" id="aba-aluno" aria-controls="painel-aluno" aria-selected="false" tabindex="-1">Aluno de personal</button>
+      </div>
+
+      <div class="painel" role="tabpanel" id="painel-atleta" aria-labelledby="aba-atleta" tabindex="0" style="--cor: var(--jiu)">
+        <div class="painel-quem">
+          <h3>Treina e pratica um ou mais esportes</h3>
+          <p>Faz academia três vezes por semana e ainda tem o jiu, o futebol ou o surf. Usa o celular entre as séries, muitas vezes com uma mão só, e quer ganhar massa, perder gordura ou render mais no esporte.</p>
+        </div>
+        <div class="painel-lista">
+          <h4>O que o app resolve</h4>
+          <ul>
+            <li>Saber em segundos o treino do dia</li>
+            <li>Anotar a carga sem digitar quase nada</li>
+            <li>Ajustar a semana quando a agenda do esporte muda</li>
+            <li>Ver se está progredindo de verdade</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="painel" role="tabpanel" id="painel-personal" aria-labelledby="aba-personal" tabindex="0" style="--cor: var(--musc)" hidden>
+        <div class="painel-quem">
+          <h3>Atende os alunos por conta própria</h3>
+          <p>Tem CREF e cerca de 15 alunos, na academia, no condomínio ou online. Monta ficha num momento calmo e entrega pelo WhatsApp, sem saber se o aluno abriu.</p>
+        </div>
+        <div class="painel-lista">
+          <h4>O que o app resolve</h4>
+          <ul>
+            <li>Ver quem treinou quando você não está junto</li>
+            <li>Perceber cedo quem está sumindo, antes de perder o aluno</li>
+            <li>Entregar e ajustar a ficha sem refazer do zero</li>
+            <li>Enxergar o jiu, o futebol e a corrida do aluno antes de pesar nas pernas</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="painel" role="tabpanel" id="painel-aluno" aria-labelledby="aba-aluno" tabindex="0" style="--cor: var(--surf)" hidden>
+        <div class="painel-quem">
+          <h3>Chega pelo link do personal</h3>
+          <p>Não escolheu o app: recebeu o convite do personal. Quer abrir e ver o treino de hoje já montado, sem configurar nada.</p>
+        </div>
+        <div class="painel-lista">
+          <h4>O que o app resolve</h4>
+          <ul>
+            <li>A ficha do personal aparece pronta no celular</li>
+            <li>Você vê exatamente o que o personal enxerga</li>
+            <li>Pode sair do acompanhamento sem perder o histórico</li>
+            <li>Continua usando o app sozinho, se quiser</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------- Personal ---------- -->
+  <section class="secao secao-escura" id="personal" aria-labelledby="personal-titulo">
+    <div class="secao-in personal-in">
+      <div class="personal-texto">
+        <h2 id="personal-titulo">Para o personal: saiba quem treinou, mesmo sem estar junto.</h2>
+        <p class="secao-sub">A área do personal mostra a semana de cada aluno com os esportes que ele pratica, quem está treinando e quem está sumindo. Você vende resultado, não uma ficha em PDF.</p>
+        <ul class="lista-check">
+          <li><b>Quem sumiu.</b> O aluno que parou aparece antes de pedir para cancelar.</li>
+          <li><b>Fichas em passo a passo.</b> Até 6 treinos de 15 exercícios, aplicados a vários alunos de uma vez.</li>
+          <li><b>Aderência e recordes.</b> Quanto da semana cada aluno cumpriu e quem mais evoluiu.</li>
+          <li><b>Convite por link.</b> O aluno entra pelo WhatsApp e já vê o seu nome e o CREF.</li>
+        </ul>
+        <a class="btn btn-gd btn-claro" href="personal.html">Começar como personal</a>
+      </div>
+      <figure class="painel-mock" aria-label="Exemplo da lista Precisam de atenção, na área do personal">
+        <div aria-hidden="true">
+          <div class="pm-topo"><strong>Precisam de atenção</strong><span>3 alunos</span></div>
+          <div class="pm-linha"><span class="pm-av" style="--cor: var(--jiu)">A</span><div><b>Ana</b><small>Sem treinar há 9 dias · antes, 4 por semana</small></div><span class="pm-selo">Sumiu</span></div>
+          <div class="pm-linha"><span class="pm-av" style="--cor: var(--musc)">B</span><div><b>Bruno</b><small>Cumpriu 1 de 4 treinos da semana</small></div><span class="pm-selo pm-selo-am">Atenção</span></div>
+          <div class="pm-linha"><span class="pm-av" style="--cor: var(--surf)">C</span><div><b>Carla</b><small>Agachamento parado há 3 semanas</small></div><span class="pm-selo pm-selo-am">Atenção</span></div>
+          <div class="pm-numeros">
+            <div><b>86%</b><small>aderência</small></div>
+            <div><b>12</b><small>treinaram hoje</small></div>
+            <div><b>9</b><small>recordes</small></div>
+          </div>
+        </div>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ---------- Privacidade ---------- -->
+  <section class="secao secao-priv" aria-labelledby="priv-titulo">
+    <div class="secao-in">
+      <h2 id="priv-titulo">Seus dados são seus.</h2>
+      <ul class="priv-lista">
+        <li><h3>Entrada com o Google</h3><p>Sem senha nova para decorar. A conta Google serve só para entrar.</p></li>
+        <li><h3>Só você vê o seu corpo</h3><p>Peso e cargas não ficam visíveis para o grupo. O personal só vê o que você liberar ao aceitar o convite.</p></li>
+        <li><h3>Baixe ou apague</h3><p>Baixe todos os seus dados ou exclua a conta pelo próprio app, quando quiser.</p></li>
+        <li><h3>LGPD</h3><p>Observações só com o seu consentimento. <a href="privacidade.html">Leia a Política de Privacidade</a>.</p></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ---------- Depoimentos ---------- -->
+  <section class="secao" id="depoimentos" aria-labelledby="dep-titulo">
+    <div class="secao-in">
+      <h2 id="dep-titulo">O que dizem.</h2>
+      <p class="dep-nota">Depoimentos ilustrativos, de exemplo. Serão trocados por depoimentos de quem usa o app.</p>
+      <div class="depoimentos">
+        <figure class="dep" style="--cor: var(--jiu)">
+          <blockquote>“Parei de chegar no tatame com a perna destruída. O aviso de conflito mudou como eu monto a semana.”</blockquote>
+          <figcaption>Exemplo: atleta de Jiu Jitsu e musculação</figcaption>
+        </figure>
+        <figure class="dep" style="--cor: var(--musc)">
+          <blockquote>“Saber quem sumiu antes de o aluno cancelar vale mais do que qualquer ficha bonita.”</blockquote>
+          <figcaption>Exemplo: personal trainer com 15 alunos</figcaption>
+        </figure>
+        <figure class="dep" style="--cor: var(--surf)">
+          <blockquote>“Abro na academia e o treino está lá, com a carga da última vez. Não preciso pensar em nada.”</blockquote>
+          <figcaption>Exemplo: aluna de personal que surfa nos fins de semana</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------- Planos ---------- -->
+  <section class="secao secao-planos" id="planos" aria-labelledby="planos-titulo">
+    <div class="secao-in">
+      <h2 id="planos-titulo">Planos.</h2>
+      <p class="secao-sub">Para treinar, é grátis. Para o personal, grátis até 3 alunos. Os planos pagos ainda estão chegando.</p>
+      <div class="planos">
+        <article class="plano">
+          <h3>Atleta</h3>
+          <p class="plano-preco"><b>Grátis</b></p>
+          <p class="plano-desc">Para quem treina por conta própria.</p>
+          <ul>
+            <li>Treinos prontos ou montados por você</li>
+            <li>Cargas, recordes e check-ins ilimitados</li>
+            <li>Semana com todos os esportes</li>
+            <li>Dashboard, temporizador e resumo por e-mail</li>
+          </ul>
+          <a class="btn" href="./">Começar grátis</a>
+        </article>
+        <article class="plano">
+          <h3>Personal Start</h3>
+          <p class="plano-preco"><b>Grátis</b></p>
+          <p class="plano-desc">Para começar a acompanhar alunos.</p>
+          <ul>
+            <li>Até 3 alunos</li>
+            <li>Fichas em passo a passo</li>
+            <li>Quem sumiu e aderência</li>
+            <li>Convite por link e WhatsApp</li>
+          </ul>
+          <a class="btn btn-sec" href="personal.html">Começar como personal</a>
+        </article>
+        <article class="plano plano-destaque">
+          <p class="plano-selo">Para quem tem mais alunos</p>
+          <h3>Personal Pro</h3>
+          <p class="plano-preco"><b>R$ 29,90</b><span>por mês</span></p>
+          <p class="plano-desc">Para quem vive de atender alunos.</p>
+          <ul>
+            <li>Alunos ilimitados</li>
+            <li>Tudo do Personal Start</li>
+            <li>Exercícios próprios na biblioteca</li>
+            <li>Fichas aplicadas a vários alunos de uma vez</li>
+          </ul>
+          <span class="btn btn-em-breve" aria-disabled="true">Em breve</span>
+        </article>
+        <article class="plano">
+          <h3>Academia e equipe</h3>
+          <p class="plano-preco"><b>Sob consulta</b></p>
+          <p class="plano-desc">Para estúdios, academias e equipes com vários profissionais.</p>
+          <ul>
+            <li>Vários personais na mesma conta</li>
+            <li>Visão geral de todos os alunos</li>
+            <li>Atendimento direto</li>
+          </ul>
+          <span class="btn btn-sec btn-em-breve" aria-disabled="true">Em breve</span>
+        </article>
+      </div>
+      <p class="planos-nota">Valores de referência, sujeitos a mudança antes do lançamento dos planos pagos.</p>
+    </div>
+  </section>
+
+  <!-- ---------- Dúvidas ---------- -->
+  <section class="secao" id="duvidas" aria-labelledby="duvidas-titulo">
+    <div class="secao-in secao-estreita">
+      <h2 id="duvidas-titulo">Dúvidas.</h2>
+      <div class="faq">
+        <details>
+          <summary>É grátis mesmo?</summary>
+          <p>Sim. Para treinar, o app é grátis. Só o plano Personal Pro, para quem acompanha mais de 3 alunos, será pago.</p>
+        </details>
+        <details>
+          <summary>Preciso instalar alguma coisa?</summary>
+          <p>Não. O app abre no navegador do celular. Se quiser, adicione à tela inicial e ele passa a abrir como um aplicativo.</p>
+        </details>
+        <details>
+          <summary>Funciona no iPhone e no Android?</summary>
+          <p>Funciona nos dois, e também no computador.</p>
+        </details>
+        <details>
+          <summary>E se a academia não tiver internet?</summary>
+          <p>O app funciona sem internet. O check-in fica salvo no celular e é enviado quando a conexão voltar.</p>
+        </details>
+        <details>
+          <summary>Só serve para Jiu Jitsu?</summary>
+          <p>Não. O app nasceu de um plano de Jiu Jitsu e hipertrofia, mas hoje recebe musculação, Jiu Jitsu, muay thai, surf, futebol, futvôlei e cardio, com objetivos prontos para hipertrofia, força e mobilidade.</p>
+        </details>
+        <details>
+          <summary>O meu personal vê os meus dados?</summary>
+          <p>Só se você aceitar o convite dele, e ele vê apenas os seus treinos e check-ins. Você pode encerrar o acompanhamento quando quiser, sem perder o histórico.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------- Chamada final ---------- -->
+  <section class="final" aria-labelledby="final-titulo">
+    <div class="secao-in">
+      <h2 id="final-titulo">Treine. Registre. Evolua.</h2>
+      <p>Sua semana inteira num lugar só, a partir de hoje.</p>
+      <a class="btn btn-gd btn-claro" href="./">Começar grátis</a>
+    </div>
+  </section>
+</main>
+
+<footer class="rodape">
+  <div class="secao-in rodape-in">
+    <span class="marca"><img src="icones/icone-192.png" alt="" width="24" height="24"><span>Gestão de Treinos</span></span>
+    <nav aria-label="Links">
+      <a href="./">Entrar no app</a>
+      <a href="personal.html">Área do personal</a>
+      <a href="privacidade.html">Política de Privacidade</a>
+    </nav>
+    <p>Desenvolvido por Marcelo Bauer</p>
+  </div>
+</footer>
+
+<a class="cta-fixo" href="./" id="cta-fixo" hidden>Começar grátis</a>
+</body>
+</html>

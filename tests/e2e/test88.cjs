@@ -1,4 +1,4 @@
-// Segurança do site publicado: CSP igual nas quatro páginas (index, admin, personal e privacidade), nenhum <script> inline nem onclick=,
+// Segurança do site publicado: CSP igual nas cinco páginas (index, admin, personal, privacidade e conheca), nenhum <script> inline nem onclick=,
 // biblioteca do Supabase guardada no site (sem CDN) e o app abre sem nenhuma violação de CSP.
 const fs = require('fs'), path = require('path');
 const { chromium } = require('playwright');
@@ -9,9 +9,9 @@ const ler = (f) => fs.readFileSync(path.join(H.RAIZ, f), 'utf8');
 const csp = (html) => (html.match(/<meta http-equiv="Content-Security-Policy" content="([^"]+)">/) || [])[1];
 
 (async () => {
-  const paginas = ['index.html', 'admin.html', 'personal.html', 'privacidade.html'];
+  const paginas = ['index.html', 'admin.html', 'personal.html', 'privacidade.html', 'conheca.html'];
   const regras = paginas.map((f) => csp(ler(f)));
-  ok(regras.every(Boolean) && new Set(regras).size === 1, 'CSP presente e igual nas quatro páginas');
+  ok(regras.every(Boolean) && new Set(regras).size === 1, 'CSP presente e igual nas cinco páginas');
   ok(/script-src 'self';/.test(regras[0] || '') && !/script-src[^;]*unsafe/.test(regras[0] || ''), "scripts só do próprio site (sem 'unsafe-inline')");
   for (const f of paginas) {
     const html = ler(f);

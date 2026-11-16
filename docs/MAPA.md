@@ -16,6 +16,7 @@ Ao criar, renomear ou apagar uma seção ou um teste, atualize este mapa no mesm
 | `admin.html`, `css/admin.css`, `js/admin.js` | Monitoramento (só administradores) |
 | `personal.html`, `css/personal.css`, `js/personal.js` | Área do personal: usa também o `js/admin.js` no modo personal (`<html data-painel="personal">`) e o `js/dados.js` (biblioteca e treinos prontos) |
 | `privacidade.html`, `js/privacidade.js` | Política de Privacidade e o script dela |
+| `conheca.html`, `css/landing.css`, `js/conheca.js` | Landing page do produto (divulgação, planos e dúvidas) |
 | `manifest.webmanifest`, `manifest-dev.webmanifest`, `icones/`, `sw.js` | App instalável (PWA): manifesto, ícones e service worker (registrado no `js/inicio.js`) |
 | `ambiente.js` | Projeto Supabase de produção ou de testes (por endereço) e o selo DEV |
 | `supabase/schema.sql` | Banco inteiro (tabelas, RLS, funções); roda de novo sem duplicar |
@@ -125,7 +126,8 @@ Rode só os da área mexida: `node tests/rodar.cjs test20 test22 …`.
 | App instalável (PWA), service worker, Instalar o app e sem internet (cópia dos dados e fila de envio) | test83, test84, test85 |
 | Identidade "Gestão de Treinos" (nome, descrição, semana padrão sem jiu, ordem dos objetivos) | test86 |
 | Tipos de check-in do painel, Cardio com modalidade e km, botões do editor e animação ao salvar | test87 |
-| Segurança do site: CSP nas quatro páginas (index, admin, personal e privacidade), sem script inline, biblioteca do Supabase em `js/vendor/`, o que fica fora da publicação | test88 |
+| Segurança do site: CSP nas cinco páginas (index, admin, personal, privacidade e conheca), sem script inline, biblioteca do Supabase em `js/vendor/`, o que fica fora da publicação | test88 |
 | Área do personal (`personal.html`, aba Profissionais do monitoramento) | test90 |
 | Aluno do personal no app (convite, Meu personal, treinos só de leitura, recado) | test89 |
+| Landing page (`conheca.html`) e o link na tela de login | test91 |
 | Harness dos testes (`tests/apoio/`) | todos |
