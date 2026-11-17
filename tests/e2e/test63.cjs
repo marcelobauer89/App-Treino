@@ -70,7 +70,11 @@ const abrir = (b, extra, op = {}) => H.novaPagina(b, { viewport: op.viewport || 
       db = await H.banco(p);
       const per = db.perfis[0];
       ok(!(await p.locator('#jornada-dialog[open]').count()) && per.jornada === 'hipertrofia' && Object.keys(per.treinos).join() === '1,2,3,4', `${tag}: escolheu Hipertrofia, 4 treinos gravados`, JSON.stringify(per.jornada));
-      ok(JSON.stringify(per.semana) === JSON.stringify([[], ['t1'], ['jiu', 't2'], [], ['jiu', 't3'], ['t4'], ['bike']]), `${tag}: semana sugerida com os dias de jiu mantidos`, JSON.stringify(per.semana));
+      // Conta antiga que nunca montou a semana: o jiu do padrão antigo (terça e quinta) não vai para a Hipertrofia.
+      ok(JSON.stringify(per.semana) === JSON.stringify([[], ['t1'], ['t2'], [], ['t3'], ['t4'], ['bike']]), `${tag}: semana sugerida sem o jiu do padrão antigo`, JSON.stringify(per.semana));
+      await p.click('#sobre summary');
+      const sobre = await txt(p, '#sobre');
+      ok(sobre.includes('No físico') && !sobre.includes('No Jiu Jitsu'), `${tag}: "Sobre o treino" sem o impacto no Jiu Jitsu`, sobre);
       ok(per.novidade_oculta, `${tag}: boas-vindas não voltam`);
       ok((await p.locator('.treino-btn').count()) === 4 && (await p.locator('#sobre .sobre').count()) === 1, `${tag}: 4 abas e "Sobre o treino" da jornada`);
       ok(!p.errs.length, `${tag}: sem erros`, p.errs.join(' | '));

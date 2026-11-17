@@ -487,7 +487,7 @@
         3: {
           nome: 'Cardio', subtitulo: 'Intervalado curto e intermediário',
           objetivo: 'Fôlego para aguentar mais tempo de esforço e recuperar mais rápido entre eles.',
-          esperado: 'Curto e intenso. Bike, remo, corrida ou corda. Pode ser feito depois do jiu, no lugar de um dia livre.',
+          esperado: 'Curto e intenso. Bike, remo, corrida ou corda. Pode ser feito depois de outro esporte, no lugar de um dia livre.',
           impacto_jiu: 'Gás para o rola inteiro e recuperação mais rápida entre uma luta e outra.',
           impacto_fisico: 'Coração e pulmões mais condicionados e mais gasto de energia.',
           exercicios: [exJ('Cardio curto intervalado', '8×20 s forte / 40 s leve', 9), exJ('Cardio intermediário', '3×3 min / 1 min 30 s leve', 8),
@@ -512,7 +512,7 @@
         },
         2: {
           nome: 'Anti-lesão', subtitulo: 'Ombros, joelhos e lombar',
-          objetivo: 'Reforçar os pontos que mais sofrem no jiu: ombros, joelhos, lombar e posterior de coxa.',
+          objetivo: 'Reforçar os pontos que mais sofrem no esporte: ombros, joelhos, lombar e posterior de coxa.',
           esperado: 'Um treino de controle, não de carga. Técnica perfeita vale mais que o peso.',
           impacto_jiu: 'Ombros e joelhos mais preparados para chaves, quedas e torções.',
           impacto_fisico: 'Articulações mais estáveis e menos risco de lesão.',
