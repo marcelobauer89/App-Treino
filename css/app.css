@@ -1075,6 +1075,8 @@
     margin: 0 -16px -20px; padding: 12px 16px calc(16px + env(safe-area-inset-bottom, 0px)); background: var(--papel); border-top: 1px solid var(--fio);
   }
   .bv-rodape .modal-done { width: auto; min-width: 160px; margin: 0 0 0 auto; padding: 0 28px; }
+  .bv-rodape:has(.jd-aviso) { flex-wrap: wrap; }
+  .jd-aviso { flex: 1 1 100%; margin: 0; font-size: 14px; line-height: 1.4; color: var(--tinta-2); }
   .bv-voltar { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; padding: 0 8px 0 0; border: 0; background: none; color: var(--marca-tinta); font: inherit; font-weight: 700; cursor: pointer; }
   .bv-voltar:focus-visible { outline: 3px solid var(--marca-tinta); outline-offset: 2px; border-radius: 6px; }
   #jornada-title:focus { outline: none; }

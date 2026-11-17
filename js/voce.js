@@ -805,8 +805,19 @@
         </li>
       </ul>
       ${boasVindas ? rodapeBV(jd.selecionado ? `<button class="modal-done" type="button" data-jd-confirmar>${jd.selecionado === 'zero' ? 'Montar meus treinos' : 'Confirmar'}</button>` : '')
-    : jd.selecionado ? '<div class="bv-rodape"><button class="modal-done" type="button" data-jd-confirmar>Confirmar</button></div>' : ''}`;
+    : jd.selecionado ? `<div class="bv-rodape">${avisoDeTroca()}<button class="modal-done" type="button" data-jd-confirmar>Confirmar</button></div>` : ''}`;
     if (foco) { const el = $('jornada-body').querySelector(foco); if (el) el.focus(); }
+  }
+  // Em "Mudar meu objetivo", quem ajustou os treinos é avisado de que os ajustes não ficam guardados para depois.
+  function avisoDeTroca() {
+    if (!treinosDaConta) return '';
+    const atual = jornadaAtual();
+    if (atual && ehDaJornada(atual)) return '';
+    const fica = 'Suas cargas e check-ins continuam salvos.';
+    const txt = !atual ? `Você montou seus próprios treinos. Ao confirmar, eles são trocados pelos deste objetivo. ${fica}`
+      : jd.selecionado === atual.id ? `Os ajustes que você fez em ${esc(atual.nome)} serão trocados pelos treinos originais. ${fica}`
+        : `Você ajustou os treinos de ${esc(atual.nome)}. Se voltar para ele depois, os treinos vêm como eram originalmente. ${fica}`;
+    return `<p class="jd-aviso" role="status">${txt}</p>`;
   }
   function fecharJornadas(escolha) {
     if (!jd) return;
