@@ -4,8 +4,9 @@
 // código de vínculo que a pessoa gerou em Você → Integrações, e grava o check-in pela função
 // registrar_checkin_externo do banco (supabase/schema.sql). Como chamar: docs/INTEGRACAO-DOJO.md.
 //
-// Publicar sem exigir login do Supabase (a autenticação é a chave do parceiro):
-//   supabase functions deploy checkin-externo --no-verify-jwt
+// Publicar sem exigir login do Supabase (a autenticação é a chave do parceiro): no painel, Edge Functions →
+// Deploy a new function → Via Editor, nome checkin-externo, colar este arquivo e desligar Verify JWT
+// (ou, pela linha de comando: supabase functions deploy checkin-externo --no-verify-jwt).
 // SUPABASE_URL e a chave de serviço já vêm prontos na função. Nada de segredo vai para o repositório.
 //
 // POST, header x-api-key: <chave do parceiro>, corpo JSON:
@@ -51,7 +52,19 @@ export async function tratar(req: Request, rpc: (args: Record<string, unknown>) 
   return responder(String(data));
 }
 
-if (import.meta.main) {
-  const sb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, { auth: { persistSession: false } });
-  Deno.serve((req) => tratar(req, (args) => sb.rpc('registrar_checkin_externo', args)));
+// Só sobe o servidor dentro do Supabase (nos testes, em Node, não existe Deno). Igual à resumo-semanal.
+// A chave de serviço vem em SUPABASE_SERVICE_ROLE_KEY ou, nos projetos com as chaves novas, em SUPABASE_SECRET_KEYS.
+if (typeof Deno !== 'undefined' && Deno.serve) {
+  const env = (k: string) => Deno.env.get(k) || '';
+  let chave = env('SUPABASE_SERVICE_ROLE_KEY');
+  if (!chave && env('SUPABASE_SECRET_KEYS')) {
+    try { chave = Object.values(JSON.parse(env('SUPABASE_SECRET_KEYS')))[0] as string; } catch (_) { /* segue sem chave */ }
+  }
+  if (!env('SUPABASE_URL') || !chave) {
+    console.error('checkin-externo: faltam SUPABASE_URL ou a chave de serviço');
+    Deno.serve(() => responder('erro', 500));
+  } else {
+    const sb = createClient(env('SUPABASE_URL'), chave, { auth: { persistSession: false, autoRefreshToken: false } });
+    Deno.serve((req) => tratar(req, (args) => sb.rpc('registrar_checkin_externo', args)));
+  }
 }
