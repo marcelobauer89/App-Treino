@@ -109,7 +109,10 @@ const abrir = (b, extra, op = {}) => H.novaPagina(b, { viewport: op.viewport || 
   await p.click('[data-jd-marcar="mobilidade"]');
   db = await H.banco(p);
   ok(JSON.stringify(db.perfis[0].treinos) === JSON.stringify(PROPRIO) && !(await p.locator('[data-jd-confirmar]').count()), 'desmarcar não muda nada');
-  await p.click('[data-jd-marcar="mobilidade"]'); await p.click('[data-jd-confirmar]'); await p.waitForTimeout(200);
+  // Treinos próprios: o Confirmar pede a confirmação da troca no centro da tela (detalhes no test92).
+  await p.click('[data-jd-marcar="mobilidade"]'); await p.click('[data-jd-confirmar]'); await p.waitForTimeout(100);
+  ok(await p.isVisible('#troca-dialog [data-troca-sim]'), 'treinos próprios: Confirmar pede a confirmação da troca');
+  await p.click('#troca-dialog [data-troca-sim]'); await p.waitForTimeout(200);
   ok(await p.isVisible('.bv-montando') && await p.evaluate(() => document.body.classList.contains('bv-ativa')), 'Confirmar mostra a animação em tela cheia');
   await p.keyboard.press('Escape'); await p.waitForTimeout(100);
   ok(await p.isVisible('.bv-montando'), 'a animação não fecha no Esc');

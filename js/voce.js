@@ -808,6 +808,42 @@
     : jd.selecionado ? '<div class="bv-rodape"><button class="modal-done" type="button" data-jd-confirmar>Confirmar</button></div>' : ''}`;
     if (foco) { const el = $('jornada-body').querySelector(foco); if (el) el.focus(); }
   }
+  // Em "Mudar meu objetivo", quem ajustou os treinos confirma a troca numa mensagem no centro da tela,
+  // que avisa que os ajustes não ficam guardados para depois. Sem ajustes, a troca segue direto.
+  function confirmacaoDeTroca() {
+    if (!treinosDaConta) return null;
+    const atual = jornadaAtual();
+    if (atual && ehDaJornada(atual)) return null;
+    const fica = 'Suas cargas e check-ins continuam salvos.';
+    const destino = jornadaPorId(jd.selecionado);
+    if (atual && jd.selecionado === atual.id) {
+      return { titulo: 'Voltar ao original?', botao: 'Voltar ao original',
+        texto: `Os ajustes que você fez em ${esc(atual.nome)} serão trocados pelos treinos originais. ${fica}` };
+    }
+    return { titulo: 'Trocar de objetivo?', botao: 'Trocar objetivo',
+      texto: !atual ? `Você montou seus próprios treinos. Eles serão trocados pelos treinos de ${esc(destino ? destino.nome : 'outro objetivo')}. ${fica}`
+        : `Você ajustou os treinos de ${esc(atual.nome)}. Se voltar para ele depois, os treinos vêm como eram originalmente. ${fica}` };
+  }
+  const trocaDialog = $('troca-dialog');
+  function abrirConfirmacaoDeTroca(c) {
+    $('troca-body').innerHTML = `
+      <div class="modal-head"><div><h3 id="troca-title" tabindex="-1">${c.titulo}</h3></div>${BOTAO_FECHAR}</div>
+      <p class="resumo-enc">${c.texto}</p>
+      <div class="confirma-acoes">
+        <button class="btn-sec" type="button" data-fechar>Cancelar</button>
+        <button class="modal-done" type="button" data-troca-sim>${c.botao}</button>
+      </div>`;
+    trocaDialog.showModal();
+    $('troca-title').focus();
+  }
+  trocaDialog.addEventListener('click', (e) => {
+    if (e.target.closest('[data-troca-sim]')) {
+      trocaDialog.close();
+      if (jd && jd.selecionado) montarTreinosBV(jd.selecionado);
+      return;
+    }
+    if (e.target === trocaDialog || e.target.closest('[data-fechar]')) trocaDialog.close();
+  });
   function fecharJornadas(escolha) {
     if (!jd) return;
     // Nas boas-vindas, escolher um objetivo encerra a apresentação (montar do zero só encerra ao salvar os treinos).
@@ -833,7 +869,8 @@
     }
     if (b && 'jdConfirmar' in b.dataset && jd.selecionado) {
       if (jd.selecionado === 'zero') { fecharJornadas('montar'); return abrirEditor({ doZero: true, daBoasVindas: true }); }
-      return montarTreinosBV(jd.selecionado);
+      const c = jd.modo === 'trocar' && confirmacaoDeTroca();
+      return c ? abrirConfirmacaoDeTroca(c) : montarTreinosBV(jd.selecionado);
     }
     if (b && 'jdZero' in b.dataset) {
       const daBoasVindas = jd.modo === 'boas-vindas';

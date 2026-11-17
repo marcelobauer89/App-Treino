@@ -114,7 +114,7 @@ Rode só os da área mexida: `node tests/rodar.cjs test20 test22 …`.
 | Dashboard e Evolução (inclui os cards de maiores pesos e pesos estagnados) | test23, test76, test77 |
 | Você (perfil, lista, temporizador) | test25, test39, test70 |
 | Minha semana | test17 |
-| Meus treinos, biblioteca e jornadas | test36, test38, test40, test55, test58, test59, test63, test71, test73 |
+| Meus treinos, biblioteca e jornadas | test36, test38, test40, test55, test58, test59, test63, test71, test73, test92 |
 | Privacidade, LGPD e excluir conta | test42, test44, test46 |
 | Convites | test43, test47 |
 | Eventos de uso | test26, test57 |
