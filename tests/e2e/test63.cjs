@@ -103,8 +103,10 @@ const abrir = (b, extra, op = {}) => H.novaPagina(b, { viewport: op.viewport || 
   ok((await txt(p, '#jornada-title')) === 'Mudar meu objetivo' && !(await p.locator('#jornada-body #novidade-ocultar').count()), 'Mudar meu objetivo abre sem a caixa de boas-vindas');
   ok(!(await p.locator('[data-jd-confirmar]').count()), 'sem Confirmar antes de escolher');
   await p.click('[data-jd-marcar="mobilidade"]');
-  ok(await p.isVisible('.bv-rodape [data-jd-confirmar]') && !(await p.locator('.bv-rodape p').count())
-    && (await p.getAttribute('[data-jd-marcar="mobilidade"]', 'aria-pressed')) === 'true', 'Escolher marca e mostra só o Confirmar no rodapé');
+  // Treinos próprios: o rodapé traz o Confirmar e o aviso de que eles serão trocados (detalhes no test92).
+  ok(await p.isVisible('.bv-rodape [data-jd-confirmar]') && (await p.locator('.bv-rodape p').count()) === 1
+    && (await p.innerText('.bv-rodape .jd-aviso')).startsWith('Você montou seus próprios treinos.')
+    && (await p.getAttribute('[data-jd-marcar="mobilidade"]', 'aria-pressed')) === 'true', 'Escolher marca e mostra o Confirmar e o aviso no rodapé');
   await p.screenshot({ path: `${S}/jornadas-confirmar.png` });
   await p.click('[data-jd-marcar="mobilidade"]');
   db = await H.banco(p);
