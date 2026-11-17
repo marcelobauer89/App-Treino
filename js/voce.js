@@ -827,14 +827,14 @@
   const trocaDialog = $('troca-dialog');
   function abrirConfirmacaoDeTroca(c) {
     $('troca-body').innerHTML = `
-      <div class="modal-head"><div><h3 id="troca-title">${c.titulo}</h3></div>${BOTAO_FECHAR}</div>
+      <div class="modal-head"><div><h3 id="troca-title" tabindex="-1">${c.titulo}</h3></div>${BOTAO_FECHAR}</div>
       <p class="resumo-enc">${c.texto}</p>
-      <div class="excluir-acoes">
-        <button class="modal-done" type="button" data-troca-sim>${c.botao}</button>
+      <div class="confirma-acoes">
         <button class="btn-sec" type="button" data-fechar>Cancelar</button>
+        <button class="modal-done" type="button" data-troca-sim>${c.botao}</button>
       </div>`;
     trocaDialog.showModal();
-    trocaDialog.querySelector('[data-troca-sim]').focus();
+    $('troca-title').focus();
   }
   trocaDialog.addEventListener('click', (e) => {
     if (e.target.closest('[data-troca-sim]')) {
