@@ -847,8 +847,11 @@
   jornadaDialog.addEventListener('cancel', (e) => { e.preventDefault(); if (jd && jd.modo !== 'boas-vindas' && jd.passo !== 'montando') fecharJornadas('fechou'); });
 
   // Semana sugerida: tira os treinos da semana de agora e põe os da jornada, sem mexer nas outras atividades (jiu, muay, surf, futebol, futvôlei e cardio).
+  // Quem nunca montou a semana (contas antigas, que começavam com jiu na terça e na quinta) não leva esse jiu
+  // para um objetivo que não é de luta: ele volta quando a pessoa o põe na semana em Você.
   function semanaDaJornada(j) {
-    const s = config.semana.map((d) => d.filter((t) => !ehTreino(t)));
+    const tirarJiu = !semanaDaConta && j.id !== 'jiu';
+    const s = config.semana.map((d) => d.filter((t) => !ehTreino(t) && !(tirarJiu && t === 'jiu')));
     for (const [dia, tipos] of Object.entries(j.semana)) {
       for (const t of tipos) if (s[dia].length < 2) s[dia].push(t);
     }
