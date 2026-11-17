@@ -470,21 +470,26 @@
               db.log.push(`${nome}:${r.error ? 'erro' : 'ok'}`);
               gravar(db); return r;
             }
-            // Apps conectados: db.integracoes = [{ id, nome, prefixo, criada_em, ultimo_uso_em, revogada_em }]; semIntegracoes = schema antigo.
-            if (['criar_codigo_conexao', 'minhas_integracoes', 'revogar_integracao'].includes(nome)) {
+            // Integrações (migração 011): db.parceiros = [{ id, nome, tipo_checkin }], db.integracoes = [{ usuario_id, parceiro,
+            // codigo, criado_em, ultimo_checkin_em }]. semIntegracoes = banco sem a migração.
+            if (['minhas_integracoes', 'gerar_codigo_integracao', 'desconectar_integracao'].includes(nome)) {
               if (db.semIntegracoes) { gravar(db); return { data: null, error: { message: `Could not find the function public.${nome} in the schema cache` } }; }
-              db.integracoes = db.integracoes || [];
-              let data = null, erro = null;
-              if (nome === 'criar_codigo_conexao') {
-                data = [{ codigo: db.proximoCodigoConexao || 'K7P2QX9M', expira_em: new Date(Date.now() + 10 * 60000).toISOString() }];
-                db.codigosConexao = (db.codigosConexao || 0) + 1;
-              } else if (nome === 'minhas_integracoes') {
-                data = db.integracoes.filter((i) => !i.revogada_em).map(({ id, nome: n, prefixo, criada_em, ultimo_uso_em }) => ({ id, nome: n, prefixo, criada_em, ultimo_uso_em }));
+              const eu = db.sessao && db.sessao.user.id;
+              db.parceiros = db.parceiros || []; db.integracoes = db.integracoes || [];
+              let data = null;
+              if (nome === 'minhas_integracoes') {
+                data = db.parceiros.map((p) => {
+                  const i = db.integracoes.find((x) => x.usuario_id === eu && x.parceiro === p.id);
+                  return { parceiro: p.id, nome: p.nome, tipo_checkin: p.tipo_checkin || 'jiu', conectado_em: i ? i.criado_em : null, ultimo_checkin_em: i ? i.ultimo_checkin_em || null : null };
+                });
+              } else if (nome === 'gerar_codigo_integracao') {
+                data = (db.proximosCodigos || []).shift() || 'GT-ABCD-2345';
+                db.integracoes = db.integracoes.filter((x) => !(x.usuario_id === eu && x.parceiro === args.p_parceiro));
+                db.integracoes.push({ usuario_id: eu, parceiro: args.p_parceiro, codigo: data, criado_em: new Date().toISOString(), ultimo_checkin_em: null });
               } else {
-                const i = db.integracoes.find((x) => x.id === args.p_id && !x.revogada_em);
-                if (i) i.revogada_em = new Date().toISOString(); else erro = 'App conectado não encontrado.';
+                db.integracoes = db.integracoes.filter((x) => !(x.usuario_id === eu && x.parceiro === args.p_parceiro));
               }
-              gravar(db); return { data: erro ? null : data, error: erro ? { message: erro } : null };
+              gravar(db); return { data, error: null };
             }
             if (nome === 'registrar_push') {
               if (db.semPush) { gravar(db); return { data: null, error: { message: 'Could not find the function public.registrar_push' } }; }

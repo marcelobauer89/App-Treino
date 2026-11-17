@@ -215,6 +215,7 @@
       }
     }
     if (acompanhamento) buscarMeuPersonal();
+    buscarIntegracoes();
     if (acesso.liberado) return true;
     const admin = await sb.rpc('eh_admin');
     if (!admin.error && admin.data) return true;
@@ -409,4 +410,87 @@
     toast('Acompanhamento encerrado. Os treinos do personal saíram, e agora você pode mudar os seus.');
     // Os treinos mudaram no banco (voltam os de antes do personal): busca de novo para a tela mostrar os certos.
     try { await carregarDados(); renderizarApp(); } catch (_) { renderConfig(); renderMeuPersonal(); }
+  });
+
+  // ---------- Integrações (app do dojo) ----------
+  // Apps parceiros que mandam check-ins sozinhos (hoje, o app do dojo). A pessoa gera um código de vínculo e cola
+  // no app parceiro; a cada check-in lá, a função checkin-externo grava aqui. O código aparece só uma vez.
+  const chaveIntegracoes = () => `bauer-integracoes-${usuario ? usuario.id : ''}`;
+  const codigosNovos = {}; // parceiro → código gerado agora (some ao sair do app)
+  let desconectando = '';
+  async function buscarIntegracoes() {
+    try { integracoes = JSON.parse(localStorage.getItem(chaveIntegracoes()) || '[]') || []; } catch (_) {}
+    const { data, error } = await sb.rpc('minhas_integracoes');
+    if (error) return; // sem internet ou banco sem a migração 011: fica com a cópia (ou sem a linha)
+    integracoes = data || [];
+    try { localStorage.setItem(chaveIntegracoes(), JSON.stringify(integracoes)); } catch (_) {}
+    if (telaAtual() === 'voce') { renderMenuVoce(); if (paginaVoce() === 'integracoes') renderIntegracoes(); }
+    if (telaAtual() === 'dashboard') renderDashboard();
+  }
+  const quandoIntegracao = (s) => {
+    const d = isoLocal(new Date(s));
+    return `${fmtData(d.slice(0, 10), { day: 'numeric', month: 'short' })}, ${d.slice(11, 16)}`;
+  };
+  function renderIntegracoes() {
+    const el = $('integracoes');
+    if (!integracoes.length) {
+      el.innerHTML = '<div class="cartao"><p class="nota-campo">Nenhum app parceiro disponível por enquanto.</p></div>';
+      return;
+    }
+    el.innerHTML = integracoes.map((i) => {
+      const nome = esc(i.nome);
+      const ativ = esc((TIPOS[i.tipo_checkin] && TIPOS[i.tipo_checkin].nome) || 'treino');
+      const cod = codigosNovos[i.parceiro];
+      const p = esc(i.parceiro);
+      let corpo;
+      if (cod) {
+        corpo = `<div class="int-codigo"><code id="int-codigo-${p}">${esc(cod)}</code>
+            <button class="btn-sec" type="button" data-int-copiar="${p}">Copiar código</button></div>
+          <p class="nota-campo">Cole este código no ${nome}, uma vez só. Por segurança ele aparece só agora: se perder, gere outro (o anterior deixa de valer).</p>`;
+      } else if (!i.conectado_em) {
+        corpo = `<p class="nota-campo">Faça check-in no ${nome} e o check-in de ${ativ} aparece aqui sozinho, sem registrar duas vezes. Toque em Conectar, copie o código e cole no ${nome}.</p>
+          <button class="btn" type="button" data-int-conectar="${p}">Conectar</button>`;
+      } else {
+        corpo = `<p class="nota-campo">Conectado desde ${quandoIntegracao(i.conectado_em)}. ${i.ultimo_checkin_em ? `Último check-in recebido em ${quandoIntegracao(i.ultimo_checkin_em)}.` : 'Nenhum check-in recebido ainda.'}</p>`;
+      }
+      if (i.conectado_em || cod) {
+        corpo += desconectando === i.parceiro
+          ? `<div class="aviso mp-confirmar" role="alert"><p>Desconectar o ${nome}? Os próximos check-ins de lá não chegam mais. Os que já vieram continuam aqui.</p>
+              <div class="novidade-acoes"><button class="btn perigo" type="button" data-int-desconectar-sim="${p}">Desconectar</button>
+              <button class="btn-sec" type="button" data-int-desconectar-nao>Continuar conectado</button></div></div>`
+          : `<div class="int-acoes">${cod ? '' : `<button class="btn-sec" type="button" data-int-conectar="${p}">Gerar novo código</button>`}
+              <button class="btn-sec perigo-sec" type="button" data-int-desconectar="${p}">Desconectar</button></div>`;
+      }
+      return `<div class="cartao integracao"><p class="mp-nome"><b>${nome}</b><small>Check-in automático de ${ativ}</small></p>${corpo}</div>`;
+    }).join('');
+  }
+  $('integracoes').addEventListener('click', async (e) => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    const d = b.dataset;
+    if (d.intCopiar) {
+      const texto = codigosNovos[d.intCopiar];
+      try { await navigator.clipboard.writeText(texto); toast('Código copiado. Agora cole no app parceiro.'); } catch (_) { toast(`Código: ${texto}`); }
+      return;
+    }
+    if (d.intDesconectar) { desconectando = d.intDesconectar; renderIntegracoes(); return; }
+    if ('intDesconectarNao' in d) { desconectando = ''; renderIntegracoes(); return; }
+    const parceiro = d.intConectar || d.intDesconectarSim;
+    if (!parceiro) return;
+    b.disabled = true;
+    const { data, error } = d.intConectar
+      ? await sb.rpc('gerar_codigo_integracao', { p_parceiro: parceiro })
+      : await sb.rpc('desconectar_integracao', { p_parceiro: parceiro });
+    if (error) { b.disabled = false; return toast('Não foi possível concluir. Confira a internet e tente de novo.'); }
+    if (d.intConectar) {
+      codigosNovos[parceiro] = data;
+      registrarEvento('integracao_conectada', { parceiro });
+    } else {
+      delete codigosNovos[parceiro];
+      desconectando = '';
+      registrarEvento('integracao_desconectada', { parceiro });
+      toast('Desconectado. Os check-ins que já vieram continuam no app.');
+    }
+    await buscarIntegracoes();
+    renderIntegracoes();
   });

@@ -1187,6 +1187,8 @@
     acesso_pedido: () => 'Pediu acesso ao app',
     personal_convite: (d) => ({ visto: 'Abriu o convite de um personal', aceitou: 'Aceitou o acompanhamento de um personal', recusou: 'Deixou o convite do personal para depois' }[d.resultado] || `Tentou um convite de personal (${d.resultado})`),
     personal_encerrado: () => 'Encerrou o acompanhamento do personal',
+    integracao_conectada: () => 'Gerou o código de um app parceiro (Integrações)',
+    integracao_desconectada: () => 'Desconectou um app parceiro (Integrações)',
     novidade_evolucao: (d) => ({ viu: 'Viu o aviso da Evolução', ver: 'Abriu a Evolução pelo aviso', depois: 'Deixou o aviso da Evolução para depois', fechou: 'Fechou o aviso da Evolução' }[d.escolha] || 'Respondeu ao aviso da Evolução') + (d.ocultou ? ' e pediu para não mostrar mais' : ''),
     novidade_treinos: (d) => ({ viu: 'Viu o aviso dos treinos personalizados', personalizar: 'Quis personalizar os treinos', montar: 'Escolheu montar os treinos', manter: 'Manteve o treino atual', fechou: 'Fechou o aviso dos treinos personalizados' }[d.escolha] || 'Respondeu ao aviso dos treinos') + (d.ocultou ? ' e pediu para não mostrar mais' : ''),
     editor_treinos: () => 'Abriu Meus treinos',

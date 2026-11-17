@@ -171,7 +171,7 @@
     }
     $('dia-lista').innerHTML = `<ul class="cks">${lista.map((c) => {
       const dur = duracaoMin(c);
-      const meta = [capitalizar(horarioTexto(c)), dur != null ? fmtDur(dur) : '', detalheCardio(c)]
+      const meta = [capitalizar(horarioTexto(c)), dur != null ? fmtDur(dur) : '', detalheCheckin(c)]
         .filter(Boolean).join(', ');
       const aberto = ckExpandido === c.id;
       return `

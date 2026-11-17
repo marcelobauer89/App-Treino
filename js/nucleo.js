@@ -162,6 +162,7 @@
   // que ele monta (o banco recusa mudança feita pelo próprio aluno) e não há escolha de objetivo nas boas-vindas.
   let acompanhamento = null;
   let treinosDoPersonalEm = null; // perfis.treinos_em quando foi o personal que montou (aviso "ficha nova")
+  let integracoes = []; // apps parceiros ativos e se a pessoa ligou cada um (função minhas_integracoes), com cópia no aparelho
   let meuPersonal = null; // { nome, cref, uf, desde } (função meu_personal), com cópia no aparelho
   const limpar = (t, max) => String(t ?? '').replace(/[<>"&]/g, '').trim().slice(0, max);
   // Exercício criado pelo personal (fora do catálogo): grupo, níveis, explicação e vídeo vêm junto no treino (e.extra).
@@ -380,10 +381,16 @@
   }
   try { const g = JSON.parse(localStorage.getItem(CHAVE_TIPOS) || 'null'); if (g) aplicarTiposCheckin(g); } catch (_) {}
   // Modalidade do check-in (ex.: Bike) e o texto curto para as listas: "Bike · 12,5 km".
+  // Check-in que veio de um app parceiro ganha "via <nome do app>" (ex.: "via App do dojo").
   const modalidadeDe = (c) => (TIPOS[c.tipo].modalidades || []).find((m) => m.id === c.modalidade) || null;
-  function detalheCardio(c) {
+  function viaParceiro(c) {
+    if (!c.origem || c.origem === 'app') return '';
+    const p = integracoes.find((i) => i.parceiro === c.origem);
+    return `via ${p ? p.nome : 'app parceiro'}`;
+  }
+  function detalheCheckin(c) {
     const m = modalidadeDe(c);
-    const partes = [m ? m.nome : '', c.km ? `${String(c.km).replace('.', ',')} km` : ''].filter(Boolean);
+    const partes = [m ? m.nome : '', c.km ? `${String(c.km).replace('.', ',')} km` : '', viaParceiro(c)].filter(Boolean);
     return partes.join(' · ');
   }
 
@@ -498,6 +505,7 @@
     obs: r.obs || '', retroativo: r.retroativo,
     ultimaSerie: minuto(r.ultima_serie), series: r.series || {}, foto: r.foto || '',
     modalidade: r.modalidade || '', km: r.km != null && Number(r.km) > 0 ? Number(r.km) : null,
+    origem: r.origem || 'app',
   });
 
   // ---------- Fila de envio e cópia dos dados no aparelho (uso sem internet) ----------
