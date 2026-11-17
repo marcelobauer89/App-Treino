@@ -1608,6 +1608,12 @@
 .btn.perigo { background: var(--erro); color: var(--sobre-erro); }
 .mp-confirmar { display: grid; gap: 10px; }
 .mp-confirmar p { margin: 0; }
+/* Integrações (Você): um cartão por app parceiro; o código de vínculo aparece grande, uma vez, para copiar. */
+.integracao { display: grid; gap: 12px; }
+.integracao p { margin: 0; }
+.int-codigo { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.int-codigo code { font: 700 22px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .06em; padding: 8px 12px; border-radius: 10px; background: var(--marca-suave); color: var(--tinta); user-select: all; }
+.int-acoes { display: flex; flex-wrap: wrap; gap: 10px; }
 .personal-erro { background: color-mix(in srgb, var(--erro) 12%, var(--papel)); color: var(--erro); }
 /* Recado do personal no topo da ficha do treino. */
 .recado-personal { margin: 0 0 12px; padding: 10px 12px; border-radius: 10px; background: var(--marca-suave); color: var(--tinta); font-size: 14px; }

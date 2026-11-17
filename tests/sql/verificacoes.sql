@@ -408,5 +408,73 @@ do $$ begin
   exception when insufficient_privilege then null; end;
 end $$;
 
+
+-- ---------- Integração com app parceiro (check-in automático do app do dojo) ----------
+reset role;
+delete from public.checkins where usuario_id = '22222222-2222-2222-2222-222222222222' and tipo = 'jiu';
+insert into public.parceiros (id, nome, chave_hash) values ('dojo', 'App do dojo', public.hash_integracao('chave-de-teste-123'));
+create temp table cod (codigo text);
+grant all on cod to authenticated, service_role;
+set local role authenticated;
+do $$ begin perform set_config('request.jwt.claim.sub', '22222222-2222-2222-2222-222222222222', true); end $$;
+do $$ declare c text; begin
+  if (select count(*) from public.minhas_integracoes() where parceiro = 'dojo' and conectado_em is null) <> 1 then
+    raise exception 'FALHOU: o parceiro ativo aparece como não conectado'; end if;
+  c := public.gerar_codigo_integracao('dojo');
+  if c !~ '^GT-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}$' then raise exception 'FALHOU: código no formato GT-XXXX-XXXX (veio %)', c; end if;
+  insert into cod values (c);
+  if (select conectado_em from public.minhas_integracoes() where parceiro = 'dojo') is null then raise exception 'FALHOU: depois do código, aparece conectado'; end if;
+  begin perform 1 from public.integracoes;
+    raise exception 'FALHOU: a tabela integracoes não é lida pela API';
+  exception when insufficient_privilege then null; end;
+  begin perform public.registrar_checkin_externo('chave-de-teste-123', c, 'x1', now(), null);
+    raise exception 'FALHOU: só a função do servidor grava check-in externo';
+  exception when insufficient_privilege then null; end;
+end $$;
+reset role;
+set local role service_role;
+do $$ declare c text := (select codigo from cod); d timestamptz := date_trunc('day', now()) - interval '45 days' + interval '22 hours'; r public.checkins; begin
+  if public.registrar_checkin_externo('chave-errada', c, 'a1', d) <> 'chave_invalida' then raise exception 'FALHOU: chave errada é recusada'; end if;
+  if public.registrar_checkin_externo('chave-de-teste-123', 'GT-AAAA-AAAA', 'a1', d) <> 'codigo_invalido' then raise exception 'FALHOU: código errado é recusado'; end if;
+  if public.registrar_checkin_externo('chave-de-teste-123', c, '', d) <> 'dados_invalidos' then raise exception 'FALHOU: sem id externo é recusado'; end if;
+  if public.registrar_checkin_externo('chave-de-teste-123', c, 'a1', now() + interval '3 days') <> 'dados_invalidos' then raise exception 'FALHOU: data no futuro é recusada'; end if;
+  -- Código com minúsculas e espaços também vale.
+  if public.registrar_checkin_externo('chave-de-teste-123', lower(replace(c, '-', ' ')), 'a1', d) <> 'criado' then raise exception 'FALHOU: check-in do dojo é gravado'; end if;
+  select * into r from public.checkins where usuario_id = '22222222-2222-2222-2222-222222222222' and id_externo = 'a1';
+  if r.tipo <> 'jiu' or r.origem <> 'dojo' or r.inicio::time <> '19:00' or r.fim - r.inicio <> interval '60 minutes' then
+    raise exception 'FALHOU: check-in do dojo vira jiu no horário de Brasília com a duração padrão (veio % % % %)', r.tipo, r.origem, r.inicio, r.fim; end if;
+  if public.registrar_checkin_externo('chave-de-teste-123', c, 'a1', d) <> 'duplicado' then raise exception 'FALHOU: o mesmo check-in não entra duas vezes'; end if;
+  if public.registrar_checkin_externo('chave-de-teste-123', c, 'a2', d + interval '1 hour') <> 'duplicado' then raise exception 'FALHOU: jiu até 2 h antes ou depois conta como o mesmo treino'; end if;
+  if public.registrar_checkin_externo('chave-de-teste-123', c, 'a3', d + interval '1 day', d + interval '1 day 90 minutes') <> 'criado' then raise exception 'FALHOU: outro dia entra'; end if;
+  if (select fim - inicio from public.checkins where id_externo = 'a3') <> interval '90 minutes' then raise exception 'FALHOU: usa o fim enviado pelo dojo'; end if;
+end $$;
+reset role;
+update public.perfis set liberado = false where id = '22222222-2222-2222-2222-222222222222';
+set local role service_role;
+do $$ begin
+  if public.registrar_checkin_externo('chave-de-teste-123', (select codigo from cod), 'a4', now() - interval '2 days') <> 'nao_liberado' then
+    raise exception 'FALHOU: conta não liberada não recebe check-in externo'; end if;
+end $$;
+reset role;
+update public.perfis set liberado = true where id = '22222222-2222-2222-2222-222222222222';
+set local role authenticated;
+do $$ begin perform set_config('request.jwt.claim.sub', '22222222-2222-2222-2222-222222222222', true); end $$;
+do $$ begin perform public.gerar_codigo_integracao('dojo'); end $$;
+reset role;
+set local role service_role;
+do $$ begin
+  if public.registrar_checkin_externo('chave-de-teste-123', (select codigo from cod), 'a5', now() - interval '3 days') <> 'codigo_invalido' then
+    raise exception 'FALHOU: código novo invalida o anterior'; end if;
+end $$;
+reset role;
+set local role authenticated;
+do $$ begin perform set_config('request.jwt.claim.sub', '22222222-2222-2222-2222-222222222222', true); end $$;
+do $$ begin
+  perform public.desconectar_integracao('dojo');
+  if (select conectado_em from public.minhas_integracoes() where parceiro = 'dojo') is not null then raise exception 'FALHOU: desconectar desliga a integração'; end if;
+  if (select count(*) from public.checkins where origem = 'dojo') <> 2 then raise exception 'FALHOU: os check-ins que vieram continuam depois de desconectar'; end if;
+end $$;
+reset role;
+
 rollback;
 \echo 'Regras de acesso: tudo OK'

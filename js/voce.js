@@ -1166,6 +1166,10 @@
     $('valor-treinos').textContent = acompanhamento ? 'Do seu personal' : j ? (ehDaJornada(j) ? j.nome : `${j.nome} (personalizada)`)
       : treinosDaConta ? `${n} ${n === 1 ? 'treino' : 'treinos'}` : 'Plano pronto';
     $('valor-personal').textContent = acompanhamento ? ((meuPersonal && meuPersonal.nome) || 'Acompanhando') : 'Nenhum';
+    // Integrações: a linha só aparece quando há app parceiro cadastrado (e o banco já tem a migração 011).
+    $('linha-integracoes').hidden = !integracoes.length;
+    const ligadas = integracoes.filter((i) => i.conectado_em).length;
+    $('valor-integracoes').textContent = ligadas ? (ligadas === 1 ? 'Conectado' : `${ligadas} conectados`) : 'Nenhuma';
     const ativ = config.semana.flat().length;
     const descanso = config.semana.filter((d) => !d.length).length;
     $('valor-semana').textContent = `${ativ} ${ativ === 1 ? 'atividade' : 'atividades'}${descanso ? '' : ', sem descanso'}`;

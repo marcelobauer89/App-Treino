@@ -4,7 +4,7 @@
   "description": "Testes do Gestão de Treinos (ver tests/README.md).",
   "scripts": {
     "testes": "node rodar.cjs",
-    "edge": "RESUMO_SEM_SERVIDOR=1 node --experimental-strip-types --import ./edge/registrar.mjs edge/teste.mjs && RESUMO_SEM_SERVIDOR=1 node --experimental-strip-types --import ./edge/registrar.mjs edge/teste-pedido.mjs"
+    "edge": "RESUMO_SEM_SERVIDOR=1 node --experimental-strip-types --import ./edge/registrar.mjs edge/teste.mjs && RESUMO_SEM_SERVIDOR=1 node --experimental-strip-types --import ./edge/registrar.mjs edge/teste-pedido.mjs && node --experimental-strip-types --import ./edge/registrar.mjs edge/teste-checkin-externo.mjs"
   },
   "devDependencies": {
     "playwright": "1.56.1"
