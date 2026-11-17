@@ -23,6 +23,9 @@
       <button class="chip" data-foco="${f.id}" aria-pressed="${f.id === estado.foco}">${f.label}</button>`).join('');
   }
 
+  // O impacto "No Jiu Jitsu" só aparece para quem luta: objetivo Jiu Jitsu ou jiu na semana.
+  const fazJiu = () => jornada === 'jiu' || config.semana.some((d) => d.includes('jiu'));
+
   function renderSobre() {
     const t = TREINOS[estado.treino];
     // Recado do personal para este treino (quando quem montou foi o personal).
@@ -42,7 +45,7 @@
           <div><h3>Objetivo</h3><p>${t.objetivo}</p></div>
           <div><h3>O que esperar</h3><p>${t.esperado}</p></div>
           <div><h3>Impacto</h3>
-            <p><b>No Jiu Jitsu:</b> ${t.impacto_jiu}</p>
+            ${t.impacto_jiu && fazJiu() ? `<p><b>No Jiu Jitsu:</b> ${t.impacto_jiu}</p>` : ''}
             <p><b>No físico:</b> ${t.impacto_fisico}</p>
           </div>
         </div>
