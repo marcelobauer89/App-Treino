@@ -872,6 +872,10 @@
   dialog.modal.confirma { width: min(400px, calc(100vw - 32px)); margin: auto; border-bottom: 1px solid var(--fio); border-radius: 18px; }
   dialog.modal.confirma[open] { animation: none; }
   dialog.modal.confirma .modal-body { padding-bottom: 20px; }
+  /* Cancelar e a ação lado a lado, do mesmo tamanho. */
+  .confirma-acoes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .confirma-acoes > button { min-height: 48px; margin: 0; padding: 0 12px; font-size: 15px; }
+  #troca-title:focus { outline: none; }
   .modal-body { display: grid; gap: 16px; padding: 20px 16px; }
   .modal-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
   .modal-head h3 { margin: 0; font-family: var(--display); font-stretch: 80%; font-weight: 800; font-size: 26px; line-height: 1.1; }
