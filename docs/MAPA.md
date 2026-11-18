@@ -87,7 +87,7 @@ Na ordem de carga. Cada linha é uma seção (comentário `// ---------- Nome --
 
 ## `js/admin.js` (monitoramento): seções
 
-Conexão · Estado · Acesso · Conta no topo (foto, nome e Administrador ou CREF, nas duas páginas) · On-line agora (Presence) · Cálculos (números da Visão geral) · Render (Visão geral e gráficos) · Usuários · Saúde do app · E-mails · Abas (o menu das seções: à esquerda no computador; no celular, botão Menu no topo e gaveta; Sair no fim) · Detalhe do usuário · Eventos de interface · Excluir conta de um usuário · Convites · Exercícios (catálogo) · Profissionais (área do personal) · Tipos de check-in (tabela tipos_checkin).
+Conexão · Estado · Acesso · Conta no topo (foto, nome e Administrador ou CREF, nas duas páginas) · On-line agora (Presence) · Cálculos (números da Visão geral) · Render (Visão geral e gráficos) · Usuários · Saúde do app · E-mails · Abas (o menu das seções: à esquerda no computador; no celular, botão Menu no topo e gaveta; Sair no fim) · Barra fixa (celular: foto, nome e Menu presos no alto ao rolar) · Detalhe do usuário · Eventos de interface · Excluir conta de um usuário · Convites · Exercícios (catálogo) · Profissionais (área do personal) · Tipos de check-in (tabela tipos_checkin).
 
 No modo personal (`personal.html`, `<html data-painel="personal">`), o começo do arquivo troca as funções do banco (`FN`), devolve um elemento "fantasma" para o que só existe no `admin.html` e troca "usuário" por "aluno" (`trocarPalavras`); o resto da área fica nos ganchos `window.PersonalHooks`.
 
@@ -130,6 +130,7 @@ Rode só os da área mexida: `node tests/rodar.cjs test20 test22 …`.
 | Tipos de check-in do painel, Cardio com modalidade e km, botões do editor e animação ao salvar | test87 |
 | Segurança do site: CSP nas cinco páginas (index, admin, personal, privacidade e conheca), sem script inline, biblioteca do Supabase em `js/vendor/`, o que fica fora da publicação | test88 |
 | Área do personal (`personal.html`, aba Profissionais do monitoramento) | test90 |
+| Topo do painel e do personal: carregamento dentro da margem (texto da etapa com espaço), foto e nome parados ao carregar e barra fixa ao rolar no celular | test94 |
 | Integrações (check-in do app do dojo): Você → Integrações, "via App do dojo" no Dashboard e Liberar integração na ficha do usuário (painel) | test93; a função em `npm run edge` (`tests/edge/teste-checkin-externo.mjs`); as regras do banco em `tests/sql/rodar.sh` |
 | Aluno do personal no app (convite, Meu personal, treinos só de leitura, recado) | test89 |
 | Landing page (`conheca.html`) e o link na tela de login | test91 |

@@ -155,8 +155,8 @@
         <button class="btn" type="button" id="entrar">Entrar com Google</button>`);
     }
     meuId = session.user.id;
-    // Personal: o topo aparece já no cadastro; administrador, só depois de confirmado o acesso.
-    if (PERSONAL) contaNoTopo(session);
+    // Foto e nome já no começo (o lugar deles está reservado no topo); a linha "Administrador" só depois de confirmado.
+    contaNoTopo(session);
     mostrarCarregando('Conferindo seu acesso…');
     const { data: admin, error } = await sb.rpc(FN.acesso);
     if (error) return mostrarEstado(`<p>Não foi possível verificar o acesso. Confira se o <code>supabase/schema.sql</code> foi aplicado.</p>${botaoTentar()}`);
@@ -167,7 +167,7 @@
         <p><b>Acesso restrito.</b> A conta ${esc(session.user.email)} não é administradora.</p>
         <button class="btn-sec" type="button" id="sair">Entrar com outra conta</button>`);
     }
-    if (!PERSONAL) contaNoTopo(session);
+    if (!PERSONAL) confirmarAdminNoTopo();
     aplicarEstiloDaConta();
     await carregar();
   }
@@ -181,23 +181,30 @@
     if (!session) {
       av.hidden = true; sub.hidden = true; $('topo-olho').hidden = true;
       nomeEl.textContent = TITULO;
+      $('barra-nome').textContent = TITULO;
       return;
     }
     const meta = session.user.user_metadata || {};
+    // O topo já nasce com o lugar da foto, do nome da área e da linha de baixo (classe "reserva" no admin.html e no
+    // personal.html): o que chega depois só preenche, sem a foto e o nome subirem e descerem durante o carregamento.
     const desenhar = (nome, foto, linha) => {
       nomeEl.textContent = nome || TITULO;
-      $('topo-olho').hidden = !nome;
-      sub.textContent = linha || '';
-      sub.hidden = !linha;
-      av.hidden = false;
-      av.textContent = iniciaisTopo(nome || session.user.email);
+      $('barra-nome').textContent = nome || TITULO;
+      $('topo-olho').classList.toggle('reserva', !nome);
+      sub.textContent = linha || '\u00a0';
+      sub.classList.toggle('reserva', !linha);
+      const iniciais = iniciaisTopo(nome || session.user.email);
+      if (!av.querySelector('img')) { av.textContent = iniciais; $('barra-avatar').textContent = iniciais; }
       if (foto) {
         const img = new Image();
         img.alt = '';
         img.referrerPolicy = 'no-referrer';
-        img.onload = () => { av.textContent = ''; av.appendChild(img); };
+        img.onload = () => {
+          av.replaceChildren(img);
+          $('barra-avatar').replaceChildren(img.cloneNode());
+        };
         img.src = foto;
-      }
+      } else if (av.querySelector('img')) { av.textContent = iniciais; $('barra-avatar').textContent = iniciais; }
     };
     const fotoGoogle = /^https:/.test(meta.avatar_url || meta.picture || '') ? meta.avatar_url || meta.picture : '';
     const nomeGoogle = String(meta.full_name || meta.name || '').slice(0, 80);
@@ -209,7 +216,14 @@
     const perfil = !p.error ? p.data || {} : {};
     const foto = /^https:/.test(perfil.foto || '') ? perfil.foto : fotoGoogle;
     const nome = (reg && reg.nome) || String(perfil.nome || '').trim().slice(0, 80) || nomeGoogle;
-    desenhar(nome, foto, PERSONAL ? (reg ? reg.sub : '') : 'Administrador');
+    desenhar(nome, foto, PERSONAL ? (reg ? reg.sub : '') : (adminConfirmado ? 'Administrador' : ''));
+  }
+  // Administrador: a linha "Administrador" só entra depois de o banco confirmar o acesso.
+  let adminConfirmado = false;
+  function confirmarAdminNoTopo() {
+    adminConfirmado = true;
+    $('topo-sub').textContent = 'Administrador';
+    $('topo-sub').classList.remove('reserva');
   }
   // O estilo das cores da conta (escolhido no app). A cópia do navegador já foi aplicada no início;
   // aqui vale o que está salvo na conta, para o monitoramento abrir igual em outro aparelho.
@@ -1141,6 +1155,7 @@
     $('menu').classList.add('aberto');
     $('menu-fundo').hidden = false;
     $('menu-abrir').setAttribute('aria-expanded', 'true');
+    $('menu-abrir-fixo').setAttribute('aria-expanded', 'true');
     const atual = document.querySelector('.menu-item[aria-current="page"]');
     setTimeout(() => (atual || $('menu-fechar')).focus(), 30);
   }
@@ -1149,9 +1164,25 @@
     $('menu').classList.remove('aberto');
     $('menu-fundo').hidden = true;
     $('menu-abrir').setAttribute('aria-expanded', 'false');
-    if (focar && menuGaveta()) $('menu-abrir').focus();
+    $('menu-abrir-fixo').setAttribute('aria-expanded', 'false');
+    if (focar && menuGaveta()) (barraFixaVisivel() ? $('menu-abrir-fixo') : $('menu-abrir')).focus();
   }
   $('menu-abrir').addEventListener('click', abrirMenu);
+  $('menu-abrir-fixo').addEventListener('click', abrirMenu);
+
+  // ---------- Barra fixa ----------
+  // No celular e no tablet, quando o topo (foto, nome e Menu) sai da tela ao rolar, uma barra fina fica presa no alto
+  // com a foto, o nome e o botão Menu. Só aparece com o painel aberto (o botão Menu do topo visível).
+  let topoForaDaTela = false;
+  const barraFixaVisivel = () => $('barra-fixa').classList.contains('visivel');
+  function atualizarBarraFixa() {
+    const mostrar = topoForaDaTela && !$('menu-abrir').hidden;
+    $('barra-fixa').classList.toggle('visivel', mostrar);
+    $('barra-fixa').inert = !mostrar;
+  }
+  new IntersectionObserver(([e]) => { topoForaDaTela = !e.isIntersecting; atualizarBarraFixa(); }).observe($('topo-perfil'));
+  new MutationObserver(atualizarBarraFixa).observe($('menu-abrir'), { attributes: true, attributeFilter: ['hidden'] });
+  atualizarBarraFixa();
   $('menu-fechar').addEventListener('click', () => fecharMenu({ focar: true }));
   $('menu-fundo').addEventListener('click', () => fecharMenu({ focar: true }));
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && $('menu').classList.contains('aberto')) fecharMenu({ focar: true }); });
@@ -1162,6 +1193,9 @@
     $('menu-alerta').hidden = !n;
     $('menu-alerta').textContent = n ? String(n) : '';
     $('menu-alerta').setAttribute('aria-label', n ? `${n} ${n === 1 ? 'alerta' : 'alertas'} no menu` : '');
+    $('menu-alerta-fixo').hidden = !n;
+    $('menu-alerta-fixo').textContent = n ? String(n) : '';
+    $('menu-alerta-fixo').setAttribute('aria-label', n ? `${n} ${n === 1 ? 'alerta' : 'alertas'} no menu` : '');
   }
   new MutationObserver(atualizarMenuAlerta).observe($('menu'), { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['hidden'] });
   addEventListener('hashchange', () => mostrarAba(location.hash.slice(1), { url: false }));
