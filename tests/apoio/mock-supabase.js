@@ -452,7 +452,9 @@
         },
         rpcBruto(nome, args) {
           // admin.atraso (ms): segura as respostas das funções do painel, para ver o carregamento.
-          const espera = (nome === 'eh_admin' || nome.startsWith('admin_')) ? ((ler().admin || {}).atraso || 5) : 5;
+          // atrasoPersonal (ms): o mesmo para a área do personal (eh_profissional e personal_*).
+          const espera = (nome === 'eh_admin' || nome.startsWith('admin_')) ? ((ler().admin || {}).atraso || 5)
+            : (nome === 'eh_profissional' || nome.startsWith('personal_')) ? (ler().atrasoPersonal || 5) : 5;
           return new Promise((r) => setTimeout(r, espera)).then(() => {
             const db = ler();
             db.log.push(`rpc:${nome}`);
