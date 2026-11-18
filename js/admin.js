@@ -875,7 +875,7 @@
     $('usuarios-corpo').innerHTML = linhas.length ? linhas.map((l) => `
       <tr data-usuario="${l.u.id}">
         <td><div class="quem">${avatar(l.u, online.has(l.u.id) ? 'on' : '')}
-          <button type="button" data-abrir="${l.u.id}"><b>${esc(l.u.nome || 'Sem nome')}${l.u.videos_liberados ? ' <span class="tag-videos">Vídeos</span>' : ''}</b><span class="sr on-sr"${online.has(l.u.id) ? '' : ' hidden'}>, on-line agora</span><small>${esc(l.u.email)}</small>
+          <button type="button" data-abrir="${l.u.id}"><b>${esc(l.u.nome || 'Sem nome')}${l.u.videos_liberados ? ' <span class="tag-videos">Vídeos</span>' : ''}${l.u.integracoes_liberadas ? ' <span class="tag-videos">Dojo</span>' : ''}</b><span class="sr on-sr"${online.has(l.u.id) ? '' : ' hidden'}>, on-line agora</span><small>${esc(l.u.email)}</small>
             <span class="resumo-cel">${l.ultimo ? relativo(l.ultimo) : 'sem uso'} · ${fmtNum(l.checkins)} check-in${l.checkins === 1 ? '' : 's'} · ${pctAder(l.aderencia)} do plano</span></button>
           <span class="chev" aria-hidden="true">${ICON.chev}</span></div></td>
         <td data-rotulo="Situação" class="cel-situacao"><span class="situacao ${l.sit.chave}">${l.sit.icone}${l.sit.rotulo}</span></td>
@@ -1187,6 +1187,8 @@
     acesso_pedido: () => 'Pediu acesso ao app',
     personal_convite: (d) => ({ visto: 'Abriu o convite de um personal', aceitou: 'Aceitou o acompanhamento de um personal', recusou: 'Deixou o convite do personal para depois' }[d.resultado] || `Tentou um convite de personal (${d.resultado})`),
     personal_encerrado: () => 'Encerrou o acompanhamento do personal',
+    integracao_conectada: () => 'Gerou o código de um app parceiro (Integrações)',
+    integracao_desconectada: () => 'Desconectou um app parceiro (Integrações)',
     novidade_evolucao: (d) => ({ viu: 'Viu o aviso da Evolução', ver: 'Abriu a Evolução pelo aviso', depois: 'Deixou o aviso da Evolução para depois', fechou: 'Fechou o aviso da Evolução' }[d.escolha] || 'Respondeu ao aviso da Evolução') + (d.ocultou ? ' e pediu para não mostrar mais' : ''),
     novidade_treinos: (d) => ({ viu: 'Viu o aviso dos treinos personalizados', personalizar: 'Quis personalizar os treinos', montar: 'Escolheu montar os treinos', manter: 'Manteve o treino atual', fechou: 'Fechou o aviso dos treinos personalizados' }[d.escolha] || 'Respondeu ao aviso dos treinos') + (d.ocultou ? ' e pediu para não mostrar mais' : ''),
     editor_treinos: () => 'Abriu Meus treinos',
@@ -1315,6 +1317,16 @@
             : `<button class="btn-peq prim" type="button" data-videos="${u.id}" data-liberar-videos="sim">Liberar vídeos</button>`}
         </div>
         <p class="excluir-erro" id="det-videos-erro" role="alert" hidden></p>
+      </section>` : ''}
+      ${typeof u.integracoes_liberadas === 'boolean' ? `<section class="det-sec" aria-labelledby="det-integracoes-t">
+        <h3 id="det-integracoes-t">Integração com o app do dojo</h3>
+        <div class="det-acesso">
+          <span class="nota" style="flex:1 1 200px">${u.integracoes_liberadas ? 'Liberada: vê Você → Integrações e pode conectar o app do dojo para receber os check-ins de lá.' : 'Não liberada: Integrações não aparece no app.'}</span>
+          ${u.integracoes_liberadas
+            ? `<button class="btn-peq sec" type="button" data-integracoes="${u.id}" data-liberar-integracoes="nao">Tirar integração</button>`
+            : `<button class="btn-peq prim" type="button" data-integracoes="${u.id}" data-liberar-integracoes="sim">Liberar integração</button>`}
+        </div>
+        <p class="excluir-erro" id="det-integracoes-erro" role="alert" hidden></p>
       </section>` : ''}
       ${PERSONAL ? '' : `<section class="det-sec" aria-labelledby="det-tempo">
         <h3 id="det-tempo">Atividade recente</h3>
@@ -1650,7 +1662,7 @@
     if ($('detalhe').open && detalheId === alvo) abrirDetalhe(alvo);
   }
   document.addEventListener('click', async (e) => {
-    const b = e.target.closest('[data-videos], [data-liberar], [data-recusar], [data-bloquear], [data-copiar-convite], [data-cancelar-convite], [data-excluir-convite], [data-abrir-usuario], #conv-copiar');
+    const b = e.target.closest('[data-videos], [data-integracoes], [data-liberar], [data-recusar], [data-bloquear], [data-copiar-convite], [data-cancelar-convite], [data-excluir-convite], [data-abrir-usuario], #conv-copiar');
     if (!b) return;
     if (b.dataset.excluirConvite) return abrirExcluirConvite(b.dataset.excluirConvite);
     if (b.dataset.abrirUsuario) return abrirDetalhe(b.dataset.abrirUsuario);
@@ -1677,6 +1689,22 @@
         return;
       }
       toast(liberar ? `Vídeos liberados para ${nome(alvo)}.` : `${nome(alvo)} não vê mais os vídeos.`);
+      await carregar();
+      if ($('detalhe').open && detalheId === alvo) abrirDetalhe(alvo);
+      return;
+    }
+    if (b.dataset.integracoes) {
+      const alvo = b.dataset.integracoes, liberar = b.dataset.liberarIntegracoes === 'sim';
+      b.disabled = true;
+      const { error } = await sb.rpc('admin_liberar_integracoes', { alvo, liberar });
+      if (error) {
+        b.disabled = false;
+        const el = $('det-integracoes-erro');
+        el.textContent = /admin_liberar_integracoes|function/.test(error.message) ? 'Para liberar a integração, rode supabase/migracoes/012-integracoes-por-usuario.sql no Supabase.' : error.message;
+        el.hidden = false;
+        return;
+      }
+      toast(liberar ? `Integração com o app do dojo liberada para ${nome(alvo)}.` : `${nome(alvo)} não vê mais a integração com o app do dojo.`);
       await carregar();
       if ($('detalhe').open && detalheId === alvo) abrirDetalhe(alvo);
       return;

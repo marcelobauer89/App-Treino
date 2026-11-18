@@ -21,6 +21,7 @@ Ao mudar um recurso, atualize só a seção dele (ache pelo índice).
 - [Convites (acesso só para convidados)](#convites-acesso-só-para-convidados)
 - [Área do personal](#área-do-personal)
 - [Landing page (conheca.html)](#landing-page-conhecahtml)
+- [Check-in automático do app do dojo](#check-in-automático-do-app-do-dojo)
 - [Excluir conta](#excluir-conta)
 - [Foto no check-in (opcional)](#foto-no-check-in-opcional)
 - [Privacidade e LGPD](#privacidade-e-lgpd)
@@ -205,6 +206,20 @@ Página de divulgação do produto (RF-86), publicada em `/App-Treino/conheca.ht
 - **Prévia no WhatsApp e nas redes:** título, descrição e a imagem `icones/compartilhar.png` (1200×630, com o título e o celular da landing) pelas tags Open Graph no `<head>`. O endereço da imagem é o de produção, então no `/dev/` a prévia só aparece depois que a mudança chegar à `main`. Para refazer a imagem depois de mudar o título, gere um PNG de 1200×630 no mesmo estilo e substitua o arquivo.
 - **Ambiente de testes:** carrega o `ambiente.js`, então no `/dev/` mostra o selo **DEV** e "[DEV]" no título, como as outras páginas.
 - **CSP:** igual à das outras quatro páginas (ver Segurança do site publicado).
+
+## Check-in automático do app do dojo
+
+- **Para quê:** quem faz check-in das aulas de jiu no app do dojo não precisa repetir o check-in aqui. O check-in de lá chega sozinho como Jiu Jitsu.
+- **Liberado por usuário:** vem escondido para todos. No painel → **Usuários** → ficha da pessoa → **Integração com o app do dojo**, o administrador toca em **Liberar integração** (ou **Tirar integração**); a lista de usuários mostra o selo **Dojo** em quem tem. Tirar esconde a linha no app e faz a função recusar os check-ins dessa pessoa (`nao_liberado`); o vínculo fica guardado e volta a valer se liberar de novo. No banco: `perfis.integracoes_liberadas` e `admin_liberar_integracoes`.
+- **No app (Você → Integrações):** a linha só aparece quando há app parceiro cadastrado e a integração foi liberada para a pessoa. **Conectar** gera um código `GT-XXXX-XXXX`, mostrado uma vez, com **Copiar código**; a pessoa cola no app do dojo. Depois aparece "Conectado desde …" e quando chegou o último check-in, com **Gerar novo código** (o anterior deixa de valer) e **Desconectar** (com confirmação; os check-ins que já vieram continuam). No Dashboard, o check-in que veio de lá mostra "via App do dojo" e pode ser editado ou excluído como os outros.
+- **Como chega:** a cada check-in, o servidor do dojo chama a Edge Function `checkin-externo` com a chave do parceiro e o código da pessoa. A função `registrar_checkin_externo` grava o jiu no horário de Brasília (sem fim, usa a duração padrão do Jiu Jitsu em Tipos de check-in), só para contas liberadas. Não grava duas vezes o mesmo check-in (id do dojo) nem um jiu que a pessoa já registrou no app até 2 h antes ou depois. O contrato para o desenvolvedor do dojo está em [INTEGRACAO-DOJO.md](INTEGRACAO-DOJO.md).
+- **No banco:** tabelas `parceiros` (id, nome, hash da chave, tipo de check-in, ativo) e `integracoes` (quem conectou, hash do código, quando, último check-in), sem acesso direto pela API; colunas `checkins.origem` (`app` ou o id do parceiro) e `checkins.id_externo`; funções `minhas_integracoes`, `gerar_codigo_integracao`, `desconectar_integracao` e `registrar_checkin_externo` (só a chave de serviço). "Baixar meus dados" inclui as integrações.
+- **Para ligar:**
+  1. Rode `supabase/migracoes/011-checkin-do-dojo.sql` e depois a `012-integracoes-por-usuario.sql` no SQL Editor (testes, depois produção).
+  2. Publique a função: no Supabase, **Edge Functions → Deploy a new function → Via Editor**; apague o código de exemplo, cole o conteúdo de `supabase/functions/checkin-externo/index.ts`, troque o **Function name** para `checkin-externo` e clique em **Deploy function**. Depois, nos detalhes da função, desligue **Verify JWT** (a proteção é a chave do parceiro) e anote o endereço que aparece embaixo do nome (o painel pode gerar outro final, como na `resumo-semanal`). Pela linha de comando: `supabase functions deploy checkin-externo --no-verify-jwt`. Sem segredos: o endereço do projeto e a chave de serviço já vêm na função.
+  3. Cadastre o parceiro com uma chave longa e aleatória (troque `CHAVE`; guarde-a só para mandar ao desenvolvedor):
+     `insert into public.parceiros (id, nome, chave_hash) values ('dojo', 'App do dojo', public.hash_integracao('CHAVE'));`
+  4. Mande ao desenvolvedor do dojo a chave, o endereço da função e o [INTEGRACAO-DOJO.md](INTEGRACAO-DOJO.md). Para pausar, `update public.parceiros set ativo = false where id = 'dojo';` (a linha some do app e a função recusa a chave).
 
 ## Excluir conta
 

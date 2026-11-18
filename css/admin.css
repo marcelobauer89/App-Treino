@@ -779,6 +779,11 @@
   html[data-estilo] .menu-item[aria-current="page"] { text-shadow: 0 0 10px var(--brilho); }
   html[data-estilo] .kpi .valor { color: var(--numero); text-shadow: 0 0 14px var(--brilho); }
   html:root[data-estilo="gelo"] :is(.cartao, .kpi, .periodo) { -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
+  /* No gelo o --papel é translúcido; o que fica por cima da página (gaveta do menu, janelas, topo e coluna fixos da
+     Gerenciar semana) ganha um fundo opaco por baixo do vidro, senão o texto de trás aparece misturado. */
+  html:root[data-estilo="gelo"] :is(.menu, dialog.detalhe, dialog.modal-excluir, dialog.ex-dialog, .pf-gs-topo, .pf-gs-grade th:first-child) {
+    background: linear-gradient(var(--papel), var(--papel)) #0b1522;
+  }
   html:root[data-estilo="ultra"] :is(.btn, .periodo button[aria-pressed="true"]) { background: linear-gradient(90deg, #d946ef, #9333ea); }
   html:root[data-estilo="miami"] :is(.btn, .periodo button[aria-pressed="true"]) { background: linear-gradient(90deg, #ff4fa3, #ff9a3c); }
   html:root[data-estilo="miami"] h1 { background: linear-gradient(90deg, #ffd56b, #ff4fa3 55%, #b26bff); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: none; }

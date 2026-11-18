@@ -5,7 +5,7 @@
   // ---------- Telas ----------
   const TELAS = ['treino', 'dashboard', 'voce'];
   // Você tem uma lista de opções (#voce) e uma tela para cada uma (#voce/semana, #voce/aparencia…).
-  const PAGINAS_VOCE = ['dados', 'aparencia', 'treinos', 'semana', 'personal', 'temporizador', 'notificacoes', 'privacidade'];
+  const PAGINAS_VOCE = ['dados', 'aparencia', 'treinos', 'semana', 'personal', 'integracoes', 'temporizador', 'notificacoes', 'privacidade'];
   const telaAtual = () => {
     const t = location.hash.slice(1).split('/')[0];
     return TELAS.includes(t) ? t : 'treino';
@@ -32,6 +32,7 @@
       document.querySelectorAll('.voce-pagina').forEach((el) => { el.hidden = el.dataset.pagina !== pag; });
       renderConfig(); erroFoto('');
       if (pag === 'personal') renderMeuPersonal();
+      if (pag === 'integracoes') { renderIntegracoes(); buscarIntegracoes(); }
     }
     $('fab-checkin').hidden = t === 'voce';
     $('fab-checkin').classList.remove('encolhido');

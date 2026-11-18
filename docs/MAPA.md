@@ -22,6 +22,7 @@ Ao criar, renomear ou apagar uma seção ou um teste, atualize este mapa no mesm
 | `supabase/schema.sql` | Banco inteiro (tabelas, RLS, funções); roda de novo sem duplicar |
 | `supabase/migracoes/` | Uma mudança do banco por arquivo (`NNN-descricao.sql`), para rodar só o que mudou |
 | `supabase/functions/resumo-semanal/` | Edge Function do resumo semanal e do aviso de pedido de acesso |
+| `supabase/functions/checkin-externo/` | Edge Function que recebe o check-in do app do dojo (ver `docs/INTEGRACAO-DOJO.md`) |
 | `supabase/agendamentos/` | Agendamento do resumo e gatilho do aviso por e-mail |
 | `supabase/ajustes/` | Correções de dados que rodam uma vez |
 | `supabase/dev/` | Cópia anonimizada da produção para o banco de testes |
@@ -79,6 +80,7 @@ Na ordem de carga. Cada linha é uma seção (comentário `// ---------- Nome --
 | Privacidade (LGPD) | Política, consentimento, baixar meus dados |
 | Convites | `?convite=` e pedir acesso |
 | Meu personal (aluno) | `?personal=` e o aceite do convite, Você → Meu personal (encerrar), aviso de treinos novos do personal |
+| Integrações (app do dojo) | Você → Integrações: `buscarIntegracoes` (`minhas_integracoes`), Conectar / código / Copiar / Desconectar; o rótulo "via …" do Dashboard fica em `viaParceiro` (`js/nucleo.js`) |
 | **`js/inicio.js`** | |
 | Entrada (login com Google) | Tela de login e sessão |
 | Início | Abertura do app (chama `carregarDados`) |
@@ -97,7 +99,7 @@ Os eventos vêm só do período escolhido (`eventosNecessarios`, em Acesso). Os 
 
 ## `supabase/schema.sql`: ordem das partes
 
-Tabelas `perfis`, `checkins`, `cargas` e RLS → `criar_perfil`, `registrar_acesso`, `treinos_validos` → `admins`, `eh_admin`, `eventos`, funções `admin_*` de leitura → Presence (`realtime.messages`) → `emails_enviados` → excluir conta → `convites` e funções de acesso → `videos_exercicios` → Storage `fotos-checkin` → catálogo (`exercicios`, `jornadas`, `admin_salvar_exercicio`, `admin_excluir_exercicio`) → `tipos_checkin` → área do personal (`profissionais`, `vinculos`, `fichas_personal`, `exercicios_personal`, `ajustes_banco`, funções `personal_*` e `meus_dados_extras`). Procure a parte por `create table if not exists public.<nome>` ou `function public.<nome>`.
+Tabelas `perfis`, `checkins`, `cargas` e RLS → `criar_perfil`, `registrar_acesso`, `treinos_validos` → `admins`, `eh_admin`, `eventos`, funções `admin_*` de leitura → Presence (`realtime.messages`) → `emails_enviados` → excluir conta → `convites` e funções de acesso → `videos_exercicios` → Storage `fotos-checkin` → catálogo (`exercicios`, `jornadas`, `admin_salvar_exercicio`, `admin_excluir_exercicio`) → `tipos_checkin` → área do personal (`profissionais`, `vinculos`, `fichas_personal`, `exercicios_personal`, `ajustes_banco`, funções `personal_*`) → integrações (`parceiros`, `integracoes`, `registrar_checkin_externo`) → `meus_dados_extras`. Procure a parte por `create table if not exists public.<nome>` ou `function public.<nome>`.
 
 ## Testes por área
 
@@ -128,6 +130,7 @@ Rode só os da área mexida: `node tests/rodar.cjs test20 test22 …`.
 | Tipos de check-in do painel, Cardio com modalidade e km, botões do editor e animação ao salvar | test87 |
 | Segurança do site: CSP nas cinco páginas (index, admin, personal, privacidade e conheca), sem script inline, biblioteca do Supabase em `js/vendor/`, o que fica fora da publicação | test88 |
 | Área do personal (`personal.html`, aba Profissionais do monitoramento) | test90 |
+| Integrações (check-in do app do dojo): Você → Integrações, "via App do dojo" no Dashboard e Liberar integração na ficha do usuário (painel) | test93; a função em `npm run edge` (`tests/edge/teste-checkin-externo.mjs`); as regras do banco em `tests/sql/rodar.sh` |
 | Aluno do personal no app (convite, Meu personal, treinos só de leitura, recado) | test89 |
 | Landing page (`conheca.html`) e o link na tela de login | test91 |
 | Harness dos testes (`tests/apoio/`) | todos |
