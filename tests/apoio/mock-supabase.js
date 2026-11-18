@@ -477,8 +477,10 @@
               const eu = db.sessao && db.sessao.user.id;
               db.parceiros = db.parceiros || []; db.integracoes = db.integracoes || [];
               let data = null;
+              // Escondidas por padrão: só quem o administrador liberou (perfis[].integracoes_liberadas) vê os parceiros.
+              const perfilEu = (db.perfis || []).find((x) => x.id === eu);
               if (nome === 'minhas_integracoes') {
-                data = db.parceiros.map((p) => {
+                data = !(perfilEu && perfilEu.integracoes_liberadas) ? [] : db.parceiros.map((p) => {
                   const i = db.integracoes.find((x) => x.usuario_id === eu && x.parceiro === p.id);
                   return { parceiro: p.id, nome: p.nome, tipo_checkin: p.tipo_checkin || 'jiu', conectado_em: i ? i.criado_em : null, ultimo_checkin_em: i ? i.ultimo_checkin_em || null : null };
                 });
@@ -515,7 +517,7 @@
               gravar(db); return { data: null, error: null };
             }
             if (nome === 'admin_excluir_convite' && db.semExcluirConvite) { gravar(db); return { data: null, error: { message: 'Could not find the function public.admin_excluir_convite(p_codigo) in the schema cache' } }; }
-            if (['admin_criar_convite', 'admin_convites', 'admin_cancelar_convite', 'admin_excluir_convite', 'admin_liberar_usuario', 'admin_bloquear_usuario', 'admin_recusar_pedido', 'admin_liberar_videos'].includes(nome)) {
+            if (['admin_criar_convite', 'admin_convites', 'admin_cancelar_convite', 'admin_excluir_convite', 'admin_liberar_usuario', 'admin_bloquear_usuario', 'admin_recusar_pedido', 'admin_liberar_videos', 'admin_liberar_integracoes'].includes(nome)) {
               const a = db.admin || {}; const eu = db.sessao && db.sessao.user.id;
               if (!(a.ids || []).includes(eu)) { gravar(db); return { data: null, error: { message: 'Acesso restrito a administradores.' } }; }
               a.convites = a.convites || [];
@@ -538,6 +540,7 @@
                 else if (nome === 'admin_liberar_usuario') { if (!u.liberado) { u.liberado_como = u.acesso_pedido_em ? 'pedido' : 'admin'; u.liberado_em = new Date().toISOString(); } u.liberado = true; u.acesso_pedido_em = null; }
                 else if (nome === 'admin_recusar_pedido') u.acesso_pedido_em = null;
                 else if (nome === 'admin_liberar_videos') u.videos_liberados = !!args.liberar;
+                else if (nome === 'admin_liberar_integracoes') u.integracoes_liberadas = !!args.liberar;
                 else if (args.alvo === eu) erro = 'Você não pode bloquear a sua própria conta.';
                 else if ((a.ids || []).includes(args.alvo)) erro = 'Não é possível bloquear outro administrador.';
                 else u.liberado = false;

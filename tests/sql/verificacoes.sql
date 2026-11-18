@@ -417,6 +417,26 @@ create temp table cod (codigo text);
 grant all on cod to authenticated, service_role;
 set local role authenticated;
 do $$ begin perform set_config('request.jwt.claim.sub', '22222222-2222-2222-2222-222222222222', true); end $$;
+-- Escondidas por padrão: sem a liberação do administrador, nada de integrações.
+do $$ begin
+  if (select count(*) from public.minhas_integracoes()) <> 0 then raise exception 'FALHOU: sem liberação, não vê apps parceiros'; end if;
+  begin perform public.gerar_codigo_integracao('dojo');
+    raise exception 'FALHOU: sem liberação, não gera código';
+  exception when insufficient_privilege then null; end;
+  begin perform public.admin_liberar_integracoes(auth.uid(), true);
+    raise exception 'FALHOU: só o administrador libera integrações';
+  exception when raise_exception then
+    if sqlerrm like 'FALHOU%' then raise; end if;
+  end;
+  if (select integracoes_liberadas from public.perfis where id = auth.uid()) then raise exception 'FALHOU: usuária não se libera sozinha'; end if;
+end $$;
+do $$ begin perform set_config('request.jwt.claim.sub', '11111111-1111-1111-1111-111111111111', true); end $$;
+do $$ begin
+  perform public.admin_liberar_integracoes('22222222-2222-2222-2222-222222222222', true);
+  if not (select integracoes_liberadas from public.admin_usuarios() where id = '22222222-2222-2222-2222-222222222222') then
+    raise exception 'FALHOU: o administrador libera e o painel mostra'; end if;
+end $$;
+do $$ begin perform set_config('request.jwt.claim.sub', '22222222-2222-2222-2222-222222222222', true); end $$;
 do $$ declare c text; begin
   if (select count(*) from public.minhas_integracoes() where parceiro = 'dojo' and conectado_em is null) <> 1 then
     raise exception 'FALHOU: o parceiro ativo aparece como não conectado'; end if;
@@ -456,7 +476,14 @@ do $$ begin
     raise exception 'FALHOU: conta não liberada não recebe check-in externo'; end if;
 end $$;
 reset role;
-update public.perfis set liberado = true where id = '22222222-2222-2222-2222-222222222222';
+update public.perfis set liberado = true, integracoes_liberadas = false where id = '22222222-2222-2222-2222-222222222222';
+set local role service_role;
+do $$ begin
+  if public.registrar_checkin_externo('chave-de-teste-123', (select codigo from cod), 'a4', now() - interval '2 days') <> 'nao_liberado' then
+    raise exception 'FALHOU: sem integrações liberadas, o check-in externo é recusado'; end if;
+end $$;
+reset role;
+update public.perfis set integracoes_liberadas = true where id = '22222222-2222-2222-2222-222222222222';
 set local role authenticated;
 do $$ begin perform set_config('request.jwt.claim.sub', '22222222-2222-2222-2222-222222222222', true); end $$;
 do $$ begin perform public.gerar_codigo_integracao('dojo'); end $$;

@@ -197,6 +197,8 @@ alter table public.perfis add column if not exists treinos_anterior jsonb
 alter table public.perfis add column if not exists jornada text check (jornada is null or char_length(jornada) <= 30);
 -- Vídeos dos exercícios liberados pelo administrador (Monitoramento → Usuários). Só o admin muda (fora do grant update).
 alter table public.perfis add column if not exists videos_liberados boolean not null default false;
+-- Integrações com apps parceiros (Você → Integrações): escondidas até o administrador liberar para a pessoa.
+alter table public.perfis add column if not exists integracoes_liberadas boolean not null default false;
 
 -- ---------- Privacidade (LGPD) ----------
 -- Versão da Política de Privacidade que a pessoa viu e aceitou (aviso no app quando muda).
@@ -269,7 +271,7 @@ returns table (
   id uuid, nome text, email text, cadastro timestamptz, ultimo_acesso timestamptz, acessos integer,
   semana jsonb, dias_jiu smallint[], sem_peso text[], emails_resumo boolean,
   liberado boolean, acesso_pedido_em timestamptz, liberado_como text, liberado_em timestamptz,
-  videos_liberados boolean
+  videos_liberados boolean, integracoes_liberadas boolean
 )
 language plpgsql
 stable
@@ -283,7 +285,7 @@ begin
     select p.id,
       coalesce(nullif(trim(p.nome), ''), u.raw_user_meta_data ->> 'full_name', u.raw_user_meta_data ->> 'name', '')::text,
       p.email, u.created_at, p.ultimo_acesso, p.acessos, p.semana, p.dias_jiu, p.sem_peso, p.emails_resumo,
-      p.liberado, p.acesso_pedido_em, p.liberado_como, p.liberado_em, p.videos_liberados
+      p.liberado, p.acesso_pedido_em, p.liberado_como, p.liberado_em, p.videos_liberados, p.integracoes_liberadas
     from public.perfis p join auth.users u on u.id = p.id
     order by 2;
 end;
@@ -1950,7 +1952,8 @@ as $$
 $$;
 revoke execute on function public.hash_integracao(text) from public, anon, authenticated;
 
--- Os parceiros ativos e se a pessoa já ligou cada um (Você → Integrações).
+-- Os parceiros ativos e se a pessoa já ligou cada um (Você → Integrações). Vazio para quem o administrador
+-- não liberou as integrações: a linha some do app.
 create or replace function public.minhas_integracoes()
 returns table (parceiro text, nome text, tipo_checkin text, conectado_em timestamptz, ultimo_checkin_em timestamptz)
 language sql
@@ -1962,6 +1965,7 @@ as $$
   from public.parceiros p
   left join public.integracoes i on i.parceiro = p.id and i.usuario_id = (select auth.uid())
   where p.ativo
+    and coalesce((select integracoes_liberadas from public.perfis where id = (select auth.uid())), false)
   order by p.nome;
 $$;
 
@@ -1980,6 +1984,9 @@ declare
 begin
   if eu is null then raise exception 'Entre com o Google para ligar a integração.'; end if;
   if not public.liberado() then raise exception 'Sua conta ainda não foi liberada.' using errcode = '42501'; end if;
+  if not coalesce((select integracoes_liberadas from public.perfis where id = eu), false) then
+    raise exception 'Integrações não liberadas para a sua conta.' using errcode = '42501';
+  end if;
   if not exists (select 1 from public.parceiros where id = p_parceiro and ativo) then raise exception 'App parceiro não encontrado.'; end if;
   loop
     novo := '';
@@ -2029,7 +2036,10 @@ begin
   if not found or coalesce(p_chave, '') = '' then return 'chave_invalida'; end if;
   select * into i from public.integracoes where codigo_hash = public.hash_integracao(p_codigo) and parceiro = p.id for update;
   if not found or coalesce(p_codigo, '') = '' then return 'codigo_invalido'; end if;
-  if not coalesce((select liberado from public.perfis where id = i.usuario_id), false) then return 'nao_liberado'; end if;
+  -- Conta liberada e integrações liberadas pelo administrador (tirar o recurso mantém o vínculo, mas recusa).
+  if not coalesce((select liberado and integracoes_liberadas from public.perfis where id = i.usuario_id), false) then
+    return 'nao_liberado';
+  end if;
   if p_inicio is null or p_inicio > now() + interval '1 day' or p_inicio < now() - interval '400 days'
     or char_length(coalesce(p_id_externo, '')) not between 1 and 100
     or (p_fim is not null and (p_fim <= p_inicio or p_fim > p_inicio + interval '6 hours')) then
@@ -2056,6 +2066,22 @@ grant execute on function public.minhas_integracoes(), public.gerar_codigo_integ
   to authenticated;
 revoke execute on function public.registrar_checkin_externo(text, text, text, timestamptz, timestamptz) from public, anon, authenticated;
 grant execute on function public.registrar_checkin_externo(text, text, text, timestamptz, timestamptz) to service_role;
+
+-- Liberar ou tirar as integrações de um usuário (só administradores), no painel → Usuários → detalhe.
+create or replace function public.admin_liberar_integracoes(alvo uuid, liberar boolean)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if not public.eh_admin() then raise exception 'Acesso restrito a administradores.'; end if;
+  update public.perfis set integracoes_liberadas = coalesce(liberar, false) where id = alvo;
+  if not found then raise exception 'Usuário não encontrado.'; end if;
+end;
+$$;
+revoke execute on function public.admin_liberar_integracoes(uuid, boolean) from public, anon;
+grant execute on function public.admin_liberar_integracoes(uuid, boolean) to authenticated;
 
 -- Baixar meus dados: inclui o acompanhamento (como aluno), o cadastro, os convites e as fichas (como personal) e as integrações.
 create or replace function public.meus_dados_extras()
