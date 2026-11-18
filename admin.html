@@ -18,11 +18,11 @@
 <header class="wrap topo">
   <!-- Quem está logado: foto, nome e "Administrador" (js/admin.js → Conta no topo). Sem login, só o título. -->
   <div class="topo-perfil" id="topo-perfil">
-    <span class="topo-avatar" id="topo-avatar" aria-hidden="true" hidden></span>
+    <span class="topo-avatar" id="topo-avatar" aria-hidden="true"></span>
     <div class="topo-perfil-txt">
-      <p class="topo-olho" id="topo-olho" hidden>Monitoramento</p>
+      <p class="topo-olho reserva" id="topo-olho">Monitoramento</p>
       <h1 id="topo-nome">Monitoramento</h1>
-      <p class="topo-sub" id="topo-sub" hidden></p>
+      <p class="topo-sub reserva" id="topo-sub">&nbsp;</p>
     </div>
     <button type="button" class="menu-abrir" id="menu-abrir" aria-expanded="false" aria-controls="menu" hidden>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
@@ -32,6 +32,18 @@
       </button>
   </div>
 </header>
+<!-- Barra fixa do celular: aparece quando o topo sai da tela ao rolar, com a foto, o nome e o Menu (js/admin.js → Barra fixa). -->
+<div class="barra-fixa" id="barra-fixa">
+  <div class="wrap barra-fixa-in">
+    <span class="topo-avatar" id="barra-avatar" aria-hidden="true"></span>
+    <b class="barra-nome" id="barra-nome"></b>
+    <button type="button" class="menu-abrir" id="menu-abrir-fixo" aria-expanded="false" aria-controls="menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      <span>Menu</span>
+      <span class="aba-alerta" id="menu-alerta-fixo" hidden></span>
+    </button>
+  </div>
+</div>
 
 <main class="wrap">
   <section class="estado" id="estado" aria-live="polite">
