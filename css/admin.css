@@ -80,7 +80,8 @@
 
   /* Carregando: o "molde" da Visão geral com brilho passando e barras nas cores dos treinos, e a etapa atual. */
   .estado.carregando { display: block; justify-items: stretch; max-width: none; padding: 20px 0 40px; }
-  .esq-etapa { display: flex; align-items: center; gap: 10px; margin: 0 0 18px; color: var(--tinta-2); font-size: 14px; font-weight: 600; }
+  /* O ".estado p" zerava a margem: a etapa (ícone girando e texto) ficava colada no molde dos gráficos. */
+  .estado .esq-etapa { display: flex; align-items: center; gap: 10px; margin: 0 0 24px; min-height: 20px; color: var(--tinta-2); font-size: 14px; font-weight: 600; }
   .esq-etapa::before {
     content: ""; flex: none; width: 16px; height: 16px; border-radius: 50%;
     border: 2.5px solid var(--marca-suave); border-top-color: var(--marca);
