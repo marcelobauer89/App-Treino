@@ -43,96 +43,117 @@
 
   // ---------- Minha semana ----------
   const lista = (nomes) => (nomes.length > 1 ? `${nomes.slice(0, -1).join(', ')} e ${nomes[nomes.length - 1]}` : nomes[0]);
-  // Avisos da semana (docs/RECURSOS.md, "Avisos da Minha semana"): o foco de cada treino vem dos grupos dos exercícios
-  // (2 ou mais de Pernas/Explosivos, Costas ou Ombros) e cada esporte tem o que mais cansa.
+  // Avisos da semana (docs/RECURSOS.md, "Avisos da Minha semana"): sempre em tom de recomendação e montados com a
+  // semana e os treinos da pessoa. O foco de cada treino vem dos grupos dos exercícios (2 ou mais de Pernas/Explosivos,
+  // Costas ou Ombros); o aviso cita os exercícios dela, a intensidade (PSE), os dias livres e o cardio que ela costuma fazer.
   const ROTULO_FOCO = { pernas: 'pernas', costas: 'costas', ombros: 'ombros' };
-  const CANSADO = { pernas: 'pernas cansadas', costas: 'costas e pegada cansadas', ombros: 'ombros cansados' };
+  const GRUPOS_FOCO = { pernas: ['Pernas', 'Explosivos'], costas: ['Costas'], ombros: ['Ombros'] };
   function focosDoTreino(t) {
     const tr = ehTreino(t) && TREINOS[t.slice(1)];
     if (!tr) return [];
-    const conta = { pernas: 0, costas: 0, ombros: 0 };
-    tr.exercicios.forEach((e) => {
-      if (e.grupo === 'Pernas' || e.grupo === 'Explosivos') conta.pernas++;
-      else if (e.grupo === 'Costas') conta.costas++;
-      else if (e.grupo === 'Ombros') conta.ombros++;
-    });
-    const f = Object.keys(conta).filter((k) => conta[k] >= 2);
+    const f = Object.keys(GRUPOS_FOCO).filter((k) => tr.exercicios.filter((e) => GRUPOS_FOCO[k].includes(e.grupo)).length >= 2);
     if (!f.includes('pernas') && /perna/i.test(`${tr.nome} ${tr.subtitulo || ''}`)) f.push('pernas');
     return f;
   }
-  // Por esporte: o motivo de cada foco pesar (véspera: só os focos que ainda cansam no dia seguinte).
+  // Exercícios do foco no treino da pessoa, os mais intensos primeiro.
+  const exDoFoco = (t, f) => TREINOS[t.slice(1)].exercicios.filter((e) => GRUPOS_FOCO[f].includes(e.grupo)).sort((a, b) => b.pse - a.pse);
+  const pesado = (t, f) => exDoFoco(t, f).some((e) => e.pse >= 8);
+  // "o Treino 3 (Agachamento e Deadlift)"; sem exercício do grupo (foco pelo nome), "o Treino 3 (pernas)".
+  function comExercicios(t, f) {
+    const ex = exDoFoco(t, f).slice(0, 2).map((e) => e.rotulo || e.nome);
+    return `o ${nomeAtividade(t)} (${ex.length ? lista(ex) : ROTULO_FOCO[f]})`;
+  }
+  // Por esporte: o que o foco do treino tira dele (véspera) e os focos que pesam no mesmo dia.
   const ESPORTES = {
-    futebol: { vespera: { pernas: 'Pernas cansadas perdem arranque e se machucam mais (a posterior da coxa é a lesão mais comum no futebol), e esse cansaço dura de 24 a 48 h.' }, junto: ['pernas'] },
-    futvolei: { vespera: { pernas: 'Os saltos na areia pedem pernas e panturrilhas descansadas, e o cansaço do treino dura de 24 a 48 h.' }, junto: ['pernas'] },
-    muay: { vespera: { pernas: 'Chutes e base firme pedem pernas descansadas, e o cansaço do treino dura de 24 a 48 h.' }, junto: ['pernas', 'ombros'] },
-    jiu: { vespera: { pernas: 'No rola, pernas pesadas tiram explosão e base, e o cansaço do treino dura de 24 a 48 h.' }, junto: ['pernas', 'costas'] },
-    surf: { vespera: { ombros: 'A remada usa ombros e costas o tempo todo, e ombro cansado é a origem mais comum de dor no surf.', costas: 'A remada usa costas e ombros o tempo todo, e chegar com eles cansados encurta a sessão e sobrecarrega o ombro.' }, junto: ['ombros', 'costas'] },
+    futebol: { vespera: { pernas: 'Pernas cansadas perdem arranque e ficam mais sujeitas a lesão (a posterior da coxa é a mais comum no futebol), e esse cansaço costuma durar de 24 a 48 h.' }, junto: ['pernas'] },
+    futvolei: { vespera: { pernas: 'Os saltos na areia pedem pernas e panturrilhas descansadas, e o cansaço do treino costuma durar de 24 a 48 h.' }, junto: ['pernas'] },
+    muay: { vespera: { pernas: 'Chutes e base firme rendem mais com as pernas descansadas, e o cansaço do treino costuma durar de 24 a 48 h.' }, junto: ['pernas', 'ombros'] },
+    jiu: { vespera: { pernas: 'No rola, pernas pesadas tiram explosão e base, e o cansaço do treino costuma durar de 24 a 48 h.' }, junto: ['pernas', 'costas'] },
+    surf: { vespera: { ombros: 'A remada usa os ombros o tempo todo, e ombro cansado é a origem mais comum de dor no surf.', costas: 'A remada usa costas e ombros o tempo todo, e com eles cansados a sessão rende menos.' }, junto: ['ombros', 'costas'] },
   };
+  const CANSADO = { pernas: 'as pernas cansadas', costas: 'as costas e a pegada cansadas', ombros: 'os ombros cansados' };
   const PERNAS_ESPORTE = ['futebol', 'futvolei', 'muay'];
+  // Cardio que a pessoa mais registrou (Bike ou Corrida), para a dica de depois do treino de pernas.
+  function cardioHabitual() {
+    const n = { bike: 0, corrida: 0 };
+    checkins.forEach((c) => { if (c.tipo === 'bike' && c.modalidade in n) n[c.modalidade]++; });
+    return n.corrida > n.bike ? 'corrida' : n.bike > n.corrida ? 'bike' : null;
+  }
   function avisosSemana() {
     const s = config.semana;
     const av = [];
     const todas = s.flat();
     const treinos = Object.keys(TREINOS).map((n) => `t${n}`);
-    const faltam = treinos.filter((t) => !todas.includes(t)).map(nomeAtividade);
+    const ant = (i) => (i + 6) % 7, prox = (i) => (i + 1) % 7;
+    // Dia livre onde o treino t (com o foco f) não cairia na véspera nem ao lado de outro treino do mesmo foco.
+    const diaLivre = (t, f, evitar = []) => ORDEM_SEMANA.find((d) => !s[d].length && !evitar.includes(d)
+      && !s[prox(d)].some((x) => ESPORTES[x] && ESPORTES[x].vespera[f])
+      && ![ant(d), prox(d)].some((v) => s[v].some((x) => x !== t && focosDoTreino(x).includes(f))));
+    const sugestao = (d) => (d === undefined ? '' : ` ${naDia(d)} está livre e pode ser uma boa opção.`);
+
+    const faltam = treinos.filter((t) => !todas.includes(t));
     if (faltam.length) {
-      av.push(`${lista(faltam)} ${faltam.length > 1 ? 'ficaram' : 'ficou'} fora da semana. ${treinosDaConta ? 'Coloque em algum dia para não deixar de fazer.' : 'O plano usa os três treinos.'}`);
+      const nomes = lista(faltam.map((t) => (TREINOS[t.slice(1)].subtitulo ? `${nomeAtividade(t)} (${TREINOS[t.slice(1)].subtitulo})` : nomeAtividade(t))));
+      av.push(`${nomes} ${faltam.length > 1 ? 'ficaram' : 'ficou'} fora da semana. ${treinosDaConta
+        ? `Recomendamos colocar ${faltam.length > 1 ? 'cada um' : 'esse treino'} em algum dia para manter todos os grupos musculares em dia.`
+        : 'Recomendamos manter os três treinos: o plano foi pensado com eles se completando.'}`);
     }
     treinos.forEach((t) => {
       const n = todas.filter((x) => x === t).length;
-      if (n > 1) av.push(`O ${nomeAtividade(t)} aparece ${n} vezes na semana.`);
+      if (n > 1) av.push(`O ${nomeAtividade(t)} aparece ${n} vezes na semana. Se não for de propósito, recomendamos trocar uma das vezes${faltam.length ? ` pelo ${nomeAtividade(faltam[0])}, que ficou de fora` : ' por outro treino'}.`);
     });
-    const nomeFoco = (t, f) => `${nomeAtividade(t)} (${ROTULO_FOCO[f]})`;
     ORDEM_SEMANA.forEach((i) => {
-      const dia = s[i];
-      const ontem = s[(i + 6) % 7];
-      const doDia = [];
-      // Treino forte na véspera do esporte que usa os mesmos músculos.
+      const dia = s[i], ontem = s[ant(i)];
+      // Treino na véspera de um esporte que usa os mesmos músculos.
       dia.filter((x) => ESPORTES[x]).forEach((esp) => {
         ontem.filter(ehTreino).forEach((t) => {
           const f = focosDoTreino(t).find((x) => ESPORTES[esp].vespera[x]);
-          if (f) doDia.push(`${naDia(i)} tem ${nomeAtividade(esp)} e, na véspera, o ${nomeFoco(t, f)}. ${ESPORTES[esp].vespera[f]} Na véspera, use carga moderada e pare 2 ou 3 repetições antes da falha, ou troque esse treino de dia.`);
+          if (!f) return;
+          const conselho = pesado(t, f)
+            ? 'Recomendamos ir com cargas moderadas nesse dia, parando 2 ou 3 repetições antes da falha, ou passar esse treino para outro dia.'
+            : 'Como as cargas desse treino já são moderadas, recomendamos manter assim e evitar ir até a falha nessa véspera.';
+          av.push(`${naDia(i)} você tem ${nomeAtividade(esp)} e, na véspera, ${comExercicios(t, f)}. ${ESPORTES[esp].vespera[f]} ${conselho}${pesado(t, f) ? sugestao(diaLivre(t, f, [ant(i)])) : ''}`);
         });
       });
-      // Esporte de pernas na véspera do treino de pernas: a dor muscular costuma durar de 24 a 72 h.
+      // Esporte de pernas na véspera do treino de pernas.
       ontem.filter((x) => PERNAS_ESPORTE.includes(x)).forEach((esp) => {
         dia.filter((t) => focosDoTreino(t).includes('pernas')).forEach((t) => {
-          doDia.push(`Depois do ${nomeAtividade(esp)} ${daDia((i + 6) % 7)}, as pernas podem chegar doloridas ao ${nomeAtividade(t)} ${daDia(i)} (a dor costuma durar de 24 a 72 h). Se estiverem, diminua a carga nesse dia.`);
+          av.push(`Depois do ${nomeAtividade(esp)} ${daDia(ant(i))}, as pernas podem chegar doloridas ${daDia(i).replace(/^d/, 'n')} para ${comExercicios(t, 'pernas')}, porque a dor costuma durar de 24 a 72 h. Recomendamos ajustar a carga conforme você se sentir nesse dia.`);
         });
       });
-      // Mesmo foco em dias seguidos (dois treinos de pernas, por exemplo).
+      // Mesmo foco em dias seguidos.
       ontem.filter(ehTreino).forEach((a) => {
         dia.filter(ehTreino).forEach((b) => {
           const f = focosDoTreino(a).find((x) => focosDoTreino(b).includes(x));
           if (!f) return;
-          const d1 = NOMES_DIA[(i + 6) % 7], d2 = NOMES_DIA[i];
-          doDia.push(a === b
-            ? `O ${nomeAtividade(a)} cai em dias seguidos (${d1} e ${d2}). O músculo precisa de cerca de 48 h para se recuperar: deixe um dia entre eles.`
-            : `O ${nomeAtividade(a)} (${d1}) e o ${nomeAtividade(b)} (${d2}) trabalham ${ROTULO_FOCO[f]} em dias seguidos. O músculo precisa de cerca de 48 h para se recuperar: deixe um dia entre eles.`);
+          const d1 = NOMES_DIA[ant(i)], d2 = NOMES_DIA[i];
+          av.push(`${a === b ? `O ${nomeAtividade(a)} cai em dias seguidos (${d1} e ${d2})` : `${comExercicios(a, f).replace(/^o/, 'O')} na ${d1} e ${comExercicios(b, f)} na ${d2} trabalham ${ROTULO_FOCO[f]} em dias seguidos`}. Recomendamos deixar um dia entre eles: o músculo precisa de cerca de 48 h para se recuperar.${sugestao(diaLivre(b, f))}`.replace(/na (sábado|domingo)/g, 'no $1'));
         });
       });
       // Duas atividades no mesmo dia.
-      if (dia.length === 2) {
-        const nomes = lista(dia.map(nomeAtividade));
-        const treino = dia.find(ehTreino);
-        const outra = dia.find((x) => x !== treino);
-        const esportes = dia.filter((x) => ESPORTES[x]);
-        const foco = treino && ESPORTES[outra] ? focosDoTreino(treino).find((f) => ESPORTES[outra].junto.includes(f)) : null;
-        if (foco) {
-          doDia.push(`${naDia(i)} o ${nomeFoco(treino, foco)} e o ${nomeAtividade(outra)} caem no mesmo dia. Se puder, faça o ${nomeAtividade(outra)} primeiro e a musculação depois, com 6 h ou mais entre os dois: chegar com ${CANSADO[foco]} tira rendimento e aumenta o risco de lesão. Faça um check-in para cada.`);
-        } else if (treino && outra === 'bike') {
-          doDia.push(`${naDia(i)} você terá ${nomes}. Faça a musculação primeiro e o cardio depois, ou em outro horário: assim o cardio atrapalha menos o ganho de força.${focosDoTreino(treino).includes('pernas') ? ' Depois de pernas, prefira bike a corrida, que cansa mais as pernas.' : ''} Faça um check-in para cada.`);
-        } else if (!treino && dia.includes('bike')) {
-          doDia.push(`${naDia(i)} você terá ${nomes}. Deixe o cardio leve e depois do ${nomeAtividade(dia.find((x) => x !== 'bike'))}, para chegar inteiro nele. Faça um check-in para cada.`);
-        } else if (esportes.length === 2) {
-          doDia.push(`${naDia(i)} você terá ${nomes}, dois treinos intensos no mesmo dia. Deixe pelo menos 6 h entre eles, coma e beba água no intervalo e vá mais leve no segundo. Faça um check-in para cada.`);
-        } else {
-          doDia.push(`${naDia(i)} você terá ${nomes}. Se der, deixe algumas horas entre os dois e faça primeiro o que for prioridade naquele dia. Faça um check-in para cada.`);
-        }
+      if (dia.length !== 2) return;
+      const nomes = lista(dia.map(nomeAtividade));
+      const treino = dia.find(ehTreino);
+      const outra = dia.find((x) => x !== treino);
+      const foco = treino && ESPORTES[outra] ? focosDoTreino(treino).find((f) => ESPORTES[outra].junto.includes(f)) : null;
+      if (foco) {
+        av.push(`${naDia(i)} você tem ${comExercicios(treino, foco)} e ${nomeAtividade(outra)}. Recomendamos fazer o ${nomeAtividade(outra)} primeiro e a musculação depois, com umas 6 h de intervalo, porque ${CANSADO[foco]} tiram rendimento e aumentam o risco de lesão.${sugestao(diaLivre(treino, foco, [i]))} Registre um check-in para cada.`);
+      } else if (treino && outra === 'bike') {
+        const pernas = focosDoTreino(treino).includes('pernas');
+        const habito = cardioHabitual();
+        const dica = !pernas ? '' : habito === 'corrida'
+          ? ' Como o seu cardio costuma ser corrida, nesse dia a bike tende a cansar menos as pernas.'
+          : habito === 'bike' ? ' A bike, que você costuma fazer, é a melhor opção depois de pernas.' : ' Depois de pernas, a bike tende a cansar menos que a corrida.';
+        av.push(`${naDia(i)} você tem ${nomes}. Recomendamos fazer a musculação primeiro e o cardio depois (ou em outro horário): assim o cardio atrapalha menos o ganho de força.${dica} Registre um check-in para cada.`);
+      } else if (!treino && dia.includes('bike')) {
+        av.push(`${naDia(i)} você tem ${nomes}. Recomendamos deixar o cardio leve e depois do ${nomeAtividade(dia.find((x) => x !== 'bike'))}, para chegar inteiro nele. Registre um check-in para cada.`);
+      } else if (dia.every((x) => ESPORTES[x])) {
+        av.push(`${naDia(i)} você tem ${nomes}, dois treinos intensos no mesmo dia. Recomendamos deixar pelo menos 6 h entre eles, comer e se hidratar no intervalo e ir mais leve no segundo. Registre um check-in para cada.`);
+      } else {
+        av.push(`${naDia(i)} você tem ${nomes}. Recomendamos deixar algumas horas entre os dois e começar pelo que for prioridade nesse dia. Registre um check-in para cada.`);
       }
-      av.push(...doDia);
     });
-    if (s.every((d) => d.length)) av.push('A semana não tem dia de descanso. Deixe pelo menos um dia vazio: é no descanso que o corpo se recupera e o cansaço acumulado deixa de virar lesão.');
+    if (s.every((d) => d.length)) av.push('A semana não tem dia de descanso. Recomendamos deixar pelo menos um dia livre: é no descanso que o corpo se recupera e o cansaço acumulado não vira lesão.');
     return av;
   }
 
