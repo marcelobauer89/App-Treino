@@ -782,14 +782,19 @@
     --int-0: var(--fio); --int-1: color-mix(in srgb, var(--marca) 30%, var(--papel)); --int-2: color-mix(in srgb, var(--marca) 60%, var(--papel));
     --int-3: var(--marca); --int-4: var(--marca-tinta);
   }
-  html[data-estilo] body { background: radial-gradient(120% 60% at 50% -10%, var(--halo) 0%, var(--gi) 55%) fixed var(--gi); }
-  html:root[data-estilo="violeta"] body { background: radial-gradient(120% 70% at 100% 0%, #7c3aed 0%, transparent 60%), linear-gradient(160deg, #5b21b6, #3b0f8c) fixed, #4c1d95; }
-  html:root[data-estilo="gelo"] body { background: radial-gradient(90% 50% at 85% 0%, #23466e 0%, transparent 60%), radial-gradient(80% 40% at 0% 35%, #13283f 0%, transparent 70%) fixed, var(--gi); }
-  html:root[data-estilo="lua_de_sangue"] body {
+  html[data-estilo] body::before { background: radial-gradient(120% 60% at 50% -10%, var(--halo) 0%, var(--gi) 55%) var(--gi); }
+  /* O fundo dos estilos fica numa camada presa à tela: o Safari do iPhone ignora "background-attachment: fixed" e
+     repetia o degradê em faixas ao longo da página (e cortava onde o conteúdo acabava). */
+  html[data-estilo] { background: var(--gi); }
+  html[data-estilo] body { background: transparent; }
+  html[data-estilo] body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; }
+  html:root[data-estilo="violeta"] body::before { background: radial-gradient(120% 70% at 100% 0%, #7c3aed 0%, transparent 60%), linear-gradient(160deg, #5b21b6, #3b0f8c), #4c1d95; }
+  html:root[data-estilo="gelo"] body::before { background: radial-gradient(90% 50% at 85% 0%, #23466e 0%, transparent 60%), radial-gradient(80% 40% at 0% 35%, #13283f 0%, transparent 70%), var(--gi); }
+  html:root[data-estilo="lua_de_sangue"] body::before {
     background: radial-gradient(70% 35% at 80% 0%, #2a3a55 0%, transparent 70%), radial-gradient(90% 40% at 10% 30%, rgba(90, 110, 140, .18) 0%, transparent 70%),
-      linear-gradient(180deg, #121a28 0%, #070a10 55%) fixed, #070a10;
+      linear-gradient(180deg, #121a28 0%, #070a10 55%), #070a10;
   }
-  html:root[data-estilo="miami"] body { background: linear-gradient(180deg, #5a1f6e 0%, #2a0f3f 28%, #140a24 60%) fixed, var(--gi); }
+  html:root[data-estilo="miami"] body::before { background: linear-gradient(180deg, #5a1f6e 0%, #2a0f3f 28%, #140a24 60%), var(--gi); }
   html[data-estilo] :is(.cartao, .kpi, .periodo, .esq-card) { box-shadow: var(--sombra); border-color: var(--borda-neon); }
   html[data-estilo] h1 { text-shadow: 0 0 22px var(--brilho), 0 0 2px rgba(255, 255, 255, .5); }
   html[data-estilo] :is(.btn, .periodo button[aria-pressed="true"]) { box-shadow: 0 0 0 1px var(--marca-tinta), 0 0 14px var(--brilho); }
