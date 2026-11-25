@@ -19,7 +19,9 @@ const CASOS = [
   ['treino montado: pernas leve na véspera do futebol', [[], ['t2'], [], [], [], ['t1'], ['futebol']], { treinos: MEUS },
     ['na véspera, o Treino A (Passada para frente e Panturrilha)', 'Como as cargas desse treino já são moderadas, recomendamos manter assim']],
   ['treino de costas com um agachamento, na véspera do futebol', [[], ['t1'], [], ['t2'], [], ['t3'], ['futebol']], { treinos: MEUS },
-    ['No sábado você tem Futebol e, na véspera, o Treino C (Agachamento).', 'Como é o único exercício de pernas desse treino, recomendamos fazer Agachamento com carga moderada nesse dia, ou passá-lo para outro treino da semana.']],
+    ['No sábado você tem Futebol e, na véspera, o Treino C (Agachamento).', 'Como esse é o único exercício de pernas desse treino, recomendamos fazê-lo com carga moderada nesse dia, ou passá-lo para outro treino da semana.']],
+  ['não sugere o único dia de descanso', [[], ['t3', 'bike'], ['jiu'], ['t1'], ['t2', 'surf'], ['t3'], ['futebol']], {},
+    ['No sábado você tem Futebol e, na véspera, o Treino 3 (Agachamento e Deadlift).'], (av) => !av.includes('está livre')],
   ['treino de costas com um agachamento, no dia seguinte ao de pernas', [[], ['t1'], ['t3'], [], ['t2'], [], []], { treinos: MEUS },
     ['O Treino A (Passada para frente e Panturrilha) na segunda e o Treino C (Agachamento) na terça trabalham pernas em dias seguidos.']],
   ['treino montado: costas e jiu no mesmo dia', [[], ['t2', 'jiu'], [], ['t1'], [], [], []], { treinos: MEUS },
@@ -41,13 +43,13 @@ const CASOS = [
 (async () => {
   const srv = await H.servidor();
   const b = await chromium.launch();
-  for (const [nome, semana, { treinos, checkins = [] }, esperados] of CASOS) {
+  for (const [nome, semana, { treinos, checkins = [] }, esperados, extraOk = () => true] of CASOS) {
     const p = await H.novaPagina(b, { checkins, extra: { perfis: [perfil(semana, treinos ? { treinos } : {})] } });
     await p.clock.install({ time: new Date('2026-10-19T09:00:00') });
     await p.goto(H.PAGINA + '#voce/semana');
     await H.prontos(p);
     const av = ((await p.locator('#avisos-semana').innerText()) || '').replace(/\s+/g, ' ');
-    ok(esperados.every((e) => av.includes(e)), nome, av);
+    ok(esperados.every((e) => av.includes(e)) && extraOk(av), nome, av);
     const itens = await p.locator('#avisos-semana li').allInnerTexts();
     ok(itens.length && itens.every((t) => /recomendamos/i.test(t)), `${nome}: todo aviso em tom de recomendação`, itens.join(' | '));
     await p.context().close();

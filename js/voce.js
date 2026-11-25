@@ -88,10 +88,12 @@
     const todas = s.flat();
     const treinos = Object.keys(TREINOS).map((n) => `t${n}`);
     const ant = (i) => (i + 6) % 7, prox = (i) => (i + 1) % 7;
+    // Só sugere dia livre se ainda sobrar outro dia de descanso na semana.
+    const livres = s.filter((d) => !d.length).length;
     // Dia livre onde o treino t (com o foco f) não cairia na véspera nem ao lado de outro treino do mesmo foco.
-    const diaLivre = (t, f, evitar = []) => ORDEM_SEMANA.find((d) => !s[d].length && !evitar.includes(d)
+    const diaLivre = (t, f, evitar = []) => (livres < 2 ? undefined : ORDEM_SEMANA.find((d) => !s[d].length && !evitar.includes(d)
       && !s[prox(d)].some((x) => ESPORTES[x] && ESPORTES[x].vespera[f])
-      && ![ant(d), prox(d)].some((v) => s[v].some((x) => x !== t && focosDoTreino(x).includes(f))));
+      && ![ant(d), prox(d)].some((v) => s[v].some((x) => x !== t && focosDoTreino(x).includes(f)))));
     const sugestao = (d) => (d === undefined ? '' : ` ${naDia(d)} está livre e pode ser uma boa opção.`);
 
     const faltam = treinos.filter((t) => !todas.includes(t));
@@ -116,7 +118,7 @@
           const conselho = !pesado(t, f)
             ? 'Como as cargas desse treino já são moderadas, recomendamos manter assim e evitar ir até a falha nessa véspera.'
             : exs.length === 1
-              ? `Como é o único exercício de ${ROTULO_FOCO[f]} desse treino, recomendamos fazer ${exs[0].rotulo || exs[0].nome} com carga moderada nesse dia, ou passá-lo para outro treino da semana.`
+              ? `Como esse é o único exercício de ${ROTULO_FOCO[f]} desse treino, recomendamos fazê-lo com carga moderada nesse dia, ou passá-lo para outro treino da semana.`
               : 'Recomendamos ir com cargas moderadas nesse dia, parando 2 ou 3 repetições antes da falha, ou passar esse treino para outro dia.';
           av.push(`${naDia(i)} você tem ${nomeAtividade(esp)} e, na véspera, ${comExercicios(t, f)}. ${ESPORTES[esp].vespera[f]} ${conselho}${pesado(t, f) && exs.length > 1 ? sugestao(diaLivre(t, f, [ant(i)])) : ''}`);
         });
