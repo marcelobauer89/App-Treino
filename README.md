@@ -6,6 +6,7 @@ App web (celular primeiro) do plano de 6 semanas **Jiu Jitsu + Hipertrofia**: tr
 - `admin.html`: o monitoramento, só para administradores (`css/admin.css` e `js/admin.js`).
 - `personal.html`: a área do personal, para personal trainers liberados (`css/personal.css`, `js/personal.js` e o `js/admin.js` no modo personal); veja [Área do personal](docs/RECURSOS.md#área-do-personal).
 - Na publicação, o `?v=dev` dos endereços de `css/` e `js/` vira o commit publicado, para o navegador não misturar versões.
+- A publicação tenta até 3 vezes quando o GitHub falha ao achar o pacote do site e, no fim, confere se o `versao.json` publicado (produção e `/dev/`) mostra o commit novo; se não mostrar em 5 minutos, a execução fica vermelha em **Actions → Publicar site**.
 - `ambiente.js`: endereço e chave do Supabase de produção e do de desenvolvimento (veja [Ambiente de desenvolvimento](#ambiente-de-desenvolvimento)).
 - `supabase/schema.sql`: tabelas, regras de acesso por usuário e criação automática do perfil.
 - `docs/PRD.md`: requisitos do produto.
