@@ -1,6 +1,6 @@
 // Service worker do app (PWA): guarda uma cópia dos arquivos do site (HTML, css/, js/, fontes, ícones) para o app
-// abrir mais rápido e mesmo com a internet ruim. Sempre tenta a rede primeiro, então quem está on-line recebe a versão
-// nova na hora; a cópia só é usada quando a rede falha. Os dados (Supabase) e o versao.json nunca passam por aqui.
+// abrir mais rápido e mesmo com a internet ruim. Sempre tenta a rede primeiro (a página sem o cache do navegador), então
+// quem está on-line recebe a versão nova na hora; a cópia só é usada quando a rede falha. Os dados (Supabase) e o versao.json nunca passam por aqui.
 // Produção (/App-Treino/) e desenvolvimento (/App-Treino/dev/) têm cada um o seu, com caches separados.
 const ESCOPO = new URL(self.registration.scope).pathname;
 const CACHE = `arquivos:${ESCOPO}`;
@@ -22,7 +22,12 @@ self.addEventListener('fetch', (e) => {
   if (url.pathname.startsWith(`${ESCOPO}dev/`)) return;
   if (url.pathname.endsWith('/versao.json') || url.pathname.endsWith('/sw.js')) return;
   const navegacao = req.mode === 'navigate';
-  e.respondWith(fetch(req).then((resp) => {
+  // A página sempre confere com o servidor (no-cache): o GitHub Pages manda guardar por 10 min, e o celular reabria
+  // o app com a página antiga, que aponta para os css/js antigos. Os css/js levam o commit no endereço e podem vir do cache.
+  const buscar = navegacao
+    ? fetch(req.url, { cache: 'no-cache', credentials: 'same-origin' }).then((r) => (r.redirected ? fetch(req) : r))
+    : fetch(req);
+  e.respondWith(buscar.then((resp) => {
     // Volta do login (?code=...) e respostas com erro não ficam guardadas.
     if (resp.ok && resp.type === 'basic' && !url.search.includes('code=')) {
       const copia = resp.clone();

@@ -65,6 +65,9 @@ Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 a t6 nos check-i
 
 - A cada publicação, o GitHub Pages grava `versao.json` (o commit de cada ambiente: `/versao.json` e `/dev/versao.json`).
 - Quando a pessoa volta para o app (no máximo a cada 2 minutos), ele confere esse arquivo. Se a versão mudou, recarrega sozinho, mas só quando é seguro: sem janela aberta, sem campo em edição e sem séries esperando gravar. Senão, tenta de novo ao fechar a janela ou na próxima volta. O check-in em andamento fica no banco e volta depois de recarregar.
+- **Ao abrir:** o app compara o `versao.json` com a versão do próprio código (o `?v=<commit>` dos arquivos). Se abriu com o código antigo (o celular guardou a página), recarrega uma vez, com uma trava na sessão para não entrar em ciclo.
+- **Página sempre fresca:** o service worker (`sw.js`) busca a página com `no-cache`, conferindo com o servidor em vez de usar a cópia de 10 minutos que o GitHub Pages manda guardar. Os css/js levam o commit no endereço e podem vir do cache.
+- **Publicação:** o workflow tenta publicar até 3 vezes e, no fim, confere se o `versao.json` publicado mostra o commit novo.
 - Assim quem deixa o app aberto em segundo plano também recebe as novidades. No Monitoramento aparece "O app se atualizou para a versão nova" (evento `app_atualizado`), seguido de "Abriu o app".
 - Sem o `versao.json` (rodando local), fica desligado. O arquivo é gravado pelo workflow **Publicar site** da `main`, que publica os dois ambientes.
 

@@ -1,6 +1,7 @@
 // Atualização automática: ao voltar para o app (no máximo a cada 2 min), se o versao.json publicado mudou, o app
 // recarrega sozinho quando é seguro (sem janela aberta, sem campo em edição) e registra "app_atualizado".
-// Com uma janela aberta, espera fechar. Sem o versao.json (404), nada acontece.
+// Com uma janela aberta, espera fechar. Sem o versao.json (404), nada acontece. No site publicado, o app compara com
+// a versão do próprio código (?v=<commit>) e recarrega ao abrir se ela estiver velha.
 const { chromium } = require('playwright');
 const H = require('../apoio/harness.cjs');
 let fails = 0;
@@ -72,6 +73,23 @@ const recarregou = async (p) => !(await p.evaluate(() => window.__mesmaPagina ==
     await sairEVoltar(p);
     ok(!(await recarregou(p)), 'sem versao.json: não recarrega');
     ok(!p.errs.filter((e) => !/404|Failed to load resource/.test(e)).length, 'sem versao.json: sem erros', p.errs.join(' | '));
+    await p.context().close();
+  }
+
+  // Site publicado: os arquivos levam o commit (?v=aaaaaaa). Abrir com o código antigo (página guardada pelo celular)
+  // recarrega uma vez só, mesmo que o versao.json já diga a versão nova; com o código em dia, não recarrega.
+  for (const [nome, publicado, deveRecarregar] of [['código antigo', 'bbbbbbb2222', true], ['código em dia', 'aaaaaaa1111', false]]) {
+    const p = await H.novaPagina(b, { checkins: [ck('a', 't1', '2026-11-02')] });
+    let cargas = 0;
+    await p.route(/\/versao\.json/, (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify({ versao: publicado }) }));
+    await p.route(/\/index\.html/, async (r) => {
+      cargas++;
+      const resp = await r.fetch();
+      r.fulfill({ response: resp, body: (await resp.text()).replace(/\?v=dev"/g, '?v=aaaaaaa"') });
+    });
+    await p.goto(H.PAGINA); await H.prontos(p);
+    await p.waitForTimeout(1500);
+    ok(deveRecarregar ? cargas === 2 : cargas === 1, `${nome}: ${deveRecarregar ? 'recarrega uma vez só ao abrir (sem ciclo)' : 'não recarrega'}`, `cargas=${cargas}`);
     await p.context().close();
   }
 
