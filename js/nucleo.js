@@ -823,12 +823,33 @@
     .then((r) => (r.ok ? r.json() : null))
     .then((j) => (j && typeof j.versao === 'string' && j.versao ? j.versao : null))
     .catch(() => null);
-  function guardarVersaoCarregada() { lerVersao().then((v) => { versaoCarregada = v; versaoEm = Date.now(); }); }
+  // Versão do código que está rodando: a publicação troca o ?v=dev dos arquivos pelo commit (7 letras). Ler o
+  // versao.json ao abrir não basta: com a página antiga guardada pelo navegador (o celular reabre o app sem buscar de novo),
+  // o arquivo já diria a versão nova e o app acharia que está em dia.
+  const versaoDoCodigo = (() => {
+    const s = document.querySelector('script[src*="js/nucleo.js?v="]');
+    const v = s && new URL(s.src, location.href).searchParams.get('v');
+    return v && v !== 'dev' ? v : null;
+  })();
+  const mesmaVersao = (a, b) => a.startsWith(b) || b.startsWith(a);
+  const CHAVE_RECARGA = 'bauer-recarregou-para';
+  function guardarVersaoCarregada() {
+    lerVersao().then((v) => {
+      versaoEm = Date.now();
+      if (!versaoDoCodigo) { versaoCarregada = v; return; }
+      versaoCarregada = versaoDoCodigo;
+      if (!v || mesmaVersao(v, versaoDoCodigo)) return;
+      // Abriu com o código antigo: recarrega uma vez só para essa versão (sem ciclo se o navegador insistir na cópia velha).
+      let ja = null;
+      try { ja = sessionStorage.getItem(CHAVE_RECARGA); sessionStorage.setItem(CHAVE_RECARGA, v); } catch (_) {}
+      if (ja !== v) { versaoNova = v; atualizarApp(); }
+    });
+  }
   async function conferirVersao() {
     if (!versaoCarregada || versaoNova || Date.now() - versaoEm < 120000) return atualizarApp();
     versaoEm = Date.now();
     const v = await lerVersao();
-    if (v && v !== versaoCarregada) versaoNova = v;
+    if (v && !mesmaVersao(v, versaoCarregada)) versaoNova = v;
     atualizarApp();
   }
   const podeAtualizar = () => !document.querySelector('dialog[open]') && !timersSeries.size
