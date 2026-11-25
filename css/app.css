@@ -359,6 +359,7 @@
   .opcao input:disabled + span { opacity: .45; }
   .campo > legend.nota-campo { margin-bottom: 8px; font-size: 13px; font-weight: 400; }
   .avisos { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .avisos-mais { margin: -4px 0 0; justify-self: start; padding: 0; }
 
   /* Minha semana: atividades arrastáveis e os dias que as recebem */
   /* A paleta acompanha a rolagem para ficar à mão ao arrastar até os últimos dias. */
