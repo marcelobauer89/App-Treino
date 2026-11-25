@@ -84,9 +84,9 @@ Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 a t6 nos check-i
 
 Abaixo dos dias, em Você → Minha semana (`avisosSemana` em `js/voce.js`, RF-88). Todo aviso é uma **recomendação** ("Recomendamos…") montada com os dados da pessoa:
 
-- **Foco do treino** pelos grupos dos exercícios dela: 2 ou mais de Pernas (ou Explosivos), Costas ou Ombros; um treino com "perna" no nome ou subtítulo também conta como pernas. Vale para o plano pronto, as jornadas, os treinos montados pela pessoa e os do personal.
+- **Foco do treino** pelos exercícios dela, um a um: basta um exercício de Pernas (ou Explosivos), Costas ou Ombros para o treino contar com aquele foco. Um treino de costas em que a pessoa pôs um agachamento também gera os avisos de pernas. O nome do treino ("perna" no nome ou subtítulo) só vale quando nenhum exercício tem grupo. Vale para o plano pronto, as jornadas, os treinos montados pela pessoa e os do personal.
 - **Exercícios citados:** o aviso nomeia os 2 exercícios mais intensos do foco no treino dela (ex.: "o Treino 3 (Agachamento e Deadlift)").
-- **Intensidade:** com algum exercício do foco em PSE 8 ou mais, recomenda carga moderada e parar 2 ou 3 repetições antes da falha (ou mudar o dia); com tudo abaixo disso, recomenda manter as cargas moderadas e não ir até a falha.
+- **Quantidade e intensidade:** com 2 ou mais exercícios do foco e algum em PSE 8 ou mais, recomenda carga moderada e parar 2 ou 3 repetições antes da falha (ou mudar o dia); com um só exercício pesado, recomenda fazê-lo com carga moderada naquele dia ou passá-lo para outro treino; com tudo abaixo de PSE 8, recomenda manter as cargas moderadas e não ir até a falha.
 - **Dia livre:** quando faz sentido mudar o treino, sugere um dia vazio da semana dela que não fique na véspera de um esporte que use o mesmo músculo nem ao lado de outro treino do mesmo foco.
 - **Cardio habitual:** depois de pernas, a dica de bike ou corrida segue a modalidade que ela mais registrou nos check-ins de Cardio.
 - Treino fora da semana aparece com o subtítulo; treino repetido sugere trocar pelo que ficou de fora.

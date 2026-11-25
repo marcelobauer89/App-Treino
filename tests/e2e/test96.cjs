@@ -9,6 +9,8 @@ const ck = (id, modalidade) => ({ id, usuario_id: 'u1', tipo: 'bike', modalidade
 const MEUS = {
   1: { nome: 'Treino A', subtitulo: 'Inferiores', exercicios: [{ nome: 'Passada para frente', dose: '3×10', pse: 6 }, { nome: 'Panturrilha', dose: '3×15', pse: 6 }] },
   2: { nome: 'Treino B', subtitulo: 'Puxadas', exercicios: [{ nome: 'Remada inversa', dose: '3×10', pse: 8 }, { nome: 'Puxada', dose: '3×10', pse: 8 }] },
+  // Costas em que a pessoa pôs um agachamento pesado: o aviso olha os exercícios, não o nome do treino.
+  3: { nome: 'Treino C', subtitulo: 'Costas', exercicios: [{ nome: 'Remada inversa', dose: '3×10', pse: 8 }, { nome: 'Puxada', dose: '3×10', pse: 8 }, { nome: 'Agachamento', dose: '4×6', pse: 9 }] },
 };
 // Plano pronto: Treino 1 = costas, Treino 2 = ombros, Treino 3 = pernas. Índices: 0 = domingo.
 const CASOS = [
@@ -16,6 +18,10 @@ const CASOS = [
     ['No sábado você tem Futebol e, na véspera, o Treino 3 (Agachamento e Deadlift).', 'Recomendamos ir com cargas moderadas', 'Na terça está livre']],
   ['treino montado: pernas leve na véspera do futebol', [[], ['t2'], [], [], [], ['t1'], ['futebol']], { treinos: MEUS },
     ['na véspera, o Treino A (Passada para frente e Panturrilha)', 'Como as cargas desse treino já são moderadas, recomendamos manter assim']],
+  ['treino de costas com um agachamento, na véspera do futebol', [[], ['t1'], [], ['t2'], [], ['t3'], ['futebol']], { treinos: MEUS },
+    ['No sábado você tem Futebol e, na véspera, o Treino C (Agachamento).', 'Como é o único exercício de pernas desse treino, recomendamos fazer Agachamento com carga moderada nesse dia, ou passá-lo para outro treino da semana.']],
+  ['treino de costas com um agachamento, no dia seguinte ao de pernas', [[], ['t1'], ['t3'], [], ['t2'], [], []], { treinos: MEUS },
+    ['O Treino A (Passada para frente e Panturrilha) na segunda e o Treino C (Agachamento) na terça trabalham pernas em dias seguidos.']],
   ['treino montado: costas e jiu no mesmo dia', [[], ['t2', 'jiu'], [], ['t1'], [], [], []], { treinos: MEUS },
     ['Na segunda você tem o Treino B (Remada inversa e Puxada) e Jiu Jitsu. Recomendamos fazer o Jiu Jitsu primeiro', 'as costas e a pegada cansadas']],
   ['pernas e futvôlei no mesmo dia', [[], ['t1'], [], ['t2'], ['t3', 'futvolei'], [], []], {},

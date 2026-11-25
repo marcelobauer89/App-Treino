@@ -44,15 +44,18 @@
   // ---------- Minha semana ----------
   const lista = (nomes) => (nomes.length > 1 ? `${nomes.slice(0, -1).join(', ')} e ${nomes[nomes.length - 1]}` : nomes[0]);
   // Avisos da semana (docs/RECURSOS.md, "Avisos da Minha semana"): sempre em tom de recomendação e montados com a
-  // semana e os treinos da pessoa. O foco de cada treino vem dos grupos dos exercícios (2 ou mais de Pernas/Explosivos,
-  // Costas ou Ombros); o aviso cita os exercícios dela, a intensidade (PSE), os dias livres e o cardio que ela costuma fazer.
+  // semana e os treinos da pessoa. O foco de cada treino vem dos exercícios dele; o aviso cita esses exercícios,
+  // a quantidade e a intensidade (PSE), os dias livres e o cardio que ela costuma fazer.
   const ROTULO_FOCO = { pernas: 'pernas', costas: 'costas', ombros: 'ombros' };
   const GRUPOS_FOCO = { pernas: ['Pernas', 'Explosivos'], costas: ['Costas'], ombros: ['Ombros'] };
+  // Olha cada exercício do treino: basta um de Pernas (ou Explosivos), Costas ou Ombros para o treino contar com aquele
+  // foco (um treino de costas em que a pessoa pôs um agachamento também é de pernas). O nome do treino só vale
+  // quando nenhum exercício tem grupo (exercício fora do catálogo sem grupo).
   function focosDoTreino(t) {
     const tr = ehTreino(t) && TREINOS[t.slice(1)];
     if (!tr) return [];
-    const f = Object.keys(GRUPOS_FOCO).filter((k) => tr.exercicios.filter((e) => GRUPOS_FOCO[k].includes(e.grupo)).length >= 2);
-    if (!f.includes('pernas') && /perna/i.test(`${tr.nome} ${tr.subtitulo || ''}`)) f.push('pernas');
+    const f = Object.keys(GRUPOS_FOCO).filter((k) => tr.exercicios.some((e) => GRUPOS_FOCO[k].includes(e.grupo)));
+    if (!f.length && !tr.exercicios.some((e) => e.grupo) && /perna/i.test(`${tr.nome} ${tr.subtitulo || ''}`)) f.push('pernas');
     return f;
   }
   // Exercícios do foco no treino da pessoa, os mais intensos primeiro.
@@ -109,10 +112,13 @@
         ontem.filter(ehTreino).forEach((t) => {
           const f = focosDoTreino(t).find((x) => ESPORTES[esp].vespera[x]);
           if (!f) return;
-          const conselho = pesado(t, f)
-            ? 'Recomendamos ir com cargas moderadas nesse dia, parando 2 ou 3 repetições antes da falha, ou passar esse treino para outro dia.'
-            : 'Como as cargas desse treino já são moderadas, recomendamos manter assim e evitar ir até a falha nessa véspera.';
-          av.push(`${naDia(i)} você tem ${nomeAtividade(esp)} e, na véspera, ${comExercicios(t, f)}. ${ESPORTES[esp].vespera[f]} ${conselho}${pesado(t, f) ? sugestao(diaLivre(t, f, [ant(i)])) : ''}`);
+          const exs = exDoFoco(t, f);
+          const conselho = !pesado(t, f)
+            ? 'Como as cargas desse treino já são moderadas, recomendamos manter assim e evitar ir até a falha nessa véspera.'
+            : exs.length === 1
+              ? `Como é o único exercício de ${ROTULO_FOCO[f]} desse treino, recomendamos fazer ${exs[0].rotulo || exs[0].nome} com carga moderada nesse dia, ou passá-lo para outro treino da semana.`
+              : 'Recomendamos ir com cargas moderadas nesse dia, parando 2 ou 3 repetições antes da falha, ou passar esse treino para outro dia.';
+          av.push(`${naDia(i)} você tem ${nomeAtividade(esp)} e, na véspera, ${comExercicios(t, f)}. ${ESPORTES[esp].vespera[f]} ${conselho}${pesado(t, f) && exs.length > 1 ? sugestao(diaLivre(t, f, [ant(i)])) : ''}`);
         });
       });
       // Esporte de pernas na véspera do treino de pernas.
