@@ -90,6 +90,8 @@ Abaixo dos dias, em Você → Minha semana (`avisosSemana` em `js/voce.js`, RF-8
 - **Dia livre:** quando faz sentido mudar o treino, sugere um dia vazio da semana dela que não fique na véspera de um esporte que use o mesmo músculo nem ao lado de outro treino do mesmo foco.
 - **Cardio habitual:** depois de pernas, a dica de bike ou corrida segue a modalidade que ela mais registrou nos check-ins de Cardio.
 - Treino fora da semana aparece com o subtítulo; treino repetido sugere trocar pelo que ficou de fora.
+- **Até 3 à mostra:** os avisos são ordenados pelo risco (1: lesão, treino na véspera ou no mesmo dia do esporte; 2: recuperação, como mesmo foco em dias seguidos, esporte antes do treino de pernas, dois esportes no dia e semana sem descanso; 3: treino fora ou repetido; 4: ordem no dia, como cardio e outras duplas). Aparecem os 3 primeiros, e o resto fica em "Ver mais N recomendações" (com "Ver menos" para fechar).
+- **Texto curto:** a situação, a recomendação e o motivo numa frase só (ex.: "Recomendamos fazê-lo com carga moderada, parando 2 ou 3 repetições antes da falha: pernas cansadas perdem arranque e se lesionam mais por até 48 h.").
 
 | Situação | O que o aviso diz | Base |
 |---|---|---|
