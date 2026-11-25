@@ -34,7 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
+      url: ${{ steps.deploy1.outputs.page_url || steps.deploy2.outputs.page_url || steps.deploy3.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -75,5 +75,36 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
-      - id: deploy
+      # O GitHub às vezes não acha o pacote logo depois de enviado ("No artifacts named github-pages were found").
+      # Por isso a publicação tenta até 3 vezes, com uma pausa entre as tentativas.
+      - id: deploy1
         uses: actions/deploy-pages@v4
+        continue-on-error: true
+      - if: steps.deploy1.outcome == 'failure'
+        run: sleep 30
+      - id: deploy2
+        if: steps.deploy1.outcome == 'failure'
+        uses: actions/deploy-pages@v4
+        continue-on-error: true
+      - if: steps.deploy2.outcome == 'failure'
+        run: sleep 60
+      - id: deploy3
+        if: steps.deploy2.outcome == 'failure'
+        uses: actions/deploy-pages@v4
+      # Confere se o site publicado ficou com a versão nova (produção e dev); se não ficar em 5 minutos, a execução fica vermelha.
+      - name: Conferir o site publicado
+        env:
+          SITE: ${{ steps.deploy1.outputs.page_url || steps.deploy2.outputs.page_url || steps.deploy3.outputs.page_url }}
+        run: |
+          conferir() {
+            esperado="$1"; endereco="$2"
+            for i in $(seq 1 20); do
+              if curl -fsS -H 'Cache-Control: no-cache' "${endereco}versao.json?t=$(date +%s%N)" | grep -q "$esperado"; then
+                echo "Publicado: ${endereco} na versão $esperado"; return 0
+              fi
+              sleep 15
+            done
+            echo "::error::${endereco} não mostrou a versão $esperado depois de 5 minutos"; return 1
+          }
+          conferir "$(git -C producao rev-parse HEAD)" "${SITE%/}/"
+          if [ -d desenvolvimento ]; then conferir "$(git -C desenvolvimento rev-parse HEAD)" "${SITE%/}/dev/"; fi
