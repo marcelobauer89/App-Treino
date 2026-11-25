@@ -43,6 +43,32 @@
 
   // ---------- Minha semana ----------
   const lista = (nomes) => (nomes.length > 1 ? `${nomes.slice(0, -1).join(', ')} e ${nomes[nomes.length - 1]}` : nomes[0]);
+  // Avisos da semana (docs/RECURSOS.md, "Avisos da Minha semana"): o foco de cada treino vem dos grupos dos exercícios
+  // (2 ou mais de Pernas/Explosivos, Costas ou Ombros) e cada esporte tem o que mais cansa.
+  const ROTULO_FOCO = { pernas: 'pernas', costas: 'costas', ombros: 'ombros' };
+  const CANSADO = { pernas: 'pernas cansadas', costas: 'costas e pegada cansadas', ombros: 'ombros cansados' };
+  function focosDoTreino(t) {
+    const tr = ehTreino(t) && TREINOS[t.slice(1)];
+    if (!tr) return [];
+    const conta = { pernas: 0, costas: 0, ombros: 0 };
+    tr.exercicios.forEach((e) => {
+      if (e.grupo === 'Pernas' || e.grupo === 'Explosivos') conta.pernas++;
+      else if (e.grupo === 'Costas') conta.costas++;
+      else if (e.grupo === 'Ombros') conta.ombros++;
+    });
+    const f = Object.keys(conta).filter((k) => conta[k] >= 2);
+    if (!f.includes('pernas') && /perna/i.test(`${tr.nome} ${tr.subtitulo || ''}`)) f.push('pernas');
+    return f;
+  }
+  // Por esporte: o motivo de cada foco pesar (véspera: só os focos que ainda cansam no dia seguinte).
+  const ESPORTES = {
+    futebol: { vespera: { pernas: 'Pernas cansadas perdem arranque e se machucam mais (a posterior da coxa é a lesão mais comum no futebol), e esse cansaço dura de 24 a 48 h.' }, junto: ['pernas'] },
+    futvolei: { vespera: { pernas: 'Os saltos na areia pedem pernas e panturrilhas descansadas, e o cansaço do treino dura de 24 a 48 h.' }, junto: ['pernas'] },
+    muay: { vespera: { pernas: 'Chutes e base firme pedem pernas descansadas, e o cansaço do treino dura de 24 a 48 h.' }, junto: ['pernas', 'ombros'] },
+    jiu: { vespera: { pernas: 'No rola, pernas pesadas tiram explosão e base, e o cansaço do treino dura de 24 a 48 h.' }, junto: ['pernas', 'costas'] },
+    surf: { vespera: { ombros: 'A remada usa ombros e costas o tempo todo, e ombro cansado é a origem mais comum de dor no surf.', costas: 'A remada usa costas e ombros o tempo todo, e chegar com eles cansados encurta a sessão e sobrecarrega o ombro.' }, junto: ['ombros', 'costas'] },
+  };
+  const PERNAS_ESPORTE = ['futebol', 'futvolei', 'muay'];
   function avisosSemana() {
     const s = config.semana;
     const av = [];
@@ -56,17 +82,57 @@
       const n = todas.filter((x) => x === t).length;
       if (n > 1) av.push(`O ${nomeAtividade(t)} aparece ${n} vezes na semana.`);
     });
+    const nomeFoco = (t, f) => `${nomeAtividade(t)} (${ROTULO_FOCO[f]})`;
     ORDEM_SEMANA.forEach((i) => {
-      if (s[i].length === 2) av.push(`${naDia(i)} você terá ${lista(s[i].map(nomeAtividade))}; faça um check-in para cada.`);
+      const dia = s[i];
+      const ontem = s[(i + 6) % 7];
+      const doDia = [];
+      // Treino forte na véspera do esporte que usa os mesmos músculos.
+      dia.filter((x) => ESPORTES[x]).forEach((esp) => {
+        ontem.filter(ehTreino).forEach((t) => {
+          const f = focosDoTreino(t).find((x) => ESPORTES[esp].vespera[x]);
+          if (f) doDia.push(`${naDia(i)} tem ${nomeAtividade(esp)} e, na véspera, o ${nomeFoco(t, f)}. ${ESPORTES[esp].vespera[f]} Na véspera, use carga moderada e pare 2 ou 3 repetições antes da falha, ou troque esse treino de dia.`);
+        });
+      });
+      // Esporte de pernas na véspera do treino de pernas: a dor muscular costuma durar de 24 a 72 h.
+      ontem.filter((x) => PERNAS_ESPORTE.includes(x)).forEach((esp) => {
+        dia.filter((t) => focosDoTreino(t).includes('pernas')).forEach((t) => {
+          doDia.push(`Depois do ${nomeAtividade(esp)} ${daDia((i + 6) % 7)}, as pernas podem chegar doloridas ao ${nomeAtividade(t)} ${daDia(i)} (a dor costuma durar de 24 a 72 h). Se estiverem, diminua a carga nesse dia.`);
+        });
+      });
+      // Mesmo foco em dias seguidos (dois treinos de pernas, por exemplo).
+      ontem.filter(ehTreino).forEach((a) => {
+        dia.filter(ehTreino).forEach((b) => {
+          const f = focosDoTreino(a).find((x) => focosDoTreino(b).includes(x));
+          if (!f) return;
+          const d1 = NOMES_DIA[(i + 6) % 7], d2 = NOMES_DIA[i];
+          doDia.push(a === b
+            ? `O ${nomeAtividade(a)} cai em dias seguidos (${d1} e ${d2}). O músculo precisa de cerca de 48 h para se recuperar: deixe um dia entre eles.`
+            : `O ${nomeAtividade(a)} (${d1}) e o ${nomeAtividade(b)} (${d2}) trabalham ${ROTULO_FOCO[f]} em dias seguidos. O músculo precisa de cerca de 48 h para se recuperar: deixe um dia entre eles.`);
+        });
+      });
+      // Duas atividades no mesmo dia.
+      if (dia.length === 2) {
+        const nomes = lista(dia.map(nomeAtividade));
+        const treino = dia.find(ehTreino);
+        const outra = dia.find((x) => x !== treino);
+        const esportes = dia.filter((x) => ESPORTES[x]);
+        const foco = treino && ESPORTES[outra] ? focosDoTreino(treino).find((f) => ESPORTES[outra].junto.includes(f)) : null;
+        if (foco) {
+          doDia.push(`${naDia(i)} o ${nomeFoco(treino, foco)} e o ${nomeAtividade(outra)} caem no mesmo dia. Se puder, faça o ${nomeAtividade(outra)} primeiro e a musculação depois, com 6 h ou mais entre os dois: chegar com ${CANSADO[foco]} tira rendimento e aumenta o risco de lesão. Faça um check-in para cada.`);
+        } else if (treino && outra === 'bike') {
+          doDia.push(`${naDia(i)} você terá ${nomes}. Faça a musculação primeiro e o cardio depois, ou em outro horário: assim o cardio atrapalha menos o ganho de força.${focosDoTreino(treino).includes('pernas') ? ' Depois de pernas, prefira bike a corrida, que cansa mais as pernas.' : ''} Faça um check-in para cada.`);
+        } else if (!treino && dia.includes('bike')) {
+          doDia.push(`${naDia(i)} você terá ${nomes}. Deixe o cardio leve e depois do ${nomeAtividade(dia.find((x) => x !== 'bike'))}, para chegar inteiro nele. Faça um check-in para cada.`);
+        } else if (esportes.length === 2) {
+          doDia.push(`${naDia(i)} você terá ${nomes}, dois treinos intensos no mesmo dia. Deixe pelo menos 6 h entre eles, coma e beba água no intervalo e vá mais leve no segundo. Faça um check-in para cada.`);
+        } else {
+          doDia.push(`${naDia(i)} você terá ${nomes}. Se der, deixe algumas horas entre os dois e faça primeiro o que for prioridade naquele dia. Faça um check-in para cada.`);
+        }
+      }
+      av.push(...doDia);
     });
-    // Regra 5: pernas pesadas na véspera (ou no mesmo dia) do tatame (só com o Treino 3 do plano pronto).
-    ORDEM_SEMANA.forEach((i) => {
-      if (!s[i].includes('jiu') || !(TREINOS['3'] && TREINOS['3'].objetivo)) return;
-      const vespera = (i + 6) % 7;
-      if (s[vespera].includes('t3')) av.push(`${naDia(i)} o jiu vem logo depois do Treino 3 (pernas). Se as pernas estiverem pesadas, vá mais leve no rola.`);
-      else if (s[i].includes('t3')) av.push(`${naDia(i)} o Treino 3 (pernas) e o jiu caem juntos. Se der, faça o jiu antes.`);
-    });
-    if (s.every((d) => d.length)) av.push('A semana não tem dia de descanso. Deixe pelo menos um dia vazio para recuperar.');
+    if (s.every((d) => d.length)) av.push('A semana não tem dia de descanso. Deixe pelo menos um dia vazio: é no descanso que o corpo se recupera e o cansaço acumulado deixa de virar lesão.');
     return av;
   }
 

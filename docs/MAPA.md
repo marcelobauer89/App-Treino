@@ -63,7 +63,7 @@ Na ordem de carga. Cada linha é uma seção (comentário `// ---------- Nome --
 | Dashboard → Evolução | Mês a mês, pesos e "hora de subir a carga" |
 | **`js/voce.js`** | |
 | Render: Você | Lista de opções |
-| Minha semana | Arrastar atividades nos dias |
+| Minha semana | Arrastar atividades nos dias e avisos da semana (foco do treino × esportes) |
 | Meus treinos (editor) | Montar até 6 treinos, biblioteca |
 | Mudar a ordem dos exercícios | Arrastar pela alça |
 | Jornadas prontas | Objetivos com treinos prontos |
@@ -115,7 +115,7 @@ Rode só os da área mexida: `node tests/rodar.cjs test20 test22 …`.
 | Atividades (muay, surf, futebol, calistenia) | test37, test48, test68, test75 |
 | Dashboard e Evolução (inclui os cards de maiores pesos e pesos estagnados) | test23, test76, test77 |
 | Você (perfil, lista, temporizador) | test25, test39, test70 |
-| Minha semana | test17 |
+| Minha semana | test17, test96 |
 | Meus treinos, biblioteca e jornadas | test36, test38, test40, test55, test58, test59, test63, test71, test73, test92 |
 | Privacidade, LGPD e excluir conta | test42, test44, test46 |
 | Convites | test43, test47 |

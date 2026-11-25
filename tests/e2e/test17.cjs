@@ -91,7 +91,7 @@ const doDia = (p, i, t) => p.locator(`#dias-cfg .dia-cfg[data-dia="${i}"] [data-
   await arrastar(p, daPaleta(p, 't3'), linhaDia(p, 5));
   await arrastar(p, daPaleta(p, 'jiu'), linhaDia(p, 6));
   const av = await txt(p, '#avisos-semana');
-  ok(av.includes('No sábado o jiu vem logo depois do Treino 3'), 'rule 5 warning', av);
+  ok(av.includes('No sábado tem Jiu Jitsu e, na véspera, o Treino 3 (pernas).'), 'rule 5 warning', av);
   d = await dias(p);
   ok(d.join(' ') === 't1 jiu - jiu t3 bike+jiu t2', 'week state', d.join(' '));
   await p.click('#tela-voce [data-arrastar="t1"]:not([data-de])');
