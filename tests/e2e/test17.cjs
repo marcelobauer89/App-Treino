@@ -49,7 +49,7 @@ const doDia = (p, i, t) => p.locator(`#dias-cfg .dia-cfg[data-dia="${i}"] [data-
   ok((await dias(p))[0] === 't2+jiu', 'jiu dropped on Monday', (await dias(p))[0]);
   let db = await H.banco(p);
   ok(JSON.stringify(db.perfis[0].semana) === JSON.stringify([[], ['t2', 'jiu'], ['jiu'], ['t1'], ['jiu'], ['t3'], ['bike']]), 'semana saved to DB', JSON.stringify(db.perfis[0].semana));
-  ok((await txt(p, '#avisos-semana')).includes('Na segunda você terá Treino 2 e Jiu Jitsu'), 'same-day warning', await txt(p, '#avisos-semana'));
+  ok((await txt(p, '#avisos-semana')).includes('Na segunda você tem Treino 2 e Jiu Jitsu. Recomendamos'), 'same-day warning', await txt(p, '#avisos-semana'));
   ok(!(await p.isDisabled('#semana-padrao')), 'reset enabled');
   ok(!(await txt(p, '#toast')).includes('Arraste'), 'no tap hint after a drag');
 
@@ -57,7 +57,7 @@ const doDia = (p, i, t) => p.locator(`#dias-cfg .dia-cfg[data-dia="${i}"] [data-
   await arrastar(p, daPaleta(p, 'bike'), linhaDia(p, 1));
   ok((await dias(p))[0] === 'jiu+bike', 'third replaces oldest', (await dias(p))[0]);
   ok((await txt(p, '#toast')).includes('Treino 2 saiu da segunda'), 'replace toast', await txt(p, '#toast'));
-  ok((await txt(p, '#avisos-semana')).includes('Treino 2 ficou fora da semana'), 'missing workout warning', await txt(p, '#avisos-semana'));
+  ok((await txt(p, '#avisos-semana')).includes('Treino 2 (Peito, tríceps e ombro) ficou fora da semana. Recomendamos'), 'missing workout warning', await txt(p, '#avisos-semana'));
 
   // mover entre dias: Treino 1 de quarta para segunda (substitui jiu)
   await arrastar(p, doDia(p, 3, 't1'), linhaDia(p, 1));
@@ -91,7 +91,7 @@ const doDia = (p, i, t) => p.locator(`#dias-cfg .dia-cfg[data-dia="${i}"] [data-
   await arrastar(p, daPaleta(p, 't3'), linhaDia(p, 5));
   await arrastar(p, daPaleta(p, 'jiu'), linhaDia(p, 6));
   const av = await txt(p, '#avisos-semana');
-  ok(av.includes('No sábado o jiu vem logo depois do Treino 3'), 'rule 5 warning', av);
+  ok(av.includes('No sábado você tem Jiu Jitsu e, na véspera, o Treino 3 (Agachamento e Deadlift).'), 'rule 5 warning', av);
   d = await dias(p);
   ok(d.join(' ') === 't1 jiu - jiu t3 bike+jiu t2', 'week state', d.join(' '));
   await p.click('#tela-voce [data-arrastar="t1"]:not([data-de])');

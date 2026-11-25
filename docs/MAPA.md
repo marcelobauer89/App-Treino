@@ -63,7 +63,7 @@ Na ordem de carga. Cada linha é uma seção (comentário `// ---------- Nome --
 | Dashboard → Evolução | Mês a mês, pesos e "hora de subir a carga" |
 | **`js/voce.js`** | |
 | Render: Você | Lista de opções |
-| Minha semana | Arrastar atividades nos dias |
+| Minha semana | Arrastar atividades nos dias e avisos da semana (foco do treino × esportes) |
 | Meus treinos (editor) | Montar até 6 treinos, biblioteca |
 | Mudar a ordem dos exercícios | Arrastar pela alça |
 | Jornadas prontas | Objetivos com treinos prontos |
@@ -115,7 +115,7 @@ Rode só os da área mexida: `node tests/rodar.cjs test20 test22 …`.
 | Atividades (muay, surf, futebol, calistenia) | test37, test48, test68, test75 |
 | Dashboard e Evolução (inclui os cards de maiores pesos e pesos estagnados) | test23, test76, test77 |
 | Você (perfil, lista, temporizador) | test25, test39, test70 |
-| Minha semana | test17 |
+| Minha semana | test17, test96 |
 | Meus treinos, biblioteca e jornadas | test36, test38, test40, test55, test58, test59, test63, test71, test73, test92 |
 | Privacidade, LGPD e excluir conta | test42, test44, test46 |
 | Convites | test43, test47 |
@@ -131,6 +131,7 @@ Rode só os da área mexida: `node tests/rodar.cjs test20 test22 …`.
 | Segurança do site: CSP nas cinco páginas (index, admin, personal, privacidade e conheca), sem script inline, biblioteca do Supabase em `js/vendor/`, o que fica fora da publicação | test88 |
 | Área do personal (`personal.html`, aba Profissionais do monitoramento) | test90 |
 | Topo do painel e do personal: carregamento dentro da margem (texto da etapa com espaço), foto e nome parados ao carregar e barra fixa ao rolar no celular | test94 |
+| Fundo dos estilos de cor (app e painel) numa camada presa à tela, sem faixas no iPhone | test95 |
 | Integrações (check-in do app do dojo): Você → Integrações, "via App do dojo" no Dashboard e Liberar integração na ficha do usuário (painel) | test93; a função em `npm run edge` (`tests/edge/teste-checkin-externo.mjs`); as regras do banco em `tests/sql/rodar.sh` |
 | Aluno do personal no app (convite, Meu personal, treinos só de leitura, recado) | test89 |
 | Landing page (`conheca.html`) e o link na tela de login | test91 |

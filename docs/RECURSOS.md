@@ -11,6 +11,7 @@ Ao mudar um recurso, atualize só a seção dele (ache pelo índice).
 - [Atualização automática](#atualização-automática)
 - [Aviso de novidade (Evolução)](#aviso-de-novidade-evolução)
 - [Futebol e Futvôlei](#futebol-e-futvôlei)
+- [Avisos da Minha semana](#avisos-da-minha-semana)
 - [Tipos de check-in (painel) e Cardio com km](#tipos-de-check-in-painel-e-cardio-com-km)
 - [Celebração do check-in](#celebração-do-check-in)
 - [Temporizador de descanso](#temporizador-de-descanso)
@@ -78,6 +79,32 @@ Para ligar, rode de novo o `supabase/schema.sql`. Ele libera t4 a t6 nos check-i
 
 - Tipos de check-in `futebol` (selo F) e `futvolei` (selo V), cada um com cor própria e 90 min por padrão. Entram no check-in, na Minha semana, no Dashboard, no resumo semanal por e-mail e no monitoramento.
 - **Para ligar:** rode de novo o `supabase/schema.sql` (o banco passa a aceitar os dois tipos) e publique de novo a função `resumo-semanal`.
+
+## Avisos da Minha semana
+
+Abaixo dos dias, em Você → Minha semana (`avisosSemana` em `js/voce.js`, RF-88). Todo aviso é uma **recomendação** ("Recomendamos…") montada com os dados da pessoa:
+
+- **Foco do treino** pelos exercícios dela, um a um: basta um exercício de Pernas (ou Explosivos), Costas ou Ombros para o treino contar com aquele foco. Um treino de costas em que a pessoa pôs um agachamento também gera os avisos de pernas. O nome do treino ("perna" no nome ou subtítulo) só vale quando nenhum exercício tem grupo. Vale para o plano pronto, as jornadas, os treinos montados pela pessoa e os do personal.
+- **Exercícios citados:** o aviso nomeia os 2 exercícios mais intensos do foco no treino dela (ex.: "o Treino 3 (Agachamento e Deadlift)").
+- **Quantidade e intensidade:** com 2 ou mais exercícios do foco e algum em PSE 8 ou mais, recomenda carga moderada e parar 2 ou 3 repetições antes da falha (ou mudar o dia); com um só exercício pesado, recomenda fazê-lo com carga moderada naquele dia ou passá-lo para outro treino; com tudo abaixo de PSE 8, recomenda manter as cargas moderadas e não ir até a falha.
+- **Dia livre:** quando faz sentido mudar o treino, sugere um dia vazio da semana dela que não fique na véspera de um esporte que use o mesmo músculo nem ao lado de outro treino do mesmo foco.
+- **Cardio habitual:** depois de pernas, a dica de bike ou corrida segue a modalidade que ela mais registrou nos check-ins de Cardio.
+- Treino fora da semana aparece com o subtítulo; treino repetido sugere trocar pelo que ficou de fora.
+- **Até 3 à mostra:** os avisos são ordenados pelo risco (1: lesão, treino na véspera ou no mesmo dia do esporte; 2: recuperação, como mesmo foco em dias seguidos, esporte antes do treino de pernas, dois esportes no dia e semana sem descanso; 3: treino fora ou repetido; 4: ordem no dia, como cardio e outras duplas). Aparecem os 3 primeiros, e o resto fica em "Ver mais N recomendações" (com "Ver menos" para fechar).
+- **Texto curto:** a situação, a recomendação e o motivo numa frase só (ex.: "Recomendamos fazê-lo com carga moderada, parando 2 ou 3 repetições antes da falha: pernas cansadas perdem arranque e se lesionam mais por até 48 h.").
+
+| Situação | O que o aviso diz | Base |
+|---|---|---|
+| Treino de pernas na véspera de futebol, futvôlei, muay thai ou jiu; de ombros ou costas na véspera do surf | Carga moderada, 2 ou 3 repetições antes da falha, ou trocar o treino de dia | Força, salto e corrida caem por 24 a 48 h depois de treino de pernas (Doma et al., 2017 e 2019; JSSM 2013) |
+| Treino e esporte com o mesmo foco no mesmo dia (pernas com futebol, futvôlei, muay ou jiu; costas com jiu ou surf; ombros com muay ou surf) | Esporte primeiro, musculação depois, 6 h ou mais entre eles | Interferência menor com 6 a 24 h de intervalo (Robineau et al., 2016); pegada cai depois da musculação em lutadores (2024) |
+| Futebol, futvôlei ou muay na véspera do treino de pernas | Pernas podem chegar doloridas; diminuir a carga | Dor muscular tardia de 24 a 72 h |
+| Mesmo foco em dias seguidos (ou o mesmo treino) | Deixar cerca de 48 h entre eles | Recuperação do músculo treinado |
+| Musculação e Cardio no mesmo dia | Musculação primeiro; depois de pernas, bike em vez de corrida | Ordem força → aeróbio preserva a força de pernas (Murlasits et al., 2018); corrida interfere mais que bike (Wilson et al., 2012) |
+| Dois esportes no mesmo dia | 6 h entre eles, comer e beber água, mais leve no segundo | Mesma base da interferência |
+| Esporte e Cardio no mesmo dia | Cardio leve e depois do esporte | |
+| Outras duplas no mesmo dia | Algumas horas entre eles, um check-in para cada | |
+
+Continuam os avisos de treino fora da semana, treino repetido e semana sem descanso. A semana do plano pronto (Treino 2, jiu, Treino 1, jiu, Treino 3, Cardio) não tem aviso. Testes: test17 e test96.
 
 ## Tipos de check-in (painel) e Cardio com km
 
