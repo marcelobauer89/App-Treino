@@ -1445,6 +1445,9 @@
   }
   html:root[data-estilo="gelo"] :is(.atividade, .dash-topo h1, .voce-topo h1) { text-shadow: none; }
   html:root[data-estilo="gelo"] dialog.modal { background: #122033; }
+  /* A paleta da Minha semana fica presa no topo ao rolar: com o --papel translúcido, os dias apareciam por trás. */
+  html:root[data-estilo="gelo"] .paleta { background: #122033; box-shadow: 0 8px 16px -8px rgba(0, 0, 0, .6); }
+  html:root[data-estilo="gelo"] .paleta .ativ { background: #1b2d45; }
   /* Violeta: fundo roxo vivo e superfícies brancas com sombra em bloco (efeito 3D). As cores de texto
      padrão são as das superfícies brancas (escuras); o que fica direto sobre o roxo ganha texto claro. */
   html:root[data-estilo="violeta"] {

@@ -212,7 +212,7 @@ async function abrir(b, extra = {}, op = {}) {
   // Semana: Treino D na paleta e aviso de que ficou fora.
   await H.voce(p, 'semana');
   ok((await p.locator('#paleta [data-arrastar="t4"]').count()) === 1, 'Treino D na paleta da semana');
-  ok(/Treino D ficou fora da semana/.test(await txt(p, '#avisos-semana')), 'aviso de treino fora da semana', await txt(p, '#avisos-semana'));
+  ok(/Treino D \(Pernas e costas\) ficou fora da semana. Recomendamos/.test(await txt(p, '#avisos-semana')), 'aviso de treino fora da semana', await txt(p, '#avisos-semana'));
   await H.voce(p, 'treinos');
   ok((await p.locator('#meus-treinos li').count()) === 4 && /montou/.test(await txt(p, '#meus-treinos-nota')), 'Você → Meus treinos lista os 4');
   await p.waitForTimeout(400); await p.screenshot({ path: SHOT('pt-voce-light'), fullPage: true });
